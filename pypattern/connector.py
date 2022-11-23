@@ -1,7 +1,18 @@
 # Custom
 from .edge import Edge
+from .panel import Panel
 from .component import Component
 
+
+class InterfaceInstance():
+    """Single edge that can be used for connecting to"""
+    def __init__(self, panel: Panel, edge_id: int) -> None:
+        self.panel = panel
+        self.edge = edge_id
+
+        
+
+# DRAFT
 class ConnectorEdge():
     """Edge that describes connecting interface of a component. 
         
@@ -47,19 +58,4 @@ class ConnectorOp():
     def assembly(self):
         return 
 
-# DRAFT
-def stitch(panel1_raw, int_id1, panel2_raw, int_id2):
-    name_1 = list(panel1_raw.keys())[0]
-    name_2 = list(panel2_raw.keys())[0]
-    return [
-                {
-                    'panel': name_1,  # corresponds to a name. 
-                                             # Only one element of the first level is expected
-                    'edge': panel1_raw[name_1]['connecting_ids'][int_id1]
-                },
-                {
-                    'panel': name_2,
-                    'edge': panel2_raw[name_2]['connecting_ids'][int_id2]
-                }
-            ]
 
