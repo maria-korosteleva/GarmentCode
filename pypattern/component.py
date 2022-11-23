@@ -12,7 +12,10 @@ class Component():
 
     def __init__(self, name) -> None:
         self.name = name
-        pass
+
+        # Edges of special type that describe the way pattern geometry is 
+        # connected to other panels 
+        self.interfaces = []
 
     def assembly(self):
         """Construction process of the garment component
