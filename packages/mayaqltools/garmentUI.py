@@ -1,13 +1,10 @@
 """
     Maya interface for editing & testing patterns files
-    Python 2.7 compatible
-    * Maya 2018+
+    * Maya 2022+
     * Qualoth
 """
 
 # Basic
-from __future__ import print_function
-from __future__ import division
 from functools import partial
 from datetime import datetime
 import os
@@ -146,6 +143,7 @@ class State(object):
     def serialize(self, directory):
         """Serialize text-like objects"""
         self.config.serialize(os.path.join(directory, 'sim_props.json'))
+        self.garment.view_ids = True
         self.garment.serialize(directory, to_subfolder=False)
 
     def save_scene(self, directory):

@@ -7,6 +7,10 @@
 
 Based on official implementation of [Generating Datasets of 3D Garments with Sewing Patterns](https://arxiv.org/abs/2109.05633).
 
+## News!
+
+* Nov. 21, 2022: switched to using Maya 2022+. NOTE: Support for earlier versions is removed. Use the state before the last merge to use the generator with Maya below 2022
+
 ## Dataset
 
 

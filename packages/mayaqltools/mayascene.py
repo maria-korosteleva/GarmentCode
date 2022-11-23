@@ -1,16 +1,14 @@
 """
     Module contains classes needed to simulate garments from patterns in Maya.
-    Note that Maya uses Python 2.7 (incl Maya 2020) hence this module is adapted to Python 2.7
 """
 # Basic
-from __future__ import print_function
-from __future__ import division
 from functools import partial
 import copy
 import errno
 import numpy as np
 import os
 import time
+from importlib import reload
 
 # Maya
 from maya import cmds
@@ -22,10 +20,10 @@ from mtoa.cmds.arnoldRender import arnoldRender
 import mtoa.core
 
 # My modules
-import pattern.core as core
+import pattern.wrappers as wrappers
 from mayaqltools import qualothwrapper as qw
 from mayaqltools import utils
-reload(core)
+reload(wrappers)
 reload(qw)
 reload(utils)
 
@@ -33,7 +31,7 @@ class PatternLoadingError(BaseException):
     """To be rised when a pattern cannot be loaded correctly to 3D"""
     pass
 
-class MayaGarment(core.ParametrizedPattern):
+class MayaGarment(wrappers.VisPattern):
     """
     Extends a pattern specification in custom JSON format to work with Maya
         Input:
@@ -1212,6 +1210,9 @@ class Scene(object):
         # https://forums.autodesk.com/t5/maya-programming/rendering-with-arnold-in-a-python-script/td-p/7710875
         # NOTE that attribute names depend on Maya version. These are for Maya2018-Maya2020
         im_size = self.config['resolution']
+        
+        # image setup
+        old_setup = self._set_image_size(im_size, im_size[0]/im_size[1], im_size[0]/im_size[1])
         cmds.setAttr("defaultArnoldDriver.aiTranslator", "png", type="string")
 
         # fixing dark rendering problem
@@ -1219,6 +1220,7 @@ class Scene(object):
         cmds.colorManagementPrefs(e=True, outputTransformEnabled=True, outputUseViewTransform=True)
 
         # render all the cameras
+        curr_frame = cmds.currentTime(query=True)
         start_time = time.time()
         for camera in self.cameras:
             print('Rendering from camera {}'.format(camera))
@@ -1228,8 +1230,9 @@ class Scene(object):
             filename = os.path.join(save_to, local_name)
             cmds.setAttr("defaultArnoldDriver.prefix", filename, type="string")
 
-            arnoldRender(im_size[0], im_size[1], True, True, camera, ' -layer defaultRenderLayer')
-            
+            cmds.arnoldRender(width=im_size[0], height=im_size[1], batch=True, frameSequence=curr_frame, camera=camera)
+        
+        self._set_image_size(*old_setup)  # restore settings    
         self.stats['render_time'][name] = time.time() - start_time
 
     def fetch_props_from_Maya(self):
@@ -1383,3 +1386,22 @@ class Scene(object):
         shader_group = cmds.sets(renderable=True, noSurfaceShader=True, empty=True, name=name)
         cmds.connectAttr(material + '.outColor', shader_group + '.surfaceShader')
         return shader_group
+
+    def _set_image_size(self, im_size, ar_pix, ar_device):
+        """Set image size for rendering"""
+
+        # remember the old settings to allow restoration
+        old_ar_pix = cmds.getAttr("defaultResolution.pixelAspect")
+        old_ar_device = cmds.getAttr("defaultResolution.deviceAspectRatio")
+
+        old_size = [0, 0]
+        old_size[0] = cmds.getAttr("defaultResolution.width")
+        old_size[1] = cmds.getAttr("defaultResolution.height")
+
+        cmds.setAttr("defaultResolution.width", im_size[0])
+        cmds.setAttr("defaultResolution.height", im_size[1])
+        cmds.setAttr("defaultResolution.pixelAspect", ar_pix)
+        cmds.setAttr("defaultResolution.deviceAspectRatio", ar_device)
+
+        return old_size, old_ar_pix, old_ar_device
+

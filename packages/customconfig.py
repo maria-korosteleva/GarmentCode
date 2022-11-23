@@ -1,6 +1,5 @@
 """
     The module contain Porperties class to manage paramters & stats in various parts of the system
-    The module might be used in Maya, so its Python 2.7 compatible
 """
 
 from datetime import timedelta
@@ -10,12 +9,10 @@ import traceback
 import sys
 
 # for system info
-if sys.version_info.major >= 3:  # prevent from loading within Maya -- Py2.7 compatibility
-    import platform
-    import json
-    import psutil
-    if 'win' in platform.system() or 'Win' in platform.system():
-        import wmi  # pip install wmi
+import platform
+import psutil
+if 'win' in platform.system() or 'Win' in platform.system():
+    import wmi  # pip install wmi
 
 
 class Properties():

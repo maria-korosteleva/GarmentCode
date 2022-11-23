@@ -1,6 +1,6 @@
 """
     Run or Resume simulation of a pattern dataset with MayaPy standalone mode
-    Note that this module is executed in Maya (or by mayapy) and is Python 2.7 friendly.
+    Note that this module is executed in Maya (or by mayapy)
 
     How to use: 
         * fill out system.json with approppriate paths 
@@ -8,11 +8,10 @@
         <path_to_maya/bin>/mayapy.exe ./datasim.py --data <dataset folder name> --minibatch <size>  --config <simulation_rendering_configuration.json>
 
 """
-from __future__ import print_function
 import argparse
 import os
-import errno
 import sys
+from importlib import reload
 
 from maya import cmds
 import maya.standalone 	

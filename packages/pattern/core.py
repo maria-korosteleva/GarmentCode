@@ -1,10 +1,7 @@
 """
     Module for basic operations on patterns
-    The code is compatible with both Python 2.7 (to be used in Maya 2020) and higher versions
 """
 # Basic
-from __future__ import print_function
-from __future__ import division
 import copy
 from datetime import datetime
 import errno
@@ -12,9 +9,6 @@ import json
 import numpy as np
 import os
 import random
-import sys
-if sys.version_info[0] >= 3:
-    from scipy.spatial.transform import Rotation as scipy_rot  # Not available in scipy 0.19.1 installed for Maya
 
 # My
 from pattern import rotation as rotation_tools
@@ -230,7 +224,7 @@ class BasicPattern(object):
             [top_right[0], mid_y],
             [low_left[0], mid_y]
         ]
-        rot_matrix = rotation_tools.euler_xyz_to_R(panel['rotation'])  # calculate once for all points # Maya (Python 2.7) compatible
+        rot_matrix = rotation_tools.euler_xyz_to_R(panel['rotation'])  # calculate once for all points 
         mid_points_3D = np.vstack(tuple(
             [self._point_in_3D(coords, rot_matrix, panel['translation']) for coords in mid_points_2D]
         ))

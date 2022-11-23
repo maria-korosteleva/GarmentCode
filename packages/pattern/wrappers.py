@@ -1,5 +1,5 @@
 """
-    To be used in Python 3.6+ due to dependencies (failed to install reportlab for Python 2.7 used by Maya)
+    To be used in Python 3.6+ due to dependencies
 """
 import copy
 import random
@@ -94,8 +94,9 @@ class VisPattern(core.ParametrizedPattern):
         """
             To get to image coordinates one might need to flip Y axis
         """
-        point[1] *= -1
-        return point
+        flipped_point = list(point)  # top-level copy
+        flipped_point[1] *= -1
+        return flipped_point
 
     def _draw_a_panel(self, drawing, panel_name, offset=[0, 0]):
         """

@@ -1,11 +1,11 @@
 """
     Loads maya interface for editing & testing template files
-    Python 2.7 compatible
-    * Maya 2018+
+    * Maya 2022+
     * Qualoth
 """
 
 from maya import cmds
+from importlib import reload
 
 # My modules
 import mayaqltools as mymaya

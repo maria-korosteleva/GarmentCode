@@ -1,11 +1,9 @@
 """
     Maya script for removing faces from 3D garement model that are not visible from the outside cameras
     The goal is to imitate scanning artifacts that result in missing geometry
-    Python 2.7 compatible
-    * Maya 2018+
+    * Maya 2022+
 """
 
-from __future__ import print_function
 from maya import OpenMaya
 from maya import cmds
 import numpy as np
@@ -97,7 +95,7 @@ def remove_invisible(target, obstacles=[], num_rays=30, visibile_rays=4):
                     and not any([utils.test_ray_intersect(mesh, face_mean, rayDir, acc,) for mesh, acc in zip(obstacles_meshes, obstacles_accs)])  # intesects any of the obstacles
                     and not utils.test_ray_intersect(target_mesh, face_mean, rayDir, target_accelerator, hit_tol=1e-5)):  # intersects itself
                 visible_count += 1
-                if visible_count >= visibile_rays:  # enough rays are visible -- no need to test more; Python 2.7 division
+                if visible_count >= visibile_rays:  # enough rays are visible -- no need to test more
                     visible = True
 
         if not visible:
@@ -122,6 +120,7 @@ if __name__ == "__main__":
     # Copy the following block to Maya script editor and modify to 
     import maya.cmds as cmds
     import mayaqltools as mymaya
+    from importlib import reload
     reload(mymaya)
 
     body = cmds.ls('*f_smpl*:Mesh')[0]

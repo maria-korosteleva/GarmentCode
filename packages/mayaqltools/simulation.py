@@ -1,7 +1,6 @@
 """Routines to run cloth simulation in Maya + Qualoth"""
 
 # Basic
-from __future__ import print_function
 import time
 import os
 
@@ -250,7 +249,6 @@ def _get_pattern_files(data_path, dataset_props):
     root, dirs, files = next(os.walk(data_path))
     if dataset_props['to_subfolders']:
         # https://stackoverflow.com/questions/800197/how-to-get-all-of-the-immediate-subdirectories-in-python
-        # cannot use os.scandir in python 2.7
         for directory in dirs:
             if directory not in to_ignore:
                 pattern_specs.append(os.path.join(root, directory, 'specification.json'))  # cereful for file name changes ^^

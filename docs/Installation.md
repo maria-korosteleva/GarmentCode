@@ -2,31 +2,26 @@
 
 ## Dependencies
 
-* Autodesk Maya 2018/2020 with Arnold
-    * Qualoth version for Maya 2022 is not available at the moment of the main development
-
+* Autodesk Maya 2022+ with Arnold
     >☝ Arnold requires license to render simulated data without watermarks.
-* [Qualoth 2020](https://www.qualoth.com/) cloth simulator 
 
-### Maya Python API Environment
-* Numpy (for Python 2.7)
-    * The process for installation is desribed in guides like [this one](https://forums.autodesk.com/t5/maya-programming/guide-how-to-install-numpy-scipy-in-maya-windows-64-bit/td-p/5796722)
+* [Qualoth](http://www.fxgear.net/vfx-software?locale=en), versiton 4.7.7+ (with Maya 2022 support)
+### Python Environment (both in Maya Python Environment, and for usual development)
 
-### Generic Python Environment
-* Python 3.6+
+[Installation instructions for python packages for Maya](https://knowledge.autodesk.com/support/maya/learn-explore/caas/CloudHelp/cloudhelp/2022/ENU/Maya-Scripting/files/GUID-72A245EC-CDB4-46AB-BEE0-4BBBF9791627-htm.html)
+
 * numpy
 * scipy
 * [svglib](https://pypi.org/project/svglib/)
 * [svgwrite](https://pypi.org/project/svgwrite/)
 * psutil
 * wmi
+    * May require pypiwin32
     * [Troubleshooting 'DLL load failed while importing win32api'](https://stackoverflow.com/questions/58612306/how-to-fix-importerror-dll-load-failed-while-importing-win32api) error on Win
 
 
-
 <details>
-    <summary> <b>NOTE: Lib verstions used in development</b></summary>
-
+    <summary> <b>NOTE: Lib versions used in development</b></summary>
     python==3.8.5
     numpy==1.19.2
     scipy==1.6.2

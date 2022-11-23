@@ -9,10 +9,10 @@
         d:/Autodesk/Maya2020/bin/mayapy.exe "./data_generation/datascan.py"
     """
 
-from __future__ import print_function
 import os
 import time
 from datetime import timedelta
+from importlib import reload
 
 # Maya
 from maya import cmds
@@ -121,7 +121,7 @@ if __name__ == "__main__":
         # go over the examples in the data
         start_time = time.time()
         to_ignore = ['renders']  # special dirs not to include in the pattern list
-        root, dirs, files = next(os.walk(datapath))  # cannot use os.scandir in python 2.7
+        root, dirs, files = next(os.walk(datapath))  
 
         for name in dirs:
             if name not in to_ignore:

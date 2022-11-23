@@ -2,13 +2,10 @@
     Qualoth scripts are written in MEL. 
     This module makes a python interface to them
     Notes:
-        * this module is Python 2.7-friendly
         * Error checks are sparse to save coding time & lines. 
             This sould not be a problem during the normal workflow
     
 """
-from __future__ import print_function
-from __future__ import division
 import time
 import sys
 

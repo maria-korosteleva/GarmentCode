@@ -64,7 +64,7 @@ for dataset in dataset_folders:
 
     # ----- Missing files ---------
     to_ignore = ['renders']  # special dirs not to include in the pattern list
-    root, dirs, files = next(os.walk(datapath))  # cannot use os.scandir in python 2.7
+    root, dirs, files = next(os.walk(datapath)) 
 
     # per element checks
     elem_count = 0
@@ -113,7 +113,7 @@ for dataset in dataset_folders:
     # -------- Renders folder check (if present at all) -----------
     if any('renders' in name for name in dirs):
         render_folders_exist.append('{}::Info::Render folder exists'.format(dataset))
-        root, dirs, files = next(os.walk(os.path.join(datapath, 'renders')))  # cannot use os.scandir in python 2.7
+        root, dirs, files = next(os.walk(os.path.join(datapath, 'renders'))) 
         num_renders = len(files)
         expected_min_num = data_size * 2 - num_fails
         if num_renders != data_size * 2:
