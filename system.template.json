@@ -1,8 +1,8 @@
 {
   "output": "",
   "datasets_path": "",
-  "templates_path": "./data_generation/Patterns",
-  "bodies_path": "./data_generation/Bodies",
-  "scenes_path": "./data_generation/Scenes",
-  "sim_configs_path": "./data_generation/Sim_props"
+  "templates_path": "./assets/Patterns",
+  "bodies_path": "./assets/Bodies",
+  "scenes_path": "./assets/Scenes",
+  "sim_configs_path": "./assets/Sim_props"
 }
