@@ -1,6 +1,7 @@
 
 import numpy as np
 from argparse import Namespace
+from scipy.spatial.transform import Rotation as R
 
 # Custom
 from pattern.core import BasicPattern
@@ -17,17 +18,16 @@ class Panel(BaseComponent):
         super().__init__(name)
 
         self.translation = np.zeros(3)  # TODO translation location? relative to what?
-        self.rotation = np.zeros(3)
+        self.rotation = R.from_euler('XYZ', [0, 0, 0])  # zero rotation
         self.edges = []   # TODO Dummy square?
 
-    def translate(self, vector):
+    def translate_by(self, delta_vector):
         """Translate panel by a vector"""
-
-        self.translation = self.translation + np.array(vector)
+        self.translation = self.translation + np.array(delta_vector)
     
-    def rotate(self, rotation):
-        # TODO Or _by_ a rotation?
-        self.rotation = np.array(rotation)
+    def rotate_by(self, delta_rotation):
+        """Rotate panel by a given rotation"""
+        self.rotation = delta_rotation * self.rotation
 
     def swap_right_wrong(self):
         """Swap right and wrond sides of the fabric piece. 
@@ -43,7 +43,7 @@ class Panel(BaseComponent):
         # UPD interfaces to point to the same edges as before
         for interface in self.interfaces:
             interface.edge_id = len(self.edges) - interface.edge_id - 1
-            
+
 
     # Build the panel -- get serializable representation
     def assembly(self):
@@ -51,10 +51,9 @@ class Panel(BaseComponent):
 
         panel = Namespace(
             translation=self.translation.tolist(),
-            rotation=self.rotation.tolist(),  # TODO Correct format?
+            rotation=self.rotation.as_euler('XYZ', degrees=True).tolist(), 
             vertices=[self.edges[0].start], 
-            edges=[],
-            connecting_ids=[None] * len(self.interfaces))
+            edges=[])
 
         for i in range(len(self.edges)):
             vertices, edges = self.edges[i].assembly()

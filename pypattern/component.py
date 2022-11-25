@@ -15,14 +15,21 @@ class Component(BaseComponent):
     def __init__(self, name) -> None:
         super().__init__(name)
 
+        self.subs = []  # list of generative sub-components
+
         # rules for connecting sub-components of this component
         # TODO stitching rules should allow modification of sub components
         self.stitching_rules = []
 
-    def translate(self, vector):
-        # TODO Or _by_ a vector?
+    def translate_by(self, delta_vector):
+        """Translate component by a vector"""
         for subs in self._get_subcomponents():
-            subs.translate(vector)
+            subs.translate_by(delta_vector)
+
+    def rotate_by(self, delta_rotation):
+        """Rotate component by a given rotation"""
+        for subs in self._get_subcomponents():
+            subs.rotate(delta_rotation)
 
     def assembly(self):
         """Construction process of the garment component
@@ -56,8 +63,9 @@ class Component(BaseComponent):
 
     # Utilities
     def _get_subcomponents(self):
-        all_attrs = [getattr(self, name) for name in dir(self) if name[:2] != '__' and name[-2:] != '__']
+        """Unique set of subcomponents defined in the self.subs list or as attributes of the object"""
 
-        return [att for att in all_attrs if isinstance(att, BaseComponent)]
+        all_attrs = [getattr(self, name) for name in dir(self) if name[:2] != '__' and name[-2:] != '__']
+        return list(set([att for att in all_attrs if isinstance(att, BaseComponent)] + self.subs))
 
 

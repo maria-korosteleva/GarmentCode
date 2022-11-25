@@ -11,6 +11,12 @@ class BaseComponent():
         # available for connectivity with other components
         self.interfaces = []
 
+    def translate_by(self, delta_translation):
+        pass
+
+    def rotate_by(self, delta_rotation):
+        pass
+
     def assembly(self, *args,**kwds):
         return {}
 
