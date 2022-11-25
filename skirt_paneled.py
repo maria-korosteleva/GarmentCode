@@ -20,7 +20,7 @@ class SkirtPanel(pyp.Panel):
 
         # define interface
         self.interfaces.append(pyp.InterfaceInstance(self, 0))
-        self.interfaces.append(pyp.InterfaceInstance(self, 3))
+        self.interfaces.append(pyp.InterfaceInstance(self, 2))
 
         # DRAFT
         # self.interfaces.append(pyp.ConnectorEdge(self.edges[0], self.edges[0]))
@@ -41,7 +41,6 @@ class Skirt2(pyp.Component):
         # Knowing that the true edge ids are only known at assembly time 
         # How do I mark it on assembly for the next assembly?
         # Maybe start without the separate notion of connector edges -- add them later   
-
 
         # DRAFT ?? self.front.connect(0, self.back, 1)
         # ?? self.front.connect(1, self.back, 0)
@@ -64,8 +63,8 @@ class Skirt2(pyp.Component):
 
         # DRAFT this is very direct, we need more nice, abstract solution
         # TODO is it good to have connectivity definition in the assembly function?
-        base['pattern']['stitches'].append(self.connect(self.front.interfaces[0], self.back.interfaces[0]))
-        base['pattern']['stitches'].append(self.connect(self.front.interfaces[1], self.back.interfaces[1]))
+        base['pattern']['stitches'].append(pyp.connect(self.front.interfaces[0], self.back.interfaces[0]))
+        base['pattern']['stitches'].append(pyp.connect(self.front.interfaces[1], self.back.interfaces[1]))
 
         return base   
 
@@ -85,7 +84,7 @@ class WBPanel(pyp.Panel):
 
         # define interface
         self.interfaces.append(pyp.InterfaceInstance(self, 0))
-        self.interfaces.append(pyp.InterfaceInstance(self, 3))
+        self.interfaces.append(pyp.InterfaceInstance(self, 2))
 
 
 class WB(pyp.Component):
@@ -94,9 +93,9 @@ class WB(pyp.Component):
         super().__init__(self.__class__.__name__)
 
         self.front = WBPanel('wb_front')
-        self.front.translate([-40, -5, 20])
+        self.front.translate([-20, -2, 20])
         self.back = WBPanel('wb_back')
-        self.back.translate([-40, -5, -15])
+        self.back.translate([-20, -2, -15])
 
         self.interfaces = [
             pyp.InterfaceInstance(self.front, 3),
@@ -116,8 +115,8 @@ class WB(pyp.Component):
         # DRAFT this is very direct, we need more nice, abstract solution
         # TODO is it good to have connectivity definition in the assembly function?
         # TODO adding stitches within the connect() func
-        base['pattern']['stitches'].append(self.connect(self.front.interfaces[0], self.back.interfaces[0]))
-        base['pattern']['stitches'].append(self.connect(self.front.interfaces[1], self.back.interfaces[1]))
+        base['pattern']['stitches'].append(pyp.connect(self.front.interfaces[0], self.back.interfaces[0]))
+        base['pattern']['stitches'].append(pyp.connect(self.front.interfaces[1], self.back.interfaces[1]))
 
         return base   
 
@@ -145,19 +144,22 @@ class SkirtWB(pyp.Component):
         base['pattern']['stitches'] += skirt_raw['pattern']['stitches']
 
         # TODO which edge id should be connected to which edge id? 
-        base['pattern']['stitches'].append(self.connect(self.wb.interfaces[0], self.skirt.interfaces[0]))
-        base['pattern']['stitches'].append(self.connect(self.wb.interfaces[1], self.skirt.interfaces[1]))
+        base['pattern']['stitches'].append(pyp.connect(self.wb.interfaces[0], self.skirt.interfaces[0]))
+        base['pattern']['stitches'].append(pyp.connect(self.wb.interfaces[1], self.skirt.interfaces[1]))
 
         return base   
 
 
 if __name__ == '__main__':
-    skirt = Skirt2()
+    skirt = SkirtWB()
     pattern = skirt()
 
-    print(json.dumps(pattern, indent=2, sort_keys=True))
+    # DEBUG 
+    # print(json.dumps(pattern, indent=2, sort_keys=True))
 
     # Save as json file
     sys_props = Properties('./system.json')
-    with open(Path(sys_props['output']) / f'skirt2_st_{datetime.now().strftime("%y%m%d-%H-%M-%S")}.json', 'w') as f:
+    filename = Path(sys_props['output']) / f'{skirt.name}_{datetime.now().strftime("%y%m%d-%H-%M-%S")}.json'
+    with open(filename, 'w') as f:
         json.dump(pattern, f, indent=2, sort_keys=True)
+    print(f'Success! {skirt.name} saved to {filename}')

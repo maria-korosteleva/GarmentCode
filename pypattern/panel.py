@@ -49,12 +49,13 @@ class Panel(Component):
 
             # upd vertex references in edges according to new vertex ids in 
             # the panel vertex loop
-            vert_shift = len(panel.vertices) - 1
-            edge_shift = len(panel.edges) - 1
-            for edge in edges:
+            vert_shift = len(panel.vertices) - 1  # first edge vertex = last vertex already in the loop
+                                                  # TODO account for this more explicitely (below?)
+            edge_shift = len(panel.edges)
+            for edge in edges:       
                 edge['endpoints'] = [id + vert_shift for id in edge['endpoints']]
-
-            self.edges[i].geometric_ids = [id + edge_shift for id in len(edges)]   # remember the mapping of logical edge to geometric edge
+                
+            self.edges[i].geometric_ids = [id + edge_shift for id in range(len(edges))]   # remember the mapping of logical edge to geometric edge
             panel.edges += edges
 
             # add new vertices
@@ -69,6 +70,5 @@ class Panel(Component):
         if panel.vertices[-1] == panel.vertices[0]:
             panel.vertices.pop()
             panel.edges[-1]['endpoints'][-1] = 0
-
 
         return {'panels': {self.name: vars(panel)}}
