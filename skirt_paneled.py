@@ -13,10 +13,10 @@ class SkirtPanel(pyp.Panel):
         super().__init__(name)
 
         # define edge loop
-        self.edges = [pyp.Edge((0,0), (20, 70))]   # TODO SequentialObject?
-        self.edges.append(pyp.Edge(self.edges[-1].end, (55, 70)))
-        self.edges.append(pyp.Edge(self.edges[-1].end, (75, 0)))
-        self.edges.append(pyp.Edge(self.edges[-1].end, self.edges[0].start))
+        self.edges = [pyp.LogicalEdge((0,0), (20, 70))]   # TODO SequentialObject?
+        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, (55, 70)))
+        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, (75, 0)))
+        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, self.edges[0].start))
 
         # define interface
         self.interfaces.append(pyp.InterfaceInstance(self, 0))
@@ -47,7 +47,7 @@ class Skirt2(pyp.Component):
         # ?? self.front.connect(1, self.back, 0)
 
         # TODO What is the new interface of this component? 
-
+        # TODO use dict for interface references
         self.interfaces = [
             pyp.InterfaceInstance(self.front, 1),
             pyp.InterfaceInstance(self.back, 1)
@@ -64,8 +64,8 @@ class Skirt2(pyp.Component):
 
         # DRAFT this is very direct, we need more nice, abstract solution
         # TODO is it good to have connectivity definition in the assembly function?
-        base['pattern']['stitches'].append(self.connect(front_raw, 0, back_raw, 0))
-        base['pattern']['stitches'].append(self.connect(front_raw, 1, back_raw, 1))
+        base['pattern']['stitches'].append(self.connect(self.front.interfaces[0], self.back.interfaces[0]))
+        base['pattern']['stitches'].append(self.connect(self.front.interfaces[1], self.back.interfaces[1]))
 
         return base   
 
@@ -78,10 +78,10 @@ class WBPanel(pyp.Panel):
         super().__init__(name)
 
         # define edge loop
-        self.edges = [pyp.Edge((0,0), (0, 10))]   # TODO SequentialObject?
-        self.edges.append(pyp.Edge(self.edges[-1].end, (35, 10)))
-        self.edges.append(pyp.Edge(self.edges[-1].end, (35, 0)))
-        self.edges.append(pyp.Edge(self.edges[-1].end, self.edges[0].start))
+        self.edges = [pyp.LogicalEdge((0,0), (0, 10))]   # TODO SequentialObject?
+        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, (35, 10)))
+        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, (35, 0)))
+        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, self.edges[0].start))
 
         # define interface
         self.interfaces.append(pyp.InterfaceInstance(self, 0))
@@ -116,8 +116,8 @@ class WB(pyp.Component):
         # DRAFT this is very direct, we need more nice, abstract solution
         # TODO is it good to have connectivity definition in the assembly function?
         # TODO adding stitches within the connect() func
-        base['pattern']['stitches'].append(self.connect(front_raw, 0, back_raw, 0))
-        base['pattern']['stitches'].append(self.connect(front_raw, 1, back_raw, 1))
+        base['pattern']['stitches'].append(self.connect(self.front.interfaces[0], self.back.interfaces[0]))
+        base['pattern']['stitches'].append(self.connect(self.front.interfaces[1], self.back.interfaces[1]))
 
         return base   
 
@@ -128,6 +128,7 @@ class SkirtWB(pyp.Component):
 
         self.wb = WB()
         self.skirt = Skirt2()
+
 
     def assembly(self):
         base = super().assembly()
@@ -144,8 +145,8 @@ class SkirtWB(pyp.Component):
         base['pattern']['stitches'] += skirt_raw['pattern']['stitches']
 
         # TODO which edge id should be connected to which edge id? 
-        base['pattern']['stitches'].append(self.connect(wb_raw, 0, skirt_raw, 0))
-        base['pattern']['stitches'].append(self.connect(wb_raw, 1, skirt_raw, 1))
+        base['pattern']['stitches'].append(self.connect(self.wb.interfaces[0], self.skirt.interfaces[0]))
+        base['pattern']['stitches'].append(self.connect(self.wb.interfaces[1], self.skirt.interfaces[1]))
 
         return base   
 

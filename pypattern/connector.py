@@ -1,7 +1,6 @@
 # Custom
-from .edge import Edge
+from .edge import LogicalEdge
 from .panel import Panel
-from .component import Component
 
 
 class InterfaceInstance():
@@ -23,7 +22,7 @@ class ConnectorEdge():
 
     """
 
-    def __init__(self, connector_shape: Edge, parent_edge: Edge) -> None:
+    def __init__(self, connector_shape: LogicalEdge, parent_edge: LogicalEdge) -> None:
         """ Create connector edge
         Parameters:
             * connector_edge: describes the shape of the interface edge 

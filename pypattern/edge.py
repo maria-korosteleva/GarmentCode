@@ -1,8 +1,8 @@
 
 # Custom
-from .component import Component
+# TODO from .component import Component 
 
-class Edge(Component):
+class LogicalEdge():
     """Edge -- an individual segement of a panel border connecting two panel vertices, 
     where the sharp change of direction occures, the basic building block of panels
 
@@ -17,12 +17,11 @@ class Edge(Component):
 
         # TODO add curvatures
         # TODO add parameters
-        # TODO add assembly (for darts?)
         # TODO add documentation
 
         self.start = start
         self.end = end
-        pass
+        self.geometric_ids = []
 
     def assembly(self):
         """Returns the dict-based representation of edges"""
