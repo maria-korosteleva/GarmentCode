@@ -5,7 +5,7 @@ import copy
 # Custom
 # TODO some elements of spec template should probably be optional?
 # TODO move spec template here?
-from pattern.core import pattern_spec_template
+from pattern.core import BasicPattern
 from .connector import connect
 from .base import BaseComponent
 
@@ -24,28 +24,29 @@ class Component(BaseComponent):
         
         Returns: simulator friendly description of component sewing pattern
         """
-        base = copy.deepcopy(pattern_spec_template)
+        spattern = BasicPattern()
+        spattern.name = self.name
 
         subs = self._get_subcomponents()
         if not subs:
-            return base
+            return spattern
 
         # TODO Name collision for panels?
         # Simple merge of sub-component representations
         for sub in subs:
-            sub_raw = sub()['pattern']
+            sub_raw = sub().pattern
 
             # TODO use class for merges (or something)
             # simple merge of panels
-            base['pattern']['panels'] = {**base['pattern']['panels'], **sub_raw['panels']}
+            spattern.pattern['panels'] = {**spattern.pattern['panels'], **sub_raw['panels']}
 
             # of stitches
-            base['pattern']['stitches'] += sub_raw['stitches']
+            spattern.pattern['stitches'] += sub_raw['stitches']
 
         for rule in self.stitching_rules:
-            base['pattern']['stitches'].append(connect(rule[0], rule[1]))
+            spattern.pattern['stitches'].append(connect(rule[0], rule[1]))
 
-        return base   
+        return spattern   
 
     # Utilities
     def _get_subcomponents(self):

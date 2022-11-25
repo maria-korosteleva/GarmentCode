@@ -3,6 +3,7 @@ import numpy as np
 from argparse import Namespace
 
 # Custom
+from pattern.core import BasicPattern
 from .base import BaseComponent
 
 class Panel(BaseComponent):
@@ -66,4 +67,8 @@ class Panel(BaseComponent):
             panel.vertices.pop()
             panel.edges[-1]['endpoints'][-1] = 0
 
-        return {'pattern': {'panels': {self.name: vars(panel)}, 'stitches': []}}   # TODO use an object or something
+        spattern = BasicPattern()
+        spattern.name = self.name
+        spattern.pattern['panels'] = {self.name: vars(panel)}
+
+        return spattern

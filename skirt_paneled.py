@@ -109,7 +109,9 @@ if __name__ == '__main__':
 
     # Save as json file
     sys_props = Properties('./system.json')
-    filename = Path(sys_props['output']) / f'{skirt.name}_{datetime.now().strftime("%y%m%d-%H-%M-%S")}.json'
-    with open(filename, 'w') as f:
-        json.dump(pattern, f, indent=2, sort_keys=True)
+    filename = pattern.serialize(
+        Path(sys_props['output']), 
+        tag=datetime.now().strftime("%y%m%d-%H-%M-%S"), 
+        to_subfolder=False)
+
     print(f'Success! {skirt.name} saved to {filename}')
