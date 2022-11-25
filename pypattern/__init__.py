@@ -3,5 +3,5 @@
 
 from .component import Component
 from .panel import Panel
-from .edge import LogicalEdge
-from .connector import ConnectorEdge, InterfaceInstance, connect
+from .edge import LogicalEdge, ConnectorEdge
+from .connector import InterfaceInstance, connect

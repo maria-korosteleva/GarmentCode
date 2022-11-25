@@ -36,37 +36,16 @@ class Skirt2(pyp.Component):
         self.back = SkirtPanel('back')
         self.back.translate([-40, -75, -15])
 
-        # TODO How the components are connected?
-        # Main problem -- propagatable edge ids through the sequence of components? 
-        # Knowing that the true edge ids are only known at assembly time 
-        # How do I mark it on assembly for the next assembly?
-        # Maybe start without the separate notion of connector edges -- add them later   
+        self.stitching_rules = [
+            (self.front.interfaces[0], self.back.interfaces[0]),
+            (self.front.interfaces[1], self.back.interfaces[1])
+        ]
 
-        # DRAFT ?? self.front.connect(0, self.back, 1)
-        # ?? self.front.connect(1, self.back, 0)
-
-        # TODO What is the new interface of this component? 
         # TODO use dict for interface references
         self.interfaces = [
             pyp.InterfaceInstance(self.front, 1),
             pyp.InterfaceInstance(self.back, 1)
-        ]
-
-    def assembly(self):
-        base = super().assembly()
-
-        # TODO Name collision for panels?
-        # TODO Hide this type of assembly in the main class?
-        front_raw = self.front()['panels']
-        back_raw = self.back()['panels']
-        base['pattern']['panels'] = {**front_raw, **back_raw}
-
-        # DRAFT this is very direct, we need more nice, abstract solution
-        # TODO is it good to have connectivity definition in the assembly function?
-        base['pattern']['stitches'].append(pyp.connect(self.front.interfaces[0], self.back.interfaces[0]))
-        base['pattern']['stitches'].append(pyp.connect(self.front.interfaces[1], self.back.interfaces[1]))
-
-        return base   
+        ]  
 
 
 # With waistband
@@ -97,28 +76,15 @@ class WB(pyp.Component):
         self.back = WBPanel('wb_back')
         self.back.translate([-20, -2, -15])
 
+        self.stitching_rules = [
+            (self.front.interfaces[0], self.back.interfaces[0]),
+            (self.front.interfaces[1], self.back.interfaces[1])
+        ]
+
         self.interfaces = [
             pyp.InterfaceInstance(self.front, 3),
             pyp.InterfaceInstance(self.back, 3)
         ]
-
-    def assembly(self):
-        base = super().assembly()
-
-        # TODO Name collision for panels?
-        # TODO Hide this type of assembly in the main class?
-        front_raw = self.front()['panels']
-        back_raw = self.back()['panels']
-        
-        base['pattern']['panels'] = {**front_raw, **back_raw}
-
-        # DRAFT this is very direct, we need more nice, abstract solution
-        # TODO is it good to have connectivity definition in the assembly function?
-        # TODO adding stitches within the connect() func
-        base['pattern']['stitches'].append(pyp.connect(self.front.interfaces[0], self.back.interfaces[0]))
-        base['pattern']['stitches'].append(pyp.connect(self.front.interfaces[1], self.back.interfaces[1]))
-
-        return base   
 
 
 class SkirtWB(pyp.Component):
@@ -128,26 +94,10 @@ class SkirtWB(pyp.Component):
         self.wb = WB()
         self.skirt = Skirt2()
 
-
-    def assembly(self):
-        base = super().assembly()
-
-        wb_raw = self.wb()
-        skirt_raw = self.skirt()
-        # TODO separate higher abstract fuction for putting the panels together in the assembly 
-        # no need to expose all this to end user
-        # Simple merge of panels
-        base['pattern']['panels'] = {**wb_raw['pattern']['panels'], **skirt_raw['pattern']['panels']}
-
-        # Simple merge of stitches
-        base['pattern']['stitches'] += wb_raw['pattern']['stitches']
-        base['pattern']['stitches'] += skirt_raw['pattern']['stitches']
-
-        # TODO which edge id should be connected to which edge id? 
-        base['pattern']['stitches'].append(pyp.connect(self.wb.interfaces[0], self.skirt.interfaces[0]))
-        base['pattern']['stitches'].append(pyp.connect(self.wb.interfaces[1], self.skirt.interfaces[1]))
-
-        return base   
+        self.stitching_rules = [
+            (self.wb.interfaces[0], self.skirt.interfaces[0]),
+            (self.wb.interfaces[1], self.skirt.interfaces[1])
+        ]
 
 
 if __name__ == '__main__':

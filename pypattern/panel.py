@@ -3,9 +3,9 @@ import numpy as np
 from argparse import Namespace
 
 # Custom
-from .component import Component 
+from .base import BaseComponent
 
-class Panel(Component):
+class Panel(BaseComponent):
     """ Garment component correspnding to a single flat fiece of fabric
     
     Defined as a collection of edges on a 2D grid with specified 3D placement (world coordinates)
@@ -66,4 +66,4 @@ class Panel(Component):
             panel.vertices.pop()
             panel.edges[-1]['endpoints'][-1] = 0
 
-        return {'panels': {self.name: vars(panel)}}
+        return {'pattern': {'panels': {self.name: vars(panel)}, 'stitches': []}}   # TODO use an object or something
