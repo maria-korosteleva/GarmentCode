@@ -27,10 +27,6 @@ class Panel(Component):
         # TODO Or _by_ a rotation?
         self.rotation = np.array(rotation)
 
-    # DRAFT
-    def connect(self, interf_id, connected_panel, target_interf_id):
-        pass
-
     def assembly(self):
         # TODO Logical VS qualoth assembly?
 
@@ -44,26 +40,25 @@ class Panel(Component):
         for i in range(len(self.edges)):
             vertices, edges = self.edges[i].assembly()
 
-            # TODO account for connecting edges being different from 
-            # Geometric pattern description
-
-            # upd vertex references in edges according to new vertex ids in 
-            # the panel vertex loop
-            vert_shift = len(panel.vertices) - 1  # first edge vertex = last vertex already in the loop
-                                                  # TODO account for this more explicitely (below?)
-            edge_shift = len(panel.edges)
-            for edge in edges:       
-                edge['endpoints'] = [id + vert_shift for id in edge['endpoints']]
-                
-            self.edges[i].geometric_ids = [id + edge_shift for id in range(len(edges))]   # remember the mapping of logical edge to geometric edge
-            panel.edges += edges
-
             # add new vertices
-            if panel.vertices[-1] == vertices[0]:  # TODO is this correct way to compare object references?
+            if panel.vertices[-1] == vertices[0]:   # We care if both point to the same vertex location, not necessarily the same vertex object
+                vert_shift = len(panel.vertices) - 1  # first edge vertex = last vertex already in the loop
                 panel.vertices += vertices[1:] 
             else: 
                 # TODO Proper handling of multiple loops in the same pattern
+                vert_shift = len(panel.vertices)
                 panel.vertices += vertices
+
+            # upd vertex references in edges according to new vertex ids in 
+            # the panel vertex loop
+            for edge in edges:       
+                edge['endpoints'] = [id + vert_shift for id in edge['endpoints']]
+                
+            # TODO account for connecting edges being different from 
+            # Geometric pattern description
+            edge_shift = len(panel.edges)  # before adding new ones
+            self.edges[i].geometric_ids = [id + edge_shift for id in range(len(edges))]   # remember the mapping of logical edge to geometric edge
+            panel.edges += edges
 
         # Check closing of the loop and upd vertex reference for the last edge
         # TODO multiple loops in panel
