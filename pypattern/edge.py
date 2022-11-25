@@ -24,6 +24,12 @@ class LogicalEdge(BaseComponent):
         self.end = end
         self.geometric_ids = []
 
+    def flip(self):
+        """Flip the direction of the edge"""
+        self.start, self.end = self.end, self.start
+
+        # TODO flip curvatures
+
     def assembly(self):
         """Returns the dict-based representation of edges"""
 

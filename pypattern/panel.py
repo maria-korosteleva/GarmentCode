@@ -21,13 +21,31 @@ class Panel(BaseComponent):
         self.edges = []   # TODO Dummy square?
 
     def translate(self, vector):
-        # TODO Or _by_ a vector?
-        self.translation = np.array(vector)
+        """Translate panel by a vector"""
+
+        self.translation = self.translation + np.array(vector)
     
     def rotate(self, rotation):
         # TODO Or _by_ a rotation?
         self.rotation = np.array(rotation)
 
+    def swap_right_wrong(self):
+        """Swap right and wrond sides of the fabric piece. 
+            = flip the normal of the 2D panel by re-tracing the edge loop backwards
+
+            NOTE: the 6D placement of panel is not affected
+        """
+        # Reverse edges
+        self.edges.reverse()
+        for edge in self.edges:
+            edge.flip()
+        
+        # UPD interfaces to point to the same edges as before
+        for interface in self.interfaces:
+            interface.edge_id = len(self.edges) - interface.edge_id - 1
+            
+
+    # Build the panel -- get serializable representation
     def assembly(self):
         # TODO Logical VS qualoth assembly?
 

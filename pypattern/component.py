@@ -19,6 +19,11 @@ class Component(BaseComponent):
         # TODO stitching rules should allow modification of sub components
         self.stitching_rules = []
 
+    def translate(self, vector):
+        # TODO Or _by_ a vector?
+        for subs in self._get_subcomponents():
+            subs.translate(vector)
+
     def assembly(self):
         """Construction process of the garment component
         
@@ -46,6 +51,7 @@ class Component(BaseComponent):
         for rule in self.stitching_rules:
             spattern.pattern['stitches'].append(connect(rule[0], rule[1]))
 
+        # TODO Normalize pattern (edge loops, etc.)?
         return spattern   
 
     # Utilities

@@ -20,6 +20,7 @@ class SkirtPanel(pyp.Panel):
 
         # define interface
         self.interfaces.append(pyp.InterfaceInstance(self, 0))
+        self.interfaces.append(pyp.InterfaceInstance(self, 1))
         self.interfaces.append(pyp.InterfaceInstance(self, 2))
 
         # DRAFT
@@ -33,18 +34,21 @@ class Skirt2(pyp.Component):
 
         self.front = SkirtPanel('front')
         self.front.translate([-40, -75, 20])
+        self.front.swap_right_wrong()
+
         self.back = SkirtPanel('back')
         self.back.translate([-40, -75, -15])
 
         self.stitching_rules = [
             (self.front.interfaces[0], self.back.interfaces[0]),
-            (self.front.interfaces[1], self.back.interfaces[1])
+            (self.front.interfaces[2], self.back.interfaces[2])
         ]
 
-        # TODO use dict for interface references
+        # TODO use dict for interface references?
+        # Reusing interfaces of sub-panels as interfaces of this component
         self.interfaces = [
-            pyp.InterfaceInstance(self.front, 1),
-            pyp.InterfaceInstance(self.back, 1)
+            self.front.interfaces[1],
+            self.back.interfaces[1]
         ]  
 
 
@@ -63,7 +67,9 @@ class WBPanel(pyp.Panel):
 
         # define interface
         self.interfaces.append(pyp.InterfaceInstance(self, 0))
+        self.interfaces.append(pyp.InterfaceInstance(self, 1))
         self.interfaces.append(pyp.InterfaceInstance(self, 2))
+        self.interfaces.append(pyp.InterfaceInstance(self, 3))
 
 
 class WB(pyp.Component):
@@ -73,17 +79,18 @@ class WB(pyp.Component):
 
         self.front = WBPanel('wb_front')
         self.front.translate([-20, -2, 20])
+        self.front.swap_right_wrong()
         self.back = WBPanel('wb_back')
         self.back.translate([-20, -2, -15])
 
         self.stitching_rules = [
             (self.front.interfaces[0], self.back.interfaces[0]),
-            (self.front.interfaces[1], self.back.interfaces[1])
+            (self.front.interfaces[2], self.back.interfaces[2])
         ]
 
         self.interfaces = [
-            pyp.InterfaceInstance(self.front, 3),
-            pyp.InterfaceInstance(self.back, 3)
+            self.front.interfaces[3],
+            self.back.interfaces[3]
         ]
 
 
@@ -101,17 +108,26 @@ class SkirtWB(pyp.Component):
 
 
 if __name__ == '__main__':
-    skirt = SkirtWB()
-    pattern = skirt()
 
-    # DEBUG 
-    # print(json.dumps(pattern, indent=2, sort_keys=True))
+    test_garments = [
+        SkirtWB(),
+        # WB(),
+        # Skirt2()
+    ]
 
-    # Save as json file
-    sys_props = Properties('./system.json')
-    filename = pattern.serialize(
-        Path(sys_props['output']), 
-        tag=datetime.now().strftime("%y%m%d-%H-%M-%S"), 
-        to_subfolder=False)
+    test_garments[0].translate([2, 0, 0])
 
-    print(f'Success! {skirt.name} saved to {filename}')
+    for piece in test_garments:
+        pattern = piece()
+
+        # DEBUG 
+        # print(json.dumps(pattern, indent=2, sort_keys=True))
+
+        # Save as json file
+        sys_props = Properties('./system.json')
+        filename = pattern.serialize(
+            Path(sys_props['output']), 
+            tag=datetime.now().strftime("%y%m%d-%H-%M-%S"), 
+            to_subfolder=False)
+
+        print(f'Success! {piece.name} saved to {filename}')
