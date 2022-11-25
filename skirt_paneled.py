@@ -6,6 +6,7 @@ from scipy.spatial.transform import Rotation as R
 
 # Custom
 import pypattern as pyp
+import pypattern.operators as ops
 from customconfig import Properties
 
 class SkirtPanel(pyp.Panel):
@@ -141,19 +142,9 @@ class SkirtManyPanels(pyp.Component):
         self.front.translate_by([-72 / n_panels, -75, 20])
         self.front.swap_right_wrong()
 
-        # Use in "get subs"
-        self.subs = [ self.front ]
+        self.subs = ops.distribute_Y(self.front, n_panels)
 
-        # TODO make an operator for duplication?
-
-        for i in range(n_panels - 1):
-            new_panel = deepcopy(self.subs[-1])
-            new_panel.name = f'panel_{i}'   # Unique
-            delta_rotation = R.from_euler('XYZ', [0, 360 / n_panels, 0], degrees=True)
-            new_panel.rotate_by(delta_rotation)
-            new_panel.translation = delta_rotation.apply(new_panel.translation)
-            self.subs.append(new_panel)
-
+        # Stitch new components
         for i in range(1, n_panels):
             self.stitching_rules.append((self.subs[i - 1].interfaces[2], self.subs[i].interfaces[0]))
         self.stitching_rules.append((self.subs[-1].interfaces[2], self.subs[0].interfaces[0]))
