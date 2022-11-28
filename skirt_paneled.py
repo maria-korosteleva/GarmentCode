@@ -6,7 +6,6 @@ from scipy.spatial.transform import Rotation as R
 
 # Custom
 import pypattern as pyp
-import pypattern.operators as ops
 from customconfig import Properties
 
 class SkirtPanel(pyp.Panel):
@@ -142,7 +141,7 @@ class SkirtManyPanels(pyp.Component):
         self.front.translate_by([-72 / n_panels, -75, 20])
         self.front.swap_right_wrong()
 
-        self.subs = ops.distribute_Y(self.front, n_panels)
+        self.subs = pyp.ops.distribute_Y(self.front, n_panels)
 
         # Stitch new components
         for i in range(1, n_panels):
