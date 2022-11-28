@@ -27,7 +27,7 @@ class RuffleSkirtPanel(pyp.Panel):
 
         # define interface
         self.interfaces.append(pyp.InterfaceInstance(self, 0))
-        # Create ruffls by the differences in edge length
+        # Create ruffles by the differences in edge length
         # NOTE ruffles are only created when connecting with something
         self.interfaces.append(pyp.InterfaceInstance(self, 1, pyp.LogicalEdge((20, length), (20 + base_width, length))))
         self.interfaces.append(pyp.InterfaceInstance(self, 2))
@@ -133,7 +133,7 @@ class SkirtManyPanels(pyp.Component):
     """Round Skirt with many panels"""
 
     def __init__(self, n_panels = 4) -> None:
-        super().__init__(self.__class__.__name__)
+        super().__init__(f'{self.__class__.__name__}_{n_panels}')
 
         self.n_panels = n_panels
 
@@ -162,7 +162,9 @@ if __name__ == '__main__':
         SkirtWB(2),
         # WB(),
         # Skirt2()
-        # SkirtManyPanels(n_panels=4)
+        SkirtManyPanels(n_panels=2),
+        SkirtManyPanels(n_panels=4),
+        SkirtManyPanels(n_panels=10)
     ]
 
     # test_garments[0].translate_by([2, 0, 0])
@@ -177,7 +179,7 @@ if __name__ == '__main__':
         sys_props = Properties('./system.json')
         filename = pattern.serialize(
             Path(sys_props['output']), 
-            tag=datetime.now().strftime("%y%m%d-%H-%M-%S"), 
+            tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
             to_subfolder=False)
 
         print(f'Success! {piece.name} saved to {filename}')
