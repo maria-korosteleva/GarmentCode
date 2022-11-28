@@ -9,6 +9,7 @@ class BaseComponent():
 
         # List of the interfaces of this components
         # available for connectivity with other components
+        # NOTE interfaces only change the shape of a component if connected to something =) 
         self.interfaces = []
 
     def translate_by(self, delta_translation):

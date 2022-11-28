@@ -1,7 +1,4 @@
 
-
-import copy
-
 # Custom
 # TODO some elements of spec template should probably be optional?
 # TODO move spec template here?

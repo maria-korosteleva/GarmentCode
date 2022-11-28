@@ -8,29 +8,30 @@ from scipy.spatial.transform import Rotation as R
 import pypattern as pyp
 from customconfig import Properties
 
-class SkirtPanel(pyp.Panel):
-    """One panel of a panel skirt"""
+class RuffleSkirtPanel(pyp.Panel):
+    """One panel of a panel skirt with ruffles on the waist"""
 
-    def __init__(self, name) -> None:
+    def __init__(self, name, ruffles=1.5, waist_length=70, length=70) -> None:
         super().__init__(name)
 
+        base_width = waist_length / 2
+        panel_top_width = base_width * ruffles
+        panel_low_width = base_width + 40
+        x_shift = (panel_low_width - panel_top_width) / 2
+
         # define edge loop
-        self.edges = [pyp.LogicalEdge((0,0), (20, 70))]   # TODO SequentialObject?
-        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, (55, 70)))
-        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, (75, 0)))
+        self.edges = [pyp.LogicalEdge((0,0), (x_shift, length))]   # TODO SequentialObject?
+        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, (x_shift + panel_top_width, length)))
+        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, (panel_low_width, 0)))
         self.edges.append(pyp.LogicalEdge(self.edges[-1].end, self.edges[0].start))
 
         # define interface
-        # DRAFT
-        # self.interfaces.append(pyp.ConnectorEdge(self.edges[0], self.edges[0]))
-        # self.interfaces.append(pyp.ConnectorEdge(self.edges[2], self.edges[2]))
-
-
         self.interfaces.append(pyp.InterfaceInstance(self, 0))
-        self.interfaces.append(pyp.InterfaceInstance(self, 1))
+        # Create ruffls by the differences in edge length
+        # NOTE ruffles are only created when connecting with something
+        self.interfaces.append(pyp.InterfaceInstance(self, 1, pyp.LogicalEdge((20, length), (20 + base_width, length))))
         self.interfaces.append(pyp.InterfaceInstance(self, 2))
 
-# TODO add parametrization to combine skirt panels into one
 class ThinSkirtPanel(pyp.Panel):
     """One panel of a panel skirt"""
 
@@ -67,17 +68,16 @@ class WBPanel(pyp.Panel):
         self.interfaces.append(pyp.InterfaceInstance(self, 3))
 
 
-
 class Skirt2(pyp.Component):
     """Simple 2 panel skirt"""
-    def __init__(self) -> None:
+    def __init__(self, ruffle_rate=1) -> None:
         super().__init__(self.__class__.__name__)
 
-        self.front = SkirtPanel('front')
+        self.front = RuffleSkirtPanel('front', ruffle_rate)
         self.front.translate_by([-40, -75, 20])
         self.front.swap_right_wrong()
 
-        self.back = SkirtPanel('back')
+        self.back = RuffleSkirtPanel('back', ruffle_rate)
         self.back.translate_by([-40, -75, -15])
 
         self.stitching_rules = [
@@ -117,11 +117,11 @@ class WB(pyp.Component):
 
 
 class SkirtWB(pyp.Component):
-    def __init__(self) -> None:
-        super().__init__(self.__class__.__name__)
+    def __init__(self, ruffle_rate=1.5) -> None:
+        super().__init__(f'{self.__class__.__name__}_{ruffle_rate:.1f}')
 
         self.wb = WB()
-        self.skirt = Skirt2()
+        self.skirt = Skirt2(ruffle_rate=ruffle_rate)
 
         self.stitching_rules = [
             (self.wb.interfaces[0], self.skirt.interfaces[0]),
@@ -157,10 +157,12 @@ class SkirtManyPanels(pyp.Component):
 if __name__ == '__main__':
 
     test_garments = [
-        # SkirtWB(),
+        SkirtWB(1),
+        SkirtWB(1.5),
+        SkirtWB(2),
         # WB(),
         # Skirt2()
-        SkirtManyPanels(n_panels=4)
+        # SkirtManyPanels(n_panels=4)
     ]
 
     # test_garments[0].translate_by([2, 0, 0])

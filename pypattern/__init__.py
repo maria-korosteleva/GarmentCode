@@ -8,7 +8,7 @@
 # Building blocks
 from .component import Component
 from .panel import Panel
-from .edge import LogicalEdge, ConnectorEdge
+from .edge import LogicalEdge
 from .connector import InterfaceInstance, connect
 
 # Operations
