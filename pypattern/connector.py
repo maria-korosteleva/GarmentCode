@@ -4,9 +4,22 @@ from typing import Union
 from .panel import Panel
 from .edge import LogicalEdge
 
+# DRAFT
+class EdgeInterfaceInstance():
+    """Interface description for a logical edges"""
+    def __init__(self, edge:LogicalEdge, geometric_ids, ruffle_rate=1):
+        """
+        Parameters:
+            * geometric_ids -- ids of elementary edges that are connectable in this interface
+
+        """
+        self.edge = LogicalEdge
+        self.geometric_ids = geometric_ids
+        self.connection_len  = 
+
 class InterfaceInstance():
     """Single edge of a panel that can be used for connecting to"""
-    def __init__(self, panel: Panel, edge_id: int, shape=None, type='full', shift=0):
+    def __init__(self, panel: Panel, edge_id: int, edge_interfaces: (0), shape=None, type='full', shift=0):
         """
         Parameters:
             * panel - Panel object
@@ -32,6 +45,8 @@ class InterfaceInstance():
         self.panel = panel
         self.edge_id = edge_id
         self.base_edge = panel.edges[edge_id]
+
+        # DRAFT Shape is probably not needed
         self.connecting_shape = self.base_edge if shape is None else shape
 
         if self.connecting_shape.length > self.base_edge.length:
