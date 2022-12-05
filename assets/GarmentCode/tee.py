@@ -17,14 +17,14 @@ class SleevePanel(pyp.Panel):
         width = (arm_width + ease) / 2 
         self.edges = pyp.ops.simple_loop([0, width], [length, width], [length - 7, 0])
 
+        # default placement
+        self.translate_by([-length - 20, 15, 0])
+
         self.interfaces = [
             pyp.InterfaceInstance(self, self.edges[1]),
             pyp.InterfaceInstance(self, self.edges[2]),
             pyp.InterfaceInstance(self, self.edges[3]),
         ]
-
-        # default placement
-        self.translate_by([-length - 20, 15, 0])
 
 class TorsoPanel(pyp.Panel):
     """Panel for the front of upper garments"""
@@ -45,6 +45,13 @@ class TorsoPanel(pyp.Panel):
 
         # default placement
         self.translate_by([-width / 2, 30 - length, 0])
+
+        self.interfaces = [
+            pyp.InterfaceInstance(self, self.edges[0]),
+            pyp.InterfaceInstance(self, self.edges[1]),
+            pyp.InterfaceInstance(self, self.edges[4]),
+            pyp.InterfaceInstance(self, self.edges[5]),
+        ]
 
 class TShirt(pyp.Component):
     """Definition of a simple T-Shirt"""

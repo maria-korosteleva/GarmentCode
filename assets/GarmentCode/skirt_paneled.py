@@ -15,14 +15,13 @@ class RuffleSkirtPanel(pyp.Panel):
         super().__init__(name)
 
         base_width = waist_length / 2
-        panel_low_width = base_width + 40
-        x_shift_top = (panel_low_width - base_width) / 2
+        x_shift_top = 20
 
         # define edge loop
         # TODO SequentialObject?
         self.edges = pyp.ops.side_with_cut([0,0], [x_shift_top, length], start_cut=bottom_cut / length)
         self.edges.append(pyp.LogicalEdge(self.edges[-1].end, [x_shift_top + base_width, length], ruffle_rate=ruffles))  # on the waist
-        self.edges += pyp.ops.side_with_cut(self.edges[-1].end, [panel_low_width, 0], end_cut=bottom_cut / length)
+        self.edges += pyp.ops.side_with_cut(self.edges[-1].end, [x_shift_top * 2 + base_width, 0], end_cut=bottom_cut / length)
         self.edges.append(pyp.LogicalEdge(self.edges[-1].end, self.edges[0].start))
 
         # define interface
