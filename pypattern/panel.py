@@ -35,14 +35,11 @@ class Panel(BaseComponent):
 
             NOTE: the 6D placement of panel is not affected
         """
+        # Interfaces contain edge object, so don't need updates
         # Reverse edges
         self.edges.reverse()
         for edge in self.edges:
             edge.flip()
-        
-        # UPD interfaces to point to the same edges as before
-        for interface in self.interfaces:
-            interface.edge_id = len(self.edges) - interface.edge_id - 1
 
 
     # Build the panel -- get serializable representation
@@ -56,7 +53,7 @@ class Panel(BaseComponent):
             edges=[])
 
         for i in range(len(self.edges)):
-            vertices, edges = self.edges[i].assembly()
+            vertices, edge = self.edges[i].assembly()
 
             # add new vertices
             if panel.vertices[-1] == vertices[0]:   # We care if both point to the same vertex location, not necessarily the same vertex object
@@ -69,14 +66,11 @@ class Panel(BaseComponent):
 
             # upd vertex references in edges according to new vertex ids in 
             # the panel vertex loop
-            for edge in edges:       
-                edge['endpoints'] = [id + vert_shift for id in edge['endpoints']]
+            edge['endpoints'] = [id + vert_shift for id in edge['endpoints']]
                 
-            # TODO account for connecting edges being different from 
-            # Geometric pattern description
             edge_shift = len(panel.edges)  # before adding new ones
-            self.edges[i].geometric_ids = [id + edge_shift for id in range(len(edges))]   # remember the mapping of logical edge to geometric edge
-            panel.edges += edges
+            self.edges[i].geometric_id = edge_shift   # remember the mapping of logical edge to geometric id in panel loop
+            panel.edges.append(edge)
 
         # Check closing of the loop and upd vertex reference for the last edge
         # TODO multiple loops in panel

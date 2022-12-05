@@ -43,12 +43,9 @@ class LogicalEdge(BaseComponent):
         if ruffle_rate > 1:
             self._ruffle(ruffle_rate)
 
-        # Attributes connecting with outside world context
-        self.geometric_ids = []
-
-        # Describes the possible options to connect this logical edge with other edges
-        # TODO implement
-        self.interfaces = [] 
+        # ID w.r.t. other edges in a super-panel
+        # Filled out at the panel assembly time
+        self.geometric_id = 0
 
     def __eq__(self, __o: object) -> bool:
         """Special implementation of comparison: same edges == edges are allowed to be connected
@@ -108,4 +105,4 @@ class LogicalEdge(BaseComponent):
         """Returns the dict-based representation of edges"""
 
         # TODO simply use the edge sequence? Without defining the vertices??
-        return [self.start, self.end], [{"endpoints": [0, 1]}]
+        return [self.start, self.end], {"endpoints": [0, 1]}

@@ -6,11 +6,11 @@ from .edge import LogicalEdge
 
 class InterfaceInstance():
     """Single edge of a panel that can be used for connecting to"""
-    def __init__(self, panel: Panel, edge_id: int):
+    def __init__(self, panel: Panel, edge: LogicalEdge):
         """
         Parameters:
             * panel - Panel object
-            * edge_id - id of LogicalEdge in the panel that are allowed to connect to
+            * edge - LogicalEdge in the panel that are allowed to connect to
         """
 
         # The base edge shape can be connected to the desired interface shape
@@ -21,8 +21,7 @@ class InterfaceInstance():
         #   (with the shape possibly being different)
 
         self.panel = panel
-        self.edge_id = edge_id
-        self.base_edge = panel.edges[edge_id]
+        self.edge = edge
 
         
 def connect(int1:InterfaceInstance, int2:InterfaceInstance):
@@ -36,7 +35,7 @@ def connect(int1:InterfaceInstance, int2:InterfaceInstance):
     panel1 = int1.panel
     panel2 = int2.panel
 
-    if int1.base_edge != int2.base_edge:
+    if int1.edge != int2.edge:
         # TODO Here is the place for modification of the target panel --
         # OR the panel should be modifined before this gets executed
         raise ValueError('Connecting edges do not match the target interface')
@@ -46,11 +45,11 @@ def connect(int1:InterfaceInstance, int2:InterfaceInstance):
                 {
                     'panel': panel1.name,  # corresponds to a name. 
                                             # Only one element of the first level is expected
-                    'edge': panel1.edges[int1.edge_id].geometric_ids[0]  # TODO What if we only want part of the geometric ids?
+                    'edge': int1.edge.geometric_id
                 },
                 {
                     'panel': panel2.name,
-                    'edge': panel2.edges[int2.edge_id].geometric_ids[0]  # TODO What if we only want part of the geometric ids?
+                    'edge': int2.edge.geometric_id
                 }
             ]
 

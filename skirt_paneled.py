@@ -28,11 +28,11 @@ class RuffleSkirtPanel(pyp.Panel):
         # define interface
         # TODO references with vs without cuts? What is the cut parameter is zero?
         # TODO More semantic references?
-        self.interfaces.append(pyp.InterfaceInstance(self, 1))
+        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[1]))
         # Create ruffles by the differences in edge length
         # NOTE ruffles are only created when connecting with something
-        self.interfaces.append(pyp.InterfaceInstance(self, 2))
-        self.interfaces.append(pyp.InterfaceInstance(self, 3))
+        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[2]))
+        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[3]))
 
 class ThinSkirtPanel(pyp.Panel):
     """One panel of a panel skirt"""
@@ -46,9 +46,9 @@ class ThinSkirtPanel(pyp.Panel):
         self.edges.append(pyp.LogicalEdge(self.edges[-1].end, [20 + top_width, 0]))
         self.edges.append(pyp.LogicalEdge(self.edges[-1].end, self.edges[0].start))
 
-        self.interfaces.append(pyp.InterfaceInstance(self, 0))
-        self.interfaces.append(pyp.InterfaceInstance(self, 1))
-        self.interfaces.append(pyp.InterfaceInstance(self, 2))
+        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[0]))
+        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[1]))
+        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[2]))
 
 
 class WBPanel(pyp.Panel):
@@ -64,10 +64,10 @@ class WBPanel(pyp.Panel):
         self.edges.append(pyp.LogicalEdge(self.edges[-1].end, self.edges[0].start))
 
         # define interface
-        self.interfaces.append(pyp.InterfaceInstance(self, 0))
-        self.interfaces.append(pyp.InterfaceInstance(self, 1))
-        self.interfaces.append(pyp.InterfaceInstance(self, 2))
-        self.interfaces.append(pyp.InterfaceInstance(self, 3))
+        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[0]))
+        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[1]))
+        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[2]))
+        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[3]))
 
 
 class Skirt2(pyp.Component):
