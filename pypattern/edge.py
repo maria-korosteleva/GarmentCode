@@ -1,7 +1,5 @@
 import numpy as np
 from numpy.linalg import norm
-from bisect import bisect_left
-from ._generic_utils import KeyWrapper
 
 # Custom
 from .base import BaseComponent
@@ -63,30 +61,6 @@ class LogicalEdge(BaseComponent):
         self.start, self.end = self.end, self.start
 
         # TODO flip curvatures
-
-# DRAFT edge subdivision
-    def subdivide(self, insert_from, for_len):
-        """Add vertices along the edge, creating new geometrical edges
-
-            This is sometimes needed for connecting only portion of the edge
-        """
-        # find the 2D location of new vertices to add
-        new_v_start = self.nstart + (insert_from / self.length) * (self.nend - self.nstart)
-        new_v_end = new_v_start + (for_len / self.length) * (self.nend - self.nstart)
-
-        # incert them at appropriate position in the vertex list
-        self._add_vertex(new_v_start.tolist(), insert_from)
-        self._add_vertex(new_v_end.tolist(), for_len)
-
-
-    def _add_vertex(self, vert, loc=None):
-        if loc is None:
-            loc = norm(vert - self.start)
-        
-        id = bisect_left(KeyWrapper(self.in_between_verts, key=lambda c: c[1]), loc)
-        self.in_between_verts.insert((vert, loc))
-
-        return id
         
 
     # Assembly into serializable object
