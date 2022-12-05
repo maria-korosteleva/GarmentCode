@@ -56,9 +56,6 @@ class Panel(BaseComponent):
         first_edge_dr = self.rotation.apply(first_edge_dr)
         last_edge_dr = self.rotation.apply(last_edge_dr)
 
-        print(self.name)
-        print(first_edge_dr, last_edge_dr)  # DEBUG
-
         # Pylance + NP error for unreachanble code -- see https://github.com/numpy/numpy/issues/22146
         # Works ok for numpy 1.23.4+
         norm_dr = np.cross(first_edge_dr, last_edge_dr)  # TODO Check the order
@@ -66,7 +63,6 @@ class Panel(BaseComponent):
         # NOTE: Nothing happens if self.translation is zero
         if np.dot(norm_dr, self.translation) < 0: 
             # Swap if wrong
-            print(norm_dr, self.translation, np.dot(norm_dr, self.translation))  # DEBUG
             self.swap_right_wrong()
         
         return self

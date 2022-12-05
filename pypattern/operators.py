@@ -9,6 +9,7 @@ from .component import Component
 from .edge import LogicalEdge
 
 # ----- Typical Edge Sequences generators ----
+# TODO Do these routines belong in this module?
 
 def simple_loop(*verts):
     """Generate edge sequence -- looped from sequence of vertices
@@ -28,7 +29,6 @@ def simple_loop(*verts):
     return edges
 
 
-# TODO Does it belong in this module?
 def side_with_cut(start=(0,0), end=(1,0), start_cut=0, end_cut=0):
     """ Edge with internal vertices that allows to stitch only part of the border represented
         by the long side edge
@@ -41,9 +41,9 @@ def side_with_cut(start=(0,0), end=(1,0), start_cut=0, end_cut=0):
     verts = [start]
 
     if start_cut > 0:
-        verts.append(tuple(start + start_cut * (nend-nstart)))
+        verts.append((start + start_cut * (nend-nstart)).tolist())
     if end_cut > 0:
-        verts.append(tuple(end - end_cut * (nend-nstart)))
+        verts.append((end - end_cut * (nend-nstart)).tolist())
     verts.append(end)
 
     edges = []
