@@ -9,6 +9,25 @@ from .component import Component
 from .edge import LogicalEdge
 
 # ----- Typical Edge Sequences generators ----
+
+def simple_loop(*verts):
+    """Generate edge sequence -- looped from sequence of vertices
+        Assume that the first vertex is always at origin
+    """
+    # TODO what's with the ruffle coefficients?
+    # TODO Curvatures
+    # TODO Use other edge sequential generators?
+    # TODO Connect with previous edge in the edge class itself?
+    edges = [
+        LogicalEdge([0,0], verts[0])
+    ]
+    for i in range(1, len(verts)):
+        edges.append(LogicalEdge(edges[-1].end, verts[i]))
+    edges.append(LogicalEdge(edges[-1].end, edges[0].start))
+
+    return edges
+
+
 # TODO Does it belong in this module?
 def side_with_cut(start=(0,0), end=(1,0), start_cut=0, end_cut=0):
     """ Edge with internal vertices that allows to stitch only part of the border represented

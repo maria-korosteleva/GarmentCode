@@ -21,13 +21,16 @@ class Panel(BaseComponent):
         self.rotation = R.from_euler('XYZ', [0, 0, 0])  # zero rotation
         self.edges = []   # TODO Dummy square?
 
+    # Operations
     def translate_by(self, delta_vector):
         """Translate panel by a vector"""
         self.translation = self.translation + np.array(delta_vector)
+        return self
     
     def rotate_by(self, delta_rotation):
         """Rotate panel by a given rotation"""
         self.rotation = delta_rotation * self.rotation
+        return self
 
     def swap_right_wrong(self):
         """Swap right and wrond sides of the fabric piece. 
@@ -40,6 +43,37 @@ class Panel(BaseComponent):
         self.edges.reverse()
         for edge in self.edges:
             edge.flip()
+        return self
+
+    def mirror(self, axis=[0, 1]):
+        """Swap this panel with it's mirror image
+        
+            Axis specifies 2D axis to swap around: Y axis by default
+        """
+
+        # Case Around Y
+        if abs(axis[0]) < 1e-4:  # reflection around Y
+
+            # Vertices
+            for i in range(len(self.edges) - 1):
+                # Swap the x of end vertex only 
+                # TODO multiple edge loops??
+                self.edges[i].end[0] *= -1
+            
+            # Position
+            self.translation[0] *= -1
+
+            # TODO right/wrong side
+
+            # NOTE: Origin vertex is not updated -- and may now be on the right of the edge rather then on the left
+            # However, it is normalized automatically at assembly time
+        else:
+            # TODO Any other axis
+            raise NotImplementedError(f'{self.name}::Error::Mirrowing over arbitrary axis is not implemented')
+
+        return self
+        
+
 
 
     # Build the panel -- get serializable representation
