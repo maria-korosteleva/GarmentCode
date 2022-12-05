@@ -149,7 +149,7 @@ class BasicPattern(object):
 
         if (dim + 1) < 3:  # 3D is max
             # re-sort values by next dimention if they have similar values in current dimention
-            fuzzy_start = 0
+            fuzzy_start, fuzzy_end = 0, 0  # init both in case we start from 1 panel to sort
             for fuzzy_end in range(1, len(sorted_reference)):
                 if sorted_reference[fuzzy_end] - sorted_reference[fuzzy_start] >= tolerance:
                     # the range of similar values is completed
