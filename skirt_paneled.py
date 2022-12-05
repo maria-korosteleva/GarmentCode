@@ -11,26 +11,29 @@ from customconfig import Properties
 class RuffleSkirtPanel(pyp.Panel):
     """One panel of a panel skirt with ruffles on the waist"""
 
-    def __init__(self, name, ruffles=1.5, waist_length=70, length=70) -> None:
+    def __init__(self, name, ruffles=1.5, waist_length=70, length=70, bottom_cut=10) -> None:
         super().__init__(name)
 
         base_width = waist_length / 2
         panel_top_width = base_width * ruffles
         panel_low_width = base_width + 40
-        x_shift = (panel_low_width - panel_top_width) / 2
+        x_shift_top = (panel_low_width - panel_top_width) / 2
 
         # define edge loop
-        self.edges = [pyp.LogicalEdge((0,0), (x_shift, length))]   # TODO SequentialObject?
-        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, (x_shift + panel_top_width, length)))
-        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, (panel_low_width, 0)))
+        # TODO SequentialObject?
+        self.edges = pyp.ops.side_with_cut((0,0), (x_shift_top, length), start_cut=bottom_cut / length)
+        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, (x_shift_top + panel_top_width, length)))
+        self.edges += pyp.ops.side_with_cut(self.edges[-1].end, (panel_low_width, 0), end_cut=bottom_cut / length)
         self.edges.append(pyp.LogicalEdge(self.edges[-1].end, self.edges[0].start))
 
         # define interface
-        self.interfaces.append(pyp.InterfaceInstance(self, 0))
+        # TODO references with vs without cuts?
+        # TODO More semantic references?
+        self.interfaces.append(pyp.InterfaceInstance(self, 1))
         # Create ruffles by the differences in edge length
         # NOTE ruffles are only created when connecting with something
-        self.interfaces.append(pyp.InterfaceInstance(self, 1, pyp.LogicalEdge((20, length), (20 + base_width, length))))
-        self.interfaces.append(pyp.InterfaceInstance(self, 2))
+        self.interfaces.append(pyp.InterfaceInstance(self, 2, pyp.LogicalEdge((20, length), (20 + base_width, length))))
+        self.interfaces.append(pyp.InterfaceInstance(self, 3))
 
 class ThinSkirtPanel(pyp.Panel):
     """One panel of a panel skirt"""
@@ -157,14 +160,14 @@ class SkirtManyPanels(pyp.Component):
 if __name__ == '__main__':
 
     test_garments = [
-        SkirtWB(1),
+        # SkirtWB(1),
         SkirtWB(1.5),
-        SkirtWB(2),
+        # SkirtWB(2),
         # WB(),
         # Skirt2()
-        SkirtManyPanels(n_panels=2),
-        SkirtManyPanels(n_panels=4),
-        SkirtManyPanels(n_panels=10)
+        # SkirtManyPanels(n_panels=2),
+        # SkirtManyPanels(n_panels=4),
+        # SkirtManyPanels(n_panels=10)
     ]
 
     # test_garments[0].translate_by([2, 0, 0])

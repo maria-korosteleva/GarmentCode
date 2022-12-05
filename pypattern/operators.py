@@ -1,12 +1,40 @@
 """Shortcuts for common operations on panels and components"""
 
 from copy import deepcopy
+import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 # Custom 
 from .component import Component
+from .edge import LogicalEdge
+
+# ----- Typical Edge Sequences generators ----
+# TODO Does it belong in this module?
+def side_with_cut(start=(0,0), end=(1,0), start_cut=0, end_cut=0):
+    """ Edge with internal vertices that allows to stitch only part of the border represented
+        by the long side edge
+
+        start_cut and end_cut specify the fraction of the edge to to add extra vertices at
+    """
+    # TODO Curvature support?
+
+    nstart, nend = np.array(start), np.array(end)
+    verts = [start]
+
+    if start_cut > 0:
+        verts.append(tuple(start + start_cut * (nend-nstart)))
+    if end_cut > 0:
+        verts.append(tuple(end - end_cut * (nend-nstart)))
+    verts.append(end)
+
+    edges = []
+    for i in range(1, len(verts)):
+        edges.append(LogicalEdge(verts[i-1], verts[i]))
+    
+    return edges
 
 
+# On Panels
 def distribute_Y(component: Component, n_copies: int):
     """Distribute copies of component over the circle around Oy"""
     copies = [ component ]

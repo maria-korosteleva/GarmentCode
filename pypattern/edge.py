@@ -64,6 +64,7 @@ class LogicalEdge(BaseComponent):
 
         # TODO flip curvatures
 
+# DRAFT edge subdivision
     def subdivide(self, insert_from, for_len):
         """Add vertices along the edge, creating new geometrical edges
 
