@@ -32,7 +32,7 @@ class RuffleSkirtPanel(pyp.Panel):
         self.interfaces.append(pyp.InterfaceInstance(self, 1))
         # Create ruffles by the differences in edge length
         # NOTE ruffles are only created when connecting with something
-        self.interfaces.append(pyp.InterfaceInstance(self, 2, pyp.LogicalEdge((20, length), (20 + base_width, length))))
+        self.interfaces.append(pyp.InterfaceInstance(self, 2))
         self.interfaces.append(pyp.InterfaceInstance(self, 3))
 
 class ThinSkirtPanel(pyp.Panel):
