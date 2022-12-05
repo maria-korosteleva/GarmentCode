@@ -8,7 +8,6 @@ from scipy.spatial.transform import Rotation as R
 import pypattern as pyp
 from customconfig import Properties
 
-# ------ Panels -------
 class RuffleSkirtPanel(pyp.Panel):
     """One panel of a panel skirt with ruffles on the waist"""
 
@@ -69,7 +68,6 @@ class WBPanel(pyp.Panel):
         self.interfaces.append(pyp.InterfaceInstance(self, 3))
 
 
-# ------ Garments -------
 class Skirt2(pyp.Component):
     """Simple 2 panel skirt"""
     def __init__(self, ruffle_rate=1) -> None:

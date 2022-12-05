@@ -75,7 +75,7 @@ class Panel(BaseComponent):
             # TODO account for connecting edges being different from 
             # Geometric pattern description
             edge_shift = len(panel.edges)  # before adding new ones
-            self.edges[i].geometric_ids = [id + edge_shift for id in self.edges[i].geometric_ids]   # remember the mapping of logical edge to geometric edge
+            self.edges[i].geometric_ids = [id + edge_shift for id in range(len(edges))]   # remember the mapping of logical edge to geometric edge
             panel.edges += edges
 
         # Check closing of the loop and upd vertex reference for the last edge
