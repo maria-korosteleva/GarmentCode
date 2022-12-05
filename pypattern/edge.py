@@ -15,7 +15,14 @@ class LogicalEdge(BaseComponent):
     
     """
 
-    def __init__(self, start=(0,0), end=(0,0)) -> None:
+    def __init__(self, start=[0,0], end=[0,0], ruffle_rate=1) -> None:
+        """ Simple edge inititalization.
+        Parameters: 
+            * start, end: from/to vertcies that the edge connectes, describing the _interface_ of an edge
+            * ruffle_rate: elongate the edge at assembly time by this rate. This parameter creates ruffles on stitches
+
+            # TODO Add support for fold schemes to allow guided folds at the edge (e.g. pleats)
+        """
         super().__init__('edge')
 
         # TODO add curvatures
@@ -25,9 +32,18 @@ class LogicalEdge(BaseComponent):
         self.start = start  # NOTE: careful with references to vertex objects
         self.end = end
 
-        self.nstart = np.array(start)
-        self.nend = np.array(end)
-        self.length = norm(self.nend - self.nstart)
+        self.nstart = np.asarray(start)
+        self.nend = np.asarray(end)
+
+        # Remember the "interface" length -- before ruffles application
+        self.int_length = norm(self.nend - self.nstart)
+
+        if ruffle_rate < 1:
+            raise ValueError(f'{self.__class__.__name__}::Error::Ruffle rate cannot be smaller than 1')
+        if ruffle_rate > 1:
+            self._ruffle(ruffle_rate)
+
+        # Attributes connecting with outside world context
         self.geometric_ids = []
 
         # Describes the possible options to connect this logical edge with other edges
@@ -35,15 +51,15 @@ class LogicalEdge(BaseComponent):
         self.interfaces = [] 
 
     def __eq__(self, __o: object) -> bool:
-        """Special implementation of comparison
-            Edges are the same up to rigid transformation (rotation/translation)
+        """Special implementation of comparison: same edges == edges are allowed to be connected
+            Edges are the same if their interface representation (no ruffles) is the same up to rigid transformation (rotation/translation)
                 => vertices do not have to be on the same locations
         """
         if not isinstance(__o, LogicalEdge):
             return False
 
         # Base length is the same
-        if self.length != __o.length:
+        if self.int_length != __o.int_length:
             return False
             
         # TODO Curvature is the same
@@ -56,13 +72,37 @@ class LogicalEdge(BaseComponent):
         return True
 
     # Actions
+    def _ruffle(self, ruffle_rate):
+        """Modify edge s.t. it ruffles on stitching"""
+
+        # Calc amount of extention to match the ruffle rate
+        mid_point = (self.nstart + self.nend) / 2
+
+        # Assuming the edge is straight 
+        # TODO account for curvatures
+        start_shift = (self.nstart - mid_point) * (ruffle_rate - 1)
+        end_shift = (self.nend - mid_point) * (ruffle_rate - 1)
+
+        # UPD the vertices location
+        self.start[0] += start_shift[0]
+        self.start[1] += start_shift[1]
+
+        self.end[0] += end_shift[0]
+        self.end[1] += end_shift[1]
+
+        # UPD numpy representation
+        self.nstart += start_shift
+        self.nend += end_shift
+
+        # DEBUG
+        print(f'{self.__class__.__name__}::Notice::Edge extended from {self.int_length:.2f} to {norm(self.nstart - self.nend):.2f} to add ruffles')
+
     def flip(self):
         """Flip the direction of the edge"""
         self.start, self.end = self.end, self.start
 
         # TODO flip curvatures
         
-
     # Assembly into serializable object
     def assembly(self):
         """Returns the dict-based representation of edges"""

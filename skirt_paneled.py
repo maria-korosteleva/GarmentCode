@@ -15,19 +15,18 @@ class RuffleSkirtPanel(pyp.Panel):
         super().__init__(name)
 
         base_width = waist_length / 2
-        panel_top_width = base_width * ruffles
         panel_low_width = base_width + 40
-        x_shift_top = (panel_low_width - panel_top_width) / 2
+        x_shift_top = (panel_low_width - base_width) / 2
 
         # define edge loop
         # TODO SequentialObject?
-        self.edges = pyp.ops.side_with_cut((0,0), (x_shift_top, length), start_cut=bottom_cut / length)
-        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, (x_shift_top + panel_top_width, length)))
-        self.edges += pyp.ops.side_with_cut(self.edges[-1].end, (panel_low_width, 0), end_cut=bottom_cut / length)
+        self.edges = pyp.ops.side_with_cut([0,0], [x_shift_top, length], start_cut=bottom_cut / length)
+        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, [x_shift_top + base_width, length], ruffle_rate=ruffles))  # on the waist
+        self.edges += pyp.ops.side_with_cut(self.edges[-1].end, [panel_low_width, 0], end_cut=bottom_cut / length)
         self.edges.append(pyp.LogicalEdge(self.edges[-1].end, self.edges[0].start))
 
         # define interface
-        # TODO references with vs without cuts?
+        # TODO references with vs without cuts? What is the cut parameter is zero?
         # TODO More semantic references?
         self.interfaces.append(pyp.InterfaceInstance(self, 1))
         # Create ruffles by the differences in edge length
@@ -42,9 +41,9 @@ class ThinSkirtPanel(pyp.Panel):
         super().__init__(name)
 
         # define edge loop
-        self.edges = [pyp.LogicalEdge((0,0), (10, 70))]   # TODO SequentialObject?
-        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, (10 + top_width, 70)))
-        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, (20 + top_width, 0)))
+        self.edges = [pyp.LogicalEdge([0,0], [10, 70])]   # TODO SequentialObject?
+        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, [10 + top_width, 70]))
+        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, [20 + top_width, 0]))
         self.edges.append(pyp.LogicalEdge(self.edges[-1].end, self.edges[0].start))
 
         self.interfaces.append(pyp.InterfaceInstance(self, 0))
@@ -59,9 +58,9 @@ class WBPanel(pyp.Panel):
         super().__init__(name)
 
         # define edge loop
-        self.edges = [pyp.LogicalEdge((0,0), (0, 10))]   # TODO SequentialObject?
-        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, (35, 10)))
-        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, (35, 0)))
+        self.edges = [pyp.LogicalEdge([0,0], [0, 10])]   # TODO SequentialObject?
+        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, [35, 10]))
+        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, [35, 0]))
         self.edges.append(pyp.LogicalEdge(self.edges[-1].end, self.edges[0].start))
 
         # define interface
