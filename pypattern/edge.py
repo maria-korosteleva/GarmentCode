@@ -24,10 +24,10 @@ class LogicalEdge(BaseComponent):
 
         self.start = start  # NOTE: careful with references to vertex objects
         self.end = end
+
         self.nstart = np.array(start)
         self.nend = np.array(end)
         self.length = norm(self.nend - self.nstart)
-        self.in_between_verts = [(self.start, 0), (self.end, self.length)]
         self.geometric_ids = []
 
         # Describes the possible options to connect this logical edge with other edges
