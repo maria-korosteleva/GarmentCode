@@ -77,7 +77,6 @@ class Skirt2(pyp.Component):
 
         self.front = RuffleSkirtPanel('front', ruffle_rate)
         self.front.translate_by([-40, -75, 20])
-        self.front.swap_right_wrong()
 
         self.back = RuffleSkirtPanel('back', ruffle_rate)
         self.back.translate_by([-40, -75, -15])
@@ -103,7 +102,6 @@ class WB(pyp.Component):
 
         self.front = WBPanel('wb_front')
         self.front.translate_by([-20, -2, 20])
-        self.front.swap_right_wrong()
         self.back = WBPanel('wb_back')
         self.back.translate_by([-20, -2, -15])
 
@@ -141,7 +139,6 @@ class SkirtManyPanels(pyp.Component):
 
         self.front = ThinSkirtPanel('front', 72 / n_panels)
         self.front.translate_by([-72 / n_panels, -75, 20])
-        self.front.swap_right_wrong()
 
         self.subs = pyp.ops.distribute_Y(self.front, n_panels)
 

@@ -12,6 +12,9 @@ class Panel(BaseComponent):
     
     Defined as a collection of edges on a 2D grid with specified 3D placement (world coordinates)
     
+
+    NOTE: All operations methods return 'self' object to allow sequential applications
+
     """
 
     def __init__(self, name) -> None:
@@ -25,11 +28,47 @@ class Panel(BaseComponent):
     def translate_by(self, delta_vector):
         """Translate panel by a vector"""
         self.translation = self.translation + np.array(delta_vector)
+        self.autonorm()
+
         return self
     
     def rotate_by(self, delta_rotation):
         """Rotate panel by a given rotation"""
         self.rotation = delta_rotation * self.rotation
+        self.autonorm()
+
+        return self
+
+    def autonorm(self):
+        """Update right/wrong side orientation, s.t. the normal of the surface looks outside of the world origin, 
+            taking into account the shape and the global position.
+        
+            This should provide correct panel orientation in most cases.
+
+            NOTE: for best results, call autonorm after translation specification
+        """
+
+        # Current norm direction 
+        first_edge_dr = np.append((np.array(self.edges[0].end) - np.array(self.edges[0].start)), 0)  # eval and make 3D
+        last_edge_dr = np.append((np.array(self.edges[-1].start) - np.array(self.edges[-1].end)), 0)  # eval and make 3D
+
+        # Account for panel rotation
+        first_edge_dr = self.rotation.apply(first_edge_dr)
+        last_edge_dr = self.rotation.apply(last_edge_dr)
+
+        print(self.name)
+        print(first_edge_dr, last_edge_dr)  # DEBUG
+
+        # Pylance + NP error for unreachanble code -- see https://github.com/numpy/numpy/issues/22146
+        # Works ok for numpy 1.23.4+
+        norm_dr = np.cross(first_edge_dr, last_edge_dr)  # TODO Check the order
+        
+        # NOTE: Nothing happens if self.translation is zero
+        if np.dot(norm_dr, self.translation) < 0: 
+            # Swap if wrong
+            print(norm_dr, self.translation, np.dot(norm_dr, self.translation))  # DEBUG
+            self.swap_right_wrong()
+        
         return self
 
     def swap_right_wrong(self):
@@ -63,19 +102,17 @@ class Panel(BaseComponent):
             # Position
             self.translation[0] *= -1
 
-            # TODO right/wrong side
+            # Fix right/wrong side
+            self.autonorm()
 
             # NOTE: Origin vertex is not updated -- and may now be on the right of the edge rather then on the left
-            # However, it is normalized automatically at assembly time
+            # TODO Update origin vertex as well
         else:
             # TODO Any other axis
             raise NotImplementedError(f'{self.name}::Error::Mirrowing over arbitrary axis is not implemented')
 
         return self
         
-
-
-
     # Build the panel -- get serializable representation
     def assembly(self):
         # TODO Logical VS qualoth assembly?

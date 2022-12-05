@@ -53,12 +53,11 @@ class TShirt(pyp.Component):
         super().__init__(self.__class__.__name__)
 
         # sleeves
-        self.lf_sleeve = SleevePanel('lf_sleeve').translate_by([0, 0, 15]).swap_right_wrong()
+        self.lf_sleeve = SleevePanel('lf_sleeve').translate_by([0, 0, 15])
         self.rf_sleeve = SleevePanel('rf_sleeve').translate_by([0, 0, 15]).mirror()
         self.lb_sleeve = SleevePanel('lb_sleeve').translate_by([0, 0, -15])
-        self.rb_sleeve = SleevePanel('rb_sleeve').translate_by([0, 0, -15]).mirror().swap_right_wrong()
+        self.rb_sleeve = SleevePanel('rb_sleeve').mirror().translate_by([0, 0, -15])
 
         # Torso
-        self.ftorso = TorsoPanel('front').translate_by([0, 0, 20]).swap_right_wrong()
-
+        self.ftorso = TorsoPanel('front').translate_by([0, 0, 20])
         self.btorso = TorsoPanel('back').translate_by([0, 0, -20])

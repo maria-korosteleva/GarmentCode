@@ -32,11 +32,11 @@ class LogicalEdge(BaseComponent):
         self.start = start  # NOTE: careful with references to vertex objects
         self.end = end
 
-        self.nstart = np.asarray(start)
-        self.nend = np.asarray(end)
+        nstart = np.asarray(start)
+        nend = np.asarray(end)
 
         # Remember the "interface" length -- before ruffles application
-        self.int_length = norm(self.nend - self.nstart)
+        self.int_length = norm(nend - nstart)
 
         if ruffle_rate < 1:
             raise ValueError(f'{self.__class__.__name__}::Error::Ruffle rate cannot be smaller than 1')
@@ -73,12 +73,13 @@ class LogicalEdge(BaseComponent):
         """Modify edge s.t. it ruffles on stitching"""
 
         # Calc amount of extention to match the ruffle rate
-        mid_point = (self.nstart + self.nend) / 2
+        nstart, nend = np.array(self.start), np.array(self.end)
+        mid_point = (nstart + nend) / 2
 
         # Assuming the edge is straight 
         # TODO account for curvatures
-        start_shift = (self.nstart - mid_point) * (ruffle_rate - 1)
-        end_shift = (self.nend - mid_point) * (ruffle_rate - 1)
+        start_shift = (nstart - mid_point) * (ruffle_rate - 1)
+        end_shift = (nend - mid_point) * (ruffle_rate - 1)
 
         # UPD the vertices location
         self.start[0] += start_shift[0]
@@ -87,12 +88,10 @@ class LogicalEdge(BaseComponent):
         self.end[0] += end_shift[0]
         self.end[1] += end_shift[1]
 
-        # UPD numpy representation
-        self.nstart += start_shift
-        self.nend += end_shift
-
         # DEBUG
-        print(f'{self.__class__.__name__}::Notice::Edge extended from {self.int_length:.2f} to {norm(self.nstart - self.nend):.2f} to add ruffles')
+        print(
+            f'{self.__class__.__name__}::Notice::Edge extended from {self.int_length:.2f}'
+            f' to {norm(nstart + start_shift - (nend + end_shift)):.2f} to add ruffles')
 
     def flip(self):
         """Flip the direction of the edge"""
