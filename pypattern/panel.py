@@ -24,7 +24,7 @@ class Panel(BaseComponent):
         self.rotation = R.from_euler('XYZ', [0, 0, 0])  # zero rotation
         self.edges = []   # TODO Dummy square?
 
-    # Operations
+    # Operations -- update object in-place
     def translate_by(self, delta_vector):
         """Translate panel by a vector"""
         self.translation = self.translation + np.array(delta_vector)

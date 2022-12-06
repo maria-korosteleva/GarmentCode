@@ -652,7 +652,7 @@ class MayaGarment(wrappers.VisPattern):
     def _edge_as_3d_tuple_list(self, edge, vertices):
         """
             Represents given edge object as list of control points
-            suitable for draing in Maya
+            suitable for drawing in Maya
         """
         points = vertices[edge['endpoints'], :]
         if 'curvature' in edge:

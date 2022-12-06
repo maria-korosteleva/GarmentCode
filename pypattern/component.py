@@ -18,16 +18,30 @@ class Component(BaseComponent):
         # TODO stitching rules should allow modification of sub components
         self.stitching_rules = []
 
+    # Operations -- update object in-place
+    # All return self object to allow chained operations
     def translate_by(self, delta_vector):
         """Translate component by a vector"""
         for subs in self._get_subcomponents():
             subs.translate_by(delta_vector)
+        return self
 
     def rotate_by(self, delta_rotation):
         """Rotate component by a given rotation"""
         for subs in self._get_subcomponents():
             subs.rotate(delta_rotation)
+        return self
 
+    def mirror(self, axis=[0, 1]):
+        """Swap this component with it's mirror image by recursively mirroring sub-components
+        
+            Axis specifies 2D axis to swap around: Y axis by default
+        """
+        for subs in self._get_subcomponents():
+            subs.mirror(axis)
+        return self
+
+    # Build the component -- get serializable representation
     def assembly(self):
         """Construction process of the garment component
         
