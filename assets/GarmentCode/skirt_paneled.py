@@ -41,7 +41,7 @@ class HipRuffleSkirtPanel(pyp.Panel):
 class RuffleSkirtPanel(pyp.Panel):
     """One panel of a panel skirt with ruffles on the waist"""
 
-    def __init__(self, name, ruffles=1.5, waist_length=70, length=70, bottom_cut=10, flare=20) -> None:
+    def __init__(self, name, ruffles=1.5, waist_length=70, length=70, bottom_cut=20, flare=20) -> None:
         super().__init__(name)
 
         base_width = waist_length / 2
@@ -65,6 +65,10 @@ class RuffleSkirtPanel(pyp.Panel):
         # NOTE ruffles are only created when connecting with something
         self.interfaces.append(pyp.InterfaceInstance(self, self.edges[2]))
         self.interfaces.append(pyp.InterfaceInstance(self, self.edges[3]))
+
+        # default placement
+        self.center_x()  # Already know that this panel should be centered over Y
+        self.translation[1] = - length - 10
 
 class ThinSkirtPanel(pyp.Panel):
     """One panel of a panel skirt"""
@@ -101,17 +105,18 @@ class WBPanel(pyp.Panel):
         self.interfaces.append(pyp.InterfaceInstance(self, self.edges[2]))
         self.interfaces.append(pyp.InterfaceInstance(self, self.edges[3]))
 
+        # Default translation
+        self.center_x()
+
 
 class Skirt2(pyp.Component):
     """Simple 2 panel skirt"""
     def __init__(self, ruffle_rate=1, flare=20) -> None:
         super().__init__(self.__class__.__name__)
 
-        self.front = RuffleSkirtPanel('front', ruffle_rate, flare=flare)
-        self.front.translate_by([-40, -75, 20])
+        self.front = RuffleSkirtPanel('front', ruffle_rate, flare=flare).translate_by([0, 0, 20])
 
-        self.back = RuffleSkirtPanel('back', ruffle_rate, flare=flare)
-        self.back.translate_by([-40, -75, -15])
+        self.back = RuffleSkirtPanel('back', ruffle_rate, flare=flare).translate_by([0, 0, -15])
 
         self.stitching_rules = [
             (self.front.interfaces[0], self.back.interfaces[0]),
@@ -133,9 +138,9 @@ class WB(pyp.Component):
         super().__init__(self.__class__.__name__)
 
         self.front = WBPanel('wb_front')
-        self.front.translate_by([-20, -2, 20])
+        self.front.translate_by([0, -2, 20])
         self.back = WBPanel('wb_back')
-        self.back.translate_by([-20, -2, -15])
+        self.back.translate_by([0, -2, -15])
 
         self.stitching_rules = [
             (self.front.interfaces[0], self.back.interfaces[0]),

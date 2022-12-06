@@ -7,7 +7,7 @@ if __name__ == '__main__':
     test_garments = [
         # SkirtWB(1),
         SkirtWB(1.5, 0),
-        SkirtWB(2, 0),
+        # SkirtWB(2, 0),
         # SkirtWB(2),
         # WB(),
         # Skirt2()

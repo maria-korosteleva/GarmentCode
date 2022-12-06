@@ -24,7 +24,7 @@ class Panel(BaseComponent):
         self.rotation = R.from_euler('XYZ', [0, 0, 0])  # zero rotation
         self.edges = []   # TODO Dummy square?
 
-    # Operations -- update object in-place
+    # ANCHOR - Operations -- update object in-place 
     def translate_by(self, delta_vector):
         """Translate panel by a vector"""
         self.translation = self.translation + np.array(delta_vector)
@@ -38,6 +38,15 @@ class Panel(BaseComponent):
         self.autonorm()
 
         return self
+
+    def center_x(self):
+        """Adjust translation over x s.t. the center of the panel is aligned with the Y axis (center of the body)"""
+
+        center_3d = self._point_to_3d(self._center_2d())
+        self.translation[0] += -center_3d[0]
+
+        return self
+
 
     def autonorm(self):
         """Update right/wrong side orientation, s.t. the normal of the surface looks outside of the world origin, 
@@ -109,7 +118,7 @@ class Panel(BaseComponent):
 
         return self
         
-    # Build the panel -- get serializable representation
+    # ANCHOR - Build the panel -- get serializable representation
     def assembly(self):
         # TODO Logical VS qualoth assembly?
 
@@ -150,3 +159,29 @@ class Panel(BaseComponent):
         spattern.pattern['panels'] = {self.name: vars(panel)}
 
         return spattern
+
+    # ANCHOR utils
+    def _center_2d(self):
+        """Location of the panel center. NOTE: does not account for the curvatures
+        """
+        # NOTE: assuming that edges are organized in a loop and share vertices
+        # TODO general case for multiple loops?
+        # TODO Account for curvatures?
+        center_2d = np.array([
+            sum([edge.start[0] + edge.end[0] for edge in self.edges]), 
+            sum([edge.start[1] + edge.end[1] for edge in self.edges])
+            ])
+
+        return center_2d / (2 * len(self.edges))
+
+    def _point_to_3d(self, point_2d):
+        """Calculate 3D location of a point given in the local 2D plane """
+        point_2d = np.asarray(point_2d)
+        if len(point_2d) == 2:
+            point_2d = np.append(point_2d, 0)
+
+        point_3d = self.rotation.apply(point_2d)
+        point_3d += self.translation
+
+        return point_3d
+

@@ -1,5 +1,3 @@
-from typing import Union
-
 # Custom
 from .panel import Panel
 from .edge import LogicalEdge
