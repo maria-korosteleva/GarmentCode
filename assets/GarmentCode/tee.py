@@ -69,10 +69,6 @@ class TShirt(pyp.Component):
         self.ftorso = TorsoPanel('front').translate_by([0, 0, 20])
         self.btorso = TorsoPanel('back').translate_by([0, 0, -20])
 
-        # DEBUG
-        for e in self.rf_sleeve.edges:
-            print(e.start, e.end)
-
         # Order of edges updated after (autonorm)..
         # TODO Simplify the choice of the edges to project from/to (regardless of autonorm)
         pyp.ops.cut_corner([self.rf_sleeve.edges[1]], self.ftorso, 5, 6)
