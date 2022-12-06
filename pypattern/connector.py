@@ -27,8 +27,7 @@ class InterfaceInstance():
 def connect(int1:InterfaceInstance, int2:InterfaceInstance):
     """Produce a stitch that connects two interfaces
 
-        The interfaces geometry is expected to match at this point (?)
-
+        NOTE: the interface geometry matching is not checked, and generally not required 
     """
     # TODO Multiple edges in the interface / geometric ids
 
