@@ -15,7 +15,7 @@ class LogicalEdge(BaseComponent):
     
     """
 
-    def __init__(self, start=[0,0], end=[0,0], ruffle_rate=1) -> None:
+    def __init__(self, start=[0,0], end=[0,0]) -> None:
         """ Simple edge inititalization.
         Parameters: 
             * start, end: from/to vertcies that the edge connectes, describing the _interface_ of an edge
@@ -32,20 +32,15 @@ class LogicalEdge(BaseComponent):
         self.start = start  # NOTE: careful with references to vertex objects
         self.end = end
 
-        nstart = np.asarray(start)
-        nend = np.asarray(end)
-
-        # Remember the "interface" length -- before ruffles application
-        self.int_length = norm(nend - nstart)
-
-        if ruffle_rate < 1:
-            raise ValueError(f'{self.__class__.__name__}::Error::Ruffle rate cannot be smaller than 1')
-        if ruffle_rate > 1:
-            self._ruffle(ruffle_rate)
-
         # ID w.r.t. other edges in a super-panel
         # Filled out at the panel assembly time
         self.geometric_id = 0
+
+    def length(self):
+        """Return current length of an edge.
+            Since vertices may change their locations externally, the length is dynamically evaluated
+        """
+        self.length = norm(np.asarray(self.end) - np.asarray(self.start))
 
     def __eq__(self, __o: object) -> bool:
         """Special implementation of comparison: same edges == edges are allowed to be connected
@@ -56,7 +51,7 @@ class LogicalEdge(BaseComponent):
             return False
 
         # Base length is the same
-        if self.int_length != __o.int_length:
+        if self.length() != __o.length():
             return False
             
         # TODO Curvature is the same
@@ -69,30 +64,6 @@ class LogicalEdge(BaseComponent):
         return True
 
     # Actions
-    def _ruffle(self, ruffle_rate):
-        """Modify edge s.t. it ruffles on stitching"""
-
-        # Calc amount of extention to match the ruffle rate
-        nstart, nend = np.array(self.start), np.array(self.end)
-        mid_point = (nstart + nend) / 2
-
-        # Assuming the edge is straight 
-        # TODO account for curvatures
-        start_shift = (nstart - mid_point) * (ruffle_rate - 1)
-        end_shift = (nend - mid_point) * (ruffle_rate - 1)
-
-        # UPD the vertices location
-        self.start[0] += start_shift[0]
-        self.start[1] += start_shift[1]
-
-        self.end[0] += end_shift[0]
-        self.end[1] += end_shift[1]
-
-        # DEBUG
-        print(
-            f'{self.__class__.__name__}::Notice::Edge extended from {self.int_length:.2f}'
-            f' to {norm(nstart + start_shift - (nend + end_shift)):.2f} to add ruffles')
-
     def flip(self):
         """Flip the direction of the edge"""
         self.start, self.end = self.end, self.start

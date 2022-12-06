@@ -1,27 +1,60 @@
-import json
-from pathlib import Path
-from datetime import datetime
-from copy import deepcopy
-from scipy.spatial.transform import Rotation as R
-
 # Custom
 import pypattern as pyp
-from customconfig import Properties
+
+# TODO Skirt that fixes/hugs the hip area 
+# TODO More modifications are needed to create pencil skirt though
+class HipRuffleSkirtPanel(pyp.Panel):
+    """One panel of a panel skirt with ruffles on the waist"""
+
+    def __init__(self, name, ruffles=1.5, waist_length=70, length=70, bottom_cut=10, flare=20) -> None:
+        super().__init__(name)
+
+        base_width = waist_length / 2
+        top_width = base_width * ruffles
+        low_width = base_width + 2*flare
+        x_shift_top = (low_width - top_width) / 2  # to account for flare at the bottom
+
+        
+        self.edges = pyp.ops.side_with_cut([0,0], [flare, length], start_cut=bottom_cut / length)
+        # Modify vertex position to account for ruffles
+        self.edges[-1].end[0] = x_shift_top
+
+        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, [x_shift_top + top_width, length]))  # on the waist
+
+        self.edges[-1].end[0] = flare + base_width
+        e_id = len(self.edges) - 1
+
+        self.edges += pyp.ops.side_with_cut(self.edges[-1].end, [low_width, 0], end_cut=bottom_cut / length)
+        self.edges[e_id].end[0] = x_shift_top + top_width  # back
+
+        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, self.edges[0].start))
+
+        # define interface
+        # TODO references with vs without cuts? What is the cut parameter is zero?
+        # TODO More semantic references?
+        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[1]))
+        # Create ruffles by the differences in edge length
+        # NOTE ruffles are only created when connecting with something
+        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[2]))
+        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[3]))
 
 class RuffleSkirtPanel(pyp.Panel):
     """One panel of a panel skirt with ruffles on the waist"""
 
-    def __init__(self, name, ruffles=1.5, waist_length=70, length=70, bottom_cut=10) -> None:
+    def __init__(self, name, ruffles=1.5, waist_length=70, length=70, bottom_cut=10, flare=20) -> None:
         super().__init__(name)
 
         base_width = waist_length / 2
-        x_shift_top = 20
+        top_width = base_width * ruffles
+        low_width = base_width + 2*flare
+        x_shift_top = (low_width - top_width) / 2  # to account for flare at the bottom
 
         # define edge loop
         # TODO SequentialObject?
+        # TODO Remove ruffles from edges
         self.edges = pyp.ops.side_with_cut([0,0], [x_shift_top, length], start_cut=bottom_cut / length)
-        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, [x_shift_top + base_width, length], ruffle_rate=ruffles))  # on the waist
-        self.edges += pyp.ops.side_with_cut(self.edges[-1].end, [x_shift_top * 2 + base_width, 0], end_cut=bottom_cut / length)
+        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, [x_shift_top + top_width, length]))  # on the waist
+        self.edges += pyp.ops.side_with_cut(self.edges[-1].end, [low_width, 0], end_cut=bottom_cut / length)
         self.edges.append(pyp.LogicalEdge(self.edges[-1].end, self.edges[0].start))
 
         # define interface
@@ -71,13 +104,13 @@ class WBPanel(pyp.Panel):
 
 class Skirt2(pyp.Component):
     """Simple 2 panel skirt"""
-    def __init__(self, ruffle_rate=1) -> None:
+    def __init__(self, ruffle_rate=1, flare=20) -> None:
         super().__init__(self.__class__.__name__)
 
-        self.front = RuffleSkirtPanel('front', ruffle_rate)
+        self.front = RuffleSkirtPanel('front', ruffle_rate, flare=flare)
         self.front.translate_by([-40, -75, 20])
 
-        self.back = RuffleSkirtPanel('back', ruffle_rate)
+        self.back = RuffleSkirtPanel('back', ruffle_rate, flare=flare)
         self.back.translate_by([-40, -75, -15])
 
         self.stitching_rules = [
@@ -116,11 +149,11 @@ class WB(pyp.Component):
 
 
 class SkirtWB(pyp.Component):
-    def __init__(self, ruffle_rate=1.5) -> None:
+    def __init__(self, ruffle_rate=1.5, flare=20) -> None:
         super().__init__(f'{self.__class__.__name__}_{ruffle_rate:.1f}')
 
         self.wb = WB()
-        self.skirt = Skirt2(ruffle_rate=ruffle_rate)
+        self.skirt = Skirt2(ruffle_rate=ruffle_rate, flare=flare)
 
         self.stitching_rules = [
             (self.wb.interfaces[0], self.skirt.interfaces[0]),

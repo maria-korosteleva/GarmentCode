@@ -32,23 +32,14 @@ def connect(int1:InterfaceInstance, int2:InterfaceInstance):
     """
     # TODO Multiple edges in the interface / geometric ids
 
-    panel1 = int1.panel
-    panel2 = int2.panel
-
-    if int1.edge != int2.edge:
-        # TODO Here is the place for modification of the target panel --
-        # OR the panel should be modifined before this gets executed
-        raise ValueError('Connecting edges do not match the target interface')
-    # Else -- interface matches, it's safe to connect the edges
-
     return [
                 {
-                    'panel': panel1.name,  # corresponds to a name. 
+                    'panel': int1.panel.name,  # corresponds to a name. 
                                             # Only one element of the first level is expected
                     'edge': int1.edge.geometric_id
                 },
                 {
-                    'panel': panel2.name,
+                    'panel': int2.panel.name,
                     'edge': int2.edge.geometric_id
                 }
             ]
