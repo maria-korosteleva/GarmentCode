@@ -75,8 +75,10 @@ def cut_corner(target_shape, panel, eid1, eid2):
     # Get rid of directions by working on vertices
     vc = np.array(panel.edges[eid1].end)
     v1, v2 = np.array(panel.edges[eid1].start), np.array(panel.edges[eid2].end)
+    swaped = False
     if v1[1] > v2[1]:
         v1, v2 = v2, v1  
+        swaped = True
         # NOW v1 is lower then v2
     if corner_shape[0].start[1] > corner_shape[-1].end[1]:
         corner_shape.reverse()
@@ -92,44 +94,84 @@ def cut_corner(target_shape, panel, eid1, eid2):
 
     # find translation s.t. start of shortcut is on [v1,vc], and end of shortcut is on [v2,vc] -- as best as possible
     # SLE!!! LOL
-
-    shift = minimize(
-        _fit_transl_scale, np.zeros(4), args=(shortcut, v1, v2, vc, dist(v1, vc), dist(v2, vc)))
-
-    shifted = shortcut + shift.x[:2]
-    shifted[0] += (shifted[0] - shifted[1]) * shift.x[2]  # this only changes the end vertex though
-    shifted[1] += (shifted[1] - shifted[0]) * shift.x[3]  # this only changes the end vertex though
+    out = minimize(
+        _fit_translation, np.zeros(2), args=(shortcut, v1, v2, vc, _dist(v1, vc), _dist(v2, vc)))
+    if not out.success:
+        raise RuntimeError(f'Cut_corner::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
+    shifted = shortcut + out.x
+    shift = out.x
 
     # DEBUG
     print(shifted)
-    print(f'Predicted:  {shift.x}, func value {shift.fun}')  # {shortcut + shift},
-    print(f'Predicted:  {shift}')  # {shortcut + shift},
+    print(f'Predicted:  {out.x}, func value {out.fun}')  # {shortcut + shift},
+    print(f'Predicted:  {out}')  # {shortcut + shift},
 
-    # shift = minimize(
-    #     _fit_translation, np.zeros(2), args=(shortcut, v1, v2, vc, dist(v1, vc), dist(v2, vc)))
+    # Then, find scaling parameter that allows to place the end vertces exactly -- another SLE
+    if abs(out.fun) > 1e-3:  
+        # Fit with translation is not perfect -- try to adjust the length
+        out = minimize(
+            _fit_scale, np.zeros(2), args=(shifted, v1, v2, vc, _dist(v1, vc), _dist(v2, vc)))
+        if not out.success:
+            raise RuntimeError(f'Cut_corner::Error::finding the projection (scaling) is unsuccessful. Likely an error in edges choice')
 
-    # shifted = shortcut + shift.x
+        shifted[0] += (shifted[0] - shifted[1]) * out.x[0]  # this only changes the end vertex though
+        shifted[1] += (shifted[1] - shifted[0]) * out.x[1]  # this only changes the end vertex though
 
-    # # DEBUG
-    # print(shifted)
-    # print(f'Predicted:  {shift.x}, func value {shift.fun}')  # {shortcut + shift},
-    # print(f'Predicted:  {shift}')  # {shortcut + shift},
+        # DEBUG
+        print(shifted)
+        print(f'Predicted:  {out.x}, func value {out.fun}')  # {shortcut + shift},
+        print(f'Predicted:  {out}')  # {shortcut + shift},
 
-    # # Then, find scaling parameter that allows to place the end vertces exactly -- another SLE
-    # # TODO IF
-    # scale = minimize(
-    #     _fit_scale, np.zeros(2), args=(shifted, v1, v2, vc, dist(v1, vc), dist(v2, vc)))
+        # TODO Adjust the scale of corner shape edges accordingly
+    
+    # re-align corner_shape with found shifts
+    corner_shape[0].start[0] += shift[0] 
+    corner_shape[0].start[1] += shift[1] 
 
-    # shifted[0] += (shifted[0] - shifted[1]) * scale.x[0]  # this only changes the end vertex though
-    # shifted[1] += (shifted[1] - shifted[0]) * scale.x[1]  # this only changes the end vertex though
+    for e in corner_shape:  # NOTE this part assumes that edges are chained
+        e.end[0] += shift[0]
+        e.end[1] += shift[1]
 
-    # # DEBUG
-    # print(shifted)
-    # print(f'Predicted:  {scale.x}, func value {scale.fun}')  # {shortcut + shift},
-    # print(f'Predicted:  {scale}')  # {shortcut + shift},
+    # Complete to the full corner -- connect with the initial vertices
+    if swaped:
+        # The edges are aligned as v2 -> vc -> v1
+        corner_shape.reverse()
+        for e in corner_shape:
+            e.flip()
+
+    corner_shape.insert(0, LogicalEdge(panel.edges[eid1].start, corner_shape[0].start))
+    corner_shape.append(LogicalEdge(corner_shape[-1].end, panel.edges[eid2].end))
+
+    # DEBUG
+    print(f'New edges: {[(e.start, e.end) for e in corner_shape]}')
+
+    # Substitute edges in the panel definition
+    edge1 = panel.edges[eid1]
+    edge2 = panel.edges[eid2]
+    if eid2 > eid1:  # making sure that correct elements are removed
+        panel.edges.pop(eid2)
+        panel.edges.pop(eid1)   
+    else:  
+        panel.edges.pop(eid1)
+        panel.edges.pop(eid2)
+
+    for i, e in enumerate(corner_shape):
+        panel.edges.insert(eid1 + i, e)
+
+    # Update interface definitions
+    intr_ids = []
+    for i, intr in enumerate(panel.interfaces):
+        if intr.edge is edge1 or intr.edge is edge2:
+            intr_ids.append(i)
+
+    # Bunch of new interfaces
+    if intr_ids:
+        for id in sorted(intr_ids, reverse=True):
+            panel.interfaces.pop(id)
+        panel.interfaces += [InterfaceInstance(panel, e) for e in corner_shape]
 
 
-def dist(v1, v2):
+def _dist(v1, v2):
     return norm(v2-v1)
 
 def _fit_translation(shift, shortcut, v1, v2, vc, d_v1, d_v2):
@@ -139,8 +181,8 @@ def _fit_translation(shift, shortcut, v1, v2, vc, d_v1, d_v2):
     # Shortcut can be used as 2D vector, not a set of 2D points, e.g.
     shifted = shortcut + shift
 
-    return ((d_v1 - dist(shifted[0], v1) - dist(shifted[0], vc))**2
-            + (d_v2 - dist(shifted[1], v2) - dist(shifted[1], vc))**2
+    return ((d_v1 - _dist(shifted[0], v1) - _dist(shifted[0], vc))**2
+            + (d_v2 - _dist(shifted[1], v2) - _dist(shifted[1], vc))**2
             )
 
 def _fit_scale(s, shortcut, v1, v2, vc, d_v1, d_v2):
@@ -155,30 +197,9 @@ def _fit_scale(s, shortcut, v1, v2, vc, d_v1, d_v2):
 
     print(shifted)
 
-    return ((d_v1 - dist(shifted[0], v1) - dist(shifted[0], vc))**2
-            + (d_v2 - dist(shifted[1], v2) - dist(shifted[1], vc))**2
+    return ((d_v1 - _dist(shifted[0], v1) - _dist(shifted[0], vc))**2
+            + (d_v2 - _dist(shifted[1], v2) - _dist(shifted[1], vc))**2
             )
-
-# Joint
-def _fit_transl_scale(s, shortcut, v1, v2, vc, d_v1, d_v2):
-    """Evaluate how good a shortcut fits the corner if the vertices are shifted 
-        a little along the line"""
-
-    # TODO is it fast enoughs??
-    # Shortcut can be used as 2D vector, not a set of 2D points, e.g.
-    shifted = deepcopy(shortcut)
-    shifted += s[:2]
-    shifted[0] += (shortcut[0] - shortcut[1]) * s[2]  # this only changes the end vertex though
-    shifted[1] += (shortcut[1] - shortcut[0]) * s[3]  # this only changes the end vertex though
-
-    print(shifted)
-
-    return ((d_v1 - dist(shifted[0], v1) - dist(shifted[0], vc))**2
-            + (d_v2 - dist(shifted[1], v2) - dist(shifted[1], vc))**2
-            )
-
-
-
 
 
 # DRAFT General projection idea

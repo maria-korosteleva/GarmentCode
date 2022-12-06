@@ -74,4 +74,8 @@ class TShirt(pyp.Component):
             print(e.start, e.end)
 
         # Order of edges updated after (autonorm)..
-        pyp.ops.cut_corner([self.rf_sleeve.edges[1]], self.ftorso, 0, 1)
+        # TODO Simplify the choice of the edges to project from/to (regardless of autonorm)
+        pyp.ops.cut_corner([self.rf_sleeve.edges[1]], self.ftorso, 5, 6)
+        pyp.ops.cut_corner([self.lf_sleeve.edges[2]], self.ftorso, 1, 2)
+        pyp.ops.cut_corner([self.rb_sleeve.edges[2]], self.btorso, 0, 1)
+        pyp.ops.cut_corner([self.lb_sleeve.edges[1]], self.btorso, 5, 6)
