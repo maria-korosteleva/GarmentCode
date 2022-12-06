@@ -92,28 +92,41 @@ def cut_corner(target_shape, panel, eid1, eid2):
 
     # find translation s.t. start of shortcut is on [v1,vc], and end of shortcut is on [v2,vc] -- as best as possible
     # SLE!!! LOL
-    shift = minimize(
-        _fit_translation, np.zeros(2), args=(shortcut, v1, v2, vc, dist(v1, vc), dist(v2, vc)))
 
-    shifted = shortcut + shift.x
+    shift = minimize(
+        _fit_transl_scale, np.zeros(4), args=(shortcut, v1, v2, vc, dist(v1, vc), dist(v2, vc)))
+
+    shifted = shortcut + shift.x[:2]
+    shifted[0] += (shifted[0] - shifted[1]) * shift.x[2]  # this only changes the end vertex though
+    shifted[1] += (shifted[1] - shifted[0]) * shift.x[3]  # this only changes the end vertex though
 
     # DEBUG
     print(shifted)
     print(f'Predicted:  {shift.x}, func value {shift.fun}')  # {shortcut + shift},
     print(f'Predicted:  {shift}')  # {shortcut + shift},
 
-    # Then, find scaling parameter that allows to place the end vertces exactly -- another SLE
-    # TODO IF
-    scale = minimize(
-        _fit_scale, np.zeros(2), args=(shifted, v1, v2, vc, dist(v1, vc), dist(v2, vc)))
+    # shift = minimize(
+    #     _fit_translation, np.zeros(2), args=(shortcut, v1, v2, vc, dist(v1, vc), dist(v2, vc)))
 
-    shifted[0] += (shifted[0] - shifted[1]) * scale.x[0]  # this only changes the end vertex though
-    shifted[1] += (shifted[1] - shifted[0]) * scale.x[1]  # this only changes the end vertex though
+    # shifted = shortcut + shift.x
 
-    # DEBUG
-    print(shifted)
-    print(f'Predicted:  {scale.x}, func value {scale.fun}')  # {shortcut + shift},
-    print(f'Predicted:  {scale}')  # {shortcut + shift},
+    # # DEBUG
+    # print(shifted)
+    # print(f'Predicted:  {shift.x}, func value {shift.fun}')  # {shortcut + shift},
+    # print(f'Predicted:  {shift}')  # {shortcut + shift},
+
+    # # Then, find scaling parameter that allows to place the end vertces exactly -- another SLE
+    # # TODO IF
+    # scale = minimize(
+    #     _fit_scale, np.zeros(2), args=(shifted, v1, v2, vc, dist(v1, vc), dist(v2, vc)))
+
+    # shifted[0] += (shifted[0] - shifted[1]) * scale.x[0]  # this only changes the end vertex though
+    # shifted[1] += (shifted[1] - shifted[0]) * scale.x[1]  # this only changes the end vertex though
+
+    # # DEBUG
+    # print(shifted)
+    # print(f'Predicted:  {scale.x}, func value {scale.fun}')  # {shortcut + shift},
+    # print(f'Predicted:  {scale}')  # {shortcut + shift},
 
 
 def dist(v1, v2):
@@ -141,18 +154,6 @@ def _fit_scale(s, shortcut, v1, v2, vc, d_v1, d_v2):
     shifted[1] += (shortcut[1] - shortcut[0]) * s[1]  # this only changes the end vertex though
 
     print(shifted)
-
-    return ((d_v1 - dist(shifted[0], v1) - dist(shifted[0], vc))**2
-            + (d_v2 - dist(shifted[1], v2) - dist(shifted[1], vc))**2
-            )
-
-
-def _fit_translation(shift, shortcut, v1, v2, vc, d_v1, d_v2):
-    """Evaluate how good a shortcut fits the corner with given global shift"""
-
-    # TODO is it fast enoughs??
-    # Shortcut can be used as 2D vector, not a set of 2D points, e.g.
-    shifted = shortcut + shift
 
     return ((d_v1 - dist(shifted[0], v1) - dist(shifted[0], vc))**2
             + (d_v2 - dist(shifted[1], v2) - dist(shifted[1], vc))**2
