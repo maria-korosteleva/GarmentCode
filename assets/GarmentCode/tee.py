@@ -60,11 +60,18 @@ class TShirt(pyp.Component):
         super().__init__(self.__class__.__name__)
 
         # sleeves
-        self.lf_sleeve = SleevePanel('lf_sleeve').translate_by([0, 0, 15])
-        self.rf_sleeve = SleevePanel('rf_sleeve').translate_by([0, 0, 15]).mirror()
-        self.lb_sleeve = SleevePanel('lb_sleeve').translate_by([0, 0, -15])
-        self.rb_sleeve = SleevePanel('rb_sleeve').mirror().translate_by([0, 0, -15])
+        self.rf_sleeve = SleevePanel('rf_sleeve').translate_by([0, 0, 15])
+        self.lf_sleeve = SleevePanel('lf_sleeve').translate_by([0, 0, 15]).mirror()
+        self.rb_sleeve = SleevePanel('rb_sleeve').translate_by([0, 0, -15])
+        self.lb_sleeve = SleevePanel('lb_sleeve').mirror().translate_by([0, 0, -15])
 
         # Torso
         self.ftorso = TorsoPanel('front').translate_by([0, 0, 20])
         self.btorso = TorsoPanel('back').translate_by([0, 0, -20])
+
+        # DEBUG
+        for e in self.rf_sleeve.edges:
+            print(e.start, e.end)
+
+        # Order of edges updated after (autonorm)..
+        pyp.ops.cut_corner([self.rf_sleeve.edges[1]], self.ftorso, 0, 1)
