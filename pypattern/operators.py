@@ -12,62 +12,6 @@ from .edge import LogicalEdge, EdgeSequence
 from .connector import InterfaceInstance
 
 # ANCHOR ----- Typical Edge Sequences generators ----
-# TODO Do these routines belong in this module?
-# TODO sequence
-
-def simple_sequence(*verts):
-    """Generate edge sequence from given vertices
-    """
-    # TODO what's with the ruffle coefficients?
-    # TODO Curvatures
-    # TODO Use other edge sequential generators?
-    # TODO Connect with previous edge in the edge class itself?
-    edges = [
-        LogicalEdge(verts[0], verts[1])
-    ]
-    for i in range(2, len(verts)):
-        edges.append(LogicalEdge(edges[-1].end, verts[i]))
-
-    return edges
-
-
-def simple_loop(*verts):
-    """Generate edge sequence -- looped from sequence of vertices
-        Assume that the first vertex is always at origin
-    """
-    # TODO what's with the ruffle coefficients?
-    # TODO Curvatures
-    # TODO Use other edge sequential generators?
-    # TODO Connect with previous edge in the edge class itself?
-    edges = simple_sequence(*[[0,0]] + list(verts))
-    edges.append(LogicalEdge(edges[-1].end, edges[0].start))
-
-    return edges
-
-
-def side_with_cut(start=(0,0), end=(1,0), start_cut=0, end_cut=0):
-    """ Edge with internal vertices that allows to stitch only part of the border represented
-        by the long side edge
-
-        start_cut and end_cut specify the fraction of the edge to to add extra vertices at
-    """
-    # TODO Curvature support?
-
-    nstart, nend = np.array(start), np.array(end)
-    verts = [start]
-
-    if start_cut > 0:
-        verts.append((start + start_cut * (nend-nstart)).tolist())
-    if end_cut > 0:
-        verts.append((end - end_cut * (nend-nstart)).tolist())
-    verts.append(end)
-
-    edges = []
-    for i in range(1, len(verts)):
-        edges.append(LogicalEdge(verts[i-1], verts[i]))
-    
-    return edges
-
 
 def cut_corner(target_shape, panel, eid1, eid2):
     """ Cut the corner made of edges 1 and 2 following the shape of target_shape
@@ -252,9 +196,7 @@ def cut_into_edge(target_shape, base_edge, offset=0, right=True, tol=1e-4):
 
     target_shape = EdgeSequence(target_shape)
 
-    new_edges = target_shape.copy()
-
-    _snap_to(new_edges, [0, 0])  # notmalize translation of vertices
+    new_edges = target_shape.copy().snap_to([0, 0])  # copy and normalize translation of vertices
 
     # Simplify to vectors
     shortcut = np.array([new_edges[0].start, new_edges[-1].end])  # "Interface" of the shape to insert
@@ -273,37 +215,17 @@ def cut_into_edge(target_shape, base_edge, offset=0, right=True, tol=1e-4):
     # find starting vertex for insertion & place edges there
     ins_point = offset * (edge_vec[1] - edge_vec[0]) + edge_vec[0] if offset > tol else base_edge.start    
     if right:  # We need to flip it's orientation of cut shape and then cut
-        new_edges.reverse()
-        _snap_to(new_edges, [0, 0])  # new first vertex to be zero
-
-    _snap_to(new_edges, ins_point)
+        new_edges.reverse().snap_to([0, 0])  # new first vertex to be zero
+    new_edges.snap_to(ins_point)
 
     # re-create edges and return 
     if offset > tol:
         new_edges.insert(0, LogicalEdge(base_edge.start, new_edges[0].start))
     
-    # TODO Check if the end is not the same as base_edge already
+    # TODO Check if the end is not the same as base_edge already / goes beyong the end edge
     new_edges.append(LogicalEdge(new_edges[-1].end, base_edge.end))
 
     return new_edges
-
-
-def _snap_to(edge_seq, new_origin=[0, 0]):
-    """Translate the edge seq vertices s.t. the first vertex is at new_origin
-        Assumes chained edge sequence
-    """
-    # TODO this should be a method of EdgeSequence object or something
-    
-    start = copy(edge_seq[0].start)
-    shift = [new_origin[0] - start[0], new_origin[1] - start[1]]
-    for edge in edge_seq:
-        edge.end[0] += shift[0]
-        edge.end[1] += shift[1]
-
-    edge_seq[0].start[0] += shift[0]
-    edge_seq[0].start[1] += shift[1]
-
-    return edge_seq
 
 
 # DRAFT General projection idea
@@ -363,7 +285,7 @@ def project(edges, panel, edge_id):
     
 
 
-# ANCHOR Panel operations 
+# ANCHOR ----- Panel operations ------
 def distribute_Y(component: Component, n_copies: int):
     """Distribute copies of component over the circle around Oy"""
     copies = [ component ]

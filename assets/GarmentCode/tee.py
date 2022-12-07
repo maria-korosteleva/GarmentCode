@@ -15,7 +15,7 @@ class SleevePanel(pyp.Panel):
         super().__init__(name)
 
         width = (arm_width + ease) / 2 
-        self.edges = pyp.ops.simple_loop([0, width], [length, width], [length - 7, 0])
+        self.edges = pyp.EdgeSequence.from_verts([0, 0], [0, width], [length, width], [length - 7, 0], loop=True)
 
         # default placement
         self.translate_by([-length - 20, 15, 0])
@@ -34,14 +34,15 @@ class TorsoPanel(pyp.Panel):
 
         width = sholder_w + ease
         sholder_top_l = (width - neck_w) / 2 
-        self.edges = pyp.ops.simple_loop(
+        self.edges = pyp.EdgeSequence.from_verts(
+            [0, 0], 
             [0, length], 
             [sholder_top_l, length], 
             [width / 2, length - c_depth], 
             [sholder_top_l + neck_w, length], 
             [width, length], 
             [width, 0], 
-            )
+            loop=True)
 
         # default placement
         self.translate_by([-width / 2, 30 - length, 0])
@@ -96,7 +97,7 @@ class TShirt(pyp.Component):
         pyp.ops.cut_corner([self.l_sleeve.interfaces[0].edge], self.btorso, 5, 6)
 
         # DRAFT
-        dart = pyp.ops.simple_sequence([0,0], [5, 10], [10, 0])
+        dart = pyp.EdgeSequence.from_verts([0,0], [5, 10], [10, 0], loop=False)
         eid = 1
         edges = pyp.ops.cut_into_edge(dart, self.ftorso.edges[eid], 0.3, right=False)
 

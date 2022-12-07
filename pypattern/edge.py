@@ -1,4 +1,4 @@
-from copy import deepcopy
+from copy import deepcopy, copy
 import numpy as np
 from numpy.linalg import norm
 
@@ -89,9 +89,10 @@ class LogicalEdge(BaseComponent):
         return [self.start, self.end], {"endpoints": [0, 1]}
 
 
-# DRAFT
 class EdgeSequence():
-    """Represents a sequence of chained edges (e.g. every next edge starts from the same vertex that the previous edge ends with"""
+    """Represents a sequence of (chained) edges (e.g. every next edge starts from the same vertex that the previous edge ends with
+        and allows building some typical edge sequences
+    """
     def __init__(self, *args) -> None:
         self.edges = []
         for arg in args:
@@ -120,20 +121,24 @@ class EdgeSequence():
 
         for i in range(1, len(self.edges)):
             if self.edges[i].start is not self.edges[i-1].end:
+                # This should be helpful to catch bugs
+                print(f'{self.__class__.__name__}::Warning!::Edge sequence is not properly chained')
                 return False
         return True
 
     # ANCHOR Modifiers
+    # All modifiers return self object to allow chaining
     def append(self, item):
         if isinstance(item, LogicalEdge):
             self.edges.append(item)
             # TODO check if chained right away!
-        elif isinstance(item, list):
+        elif isinstance(item, list):  # Assuming list of LogicalEdge objects
             self.edges += item
         elif isinstance(item, EdgeSequence):
             self.edges += item.edges
         else:
             raise ValueError(f'{self.__class__.__name__}::Error::Trying to add object of incompatible type {type(item)}')
+        return self
 
     def insert(self, i, item):
         if isinstance(item, LogicalEdge):
@@ -141,14 +146,35 @@ class EdgeSequence():
             # TODO check if chained right away!
         else:
             raise NotImplementedError(f'{self.__class__.__name__}::Error::incerting object of {type(item)} not suported (yet)')
+        return self
     
+    def pop(self, i):
+        self.edges.pop(i)
+        return self
+
     def reverse(self):
         """Reverse edge sequence in-place"""
         self.edges.reverse()
         for edge in self.edges:
             edge.flip()
+        return self
 
-    # ANCHOR Factories
+    def snap_to(self, new_origin=[0, 0]):
+        """Translate the edge seq vertices s.t. the first vertex is at new_origin
+        """
+        start = copy(self[0].start)
+        shift = [new_origin[0] - start[0], new_origin[1] - start[1]]
+        for edge in self:
+            edge.end[0] += shift[0]
+            edge.end[1] += shift[1]
+
+        self[0].start[0] += shift[0]
+        self[0].start[1] += shift[1]
+
+        return self
+
+
+    # ANCHOR Factories for some tipical edge sequences
     def copy(self):
         """Create a copy of a current edge sequence preserving the chaining property of edge sequences"""
         new_seq = deepcopy(self)
@@ -166,5 +192,40 @@ class EdgeSequence():
 
         return new_seq
 
+    @staticmethod
+    def from_verts(*verts, loop=False):
+        """Generate edge sequence from given vertices. If loop==True, the method also closes the edge sequence as a loop
+        """
+        # TODO Curvatures
+        seq = EdgeSequence(LogicalEdge(verts[0], verts[1]))
+        for i in range(2, len(verts)):
+            seq.append(LogicalEdge(seq[-1].end, verts[i]))
 
-    # TODO isConsistent, from_vertices(), etc.
+        if loop:
+            seq.append(LogicalEdge(seq[-1].end, seq[0].start))
+        
+        seq.isChained()
+        return seq
+
+    @staticmethod
+    def side_with_cut(start=(0,0), end=(1,0), start_cut=0, end_cut=0):
+        """ Edge with internal vertices that allows to stitch only part of the border represented
+            by the long side edge
+
+            start_cut and end_cut specify the fraction of the edge to to add extra vertices at
+        """
+        # TODO Curvature support?
+
+        nstart, nend = np.array(start), np.array(end)
+        verts = [start]
+
+        if start_cut > 0:
+            verts.append((start + start_cut * (nend-nstart)).tolist())
+        if end_cut > 0:
+            verts.append((end - end_cut * (nend-nstart)).tolist())
+        verts.append(end)
+
+        edges = EdgeSequence.from_verts(*verts)
+
+        return edges
+

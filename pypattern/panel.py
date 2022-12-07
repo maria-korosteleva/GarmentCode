@@ -7,6 +7,7 @@ from scipy.spatial.transform import Rotation as R
 from pattern.core import BasicPattern
 from pattern.wrappers import VisPattern
 from .base import BaseComponent
+from .edge import EdgeSequence
 
 class Panel(BaseComponent):
     """ Garment component correspnding to a single flat fiece of fabric
@@ -24,7 +25,7 @@ class Panel(BaseComponent):
 
         self.translation = np.zeros(3)  # TODO translation location? relative to what?
         self.rotation = R.from_euler('XYZ', [0, 0, 0])  # zero rotation
-        self.edges = []   # TODO Dummy square?
+        self.edges =  EdgeSequence()  # TODO Dummy square?
 
     # ANCHOR - Operations -- update object in-place 
     def translate_by(self, delta_vector):
@@ -48,7 +49,6 @@ class Panel(BaseComponent):
         self.translation[0] += -center_3d[0]
 
         return self
-
 
     def autonorm(self):
         """Update right/wrong side orientation, s.t. the normal of the surface looks outside of the world origin, 
@@ -84,11 +84,8 @@ class Panel(BaseComponent):
 
             NOTE: the 6D placement of panel is not affected
         """
-        # Interfaces contain edge object, so don't need updates
-        # Reverse edges
+        # Interfaces contain edge objects, so don't need updates
         self.edges.reverse()
-        for edge in self.edges:
-            edge.flip()
         return self
 
     def mirror(self, axis=[0, 1]):
