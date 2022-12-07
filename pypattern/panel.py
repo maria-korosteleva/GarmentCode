@@ -5,6 +5,7 @@ from scipy.spatial.transform import Rotation as R
 
 # Custom
 from pattern.core import BasicPattern
+from pattern.wrappers import VisPattern
 from .base import BaseComponent
 
 class Panel(BaseComponent):
@@ -16,6 +17,7 @@ class Panel(BaseComponent):
     NOTE: All operations methods return 'self' object to allow sequential applications
 
     """
+    # TODO __get_item__ implementation? Return edges??
 
     def __init__(self, name) -> None:
         super().__init__(name)

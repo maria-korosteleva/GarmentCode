@@ -95,6 +95,21 @@ class TShirt(pyp.Component):
         pyp.ops.cut_corner([self.r_sleeve.interfaces[1].edge], self.btorso, 0, 1)
         pyp.ops.cut_corner([self.l_sleeve.interfaces[0].edge], self.btorso, 5, 6)
 
+        # DRAFT
+        dart = pyp.ops.simple_sequence([0,0], [5, 10], [10, 0])
+        eid = 1
+        edges = pyp.ops.cut_into_edge(dart, self.ftorso.edges[eid], 0.3, right=False)
+
+        self.ftorso.edges.pop(eid)
+        for i, e in enumerate(edges):
+            self.ftorso.edges.insert(eid + i, e)
+
+        eid = 0
+        edges = pyp.ops.cut_into_edge(dart, self.btorso.edges[eid], 0.3, right=True)
+        self.btorso.edges.pop(eid)
+        for i, e in enumerate(edges):
+            self.btorso.edges.insert(eid + i, e)
+
         self.stitching_rules = [
             (self.ftorso.interfaces[-1], self.btorso.interfaces[-3]),
             (self.ftorso.interfaces[-3], self.btorso.interfaces[-1]),

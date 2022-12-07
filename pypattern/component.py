@@ -3,6 +3,7 @@
 # TODO some elements of spec template should probably be optional?
 # TODO move spec template here?
 from pattern.core import BasicPattern
+from pattern.wrappers import VisPattern
 from .connector import connect
 from .base import BaseComponent
 
@@ -47,7 +48,7 @@ class Component(BaseComponent):
         
         Returns: simulator friendly description of component sewing pattern
         """
-        spattern = BasicPattern()
+        spattern = VisPattern()
         spattern.name = self.name
 
         subs = self._get_subcomponents()

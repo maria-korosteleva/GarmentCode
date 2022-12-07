@@ -1,6 +1,6 @@
 """Shortcuts for common operations on panels and components"""
 
-from copy import deepcopy
+from copy import deepcopy, copy
 import numpy as np
 from numpy.linalg import norm
 from scipy.spatial.transform import Rotation as R
@@ -8,11 +8,28 @@ from scipy.optimize import minimize
 
 # Custom 
 from .component import Component
-from .edge import LogicalEdge
+from .edge import LogicalEdge, EdgeSequence
 from .connector import InterfaceInstance
 
 # ANCHOR ----- Typical Edge Sequences generators ----
 # TODO Do these routines belong in this module?
+# TODO sequence
+
+def simple_sequence(*verts):
+    """Generate edge sequence from given vertices
+    """
+    # TODO what's with the ruffle coefficients?
+    # TODO Curvatures
+    # TODO Use other edge sequential generators?
+    # TODO Connect with previous edge in the edge class itself?
+    edges = [
+        LogicalEdge(verts[0], verts[1])
+    ]
+    for i in range(2, len(verts)):
+        edges.append(LogicalEdge(edges[-1].end, verts[i]))
+
+    return edges
+
 
 def simple_loop(*verts):
     """Generate edge sequence -- looped from sequence of vertices
@@ -22,11 +39,7 @@ def simple_loop(*verts):
     # TODO Curvatures
     # TODO Use other edge sequential generators?
     # TODO Connect with previous edge in the edge class itself?
-    edges = [
-        LogicalEdge([0,0], verts[0])
-    ]
-    for i in range(1, len(verts)):
-        edges.append(LogicalEdge(edges[-1].end, verts[i]))
+    edges = simple_sequence(*[[0,0]] + list(verts))
     edges.append(LogicalEdge(edges[-1].end, edges[0].start))
 
     return edges
@@ -177,6 +190,7 @@ def _shift_edge_verts(edge_seq, shift):
         e.end[0] += shift[0]
         e.end[1] += shift[1]
 
+
 def _scale_edges_from_start(edge_seq, scale):
     """Scale the edge sizes by scale, using start of the first edge as a fixes point
     """
@@ -189,8 +203,10 @@ def _scale_edges_from_start(edge_seq, scale):
         e.end[0] = scale * (e.end[0] - v_start[0]) + v_start[0]
         e.end[1] = scale * (e.end[0] - v_start[0]) + v_start[0]
 
+
 def _dist(v1, v2):
     return norm(v2-v1)
+
 
 def _fit_translation(shift, shortcut, v1, v2, vc, d_v1, d_v2):
     """Evaluate how good a shortcut fits the corner with given global shift"""
@@ -203,6 +219,7 @@ def _fit_translation(shift, shortcut, v1, v2, vc, d_v1, d_v2):
             + (d_v2 - _dist(shifted[1], v2) - _dist(shifted[1], vc))**2
             )
 
+
 def _fit_scale(s, shortcut, v1, v2, vc, d_v1, d_v2):
     """Evaluate how good a shortcut fits the corner if the vertices are shifted 
         a little along the line"""
@@ -213,11 +230,80 @@ def _fit_scale(s, shortcut, v1, v2, vc, d_v1, d_v2):
     shifted[0] += (shortcut[0] - shortcut[1]) * s[0]  # this only changes the end vertex though
     shifted[1] += (shortcut[1] - shortcut[0]) * s[1]  # this only changes the end vertex though
 
-    print(shifted)
-
     return ((d_v1 - _dist(shifted[0], v1) - _dist(shifted[0], vc))**2
             + (d_v2 - _dist(shifted[1], v2) - _dist(shifted[1], vc))**2
             )
+
+
+def cut_into_edge(target_shape, base_edge, offset=0, right=True, tol=1e-4):
+    """ Insert edges of the target_shape into the given base_edge, starting from offset
+        edges in target shape are rotated s.t. start -> end vertex vector is aligned with the edge 
+
+        NOTE: for now the base_edge is treated as straight edge
+
+        Parameters:
+        * target_shape -- list of single edge or chained edges to be inserted in the edge. 
+        * base_edge -- edge object, defining the border
+        * right -- which direction the cut should be oriented w.r.t. the direction of base edge
+        * Offset -- fraction [0, 1 - <target_shape_size>], defines position of the target shape along the edge.
+    """
+    # TODO Allow insertion into curved edges
+    # TODO Is it needed? Or edge loop specification is enough?
+
+    target_shape = EdgeSequence(target_shape)
+
+    new_edges = target_shape.copy()
+
+    _snap_to(new_edges, [0, 0])  # notmalize translation of vertices
+
+    # Simplify to vectors
+    shortcut = np.array([new_edges[0].start, new_edges[-1].end])  # "Interface" of the shape to insert
+    edge_vec = np.array([base_edge.start, base_edge.end])  
+
+    # find rotation to apply on target shape to alight it with an edge
+    cos = np.dot(edge_vec[1] - edge_vec[0], shortcut[1] - shortcut[0]) / (_dist(edge_vec[0], edge_vec[1]) * _dist(shortcut[0], shortcut[1]))
+    # Angle with stable relative orienataion of shortcut vector w.r.t. base_edge
+    angle = np.arccos(cos) * np.sign(np.cross(edge_vec[1] - edge_vec[0], shortcut[1] - shortcut[0]))
+    angle *= 1 if right else -1  # account for a desired orientation of the cut
+    rot = np.array([[cos, -np.sin(angle)], [np.sin(angle), cos]])
+
+    for edge in new_edges:
+        edge.end[:] = np.matmul(rot, edge.end)
+    
+    # find starting vertex for insertion & place edges there
+    ins_point = offset * (edge_vec[1] - edge_vec[0]) + edge_vec[0] if offset > tol else base_edge.start    
+    if right:  # We need to flip it's orientation of cut shape and then cut
+        new_edges.reverse()
+        _snap_to(new_edges, [0, 0])  # new first vertex to be zero
+
+    _snap_to(new_edges, ins_point)
+
+    # re-create edges and return 
+    if offset > tol:
+        new_edges.insert(0, LogicalEdge(base_edge.start, new_edges[0].start))
+    
+    # TODO Check if the end is not the same as base_edge already
+    new_edges.append(LogicalEdge(new_edges[-1].end, base_edge.end))
+
+    return new_edges
+
+
+def _snap_to(edge_seq, new_origin=[0, 0]):
+    """Translate the edge seq vertices s.t. the first vertex is at new_origin
+        Assumes chained edge sequence
+    """
+    # TODO this should be a method of EdgeSequence object or something
+    
+    start = copy(edge_seq[0].start)
+    shift = [new_origin[0] - start[0], new_origin[1] - start[1]]
+    for edge in edge_seq:
+        edge.end[0] += shift[0]
+        edge.end[1] += shift[1]
+
+    edge_seq[0].start[0] += shift[0]
+    edge_seq[0].start[1] += shift[1]
+
+    return edge_seq
 
 
 # DRAFT General projection idea
