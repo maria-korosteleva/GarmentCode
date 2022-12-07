@@ -56,7 +56,6 @@ def side_with_cut(start=(0,0), end=(1,0), start_cut=0, end_cut=0):
     return edges
 
 
-# DRAFT corner cutting
 def cut_corner(target_shape, panel, eid1, eid2):
     """ Cut the corner made of edges 1 and 2 following the shape of target_shape
         This routine updated the panel geometry and interfaces appropriately
@@ -69,8 +68,8 @@ def cut_corner(target_shape, panel, eid1, eid2):
         * eid1, eid2 -- ids of the chained pairs of edges that form the corner to cut, s.t. the end vertex of eid1 is at the corner
             # NOTE: Onto edges are expected to be straight lines for simplicity
     """
-
     # TODO specifying desired 2D rotation of target_shape?
+    # TODO component on component?? Interface / stitching rules re-calibration probelem
 
     # ---- Evaluate optimal projection of the target shape onto the corner
     corner_shape = deepcopy(target_shape)

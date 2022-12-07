@@ -53,6 +53,27 @@ class TorsoPanel(pyp.Panel):
             pyp.InterfaceInstance(self, self.edges[5]),
         ]
 
+class SimpleSleeve(pyp.Component):
+    """Very simple sleeve"""
+    # TODO Substitute T-Shirt sleeve with this one
+    def __init__(self, tag) -> None:
+        super().__init__(f'{self.__class__.__name__}_{tag}')
+
+        # sleeves
+        self.f_sleeve = SleevePanel(f'{tag}_f_sleeve').translate_by([0, 0, 15])
+        self.b_sleeve = SleevePanel(f'{tag}_b_sleeve').translate_by([0, 0, -15])
+
+        self.stitching_rules = [
+            (self.f_sleeve.interfaces[0], self.b_sleeve.interfaces[0]),
+            (self.f_sleeve.interfaces[2], self.b_sleeve.interfaces[2]),
+        ]
+
+        self.interfaces = [
+            self.f_sleeve.interfaces[1],
+            self.b_sleeve.interfaces[1],
+        ]
+
+
 class TShirt(pyp.Component):
     """Definition of a simple T-Shirt"""
 
@@ -60,18 +81,29 @@ class TShirt(pyp.Component):
         super().__init__(self.__class__.__name__)
 
         # sleeves
-        self.rf_sleeve = SleevePanel('rf_sleeve').translate_by([0, 0, 15])
-        self.lf_sleeve = SleevePanel('lf_sleeve').translate_by([0, 0, 15]).mirror()
-        self.rb_sleeve = SleevePanel('rb_sleeve').translate_by([0, 0, -15])
-        self.lb_sleeve = SleevePanel('lb_sleeve').mirror().translate_by([0, 0, -15])
+        self.r_sleeve = SimpleSleeve('r')
+        self.l_sleeve = SimpleSleeve('l').mirror()
 
         # Torso
-        self.ftorso = TorsoPanel('front').translate_by([0, 0, 20])
-        self.btorso = TorsoPanel('back').translate_by([0, 0, -20])
+        self.ftorso = TorsoPanel('ftorso').translate_by([0, 0, 20])
+        self.btorso = TorsoPanel('btorso').translate_by([0, 0, -20])
 
         # Order of edges updated after (autonorm)..
         # TODO Simplify the choice of the edges to project from/to (regardless of autonorm)
-        pyp.ops.cut_corner([self.rf_sleeve.edges[1]], self.ftorso, 5, 6)
-        pyp.ops.cut_corner([self.lf_sleeve.edges[2]], self.ftorso, 1, 2)
-        pyp.ops.cut_corner([self.rb_sleeve.edges[2]], self.btorso, 0, 1)
-        pyp.ops.cut_corner([self.lb_sleeve.edges[1]], self.btorso, 5, 6)
+        pyp.ops.cut_corner([self.r_sleeve.interfaces[0].edge], self.ftorso, 5, 6)
+        pyp.ops.cut_corner([self.l_sleeve.interfaces[0].edge], self.ftorso, 1, 2)
+        pyp.ops.cut_corner([self.r_sleeve.interfaces[1].edge], self.btorso, 0, 1)
+        pyp.ops.cut_corner([self.l_sleeve.interfaces[0].edge], self.btorso, 5, 6)
+
+        self.stitching_rules = [
+            (self.ftorso.interfaces[-1], self.btorso.interfaces[-3]),
+            (self.ftorso.interfaces[-3], self.btorso.interfaces[-1]),
+            (self.ftorso.interfaces[-4], self.btorso.interfaces[-6]),
+            (self.ftorso.interfaces[-6], self.btorso.interfaces[-4]),
+
+            (self.r_sleeve.interfaces[0], self.ftorso.interfaces[-5]),
+            (self.l_sleeve.interfaces[0], self.ftorso.interfaces[-2]),
+            (self.r_sleeve.interfaces[1], self.btorso.interfaces[-5]),
+            (self.l_sleeve.interfaces[1], self.btorso.interfaces[-2]),
+
+        ]
