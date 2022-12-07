@@ -10,11 +10,10 @@ from .base import BaseComponent
 from .edge import EdgeSequence
 
 class Panel(BaseComponent):
-    """ Garment component correspnding to a single flat fiece of fabric
+    """ A Base class for defining a Garment component corresponding to a single flat fiece of fabric
     
     Defined as a collection of edges on a 2D grid with specified 3D placement (world coordinates)
     
-
     NOTE: All operations methods return 'self' object to allow sequential applications
 
     """
@@ -74,18 +73,8 @@ class Panel(BaseComponent):
         # NOTE: Nothing happens if self.translation is zero
         if np.dot(norm_dr, self.translation) < 0: 
             # Swap if wrong
-            self.swap_right_wrong()
+            self.edges.reverse()
         
-        return self
-
-    def swap_right_wrong(self):
-        """Swap right and wrond sides of the fabric piece. 
-            = flip the normal of the 2D panel by re-tracing the edge loop backwards
-
-            NOTE: the 6D placement of panel is not affected
-        """
-        # Interfaces contain edge objects, so don't need updates
-        self.edges.reverse()
         return self
 
     def mirror(self, axis=[0, 1]):
