@@ -1,3 +1,4 @@
+from copy import deepcopy
 import numpy as np
 from numpy.linalg import norm
 
@@ -63,6 +64,16 @@ class LogicalEdge(BaseComponent):
 
         return True
 
+    def __str__(self) -> str:
+        return f'[{self.start[0]:.2f}, {self.start[1]:.2f}] -> [{self.end[0]:.2f}, {self.end[1]:.2f}]'  # TODO account for curvatures
+
+    def __repr__(self) -> str:
+        """ 'Official string representation' -- for nice printing of lists of edges
+        
+        https://stackoverflow.com/questions/3558474/how-to-apply-str-function-when-printing-a-list-of-objects-in-python
+        """
+        return self.__str__()
+
     # Actions
     def flip(self):
         """Flip the direction of the edge"""
@@ -76,3 +87,84 @@ class LogicalEdge(BaseComponent):
 
         # TODO simply use the edge sequence? Without defining the vertices??
         return [self.start, self.end], {"endpoints": [0, 1]}
+
+
+# DRAFT
+class EdgeSequence():
+    """Represents a sequence of chained edges (e.g. every next edge starts from the same vertex that the previous edge ends with"""
+    def __init__(self, *args) -> None:
+        self.edges = []
+        for arg in args:
+            self.append(arg)
+
+    # ANCHOR Properties
+    def __getitem__(self, i):
+        return self.edges[i]
+
+    def __len__(self):
+        return len(self.edges)
+
+    def __str__(self) -> str:
+        return str(self.edges)
+    
+    def __repr__(self) -> str:
+        return self.__str__()
+
+    def isLoop(self):
+        return self.edges[0].start is self.edges[-1].end and len(self) > 1
+
+    def isChained(self):
+        """Does the sequence of edges represent correct chain?"""
+        if len(self) < 2:
+            return False
+
+        for i in range(1, len(self.edges)):
+            if self.edges[i].start is not self.edges[i-1].end:
+                return False
+        return True
+
+    # ANCHOR Modifiers
+    def append(self, item):
+        if isinstance(item, LogicalEdge):
+            self.edges.append(item)
+            # TODO check if chained right away!
+        elif isinstance(item, list):
+            self.edges += item
+        elif isinstance(item, EdgeSequence):
+            self.edges += item.edges
+        else:
+            raise ValueError(f'{self.__class__.__name__}::Error::Trying to add object of incompatible type {type(item)}')
+
+    def insert(self, i, item):
+        if isinstance(item, LogicalEdge):
+            self.edges.insert(i, item)
+            # TODO check if chained right away!
+        else:
+            raise NotImplementedError(f'{self.__class__.__name__}::Error::incerting object of {type(item)} not suported (yet)')
+    
+    def reverse(self):
+        """Reverse edge sequence in-place"""
+        self.edges.reverse()
+        for edge in self.edges:
+            edge.flip()
+
+    # ANCHOR Factories
+    def copy(self):
+        """Create a copy of a current edge sequence preserving the chaining property of edge sequences"""
+        new_seq = deepcopy(self)
+
+        # deepcopy recreates the vertex objects on both sides of the edges
+        # in chaned edges those vertex objects are supposed to be shared
+        # by neighbor edges
+
+        # fix vertex sharing
+        for i in range(1, len(new_seq)):
+            new_seq[i].start = new_seq[i-1].end
+            
+        if self.isLoop():
+            new_seq[-1].end = new_seq[0].start
+
+        return new_seq
+
+
+    # TODO isConsistent, from_vertices(), etc.
