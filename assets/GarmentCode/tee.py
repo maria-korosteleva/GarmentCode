@@ -102,14 +102,12 @@ class TShirt(pyp.Component):
         edges = pyp.ops.cut_into_edge(dart, self.ftorso.edges[eid], 0.3, right=False)
 
         self.ftorso.edges.pop(eid)
-        for i, e in enumerate(edges):
-            self.ftorso.edges.insert(eid + i, e)
+        self.ftorso.edges.insert(eid, edges)
 
         eid = 0
         edges = pyp.ops.cut_into_edge(dart, self.btorso.edges[eid], 0.3, right=True)
         self.btorso.edges.pop(eid)
-        for i, e in enumerate(edges):
-            self.btorso.edges.insert(eid + i, e)
+        self.btorso.edges.insert(eid, edges)
 
         self.stitching_rules = [
             (self.ftorso.interfaces[-1], self.btorso.interfaces[-3]),

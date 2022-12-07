@@ -106,8 +106,7 @@ def cut_corner(target_shape, panel, eid1, eid2):
         panel.edges.pop(eid1)
         panel.edges.pop(eid2)
 
-    for i, e in enumerate(corner_shape):
-        panel.edges.insert(eid1 + i, e)
+    panel.edges.insert(eid1, corner_shape)
 
     # Update interface definitions
     intr_ids = []
@@ -268,8 +267,7 @@ def project(edges, panel, edge_id):
 
     # Substitute edges in the panel definition
     panel.edges.pop(edge_id)
-    for i, e in enumerate(edges_copy):
-        panel.edges.insert(edge_id + i, e)
+    panel.edges.insert(edge_id, edges_copy)
 
     # Update interface definitions
     intr_id = None

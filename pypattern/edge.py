@@ -143,7 +143,9 @@ class EdgeSequence():
     def insert(self, i, item):
         if isinstance(item, LogicalEdge):
             self.edges.insert(i, item)
-            # TODO check if chained right away!
+        elif isinstance(item, list) or isinstance(item, EdgeSequence):
+            for j in range(len(item)):
+                self.edges.insert(i + j, item[j])
         else:
             raise NotImplementedError(f'{self.__class__.__name__}::Error::incerting object of {type(item)} not suported (yet)')
         return self
