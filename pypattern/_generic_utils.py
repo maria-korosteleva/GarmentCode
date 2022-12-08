@@ -1,3 +1,5 @@
+import numpy as np
+from numpy.linalg import norm
 from typing import TypeVar, Generic, Sequence, Callable
 
 
@@ -17,3 +19,12 @@ class KeyWrapper(Generic[T, V]):
 
     def __len__(self) -> int:
         return len(self.it)
+
+def vector_angle(v1, v2):
+    """Find an angle between two vectors"""
+    v1, v2 = np.asarray(v1), np.asarray(v2)
+    cos = np.dot(v1, v2) / (norm(v1) * norm(v2))
+    # Cross to indicate correct relative orienataion of v2 w.r.t. v1
+    angle = np.arccos(cos) * np.sign(np.cross(v1, v2))
+
+    return angle

@@ -4,7 +4,7 @@ from numpy.linalg import norm
 
 # Custom
 from .base import BaseComponent
-from .operators import cut_into_edge
+from ._generic_utils import vector_angle
 
 class LogicalEdge(BaseComponent):
     """Edge -- an individual segement of a panel border connecting two panel vertices, 
@@ -91,6 +91,8 @@ class LogicalEdge(BaseComponent):
 
 
 class EdgeSequence():
+    # TODO 2D rotation of edge sequences
+    # TODO Scaling of edge sequences
     """Represents a sequence of (chained) edges (e.g. every next edge starts from the same vertex that the previous edge ends with
         and allows building some typical edge sequences
     """
@@ -184,6 +186,25 @@ class EdgeSequence():
         if not self.isLoop():
             self.append(LogicalEdge(self[-1].end, self[0].start))
 
+    def rotate(self, angle):
+        """Rotate edge sequence by angle in place, using first point as a reference
+
+        Parameters: 
+            angle -- desired rotation angle in radians (!)
+        """
+        curr_start = copy(self[0].start)
+        
+        # set the start point to zero
+        self.snap_to([0, 0])
+        rot = np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
+
+        for edge in self.edges:
+            edge.end[:] = np.matmul(rot, edge.end)
+        
+        # recover the original location
+        self.snap_to(curr_start)
+
+        return self
 
     # ANCHOR Factories for some tipical edge sequences
     def copy(self):
@@ -251,17 +272,52 @@ class EdgeSequence():
             * dart_position -- position along the edge (to the beginning of the dart)
             * right -- whether the dart is created on the right from the edge direction (otherwise created on the left). Default - Right (True)
 
+        NOTE: Darts always have the same length on the sides
         """
-        # TODO revisit presentation on darts to confirm the implementation
-        # TODO Curvatures??
+        # TODO Curvatures?? -- on edges, dart sides
         # TODO Non-straight darts? They won't have the sides of the same length, so it makes things complicated..
 
         # TODO The side edge need to be angled s.t. the sewed thing is straight (original edge)..
-        #REVIEW -  angle or some ratio? How to easily specify the right angle on one of the vertices?
+        # TODO Target edge length / shapes as input
+        # TODO Multiple darts on one side (can we make this fucntions re-usable/chainable?)
 
-        dart_shape = EdgeSequence.from_verts([0, 0], [width / 2, depth] [width, 0])
-        base_edge = LogicalEdge(start, end)
+        dart_shape = EdgeSequence.from_verts([0, 0], [width / 2, depth], [width, 0])
 
-        seq = ops.cut_into_edge(dart_shape, base_edge, offset=dart_position, right=right)
+        # Align with the direction between vertices
+        angle = vector_angle(
+            np.array(end) - np.array(start),
+            np.array(dart_shape[0].start) - np.array(dart_shape[-1].end))
+        angle *= -1 if right else 1  # account for a desired orientation of the cut
+        dart_shape.rotate(angle)
         
-        return seq
+        # TODO support positions other then in the middle between vertices
+
+        # Create new vertex that the dart will start from
+        d_to_center = norm(np.array(end) - np.array(start))
+        # coords relative to start vertex
+        dart_st_point = [(d_to_center - width) / 2, 0]
+        dart_st_point[1] = dart_st_point[0] * width / 2 / depth
+        # absolute position
+        dart_st_point = EdgeSequence._rel_to_abs_coords(start, end, dart_st_point)
+
+        # Collect all together
+        if right:
+            dart_shape.reverse()
+        dart_shape.snap_to(dart_st_point)
+        dart_shape.insert(0, LogicalEdge(start, dart_shape[0].start))
+        dart_shape.append(LogicalEdge(dart_shape[-1].end, end))
+
+        return dart_shape
+
+    @staticmethod
+    def _rel_to_abs_coords(start, end, vrel):
+        """Convert coordinates specified relative to vector v2 - v1 to world coords"""
+        start, end, vrel = np.asarray(start), np.asarray(end), np.asarray(vrel)
+        vec = end - start
+        vec = vec / norm(vec)
+        vec_perp = np.array([-vec[1], vec[0]])
+        
+        new_start = start + vrel[0] * vec
+        new_point = new_start + vrel[1] * vec_perp
+
+        return new_point 

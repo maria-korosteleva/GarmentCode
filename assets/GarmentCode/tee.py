@@ -127,7 +127,7 @@ class TShirt(pyp.Component):
         pyp.ops.cut_corner([self.r_sleeve.interfaces[1].edge], self.btorso, 0, 1)
         pyp.ops.cut_corner([self.l_sleeve.interfaces[0].edge], self.btorso, 5, 6)
 
-        # DRAFT
+        # DRAFT tests of cut-outs
         dart = pyp.EdgeSequence.from_verts([0,0], [5, 10], [10, 0], loop=False)
         eid = 1
         edges = pyp.ops.cut_into_edge(dart, self.ftorso.edges[eid], 0.3, right=False)
@@ -170,8 +170,8 @@ class FittedTShirt(pyp.Component):
 
         # Order of edges updated after (autonorm)..
         # TODO Simplify the choice of the edges to project from/to (regardless of autonorm)
-        pyp.ops.cut_corner([self.r_sleeve.interfaces[0].edge], self.ftorso, 8, 9)
-        pyp.ops.cut_corner([self.l_sleeve.interfaces[0].edge], self.ftorso, 4, 5)
+        # pyp.ops.cut_corner([self.r_sleeve.interfaces[0].edge], self.ftorso, 8, 9)
+        # pyp.ops.cut_corner([self.l_sleeve.interfaces[0].edge], self.ftorso, 4, 5)
         pyp.ops.cut_corner([self.r_sleeve.interfaces[1].edge], self.btorso, 0, 1)
         pyp.ops.cut_corner([self.l_sleeve.interfaces[0].edge], self.btorso, 5, 6)
 

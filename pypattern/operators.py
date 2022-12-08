@@ -9,6 +9,7 @@ from scipy.optimize import minimize
 # Custom 
 from .edge import LogicalEdge, EdgeSequence
 from .connector import InterfaceInstance
+from ._generic_utils import vector_angle
 
 # ANCHOR ----- Edge Sequences Modifiers ----
 # TODO also part of EdgeSequence class?
@@ -144,14 +145,9 @@ def cut_into_edge(target_shape, base_edge, offset=0, right=True, tol=1e-4):
     edge_vec = np.array([base_edge.start, base_edge.end])  
 
     # find rotation to apply on target shape to alight it with an edge
-    cos = np.dot(edge_vec[1] - edge_vec[0], shortcut[1] - shortcut[0]) / (_dist(edge_vec[0], edge_vec[1]) * _dist(shortcut[0], shortcut[1]))
-    # Angle with stable relative orienataion of shortcut vector w.r.t. base_edge
-    angle = np.arccos(cos) * np.sign(np.cross(edge_vec[1] - edge_vec[0], shortcut[1] - shortcut[0]))
+    angle = vector_angle(edge_vec[1] - edge_vec[0], shortcut[1] - shortcut[0])
     angle *= 1 if right else -1  # account for a desired orientation of the cut
-    rot = np.array([[cos, -np.sin(angle)], [np.sin(angle), cos]])
-
-    for edge in new_edges:
-        edge.end[:] = np.matmul(rot, edge.end)
+    new_edges.rotate(angle)
     
     # find starting vertex for insertion & place edges there
     ins_point = offset * (edge_vec[1] - edge_vec[0]) + edge_vec[0] if offset > tol else base_edge.start    
