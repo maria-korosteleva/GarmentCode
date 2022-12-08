@@ -367,7 +367,7 @@ class EdgeSequence():
         dart_shape.insert(0, LogicalEdge(start, dart_shape[0].start))
         dart_shape.append(LogicalEdge(dart_shape[-1].end, end))
 
-        return dart_shape, dart_shape[1:-1], EdgeSequence(dart_shape[0], dart_shape[1])
+        return dart_shape, dart_shape[1:-1], EdgeSequence(dart_shape[0], dart_shape[-1])
 
     @staticmethod
     def _rel_to_abs_coords(start, end, vrel):

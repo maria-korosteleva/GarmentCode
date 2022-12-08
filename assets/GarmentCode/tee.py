@@ -97,11 +97,11 @@ class TorsoFittedPanel(pyp.Panel):
         # default placement
         self.translate_by([-width / 2, 30 - length, 0])
 
-        # TODO Update to contain multiple edges
+        # TODO Finding ids of edges is a pain..
         self.interfaces = [
             pyp.InterfaceInstance(self, r_interface),
-            pyp.InterfaceInstance(self, self.edges[1]),
             pyp.InterfaceInstance(self, self.edges[4]),
+            pyp.InterfaceInstance(self, self.edges[7]),
             pyp.InterfaceInstance(self, l_interface),
         ]
 
@@ -194,8 +194,8 @@ class FittedTShirt(pyp.Component):
 
         self.stitching_rules = [
             # sides
-            pyp.StitchingRule(self.ftorso.interfaces[0], self.btorso.interfaces[3]),
-            pyp.StitchingRule(self.ftorso.interfaces[3], self.btorso.interfaces[0]),
+            pyp.StitchingRule(self.ftorso.interfaces[0], self.btorso.interfaces[0]),
+            pyp.StitchingRule(self.ftorso.interfaces[3], self.btorso.interfaces[3]),
 
             # tops
             pyp.StitchingRule(self.ftorso.interfaces[1], self.btorso.interfaces[2]),
