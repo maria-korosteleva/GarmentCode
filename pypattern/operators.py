@@ -7,7 +7,6 @@ from scipy.spatial.transform import Rotation as R
 from scipy.optimize import minimize
 
 # Custom 
-from .component import Component
 from .edge import LogicalEdge, EdgeSequence
 from .connector import InterfaceInstance
 
@@ -224,7 +223,7 @@ def project(edges, panel, edge_id):
 
 
 # ANCHOR ----- Panel operations ------
-def distribute_Y(component: Component, n_copies: int):
+def distribute_Y(component, n_copies):
     """Distribute copies of component over the circle around Oy"""
     copies = [ component ]
     for i in range(n_copies - 1):

@@ -4,6 +4,7 @@ from numpy.linalg import norm
 
 # Custom
 from .base import BaseComponent
+from .operators import cut_into_edge
 
 class LogicalEdge(BaseComponent):
     """Edge -- an individual segement of a panel border connecting two panel vertices, 
@@ -128,6 +129,7 @@ class EdgeSequence():
 
     # ANCHOR Modifiers
     # All modifiers return self object to allow chaining
+    # Wrappers around python's list
     def append(self, item):
         if isinstance(item, LogicalEdge):
             self.edges.append(item)
@@ -161,6 +163,7 @@ class EdgeSequence():
             edge.flip()
         return self
 
+    # EdgeSequence-specific
     def snap_to(self, new_origin=[0, 0]):
         """Translate the edge seq vertices s.t. the first vertex is at new_origin
         """
@@ -174,6 +177,12 @@ class EdgeSequence():
         self[0].start[1] += shift[1]
 
         return self
+
+    def close_loop(self):
+        """if edge loop is not closed, add and edge to close it"""
+        self.isChained()  # print worning if smth is wrong
+        if not self.isLoop():
+            self.append(LogicalEdge(self[-1].end, self[0].start))
 
 
     # ANCHOR Factories for some tipical edge sequences
@@ -231,3 +240,28 @@ class EdgeSequence():
 
         return edges
 
+    #DRAFT
+    @staticmethod
+    def side_with_dart(start=(0,0), end=(1,0), width=5, depth=10, dart_position=0, right=True):
+        """Create a seqence of edges that represent a side with a dart with given parameters
+        Parameters:
+            * start and end -- vertices between which side with a dart is located
+            * width -- width of a dart opening
+            * depth -- depth of a dart (distance between the opening and the farthest vertex)
+            * dart_position -- position along the edge (to the beginning of the dart)
+            * right -- whether the dart is created on the right from the edge direction (otherwise created on the left). Default - Right (True)
+
+        """
+        # TODO revisit presentation on darts to confirm the implementation
+        # TODO Curvatures??
+        # TODO Non-straight darts? They won't have the sides of the same length, so it makes things complicated..
+
+        # TODO The side edge need to be angled s.t. the sewed thing is straight (original edge)..
+        #REVIEW -  angle or some ratio? How to easily specify the right angle on one of the vertices?
+
+        dart_shape = EdgeSequence.from_verts([0, 0], [width / 2, depth] [width, 0])
+        base_edge = LogicalEdge(start, end)
+
+        seq = ops.cut_into_edge(dart_shape, base_edge, offset=dart_position, right=right)
+        
+        return seq
