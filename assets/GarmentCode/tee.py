@@ -198,10 +198,11 @@ class FittedTShirt(pyp.Component):
             pyp.StitchingRule(self.ftorso.interfaces[3], self.btorso.interfaces[3]),
 
             # tops
-            pyp.StitchingRule(self.ftorso.interfaces[1], self.btorso.interfaces[2]),
-            pyp.StitchingRule(self.ftorso.interfaces[2], self.btorso.interfaces[1]),
+            pyp.StitchingRule(self.ftorso.interfaces[1], self.btorso.interfaces[1]),
+            pyp.StitchingRule(self.ftorso.interfaces[2], self.btorso.interfaces[2]),
 
             # Stitches are connected by new interfaces
+            # TODO return those new interfaces from the cut function
             pyp.StitchingRule(self.r_sleeve.interfaces[0], self.ftorso.interfaces[-2]),
             pyp.StitchingRule(self.l_sleeve.interfaces[0], self.ftorso.interfaces[-1]),
             pyp.StitchingRule(self.r_sleeve.interfaces[1], self.btorso.interfaces[-2]),

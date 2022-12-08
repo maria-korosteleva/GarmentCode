@@ -112,7 +112,10 @@ class EdgeSequence():
             return self.edges[i]
 
     def index(self, elem):
-        return self.edges.index(elem)
+        # Find the same object (by reference) 
+        # list.index() is doing something different..
+        # https://stackoverflow.com/a/47057419
+        return next(i for i, e in enumerate(self.edges) if elem is e)
 
     def __len__(self):
         return len(self.edges)
