@@ -83,10 +83,9 @@ class TorsoFittedPanel(pyp.Panel):
         width = sholder_w + ease
         sholder_top_l = (width - neck_w) / 2 
         # TODO dart depends on measurements?
-        self.edges, r_dart_st, r_interface = pyp.EdgeSequence.side_with_dart(
+        self.edges, r_dart, r_interface = pyp.EdgeSequence.side_with_dart(
             [0, 0], [0, length], 
-            width=4, depth=10, dart_position=0.3, right=True, 
-            panel=self)
+            width=4, depth=10, dart_position=0.3, right=True)
 
         self.edges.append(pyp.EdgeSequence.from_verts(
             self.edges[-1].end, 
@@ -95,10 +94,9 @@ class TorsoFittedPanel(pyp.Panel):
             [sholder_top_l + neck_w, length], 
             [width, length]))
 
-        l_edge, l_dart_st, l_interface = pyp.EdgeSequence.side_with_dart(
+        l_edge, l_dart, l_interface = pyp.EdgeSequence.side_with_dart(
             self.edges[-1].end, [width, 0], 
-            width=4, depth=10, dart_position=0.7, right=True,
-            panel=self)
+            width=4, depth=10, dart_position=0.7, right=True)
         self.edges.append(l_edge)
         self.edges.close_loop()
 
@@ -114,7 +112,10 @@ class TorsoFittedPanel(pyp.Panel):
         ]
 
         # Stitch the darts
-        self.stitching_rules += r_dart_st + l_dart_st
+        self.stitching_rules = [
+            (pyp.InterfaceInstance(self, r_dart[0]), pyp.InterfaceInstance(self, r_dart[1])),
+            (pyp.InterfaceInstance(self, l_dart[0]), pyp.InterfaceInstance(self, l_dart[1]))
+        ]
 
 # TODO condition T-Shirts to be fitted or not
 class TShirt(pyp.Component):

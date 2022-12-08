@@ -1,10 +1,13 @@
+# Custom
+from .edge import LogicalEdge, EdgeSequence
+
 class InterfaceInstance():
     """Single edge of a panel that can be used for connecting to"""
     def __init__(self, panel, edge):
         """
         Parameters:
             * panel - Panel object
-            * edge - LogicalEdge in the panel that are allowed to connect to
+            * edges - LogicalEdge or EdgeSequence -- edges in the panel that are allowed to connect to
         """
 
         # The base edge shape can be connected to the desired interface shape

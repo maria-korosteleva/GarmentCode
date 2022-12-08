@@ -4,7 +4,6 @@ from numpy.linalg import norm
 
 # Custom
 from .base import BaseComponent
-from .connector import InterfaceInstance
 from ._generic_utils import vector_angle
 
 class LogicalEdge(BaseComponent):
@@ -269,7 +268,7 @@ class EdgeSequence():
 
     #DRAFT
     @staticmethod
-    def side_with_dart(start=(0,0), end=(1,0), width=5, depth=10, dart_position=0, right=True, panel=None):
+    def side_with_dart(start=(0,0), end=(1,0), width=5, depth=10, dart_position=0, right=True):
         """Create a seqence of edges that represent a side with a dart with given parameters
         Parameters:
             * start and end -- vertices between which side with a dart is located
@@ -318,14 +317,7 @@ class EdgeSequence():
         dart_shape.insert(0, LogicalEdge(start, dart_shape[0].start))
         dart_shape.append(LogicalEdge(dart_shape[-1].end, end))
 
-        # Suggest stitching rules
-        # TODO Multiple darts?
-        st_rules = []
-        if panel is not None:
-            st_rules.append(
-                (InterfaceInstance(panel, dart_shape[1]), InterfaceInstance(panel, dart_shape[2])))
-
-        return dart_shape, st_rules, EdgeSequence(dart_shape[0], dart_shape[1])
+        return dart_shape, dart_shape[1:-1], EdgeSequence(dart_shape[0], dart_shape[1])
 
     @staticmethod
     def _rel_to_abs_coords(start, end, vrel):
