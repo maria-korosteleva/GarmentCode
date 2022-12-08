@@ -14,6 +14,7 @@ from ._generic_utils import vector_angle
 # ANCHOR ----- Edge Sequences Modifiers ----
 # TODO also part of EdgeSequence class?
 
+#FIXME - projection does not always preserve the angles of original edges
 def cut_corner(target_shape, panel, eid1, eid2):
     """ Cut the corner made of edges 1 and 2 following the shape of target_shape
         This routine updated the panel geometry and interfaces appropriately
