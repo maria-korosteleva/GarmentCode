@@ -40,6 +40,10 @@ def cut_corner(target_shape, panel, eid1, eid2):
         v1, v2 = v2, v1  
         swaped = True
         # NOW v1 is lower then v2
+
+    # DEBUG 
+    print(corner_shape)
+
     if corner_shape[0].start[1] > corner_shape[-1].end[1]:
         corner_shape.reverse()
         for e in corner_shape:
@@ -111,9 +115,10 @@ def cut_corner(target_shape, panel, eid1, eid2):
     panel.edges.insert(eid1, corner_shape)
 
     # Update interface definitions
+    # FIXME This is not working properly with the new multi-edge interfaces
     intr_ids = []
     for i, intr in enumerate(panel.interfaces):
-        if intr.edge is edge1 or intr.edge is edge2:
+        if edge1 in intr.edges or edge2 in intr.edges:
             intr_ids.append(i)
 
     # Bunch of new interfaces
@@ -204,8 +209,7 @@ def project(edges, panel, edge_id):
     print(f'New edges: {[(e.start, e.end) for e in edges_copy]}')
 
     # Substitute edges in the panel definition
-    panel.edges.pop(edge_id)
-    panel.edges.insert(edge_id, edges_copy)
+    panel.edges.substitute(edge_id, edges_copy)
 
     # Update interface definitions
     intr_id = None

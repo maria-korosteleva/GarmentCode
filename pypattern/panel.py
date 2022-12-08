@@ -8,7 +8,6 @@ from pattern.core import BasicPattern
 from pattern.wrappers import VisPattern
 from .base import BaseComponent
 from .edge import EdgeSequence
-from .connector import connect
 
 class Panel(BaseComponent):
     """ A Base class for defining a Garment component corresponding to a single flat fiece of fabric
@@ -149,7 +148,7 @@ class Panel(BaseComponent):
 
         # Assembly stitching info (panel might have inner stitches)
         for rule in self.stitching_rules:
-            spattern.pattern['stitches'].append(connect(rule[0], rule[1]))
+            spattern.pattern['stitches'] += rule.assembly()
             
         return spattern
 

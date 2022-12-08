@@ -6,6 +6,7 @@ from numpy.linalg import norm
 from .base import BaseComponent
 from ._generic_utils import vector_angle
 
+# TODO rename 
 class LogicalEdge(BaseComponent):
     """Edge -- an individual segement of a panel border connecting two panel vertices, 
     where the sharp change of direction occures, the basic building block of panels
@@ -110,6 +111,9 @@ class EdgeSequence():
         else:
             return self.edges[i]
 
+    def index(self, elem):
+        return self.edges.index(elem)
+
     def __len__(self):
         return len(self.edges)
 
@@ -133,6 +137,14 @@ class EdgeSequence():
                 print(f'{self.__class__.__name__}::Warning!::Edge sequence is not properly chained')
                 return False
         return True
+
+    def fractions(self):
+        """Fractions of the lengths of each edge in sequence w.r.t. 
+            the whole sequence
+        """
+        total_len = sum([len(e) for e in self.edges])
+
+        return [len(e) / total_len for e in self.edges]
 
     # ANCHOR Modifiers
     # All modifiers return self object to allow chaining
@@ -161,6 +173,17 @@ class EdgeSequence():
     
     def pop(self, i):
         self.edges.pop(i)
+        return self
+
+    def substitute(self, orig, new):
+        """Remove orign item from the list and place seq into it's place
+            orig can be either an id of an item to remove 
+            or an instance of LogicalEdge that exists in the current sequence
+        """
+        if isinstance(orig, LogicalEdge):
+            orig = self.index(orig)
+        self.pop(orig)
+        self.insert(orig, new)
         return self
 
     def reverse(self):
@@ -243,6 +266,32 @@ class EdgeSequence():
         
         seq.isChained()
         return seq
+
+    def from_fractions(start, end, frac=[1]):
+        """A sequence of edges between start and end wich lengths are distributed
+            as specified in frac list 
+        Parameters:
+            * frac -- list of legth fractions. Every entry is in (0, 1], 
+                all entries sums up to 1
+        """
+        # TODO fractions of curvy edges?
+        frac = [abs(f) for f in frac]
+        if abs(sum(frac) - 1) > 1e-4:
+            raise RuntimeError(f'EdgeSequence::Error::fraction list does not follow the requirements')
+
+        vec = np.asarray(end) - np.asarray(start)
+        vec = vec / norm(vec)
+        verts = [start]
+        for i in range(len(frac) - 1):
+            verts.append(
+                [verts[-1][0] + frac[i]*vec[0],
+                verts[-1][1] + frac[i]*vec[1]]
+            )
+        verts.append(end)
+        
+        return EdgeSequence.from_verts(verts)
+
+
 
     @staticmethod
     def side_with_cut(start=(0,0), end=(1,0), start_cut=0, end_cut=0):

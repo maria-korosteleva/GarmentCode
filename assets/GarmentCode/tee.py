@@ -1,11 +1,5 @@
-from pathlib import Path
-from datetime import datetime
-from copy import deepcopy
-from scipy.spatial.transform import Rotation as R
-
 # Custom
 import pypattern as pyp
-from customconfig import Properties
 
 
 class SleevePanel(pyp.Panel):
@@ -37,8 +31,8 @@ class SimpleSleeve(pyp.Component):
         self.b_sleeve = SleevePanel(f'{tag}_b_sleeve').translate_by([0, 0, -15])
 
         self.stitching_rules = [
-            (self.f_sleeve.interfaces[0], self.b_sleeve.interfaces[0]),
-            (self.f_sleeve.interfaces[2], self.b_sleeve.interfaces[2]),
+            pyp.StitchingRule(self.f_sleeve.interfaces[0], self.b_sleeve.interfaces[0]),
+            pyp.StitchingRule(self.f_sleeve.interfaces[2], self.b_sleeve.interfaces[2]),
         ]
 
         self.interfaces = [
@@ -113,8 +107,8 @@ class TorsoFittedPanel(pyp.Panel):
 
         # Stitch the darts
         self.stitching_rules = [
-            (pyp.InterfaceInstance(self, r_dart[0]), pyp.InterfaceInstance(self, r_dart[1])),
-            (pyp.InterfaceInstance(self, l_dart[0]), pyp.InterfaceInstance(self, l_dart[1]))
+            pyp.StitchingRule(pyp.InterfaceInstance(self, r_dart[0]), pyp.InterfaceInstance(self, r_dart[1])),
+            pyp.StitchingRule(pyp.InterfaceInstance(self, l_dart[0]), pyp.InterfaceInstance(self, l_dart[1]))
         ]
 
 # TODO condition T-Shirts to be fitted or not
@@ -134,34 +128,33 @@ class TShirt(pyp.Component):
 
         # Order of edges updated after (autonorm)..
         # TODO Simplify the choice of the edges to project from/to (regardless of autonorm)
-        pyp.ops.cut_corner([self.r_sleeve.interfaces[0].edge], self.ftorso, 5, 6)
-        pyp.ops.cut_corner([self.l_sleeve.interfaces[0].edge], self.ftorso, 1, 2)
-        pyp.ops.cut_corner([self.r_sleeve.interfaces[1].edge], self.btorso, 0, 1)
-        pyp.ops.cut_corner([self.l_sleeve.interfaces[0].edge], self.btorso, 5, 6)
+        pyp.ops.cut_corner([self.r_sleeve.interfaces[0].edges], self.ftorso, 5, 6)
+        pyp.ops.cut_corner([self.l_sleeve.interfaces[0].edges], self.ftorso, 1, 2)
+        pyp.ops.cut_corner([self.r_sleeve.interfaces[1].edges], self.btorso, 0, 1)
+        pyp.ops.cut_corner([self.l_sleeve.interfaces[0].edges], self.btorso, 5, 6)
 
         # DRAFT tests of cut-outs
         dart = pyp.EdgeSequence.from_verts([0,0], [5, 10], [10, 0], loop=False)
         eid = 1
         edges = pyp.ops.cut_into_edge(dart, self.ftorso.edges[eid], 0.3, right=False)
 
-        self.ftorso.edges.pop(eid)
-        self.ftorso.edges.insert(eid, edges)
+        self.ftorso.edges.substitute(eid, edges)
 
         eid = 0
         edges = pyp.ops.cut_into_edge(dart, self.btorso.edges[eid], 0.3, right=True)
-        self.btorso.edges.pop(eid)
-        self.btorso.edges.insert(eid, edges)
+        self.btorso.edges.substitute(eid, edges)
 
+        # TODO too bulky??
         self.stitching_rules = [
-            (self.ftorso.interfaces[-1], self.btorso.interfaces[-3]),
-            (self.ftorso.interfaces[-3], self.btorso.interfaces[-1]),
-            (self.ftorso.interfaces[-4], self.btorso.interfaces[-6]),
-            (self.ftorso.interfaces[-6], self.btorso.interfaces[-4]),
+            pyp.StitchingRule(self.ftorso.interfaces[-1], self.btorso.interfaces[-3]),
+            pyp.StitchingRule(self.ftorso.interfaces[-3], self.btorso.interfaces[-1]),
+            pyp.StitchingRule(self.ftorso.interfaces[-4], self.btorso.interfaces[-6]),
+            pyp.StitchingRule(self.ftorso.interfaces[-6], self.btorso.interfaces[-4]),
 
-            (self.r_sleeve.interfaces[0], self.ftorso.interfaces[-5]),
-            (self.l_sleeve.interfaces[0], self.ftorso.interfaces[-2]),
-            (self.r_sleeve.interfaces[1], self.btorso.interfaces[-5]),
-            (self.l_sleeve.interfaces[1], self.btorso.interfaces[-2]),
+            pyp.StitchingRule(self.r_sleeve.interfaces[0], self.ftorso.interfaces[-5]),
+            pyp.StitchingRule(self.l_sleeve.interfaces[0], self.ftorso.interfaces[-2]),
+            pyp.StitchingRule(self.r_sleeve.interfaces[1], self.btorso.interfaces[-5]),
+            pyp.StitchingRule(self.l_sleeve.interfaces[1], self.btorso.interfaces[-2]),
 
         ]
 
@@ -182,20 +175,21 @@ class FittedTShirt(pyp.Component):
 
         # Order of edges updated after (autonorm)..
         # TODO Simplify the choice of the edges to project from/to (regardless of autonorm)
-        pyp.ops.cut_corner([self.r_sleeve.interfaces[0].edge], self.ftorso, 8, 9)
-        pyp.ops.cut_corner([self.l_sleeve.interfaces[0].edge], self.ftorso, 4, 5)
-        pyp.ops.cut_corner([self.r_sleeve.interfaces[1].edge], self.btorso, 0, 1)
-        pyp.ops.cut_corner([self.l_sleeve.interfaces[0].edge], self.btorso, 5, 6)
+
+        pyp.ops.cut_corner(self.r_sleeve.interfaces[0].edges, self.ftorso, 8, 9)
+        pyp.ops.cut_corner(self.l_sleeve.interfaces[0].edges, self.ftorso, 4, 5)
+        pyp.ops.cut_corner(self.r_sleeve.interfaces[1].edges, self.btorso, 0, 1)
+        pyp.ops.cut_corner(self.l_sleeve.interfaces[0].edges, self.btorso, 5, 6)
 
         # self.stitching_rules = [
-        #     (self.ftorso.interfaces[-1], self.btorso.interfaces[-3]),
-        #     (self.ftorso.interfaces[-3], self.btorso.interfaces[-1]),
-        #     (self.ftorso.interfaces[-4], self.btorso.interfaces[-6]),
-        #     (self.ftorso.interfaces[-6], self.btorso.interfaces[-4]),
+        #     pyp.StitchingRule(self.ftorso.interfaces[-1], self.btorso.interfaces[-3]),
+        #     pyp.StitchingRule(self.ftorso.interfaces[-3], self.btorso.interfaces[-1]),
+        #     pyp.StitchingRule(self.ftorso.interfaces[-4], self.btorso.interfaces[-6]),
+        #     pyp.StitchingRule(self.ftorso.interfaces[-6], self.btorso.interfaces[-4]),
 
-        #     (self.r_sleeve.interfaces[0], self.ftorso.interfaces[-5]),
-        #     (self.l_sleeve.interfaces[0], self.ftorso.interfaces[-2]),
-        #     (self.r_sleeve.interfaces[1], self.btorso.interfaces[-5]),
-        #     (self.l_sleeve.interfaces[1], self.btorso.interfaces[-2]),
+        #     pyp.StitchingRule(self.r_sleeve.interfaces[0], self.ftorso.interfaces[-5]),
+        #     pyp.StitchingRule(self.l_sleeve.interfaces[0], self.ftorso.interfaces[-2]),
+        #     pyp.StitchingRule(self.r_sleeve.interfaces[1], self.btorso.interfaces[-5]),
+        #     pyp.StitchingRule(self.l_sleeve.interfaces[1], self.btorso.interfaces[-2]),
 
         # ]

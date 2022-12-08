@@ -4,7 +4,6 @@
 # TODO move spec template here?
 from pattern.core import BasicPattern
 from pattern.wrappers import VisPattern
-from .connector import connect
 from .base import BaseComponent
 
 class Component(BaseComponent):
@@ -68,7 +67,7 @@ class Component(BaseComponent):
             spattern.pattern['stitches'] += sub_raw['stitches']
 
         for rule in self.stitching_rules:
-            spattern.pattern['stitches'].append(connect(rule[0], rule[1]))
+            spattern.pattern['stitches'] += rule.assembly()
 
         # TODO Normalize pattern (edge loops, etc.)?
         return spattern   
