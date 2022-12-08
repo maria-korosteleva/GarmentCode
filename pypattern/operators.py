@@ -15,12 +15,12 @@ from ._generic_utils import vector_angle
 # TODO also part of EdgeSequence class?
 
 #FIXME - projection does not always preserve the angles of original edges
-def cut_corner(target_shape, panel, eid1, eid2):
+def cut_corner(target_shape:EdgeSequence, panel, eid1, eid2):
     """ Cut the corner made of edges 1 and 2 following the shape of target_shape
         This routine updated the panel geometry and interfaces appropriately
 
         Parameters:
-        * 'target_shape' is a list that is expected to contain one LogicalEdge or sequence of chained LogicalEdges 
+        * 'target_shape' is an EdgeSequence that is expected to contain one LogicalEdge or sequence of chained LogicalEdges 
             (next one starts from the end vertex of the one before)
             # NOTE: 'target_shape' might be scaled (along the main direction) to fit the corner size
         * Panel to modify
@@ -41,14 +41,9 @@ def cut_corner(target_shape, panel, eid1, eid2):
         swaped = True
         # NOW v1 is lower then v2
 
-    # DEBUG 
-    print(corner_shape)
-
     if corner_shape[0].start[1] > corner_shape[-1].end[1]:
-        corner_shape.reverse()
-        for e in corner_shape:
-            e.flip()
         # now corner shape is oriented the same way as vertices
+        corner_shape.reverse()
 
     shortcut = np.array([corner_shape[0].start, corner_shape[-1].end]) 
 
@@ -62,7 +57,10 @@ def cut_corner(target_shape, panel, eid1, eid2):
     shift = out.x
 
     # re-align corner_shape with found shifts
-    _shift_edge_verts(corner_shape, shift)
+    corner_shape.snap_to(
+        [corner_shape[0].start[0] + shift[0], 
+        corner_shape[0].start[1] + shift[1]]
+        )
 
     # Then, find scaling parameter that allows to place the end vertces exactly -- another SLE
     if abs(out.fun) > 1e-3:  
@@ -86,7 +84,7 @@ def cut_corner(target_shape, panel, eid1, eid2):
         scale = _dist(shifted[0], shifted[1]) / _dist(shortcut[1], shortcut[0])
 
         # move the sequence s.t. the initial vertex is places correctly
-        _shift_edge_verts(corner_shape, (shifted[0] - shifted[1]) * out.x[0])
+        corner_shape.snap_to((shifted[0] - shifted[1]) * out.x[0])
 
         # Move internal vertices according to predicred scale s.w. the final vertex can be placed correctly
         _scale_edges_from_start(corner_shape, scale=scale)
@@ -96,8 +94,6 @@ def cut_corner(target_shape, panel, eid1, eid2):
     if swaped:
         # The edges are aligned as v2 -> vc -> v1
         corner_shape.reverse()
-        for e in corner_shape:
-            e.flip()
 
     corner_shape.insert(0, LogicalEdge(panel.edges[eid1].start, corner_shape[0].start))
     corner_shape.append(LogicalEdge(corner_shape[-1].end, panel.edges[eid2].end))
@@ -241,20 +237,6 @@ def distribute_Y(component, n_copies):
 
 
 # ---- Utils ----
-
-def _shift_edge_verts(edge_seq, shift):
-    """ Move all vertices in the edge sequence by provided shift vector (2D)
-        NOTE this function assumes that edges are chained
-
-    """
-    edge_seq[0].start[0] += shift[0] 
-    edge_seq[0].start[1] += shift[1] 
-
-    for e in edge_seq:  # NOTE this part assumes that edges are chained
-        e.end[0] += shift[0]
-        e.end[1] += shift[1]
-
-
 def _scale_edges_from_start(edge_seq, scale):
     """Scale the edge sizes by scale, using start of the first edge as a fixes point
     """

@@ -43,7 +43,7 @@ class LogicalEdge(BaseComponent):
         """Return current length of an edge.
             Since vertices may change their locations externally, the length is dynamically evaluated
         """
-        self.length = norm(np.asarray(self.end) - np.asarray(self.start))
+        return norm(np.asarray(self.end) - np.asarray(self.start))
 
     def __eq__(self, __o: object) -> bool:
         """Special implementation of comparison: same edges == edges are allowed to be connected
