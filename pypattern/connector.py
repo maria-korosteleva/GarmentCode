@@ -15,6 +15,13 @@ class InterfaceInstance():
 
     def __len__(self):
         return len(self.edges)
+    
+    def __str__(self) -> str:
+        return f'{self.panel.name}: {str(self.edges)}'
+    
+    def __repr__(self) -> str:
+        return self.__str__()
+
 
 # DRAFT
 class StitchingRule():
@@ -33,7 +40,7 @@ class StitchingRule():
         if self.isT(): # swap to always have long single edge at int2 location
             if len(int2) > 1:
                 self.int1, self.int2 = int2, int1
-                self.match_egde_count()
+            self.match_edge_count()
             
 
     def isMatching(self):
@@ -54,8 +61,12 @@ class StitchingRule():
             # SIM specific
         """
 
+        print('We are here!!')  # DEBUG
+
         # Eval the fraction corresponding to every segment in the "from" interface
         fractions = self.int1.edges.fractions()
+
+        print(fractions)  # DEBUG
 
         # Subdivide edges in the target interface
         base_edge = self.int2.edges[0]
@@ -63,6 +74,8 @@ class StitchingRule():
         # Substitute
         self.int2.panel.edges.substitute(base_edge, subdiv)
         self.int2.edges = subdiv
+
+        print(subdiv)  # DEBUG
 
 
     def assembly(self):

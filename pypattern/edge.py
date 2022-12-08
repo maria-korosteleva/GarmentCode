@@ -117,6 +117,10 @@ class EdgeSequence():
     def __len__(self):
         return len(self.edges)
 
+    def __contains__(self, item):
+        # check presence by comparing references
+        return any([item is e for e in self.edges])
+
     def __str__(self) -> str:
         return str(self.edges)
     
@@ -142,9 +146,9 @@ class EdgeSequence():
         """Fractions of the lengths of each edge in sequence w.r.t. 
             the whole sequence
         """
-        total_len = sum([len(e) for e in self.edges])
+        total_len = sum([e.length() for e in self.edges])
 
-        return [len(e) / total_len for e in self.edges]
+        return [e.length() / total_len for e in self.edges]
 
     # ANCHOR Modifiers
     # All modifiers return self object to allow chaining
@@ -280,7 +284,6 @@ class EdgeSequence():
             raise RuntimeError(f'EdgeSequence::Error::fraction list does not follow the requirements')
 
         vec = np.asarray(end) - np.asarray(start)
-        vec = vec / norm(vec)
         verts = [start]
         for i in range(len(frac) - 1):
             verts.append(
@@ -289,9 +292,7 @@ class EdgeSequence():
             )
         verts.append(end)
         
-        return EdgeSequence.from_verts(verts)
-
-
+        return EdgeSequence.from_verts(*verts)
 
     @staticmethod
     def side_with_cut(start=(0,0), end=(1,0), start_cut=0, end_cut=0):

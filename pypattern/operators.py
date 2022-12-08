@@ -99,29 +99,24 @@ def cut_corner(target_shape:EdgeSequence, panel, eid1, eid2):
     corner_shape.append(LogicalEdge(corner_shape[-1].end, panel.edges[eid2].end))
 
     # Substitute edges in the panel definition
-    edge1 = panel.edges[eid1]
-    edge2 = panel.edges[eid2]
-    if eid2 > eid1:  # making sure that correct elements are removed
-        panel.edges.pop(eid2)
-        panel.edges.pop(eid1)   
-    else:  
-        panel.edges.pop(eid1)
-        panel.edges.pop(eid2)
+    edge1, edge2 = panel.edges[eid1], panel.edges[eid2]  # remember the old ones
+    if eid2 < eid1:  # making sure that elements are removed in correct order
+        eid1, eid2 = eid2, eid1
+    panel.edges.pop(eid2)
+    panel.edges.pop(eid1)   
 
     panel.edges.insert(eid1, corner_shape)
 
     # Update interface definitions
-    # FIXME This is not working properly with the new multi-edge interfaces
-    intr_ids = []
-    for i, intr in enumerate(panel.interfaces):
-        if edge1 in intr.edges or edge2 in intr.edges:
-            intr_ids.append(i)
+    for intr in panel.interfaces:
+        # Substitute old edges with what's left from them after cutting
+        if edge1 in intr.edges:
+            intr.edges.substitute(edge1, corner_shape[0])
+        if edge2 in intr.edges:
+            intr.edges.substitute(edge2, corner_shape[-1])
 
-    # Bunch of new interfaces
-    if intr_ids:
-        for id in sorted(intr_ids, reverse=True):
-            panel.interfaces.pop(id)
-        panel.interfaces += [InterfaceInstance(panel, e) for e in corner_shape]
+    # Add new interface corresponding to the introduced cut
+    panel.interfaces.append(InterfaceInstance(panel, corner_shape[1:-1]))
 
 def cut_into_edge(target_shape, base_edge, offset=0, right=True, tol=1e-4):
     """ Insert edges of the target_shape into the given base_edge, starting from offset
