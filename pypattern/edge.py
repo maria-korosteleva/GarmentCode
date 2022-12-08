@@ -4,6 +4,7 @@ from numpy.linalg import norm
 
 # Custom
 from .base import BaseComponent
+from .connector import InterfaceInstance
 from ._generic_utils import vector_angle
 
 class LogicalEdge(BaseComponent):
@@ -103,7 +104,12 @@ class EdgeSequence():
 
     # ANCHOR Properties
     def __getitem__(self, i):
-        return self.edges[i]
+        if isinstance(i, slice):
+            # return an EdgeSequence object for slices
+            e_slice = self.edges[i]
+            return EdgeSequence(e_slice)
+        else:
+            return self.edges[i]
 
     def __len__(self):
         return len(self.edges)
@@ -263,7 +269,7 @@ class EdgeSequence():
 
     #DRAFT
     @staticmethod
-    def side_with_dart(start=(0,0), end=(1,0), width=5, depth=10, dart_position=0, right=True):
+    def side_with_dart(start=(0,0), end=(1,0), width=5, depth=10, dart_position=0, right=True, panel=None):
         """Create a seqence of edges that represent a side with a dart with given parameters
         Parameters:
             * start and end -- vertices between which side with a dart is located
@@ -271,6 +277,11 @@ class EdgeSequence():
             * depth -- depth of a dart (distance between the opening and the farthest vertex)
             * dart_position -- position along the edge (to the beginning of the dart)
             * right -- whether the dart is created on the right from the edge direction (otherwise created on the left). Default - Right (True)
+
+        Returns: 
+            * Full edge with a dart
+            * References to dart edges
+            * References to non-dart edges
 
         NOTE: Darts always have the same length on the sides
         """
@@ -307,7 +318,14 @@ class EdgeSequence():
         dart_shape.insert(0, LogicalEdge(start, dart_shape[0].start))
         dart_shape.append(LogicalEdge(dart_shape[-1].end, end))
 
-        return dart_shape
+        # Suggest stitching rules
+        # TODO Multiple darts?
+        st_rules = []
+        if panel is not None:
+            st_rules.append(
+                (InterfaceInstance(panel, dart_shape[1]), InterfaceInstance(panel, dart_shape[2])))
+
+        return dart_shape, st_rules, EdgeSequence(dart_shape[0], dart_shape[1])
 
     @staticmethod
     def _rel_to_abs_coords(start, end, vrel):

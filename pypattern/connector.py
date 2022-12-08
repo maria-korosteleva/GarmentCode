@@ -1,10 +1,6 @@
-# Custom
-from .panel import Panel
-from .edge import LogicalEdge
-
 class InterfaceInstance():
     """Single edge of a panel that can be used for connecting to"""
-    def __init__(self, panel: Panel, edge: LogicalEdge):
+    def __init__(self, panel, edge):
         """
         Parameters:
             * panel - Panel object
