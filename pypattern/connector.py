@@ -103,26 +103,3 @@ class StitchingRule():
             ])
         return stitches
 
-# TODO Remove and refactor the code -- this is obsolete
-def connect_assembly(int1:Interface, int2:Interface):
-    """Produce a stitch that connects two interfaces
-
-        NOTE: the interface geometry matching is not checked, and generally not required 
-    """
-    # TODO Multiple edges in the interface / geometric ids
-    # TODO BEFORE THIS, one should have a projection operator to match the # of egdes on both sides
-    # TODO Interface -- check matching (which edge connects to which edge)
-
-    return [
-                {
-                    'panel': int1.panel.name,  # corresponds to a name. 
-                                            # Only one element of the first level is expected
-                    'edge': int1.edges.geometric_id
-                },
-                {
-                    'panel': int2.panel.name,
-                    'edge': int2.edges.geometric_id
-                }
-            ]
-
-
