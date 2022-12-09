@@ -3,11 +3,10 @@ import numpy as np
 from numpy.linalg import norm
 
 # Custom
-from .base import BaseComponent
 from ._generic_utils import vector_angle
 
 # TODO rename 
-class LogicalEdge(BaseComponent):
+class LogicalEdge():
     """Edge -- an individual segement of a panel border connecting two panel vertices, 
     where the sharp change of direction occures, the basic building block of panels
 
@@ -26,8 +25,6 @@ class LogicalEdge(BaseComponent):
 
             # TODO Add support for fold schemes to allow guided folds at the edge (e.g. pleats)
         """
-        super().__init__('edge')
-
         # TODO add curvatures
         # TODO add parameters
         # TODO add documentation
