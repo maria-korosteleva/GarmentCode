@@ -1,3 +1,5 @@
+from numpy.linalg import norm
+
 # Custom
 from .edge import LogicalEdge, EdgeSequence
 
@@ -32,6 +34,7 @@ class StitchingRule():
         # TODO Multuple edges and multiple panels??
         self.int1 = int1
         self.int2 = int2
+
         if not self.isMatching() and not self.isT():
             raise ValueError(f'{self.__class__.__name__}::Error::Many-to-many stitches are not supported')
         
@@ -47,7 +50,27 @@ class StitchingRule():
 
     def isT(self):
         """Check if we are dealing with T-stitch"""
-        return len(self.int1) > 1 or len(self.int2) > 1
+        return (len(self.int1) > 1 and len(self.int2) == 1) or (len(self.int2) == 1 and len(self.int2) > 1)
+
+    def isTraversalMatching(self):
+        """Check if the traversal direction of edge sequences matches or needs to be swapped"""
+
+        if len(self.int1.edges) > 1:
+            # Make sure the direction is matching
+            # 3D distance between corner vertices
+            start_1 = self.int1.panel.point_to_3D(self.int1.edges[0].start)
+            start_2 = self.int2.panel.point_to_3D(self.int2.edges[0].start)
+
+            end_1 = self.int1.panel.point_to_3D(self.int1.edges[-1].end)
+            end_2 = self.int2.panel.point_to_3D(self.int2.edges[-1].end)
+            
+            stitch_dist_straight = norm(start_2 - start_1) + norm(end_2 - end_1)
+            stitch_dist_reverse = norm(start_2 - end_1) + norm(end_2 - start_1)
+
+            if stitch_dist_reverse < stitch_dist_straight:
+                # We need to swap traversal direction
+                return False
+        return True
 
 
     def match_edge_count(self):
@@ -87,7 +110,8 @@ class StitchingRule():
             raise RuntimeError(f'{self.__class__.__name__}::Error::Stitch sides do not matched!!')
 
         stitches = []
-        for i in range(len(self.int1.edges)):
+        swap = not self.isTraversalMatching()  # traverse edge sequences correctly
+        for i, j in zip(range(len(self.int1.edges)), range(len(self.int2.edges) - 1, -1, -1) if swap else range(len(self.int2.edges))):
             stitches.append([
                 {
                     'panel': self.int1.panel.name,  # corresponds to a name. 
@@ -96,7 +120,7 @@ class StitchingRule():
                 },
                 {
                     'panel': self.int2.panel.name,
-                    'edge': self.int2.edges[i].geometric_id
+                    'edge': self.int2.edges[j].geometric_id
                 }
             ])
         return stitches
