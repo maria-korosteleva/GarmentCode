@@ -71,7 +71,7 @@ class TorsoPanel(pyp.Panel):
 class TorsoFittedPanel(pyp.Panel):
     """Panel for the front of upper garments with darts to properly fit it to the shape"""
 
-    def __init__(self, name, length=50, neck_w=15, sholder_w=40, c_depth=15, ease=3) -> None:
+    def __init__(self, name, length=50, neck_w=15, sholder_w=40, c_depth=15, ease=3, d_width=4, d_depth=10) -> None:
         super().__init__(name)
 
         width = sholder_w + ease
@@ -79,7 +79,7 @@ class TorsoFittedPanel(pyp.Panel):
         # TODO dart depends on measurements?
         self.edges, r_dart, r_interface = pyp.EdgeSequence.side_with_dart(
             [0, 0], [0, length], 
-            width=4, depth=10, dart_position=0.3, right=True)
+            width=d_width, depth=d_depth, dart_position=0.3, right=True)
 
         self.edges.append(pyp.EdgeSequence.from_verts(
             self.edges[-1].end, 
@@ -90,7 +90,7 @@ class TorsoFittedPanel(pyp.Panel):
 
         l_edge, l_dart, l_interface = pyp.EdgeSequence.side_with_dart(
             self.edges[-1].end, [width, 0], 
-            width=4, depth=10, dart_position=0.7, right=True)
+            width=d_width, depth=d_depth, dart_position=0.7, right=True)
         self.edges.append(l_edge)
         self.edges.close_loop()
 
@@ -126,22 +126,22 @@ class TShirt(pyp.Component):
         self.ftorso = TorsoPanel('ftorso').translate_by([0, 0, 20])
         self.btorso = TorsoPanel('btorso').translate_by([0, 0, -20])
 
-        # Order of edges updated after (autonorm)..
-        # TODO Simplify the choice of the edges to project from/to (regardless of autonorm)
-        pyp.ops.cut_corner(self.r_sleeve.interfaces[0].edges, self.ftorso, 5, 6)
-        pyp.ops.cut_corner(self.l_sleeve.interfaces[0].edges, self.ftorso, 1, 2)
-        pyp.ops.cut_corner(self.r_sleeve.interfaces[1].edges, self.btorso, 0, 1)
-        pyp.ops.cut_corner(self.l_sleeve.interfaces[0].edges, self.btorso, 5, 6)
+        # Cut the sleeve shapes to connect them nicely
+        # TODO Try with ruffle sleeves! O_o
+        _, fr_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[0].edges, self.ftorso, 5, 6)
+        _, fl_sleeve_int = pyp.ops.cut_corner(self.l_sleeve.interfaces[0].edges, self.ftorso, 1, 2)
+        _, br_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[1].edges, self.btorso, 0, 1)
+        _, bl_sleeve_int = pyp.ops.cut_corner(self.l_sleeve.interfaces[0].edges, self.btorso, 5, 6)
 
         # DRAFT tests of cut-outs
         # dart = pyp.EdgeSequence.from_verts([0,0], [5, 10], [10, 0], loop=False)
         # eid = 1
-        # edges = pyp.ops.cut_into_edge(dart, self.ftorso.edges[eid], 0.3, right=False)
+        # edges, _ = pyp.ops.cut_into_edge(dart, self.ftorso.edges[eid], 0.3, right=False)
 
         # self.ftorso.edges.substitute(eid, edges)
 
         # eid = 0
-        # edges = pyp.ops.cut_into_edge(dart, self.btorso.edges[eid], 0.3, right=True)
+        # edges, _ = pyp.ops.cut_into_edge(dart, self.btorso.edges[eid], 0.3, right=True)
         # self.btorso.edges.substitute(eid, edges)
 
         self.stitching_rules = pyp.Stitches(
@@ -153,12 +153,11 @@ class TShirt(pyp.Component):
             (self.ftorso.interfaces[1], self.btorso.interfaces[1]),
             (self.ftorso.interfaces[2], self.btorso.interfaces[2]),
 
-            # Stitches are connected by new interfaces
-            # TODO return those new interfaces from the cut function
-            (self.r_sleeve.interfaces[0], self.ftorso.interfaces[-2]),
-            (self.l_sleeve.interfaces[0], self.ftorso.interfaces[-1]),
-            (self.r_sleeve.interfaces[1], self.btorso.interfaces[-2]),
-            (self.l_sleeve.interfaces[1], self.btorso.interfaces[-1]),
+            # Sleeves are connected by new interfaces
+            (self.r_sleeve.interfaces[0], fr_sleeve_int),
+            (self.l_sleeve.interfaces[0], fl_sleeve_int),
+            (self.r_sleeve.interfaces[1], br_sleeve_int),
+            (self.l_sleeve.interfaces[1], bl_sleeve_int),
         )
 
 
@@ -173,28 +172,16 @@ class FittedTShirt(pyp.Component):
         self.l_sleeve = SimpleSleeve('l').mirror()
 
         # Torso
-        self.ftorso = TorsoFittedPanel('ftorso').translate_by([0, 0, 20])
+        self.ftorso = TorsoFittedPanel('ftorso', d_width=7, d_depth=17).translate_by([0, 0, 20])
         self.btorso = TorsoPanel('btorso').translate_by([0, 0, -20])
 
         # Order of edges updated after (autonorm)..
         # TODO Simplify the choice of the edges to project from/to (regardless of autonorm)
 
-        # DEBUG
-        print('Before cutting: ')
-        print(self.ftorso.interfaces[0])
-        print(self.btorso.interfaces[0])
-        print(self.btorso.interfaces[3])
-
-        pyp.ops.cut_corner(self.r_sleeve.interfaces[0].edges, self.ftorso, 8, 9)
-        pyp.ops.cut_corner(self.l_sleeve.interfaces[0].edges, self.ftorso, 4, 5)
-        pyp.ops.cut_corner(self.r_sleeve.interfaces[1].edges, self.btorso, 0, 1)
-        pyp.ops.cut_corner(self.l_sleeve.interfaces[0].edges, self.btorso, 5, 6)
-
-        # DEBUG
-        print('After cutting: ')
-        print(self.ftorso.interfaces[0])
-        print(self.btorso.interfaces[0])
-        print(self.btorso.interfaces[3])
+        _, fr_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[0].edges, self.ftorso, 8, 9)
+        _, fl_sleeve_int = pyp.ops.cut_corner(self.l_sleeve.interfaces[0].edges, self.ftorso, 4, 5)
+        _, br_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[1].edges, self.btorso, 0, 1)
+        _, bl_sleeve_int = pyp.ops.cut_corner(self.l_sleeve.interfaces[0].edges, self.btorso, 5, 6)
 
         self.stitching_rules = pyp.Stitches(
             # sides
@@ -205,12 +192,11 @@ class FittedTShirt(pyp.Component):
             (self.ftorso.interfaces[1], self.btorso.interfaces[1]),
             (self.ftorso.interfaces[2], self.btorso.interfaces[2]),
 
-            # Stitches are connected by new interfaces
-            # TODO return those new interfaces from the cut function
-            (self.r_sleeve.interfaces[0], self.ftorso.interfaces[-2]),
-            (self.l_sleeve.interfaces[0], self.ftorso.interfaces[-1]),
-            (self.r_sleeve.interfaces[1], self.btorso.interfaces[-2]),
-            (self.l_sleeve.interfaces[1], self.btorso.interfaces[-1]),
+            # Sleeves are connected by new interfaces
+            (self.r_sleeve.interfaces[0], fr_sleeve_int),
+            (self.l_sleeve.interfaces[0], fl_sleeve_int),
+            (self.r_sleeve.interfaces[1], br_sleeve_int),
+            (self.l_sleeve.interfaces[1], bl_sleeve_int),
 
         )
 

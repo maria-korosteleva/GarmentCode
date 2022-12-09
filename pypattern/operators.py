@@ -28,6 +28,14 @@ def cut_corner(target_shape:EdgeSequence, panel, eid1, eid2):
 
         # NOTE There might be slight computational errors in the resulting shape, 
                 that are more pronounced on svg visualizations due to scaling and rasterization
+
+        Side-Effects:
+            * Modified the panel shape to insert new edges
+            * Adds new interface object corresponding to new edges to the panel interface list
+
+        Returns:
+            * Newly inserted edges
+            * New interface object corresponding to new edges
     """
     # TODO specifying desired 2D rotation of target_shape?
     # TODO component on component?? Interface / stitching rules re-calibration probelem
@@ -120,6 +128,8 @@ def cut_corner(target_shape:EdgeSequence, panel, eid1, eid2):
     # Add new interface corresponding to the introduced cut
     panel.interfaces.append(Interface(panel, corner_shape[1:-1]))
 
+    return corner_shape[1:-1], panel.interfaces[-1]
+
 def cut_into_edge(target_shape, base_edge, offset=0, right=True, tol=1e-4):
     """ Insert edges of the target_shape into the given base_edge, starting from offset
         edges in target shape are rotated s.t. start -> end vertex vector is aligned with the edge 
@@ -131,6 +141,10 @@ def cut_into_edge(target_shape, base_edge, offset=0, right=True, tol=1e-4):
         * base_edge -- edge object, defining the border
         * right -- which direction the cut should be oriented w.r.t. the direction of base edge
         * Offset -- fraction [0, 1 - <target_shape_size>], defines position of the target shape along the edge.
+
+        Returns:
+        * Newly created edges that accomodate the cut
+        * Edges corresponding to the cut area
     """
     # TODO Allow insertion into curved edges
     # TODO Is it needed? Or edge loop specification is enough?
@@ -161,7 +175,7 @@ def cut_into_edge(target_shape, base_edge, offset=0, right=True, tol=1e-4):
     # TODO Check if the end is not the same as base_edge already / goes beyong the end edge
     new_edges.append(LogicalEdge(new_edges[-1].end, base_edge.end))
 
-    return new_edges
+    return new_edges, new_edges[1:-1]
 
 # ANCHOR ----- Panel operations ------
 def distribute_Y(component, n_copies):
