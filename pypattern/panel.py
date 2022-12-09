@@ -35,9 +35,23 @@ class Panel(BaseComponent):
 
         return self
     
+    def translate_to(self, new_translation):
+        """Set panel translation to be exactly that vector"""
+        self.translation = new_translation
+        self.autonorm()
+
+        return self
+    
     def rotate_by(self, delta_rotation):
         """Rotate panel by a given rotation"""
         self.rotation = delta_rotation * self.rotation
+        self.autonorm()
+
+        return self
+
+    def rotate_to(self, new_rot):
+        """Set panel rotation to be exactly given rotation"""
+        self.rotation = new_rot
         self.autonorm()
 
         return self

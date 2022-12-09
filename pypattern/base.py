@@ -3,7 +3,10 @@ from typing import Any
 from .connector import Stitches
 
 class BaseComponent():
-    """Basic interface for garment-related components"""
+    """Basic interface for garment-related components
+    
+        NOTE: modifier methods return self object to allow chaining of the operations
+    """
 
     def __init__(self, name) -> None:
         self.name = name
@@ -16,10 +19,17 @@ class BaseComponent():
         self.stitching_rules = Stitches()
 
     def translate_by(self, delta_translation):
-        pass
+        return self
+
+    def translate_to(self, new_translation):
+        """Set panel translation to be exactly that vector"""
+        return self
 
     def rotate_by(self, delta_rotation):
-        pass
+        return self
+    
+    def rotate_to(self, new_rot):
+        return self
 
     def assembly(self, *args,**kwds):
         return {}

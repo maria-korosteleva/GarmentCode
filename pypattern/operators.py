@@ -173,9 +173,11 @@ def distribute_Y(component, n_copies):
         delta_rotation = R.from_euler('XYZ', [0, 360 / n_copies, 0], degrees=True)
 
         new_component.rotate_by(delta_rotation)
-        new_component.translation = delta_rotation.apply(new_component.translation)
+        new_component.translate_to(delta_rotation.apply(new_component.translation))
 
         copies.append(new_component)
+
+    # TODO resolve collisions though!
 
     return copies
 

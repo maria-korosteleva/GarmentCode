@@ -167,8 +167,7 @@ class SkirtManyPanels(pyp.Component):
 
         self.n_panels = n_panels
 
-        self.front = ThinSkirtPanel('front', 72 / n_panels)
-        self.front.translate_by([-72 / n_panels, -75, 20])
+        self.front = ThinSkirtPanel('front', 72 / n_panels).translate_by([-72 / n_panels, -75, 20]).center_x()
 
         self.subs = pyp.ops.distribute_Y(self.front, n_panels)
 

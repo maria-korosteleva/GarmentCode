@@ -22,11 +22,23 @@ class Component(BaseComponent):
         for subs in self._get_subcomponents():
             subs.translate_by(delta_vector)
         return self
+    
+    def translate_to(self, new_translation):
+        """Set panel translation to be exactly that vector"""
+        for subs in self._get_subcomponents():
+            subs.translate_to(new_translation)
+        return self
 
     def rotate_by(self, delta_rotation):
         """Rotate component by a given rotation"""
         for subs in self._get_subcomponents():
-            subs.rotate(delta_rotation)
+            subs.rotate_by(delta_rotation)
+        return self
+    
+    def rotate_to(self, new_rot):
+        """Set panel rotation to be exactly given rotation"""
+        for subs in self._get_subcomponents():
+            subs.rotate_to(new_rot)
         return self
 
     def mirror(self, axis=[0, 1]):
