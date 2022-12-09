@@ -22,7 +22,6 @@ class SleevePanel(pyp.Panel):
 
 class SimpleSleeve(pyp.Component):
     """Very simple sleeve"""
-    # TODO Substitute T-Shirt sleeve with this one
     def __init__(self, tag) -> None:
         super().__init__(f'{self.__class__.__name__}_{tag}')
 
@@ -39,6 +38,27 @@ class SimpleSleeve(pyp.Component):
             self.f_sleeve.interfaces[1],
             self.b_sleeve.interfaces[1],
         ]
+
+class RuffleSleeve(pyp.Component):
+    """Very simple sleeve"""
+    # TODO Make it work as ruffles from a sleeve definition!!
+    def __init__(self, tag, ruffle_rate=1.5, arm_width=30) -> None:
+        super().__init__(f'{self.__class__.__name__}_{tag}')
+
+        # sleeves
+        self.f_sleeve = SleevePanel(f'{tag}_f_sleeve', arm_width=arm_width*ruffle_rate).translate_by([0, 0, 15])
+        self.b_sleeve = SleevePanel(f'{tag}_b_sleeve', arm_width=arm_width*ruffle_rate).translate_by([0, 0, -15])
+
+        self.stitching_rules = pyp.Stitches(
+            (self.f_sleeve.interfaces[0], self.b_sleeve.interfaces[0]),
+            (self.f_sleeve.interfaces[2], self.b_sleeve.interfaces[2]),
+        )
+
+        self.interfaces = [
+            self.f_sleeve.interfaces[1],
+            self.b_sleeve.interfaces[1],
+        ]
+
 
 class TorsoPanel(pyp.Panel):
     """Panel for the front/back of upper garments"""
@@ -115,12 +135,16 @@ class TorsoFittedPanel(pyp.Panel):
 class TShirt(pyp.Component):
     """Definition of a simple T-Shirt"""
 
-    def __init__(self) -> None:
+    def __init__(self, ruffle_sleeve=False) -> None:
         super().__init__(self.__class__.__name__)
 
         # sleeves
-        self.r_sleeve = SimpleSleeve('r')
-        self.l_sleeve = SimpleSleeve('l').mirror()
+        if ruffle_sleeve:
+            self.r_sleeve = RuffleSleeve('r')
+            self.l_sleeve = RuffleSleeve('l').mirror()
+        else:
+            self.r_sleeve = SimpleSleeve('r')
+            self.l_sleeve = SimpleSleeve('l').mirror()
 
         # Torso
         self.ftorso = TorsoPanel('ftorso').translate_by([0, 0, 20])
@@ -159,7 +183,6 @@ class TShirt(pyp.Component):
             (self.r_sleeve.interfaces[1], br_sleeve_int),
             (self.l_sleeve.interfaces[1], bl_sleeve_int),
         )
-
 
 class FittedTShirt(pyp.Component):
     """Definition of a simple T-Shirt"""
