@@ -19,8 +19,8 @@ if __name__ == '__main__':
         # SkirtManyPanels(n_panels=2),
         # SkirtManyPanels(n_panels=4),
         # SkirtManyPanels(n_panels=10),
-        # TShirt(),
-        FittedTShirt()
+        TShirt(),
+        # FittedTShirt()
     ]
 
     # test_garments[0].translate_by([2, 0, 0])

@@ -1,7 +1,7 @@
 # Custom
 from .edge import LogicalEdge, EdgeSequence
 
-class InterfaceInstance():
+class Interface():
     """Single edge of a panel that can be used for connecting to"""
     def __init__(self, panel, edges):
         """
@@ -104,7 +104,7 @@ class StitchingRule():
         return stitches
 
 # TODO Remove and refactor the code -- this is obsolete
-def connect_assembly(int1:InterfaceInstance, int2:InterfaceInstance):
+def connect_assembly(int1:Interface, int2:Interface):
     """Produce a stitch that connects two interfaces
 
         NOTE: the interface geometry matching is not checked, and generally not required 

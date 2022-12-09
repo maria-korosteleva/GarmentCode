@@ -9,7 +9,7 @@
 from .component import Component
 from .panel import Panel
 from .edge import LogicalEdge, EdgeSequence
-from .connector import InterfaceInstance, StitchingRule
+from .connector import Interface, StitchingRule
 
 # Operations
 import pypattern.operators as ops

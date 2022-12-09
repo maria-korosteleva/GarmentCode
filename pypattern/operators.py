@@ -8,7 +8,7 @@ from scipy.optimize import minimize
 
 # Custom 
 from .edge import LogicalEdge, EdgeSequence
-from .connector import InterfaceInstance
+from .connector import Interface
 from ._generic_utils import vector_angle
 
 # ANCHOR ----- Edge Sequences Modifiers ----
@@ -118,7 +118,7 @@ def cut_corner(target_shape:EdgeSequence, panel, eid1, eid2):
             intr.edges.substitute(edge2, corner_shape[-1])
 
     # Add new interface corresponding to the introduced cut
-    panel.interfaces.append(InterfaceInstance(panel, corner_shape[1:-1]))
+    panel.interfaces.append(Interface(panel, corner_shape[1:-1]))
 
 def cut_into_edge(target_shape, base_edge, offset=0, right=True, tol=1e-4):
     """ Insert edges of the target_shape into the given base_edge, starting from offset

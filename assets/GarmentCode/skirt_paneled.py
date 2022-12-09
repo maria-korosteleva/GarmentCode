@@ -32,11 +32,11 @@ class HipRuffleSkirtPanel(pyp.Panel):
         # define interface
         # TODO references with vs without cuts? What is the cut parameter is zero?
         # TODO More semantic references?
-        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[1]))
+        self.interfaces.append(pyp.Interface(self, self.edges[1]))
         # Create ruffles by the differences in edge length
         # NOTE ruffles are only created when connecting with something
-        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[2]))
-        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[3]))
+        self.interfaces.append(pyp.Interface(self, self.edges[2]))
+        self.interfaces.append(pyp.Interface(self, self.edges[3]))
 
 class RuffleSkirtPanel(pyp.Panel):
     """One panel of a panel skirt with ruffles on the waist"""
@@ -59,11 +59,11 @@ class RuffleSkirtPanel(pyp.Panel):
         # define interface
         # TODO references with vs without cuts? What is the cut parameter is zero?
         # TODO More semantic references?
-        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[1]))
+        self.interfaces.append(pyp.Interface(self, self.edges[1]))
         # Create ruffles by the differences in edge length
         # NOTE ruffles are only created when connecting with something
-        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[2]))
-        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[3]))
+        self.interfaces.append(pyp.Interface(self, self.edges[2]))
+        self.interfaces.append(pyp.Interface(self, self.edges[3]))
 
         # default placement
         self.center_x()  # Already know that this panel should be centered over Y
@@ -78,9 +78,9 @@ class ThinSkirtPanel(pyp.Panel):
         # define edge loop
         self.edges = pyp.EdgeSequence.from_verts([0,0], [10, 70], [10 + top_width, 70], [20 + top_width, 0], loop=True)
 
-        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[0]))
-        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[1]))
-        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[2]))
+        self.interfaces.append(pyp.Interface(self, self.edges[0]))
+        self.interfaces.append(pyp.Interface(self, self.edges[1]))
+        self.interfaces.append(pyp.Interface(self, self.edges[2]))
 
 
 class WBPanel(pyp.Panel):
@@ -93,10 +93,10 @@ class WBPanel(pyp.Panel):
         self.edges = pyp.EdgeSequence.from_verts([0,0], [0, 10], [35, 10], [35, 0], loop=True)
 
         # define interface
-        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[0]))
-        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[1]))
-        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[2]))
-        self.interfaces.append(pyp.InterfaceInstance(self, self.edges[3]))
+        self.interfaces.append(pyp.Interface(self, self.edges[0]))
+        self.interfaces.append(pyp.Interface(self, self.edges[1]))
+        self.interfaces.append(pyp.Interface(self, self.edges[2]))
+        self.interfaces.append(pyp.Interface(self, self.edges[3]))
 
         # Default translation
         self.center_x()

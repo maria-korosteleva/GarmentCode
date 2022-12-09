@@ -15,9 +15,9 @@ class SleevePanel(pyp.Panel):
         self.translate_by([-length - 20, 15, 0])
 
         self.interfaces = [
-            pyp.InterfaceInstance(self, self.edges[1]),
-            pyp.InterfaceInstance(self, self.edges[2]),
-            pyp.InterfaceInstance(self, self.edges[3]),
+            pyp.Interface(self, self.edges[1]),
+            pyp.Interface(self, self.edges[2]),
+            pyp.Interface(self, self.edges[3]),
         ]
 
 class SimpleSleeve(pyp.Component):
@@ -62,10 +62,10 @@ class TorsoPanel(pyp.Panel):
         self.translate_by([-width / 2, 30 - length, 0])
 
         self.interfaces = [
-            pyp.InterfaceInstance(self, self.edges[0]),
-            pyp.InterfaceInstance(self, self.edges[1]),
-            pyp.InterfaceInstance(self, self.edges[4]),
-            pyp.InterfaceInstance(self, self.edges[5]),
+            pyp.Interface(self, self.edges[0]),
+            pyp.Interface(self, self.edges[1]),
+            pyp.Interface(self, self.edges[4]),
+            pyp.Interface(self, self.edges[5]),
         ]
 
 class TorsoFittedPanel(pyp.Panel):
@@ -99,16 +99,16 @@ class TorsoFittedPanel(pyp.Panel):
 
         # TODO Finding ids of edges is a pain..
         self.interfaces = [
-            pyp.InterfaceInstance(self, r_interface),
-            pyp.InterfaceInstance(self, self.edges[4]),
-            pyp.InterfaceInstance(self, self.edges[7]),
-            pyp.InterfaceInstance(self, l_interface),
+            pyp.Interface(self, r_interface),
+            pyp.Interface(self, self.edges[4]),
+            pyp.Interface(self, self.edges[7]),
+            pyp.Interface(self, l_interface),
         ]
 
         # Stitch the darts
         self.stitching_rules = [
-            pyp.StitchingRule(pyp.InterfaceInstance(self, r_dart[0]), pyp.InterfaceInstance(self, r_dart[1])),
-            pyp.StitchingRule(pyp.InterfaceInstance(self, l_dart[0]), pyp.InterfaceInstance(self, l_dart[1]))
+            pyp.StitchingRule(pyp.Interface(self, r_dart[0]), pyp.Interface(self, r_dart[1])),
+            pyp.StitchingRule(pyp.Interface(self, l_dart[0]), pyp.Interface(self, l_dart[1]))
         ]
 
 # TODO condition T-Shirts to be fitted or not
