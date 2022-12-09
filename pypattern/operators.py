@@ -14,7 +14,6 @@ from ._generic_utils import vector_angle
 # ANCHOR ----- Edge Sequences Modifiers ----
 # TODO also part of EdgeSequence class?
 
-#FIXME - projection does not always preserve the angles of original edges
 def cut_corner(target_shape:EdgeSequence, panel, eid1, eid2):
     """ Cut the corner made of edges 1 and 2 following the shape of target_shape
         This routine updated the panel geometry and interfaces appropriately
@@ -26,6 +25,9 @@ def cut_corner(target_shape:EdgeSequence, panel, eid1, eid2):
         * Panel to modify
         * eid1, eid2 -- ids of the chained pairs of edges that form the corner to cut, s.t. the end vertex of eid1 is at the corner
             # NOTE: Onto edges are expected to be straight lines for simplicity
+
+        # NOTE There might be slight computational errors in the resulting shape, 
+                that are more pronounced on svg visualizations due to scaling and rasterization
     """
     # TODO specifying desired 2D rotation of target_shape?
     # TODO component on component?? Interface / stitching rules re-calibration probelem
