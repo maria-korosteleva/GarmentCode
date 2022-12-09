@@ -31,7 +31,7 @@ def cut_corner(target_shape:EdgeSequence, panel, eid1, eid2):
     # TODO component on component?? Interface / stitching rules re-calibration probelem
 
     # ---- Evaluate optimal projection of the target shape onto the corner
-    corner_shape = deepcopy(target_shape)
+    corner_shape = target_shape.copy()
     # Get rid of directions by working on vertices
     vc = np.array(panel.edges[eid1].end)
     v1, v2 = np.array(panel.edges[eid1].start), np.array(panel.edges[eid2].end)
@@ -57,10 +57,10 @@ def cut_corner(target_shape:EdgeSequence, panel, eid1, eid2):
     shift = out.x
 
     # re-align corner_shape with found shifts
-    corner_shape.snap_to(
-        [corner_shape[0].start[0] + shift[0], 
-        corner_shape[0].start[1] + shift[1]]
-        )
+    corner_shape.snap_to([
+        corner_shape[0].start[0] + shift[0], 
+        corner_shape[0].start[1] + shift[1]
+        ])
 
     # Then, find scaling parameter that allows to place the end vertces exactly -- another SLE
     if abs(out.fun) > 1e-3:  
@@ -160,59 +160,6 @@ def cut_into_edge(target_shape, base_edge, offset=0, right=True, tol=1e-4):
     new_edges.append(LogicalEdge(new_edges[-1].end, base_edge.end))
 
     return new_edges
-
-# DRAFT General projection idea
-def project(edges, panel, edge_id):
-    """Project the shape defines by edges onto the panel's specified edge.
-        This routine updated the panel geometry and interfaces appropriately
-
-        NOTE: 'edges' are expected to contain one edge or sequence of chained edges (next one starts from the end vertex of the one before)
-    """
-
-    # TODO Same for components -- what if there are some interfaces that this panel is conneced to already?
-    # TODO Projection location? 
-    # TODO Direction
-    # TODO adjustment for 2D rotation? Project rotated version? Might be important for sleeves
-    
-    base_edge = panel.edges[edge_id]
-
-    # DEBUG
-    print(f'Base edge vertices: {base_edge.start}, {base_edge.end}')
-    # DEBUG
-    print(f'Edges to insert: {[(e.start, e.end) for e in edges]}')
-
-    # Create new edges
-    edges_copy = [deepcopy(e) for e in edges]
-
-    # TODO with a shift? 
-    # TODO from the start??
-    shift = [base_edge.start[0] - edges_copy[0].start[0], base_edge.start[0] - edges_copy[0].start[0]]
-    edges_copy[0].start = base_edge.start  # start with the same vertex as target edge
-
-    for e in edges_copy:  # NOTE this part assumes that edges are chained
-        e.end[0] += shift[0]
-        e.end[1] += shift[1]
-
-    # Connect with the rest of the edges
-    edges_copy.append(LogicalEdge(edges_copy[-1].end, base_edge.end))
-
-    # DEBUG
-    print(f'New edges: {[(e.start, e.end) for e in edges_copy]}')
-
-    # Substitute edges in the panel definition
-    panel.edges.substitute(edge_id, edges_copy)
-
-    # Update interface definitions
-    intr_id = None
-    for i, intr in enumerate(panel.interfaces):
-        if intr.edge is base_edge:
-            intr_id = i
-
-    # Bunch of new interfaces
-    if intr_id is not None:
-        panel.interfaces.pop(intr_id)
-        panel.interfaces += [InterfaceInstance(panel, e) for e in edges_copy]
-
 
 # ANCHOR ----- Panel operations ------
 def distribute_Y(component, n_copies):

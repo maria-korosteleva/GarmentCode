@@ -9,6 +9,8 @@ from .base import BaseComponent
 class Component(BaseComponent):
     """Garment element (or whole piece) composed of simpler connected garment elements"""
 
+    # TODO Overload copy -- respecting edge sequences
+
     def __init__(self, name) -> None:
         super().__init__(name)
 
