@@ -111,10 +111,10 @@ class Skirt2(pyp.Component):
 
         self.back = RuffleSkirtPanel('back', ruffle_rate, flare=flare).translate_by([0, 0, -15])
 
-        self.stitching_rules = [
-            pyp.StitchingRule(self.front.interfaces[0], self.back.interfaces[0]),
-            pyp.StitchingRule(self.front.interfaces[2], self.back.interfaces[2])
-        ]
+        self.stitching_rules = pyp.Stitches(
+            (self.front.interfaces[0], self.back.interfaces[0]),
+            (self.front.interfaces[2], self.back.interfaces[2])
+        )
 
         # TODO use dict for interface references?
         # Reusing interfaces of sub-panels as interfaces of this component
@@ -135,10 +135,10 @@ class WB(pyp.Component):
         self.back = WBPanel('wb_back')
         self.back.translate_by([0, -2, -15])
 
-        self.stitching_rules = [
-            pyp.StitchingRule(self.front.interfaces[0], self.back.interfaces[0]),
-            pyp.StitchingRule(self.front.interfaces[2], self.back.interfaces[2])
-        ]
+        self.stitching_rules = pyp.Stitches(
+            (self.front.interfaces[0], self.back.interfaces[0]),
+            (self.front.interfaces[2], self.back.interfaces[2])
+        )
 
         self.interfaces = [
             self.front.interfaces[3],
@@ -153,10 +153,10 @@ class SkirtWB(pyp.Component):
         self.wb = WB()
         self.skirt = Skirt2(ruffle_rate=ruffle_rate, flare=flare)
 
-        self.stitching_rules = [
-            pyp.StitchingRule(self.wb.interfaces[0], self.skirt.interfaces[0]),
-            pyp.StitchingRule(self.wb.interfaces[1], self.skirt.interfaces[1])
-        ]
+        self.stitching_rules = pyp.Stitches(
+            (self.wb.interfaces[0], self.skirt.interfaces[0]),
+            (self.wb.interfaces[1], self.skirt.interfaces[1])
+        )
 
 
 class SkirtManyPanels(pyp.Component):
@@ -174,7 +174,7 @@ class SkirtManyPanels(pyp.Component):
 
         # Stitch new components
         for i in range(1, n_panels):
-            self.stitching_rules.append(pyp.StitchingRule(self.subs[i - 1].interfaces[2], self.subs[i].interfaces[0]))
-        self.stitching_rules.append(pyp.StitchingRule(self.subs[-1].interfaces[2], self.subs[0].interfaces[0]))
+            self.stitching_rules.append((self.subs[i - 1].interfaces[2], self.subs[i].interfaces[0]))
+        self.stitching_rules.append((self.subs[-1].interfaces[2], self.subs[0].interfaces[0]))
 
         # No interfaces

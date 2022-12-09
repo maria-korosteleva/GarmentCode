@@ -1,5 +1,6 @@
 
 from typing import Any
+from .connector import Stitches
 
 class BaseComponent():
     """Basic interface for garment-related components"""
@@ -10,7 +11,9 @@ class BaseComponent():
         # List of the interfaces of this components
         # available for connectivity with other components
         self.interfaces = []
-        self.stitching_rules = []
+
+        # Rules for connecting subcomponents
+        self.stitching_rules = Stitches()
 
     def translate_by(self, delta_translation):
         pass

@@ -22,8 +22,6 @@ class Interface():
     def __repr__(self) -> str:
         return self.__str__()
 
-
-# DRAFT
 class StitchingRule():
     """High-level stitching instructions connecting two component interfaces"""
     def __init__(self, int1, int2) -> None:
@@ -103,3 +101,21 @@ class StitchingRule():
             ])
         return stitches
 
+
+class Stitches():
+    """Describes a collection of StitchingRule objects
+        Needed for more compact specification and evaluation of those rules
+    """
+    def __init__(self, *rules) -> None:
+        """Rules -- any number of tuples of two interfaces (Interface, Interface) """
+
+        self.rules = [StitchingRule(int1, int2) for int1, int2 in rules]
+
+    def append(self, pair):
+        self.rules.append(StitchingRule(*pair))
+    
+    def assembly(self):
+        stitches = []
+        for rule in self.rules:
+            stitches += rule.assembly()
+        return stitches

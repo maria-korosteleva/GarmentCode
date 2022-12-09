@@ -1,7 +1,6 @@
 
 # Custom
 # TODO some elements of spec template should probably be optional?
-# TODO move spec template here?
 from pattern.core import BasicPattern
 from pattern.wrappers import VisPattern
 from .base import BaseComponent
@@ -15,10 +14,6 @@ class Component(BaseComponent):
         super().__init__(name)
 
         self.subs = []  # list of generative sub-components
-
-        # rules for connecting sub-components of this component
-        # TODO stitching rules should allow modification of sub components
-        self.stitching_rules = []
 
     # Operations -- update object in-place
     # All return self object to allow chained operations
@@ -68,8 +63,7 @@ class Component(BaseComponent):
             # of stitches
             spattern.pattern['stitches'] += sub_raw['stitches']
 
-        for rule in self.stitching_rules:
-            spattern.pattern['stitches'] += rule.assembly()
+        spattern.pattern['stitches'] += self.stitching_rules.assembly()
 
         # TODO Normalize pattern (edge loops, etc.)?
         return spattern   
