@@ -86,6 +86,8 @@ class StitchingRule():
 
         # Eval the fraction corresponding to every segment in the "from" interface
         fractions = self.int1.edges.fractions()
+        if not self.isTraversalMatching():      # Make sure connectivity order will be correct even if edge directions are not aligned
+            fractions.reverse()
 
         print(fractions)  # DEBUG
 
