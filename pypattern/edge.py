@@ -142,7 +142,7 @@ class EdgeSequence():
                 return False
         return True
 
-    def fractions(self):
+    def fractions(self) -> list:
         """Fractions of the lengths of each edge in sequence w.r.t. 
             the whole sequence
         """
@@ -261,6 +261,7 @@ class EdgeSequence():
         """Generate edge sequence from given vertices. If loop==True, the method also closes the edge sequence as a loop
         """
         # TODO Curvatures
+
         seq = EdgeSequence(LogicalEdge(verts[0], verts[1]))
         for i in range(2, len(verts)):
             seq.append(LogicalEdge(seq[-1].end, verts[i]))

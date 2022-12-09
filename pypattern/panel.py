@@ -59,7 +59,7 @@ class Panel(BaseComponent):
     def center_x(self):
         """Adjust translation over x s.t. the center of the panel is aligned with the Y axis (center of the body)"""
 
-        center_3d = self._point_to_3d(self._center_2d())
+        center_3d = self.point_to_3D(self._center_2D())
         self.translation[0] += -center_3d[0]
 
         return self
@@ -167,7 +167,7 @@ class Panel(BaseComponent):
         return spattern
 
     # ANCHOR utils
-    def _center_2d(self):
+    def _center_2D(self):
         """Location of the panel center. NOTE: does not account for the curvatures
         """
         # NOTE: assuming that edges are organized in a loop and share vertices
@@ -180,7 +180,7 @@ class Panel(BaseComponent):
 
         return center_2d / (2 * len(self.edges))
 
-    def _point_to_3d(self, point_2d):
+    def point_to_3D(self, point_2d):
         """Calculate 3D location of a point given in the local 2D plane """
         point_2d = np.asarray(point_2d)
         if len(point_2d) == 2:

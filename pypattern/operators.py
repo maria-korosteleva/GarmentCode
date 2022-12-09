@@ -148,7 +148,6 @@ def cut_into_edge(target_shape, base_edge, offset=0, right=True, tol=1e-4):
     """
     # TODO Allow insertion into curved edges
     # TODO Is it needed? Or edge loop specification is enough?
-
     target_shape = EdgeSequence(target_shape)
 
     new_edges = target_shape.copy().snap_to([0, 0])  # copy and normalize translation of vertices
@@ -156,6 +155,9 @@ def cut_into_edge(target_shape, base_edge, offset=0, right=True, tol=1e-4):
     # Simplify to vectors
     shortcut = np.array([new_edges[0].start, new_edges[-1].end])  # "Interface" of the shape to insert
     edge_vec = np.array([base_edge.start, base_edge.end])  
+
+    if offset < 0 or offset > 1:   # TODO account also for the length of a shortcut
+        raise ValueError(f'Operators-CutingIntoEdge::Error::offset value shoulf be between 0 and 1')
 
     # find rotation to apply on target shape to alight it with an edge
     angle = vector_angle(edge_vec[1] - edge_vec[0], shortcut[1] - shortcut[0])
