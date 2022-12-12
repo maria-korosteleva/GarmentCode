@@ -108,7 +108,7 @@ class VisPattern(core.ParametrizedPattern):
             the lower-right vertex coordinate for the convenice of future offsetting.
         """
         panel = self.pattern['panels'][panel_name]
-        vertices = np.asarray(panel['vertices'], dtype=int)
+        vertices = np.asarray(panel['vertices'])
         vertices = self._verts_to_px_coords(vertices)
         # Shift vertices for visibility
         vertices = vertices + offset
