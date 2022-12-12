@@ -87,8 +87,7 @@ class VisPattern(core.ParametrizedPattern):
         offset = np.min(vertices, axis=0)
         vertices = vertices - offset
         # Update units scaling
-        vertices *= self.scaling_for_drawing   # FIXME This thing seems to multiply computational errors and making them more pronounced
-                                               #  resulting in incorrect angles in sewing patterns visualizations
+        vertices *= self.scaling_for_drawing
         return vertices
 
     def _flip_y(self, point):
