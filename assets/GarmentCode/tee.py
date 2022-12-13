@@ -67,13 +67,13 @@ class TorsoPanel(pyp.Panel):
         super().__init__(name)
 
         width = sholder_w + ease
-        sholder_top_l = (width - neck_w) / 2 
+        shoulder_top_l = (width - neck_w) / 2 
         self.edges = pyp.EdgeSequence.from_verts(
             [0, 0], 
             [0, length], 
-            [sholder_top_l, length], 
+            [shoulder_top_l, length], 
             [width / 2, length - c_depth], 
-            [sholder_top_l + neck_w, length], 
+            [shoulder_top_l + neck_w, length], 
             [width, length], 
             [width, 0], 
             loop=True)
