@@ -22,8 +22,8 @@ if __name__ == '__main__':
         # SkirtManyPanels(n_panels=10),
         # TShirt(),
         # TShirt(ruffle_sleeve=True),
-        # FittedTShirt(),
-        GodetSkirt(40, 50)
+        FittedTShirt(),
+        GodetSkirt(20, 50)
     ]
 
     # test_garments[0].translate_by([2, 0, 0])

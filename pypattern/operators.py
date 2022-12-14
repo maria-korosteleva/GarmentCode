@@ -10,6 +10,7 @@ from scipy.optimize import minimize
 from .edge import LogicalEdge, EdgeSequence
 from .connector import Interface
 from ._generic_utils import vector_angle
+from .base import BaseComponent
 
 # ANCHOR ----- Edge Sequences Modifiers ----
 # TODO also part of EdgeSequence class?
@@ -190,6 +191,32 @@ def distribute_Y(component, n_copies):
 
         new_component.rotate_by(delta_rotation)
         new_component.translate_to(delta_rotation.apply(new_component.translation))
+
+        copies.append(new_component)
+
+    # TODO resolve collisions though!
+
+    return copies
+
+
+def distribute_horisontally(component, n_copies, stride=20, name_tag='panel'):
+    """Distribute copies of component over the straight horisontal line perpendicular to the norm"""
+    copies = [ component ]
+    component.name = f'{name_tag}_0'   # Unique
+
+    if isinstance(component, BaseComponent):
+        translation_dir = component.rotation.apply([0, 0, 1])   # TODO panel norm
+        # FIXME What if it's looking up?
+        translation_dir = np.cross(translation_dir, [0, 1, 0])   # TODO control direction better?
+        translation_dir = translation_dir / norm(translation_dir)
+        delta_translation = translation_dir * stride
+    else:
+        translation_dir = [1, 0, 0]  # TODO specify?
+
+    for i in range(n_copies - 1):
+        new_component = deepcopy(copies[-1])   # TODO proper copy
+        new_component.name = f'{name_tag}_{i + 1}'   # Unique
+        new_component.translate_by(delta_translation)
 
         copies.append(new_component)
 

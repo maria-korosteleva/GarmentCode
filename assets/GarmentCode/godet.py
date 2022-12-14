@@ -24,20 +24,34 @@ class GodetSkirt(pyp.Component):
         self.front = RuffleSkirtPanel('front', ruffles=1, length=sk_length, bottom_cut=2).center_x().translate_by([0, 0, 20])
         self.back = RuffleSkirtPanel('back', ruffles=1, length=sk_length, bottom_cut=2).center_x().translate_by([0, 0, -15])
 
-        # Try inserts
-        self.test_insert = Insert(0, width=ins_w, depth=ins_depth).center_x().translate_by([0, -sk_length, 25])
+        # front and back of a skirt
+        self.stitching_rules.append((self.front.interfaces[0], self.back.interfaces[0]))
+        self.stitching_rules.append((self.front.interfaces[2], self.back.interfaces[2]))
+
+        self.inserts(self.front, 25, 0, ins_w, ins_depth, sk_length, right=False)
+        self.inserts(self.back, -20, 5, ins_w, ins_depth, sk_length, right=True)
+
+
+    def inserts(self, panel, z_transl, bottom_id, ins_w, ins_depth, sk_length, right=True):
+
+        # Inserts for front of the skirt
+        insert = Insert(0, width=ins_w, depth=ins_depth).translate_by([-35, -sk_length, z_transl])
 
         cut_depth = math.sqrt((ins_w / 2)**2 + ins_depth**2 - (ins_w/4)**2)
         cut = pyp.EdgeSequence.from_verts([0,0], [ins_w / 4, cut_depth], [ins_w / 2, 0])  # TODO width cut is also a parameter
 
-        edge_id = 0
-        # TODO Offset should make more sense
-        # TODO determining orientation is not obvious due to normal swaps..
-        new_bottom, cutted = pyp.ops.cut_into_edge(cut, self.front.edges[0], offset=0.4, right=False)
-        self.front.edges.substitute(edge_id, new_bottom)
+        self.subs += pyp.ops.distribute_horisontally(insert, 3, -ins_w, panel.name)
 
-        self.stitching_rules = pyp.Stitches(
-            (self.test_insert.interfaces[0], pyp.Interface(self.front, cutted)),
-            (self.front.interfaces[0], self.back.interfaces[0]),
-            (self.front.interfaces[2], self.back.interfaces[2])
-        )
+        # make appropriate cuts and stitches
+        bottom_edge = panel.edges[bottom_id]  # TODO which id?
+        for i in range(3):
+            # TODO Offset specification should make more sense
+            # TODO determining orientation is not obvious due to normal swaps..
+
+            offset =  0.14 + i * 0.1   # 0.14 + (2 - i) * 0.1 0.16 + (2 - i) * 0.1 if right else
+            new_bottom, cutted = pyp.ops.cut_into_edge(cut, bottom_edge, offset=offset, right=right)
+            panel.edges.substitute(bottom_edge, new_bottom)
+            bottom_edge = new_bottom[-1]# OR front?   new_bottom[0] if right else 
+
+            self.stitching_rules.append((self.subs[-1-i if right else -(3-i)].interfaces[0], pyp.Interface(panel, cutted)))
+       
