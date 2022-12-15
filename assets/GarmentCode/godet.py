@@ -9,7 +9,7 @@ class Insert(pyp.Panel):
     def __init__(self, id, width=30, depth=30) -> None:
         super().__init__(f'Insert_{id}')
 
-        self.edges = pyp.EdgeSequence.from_verts([0, 0], [width/2, depth], [width, 0], loop=True)
+        self.edges = pyp.esf.from_verts([0, 0], [width/2, depth], [width, 0], loop=True)
 
         self.interfaces = [
             pyp.Interface(self, self.edges[:2])
@@ -38,7 +38,7 @@ class GodetSkirt(pyp.Component):
         insert = Insert(0, width=ins_w, depth=ins_depth).translate_by([-35, -sk_length, z_transl])
 
         cut_depth = math.sqrt((ins_w / 2)**2 + ins_depth**2 - (ins_w/4)**2)
-        cut = pyp.EdgeSequence.from_verts([0,0], [ins_w / 4, cut_depth], [ins_w / 2, 0])  # TODO width cut is also a parameter
+        cut = pyp.esf.from_verts([0,0], [ins_w / 4, cut_depth], [ins_w / 2, 0])  # TODO width cut is also a parameter
 
         self.subs += pyp.ops.distribute_horisontally(insert, 3, -ins_w, panel.name)
 

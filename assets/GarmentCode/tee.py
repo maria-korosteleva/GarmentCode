@@ -9,7 +9,7 @@ class SleevePanel(pyp.Panel):
         super().__init__(name)
 
         width = (arm_width + ease) / 2 
-        self.edges = pyp.EdgeSequence.from_verts([0, 0], [0, width], [length, width], [length - 7, 0], loop=True)
+        self.edges = pyp.esf.from_verts([0, 0], [0, width], [length, width], [length - 7, 0], loop=True)
 
         # default placement
         self.translate_by([-length - 20, 15, 0])
@@ -68,7 +68,7 @@ class TorsoPanel(pyp.Panel):
 
         width = sholder_w + ease
         shoulder_top_l = (width - neck_w) / 2 
-        self.edges = pyp.EdgeSequence.from_verts(
+        self.edges = pyp.esf.from_verts(
             [0, 0], 
             [0, length], 
             [shoulder_top_l, length], 
@@ -97,18 +97,18 @@ class TorsoFittedPanel(pyp.Panel):
         width = sholder_w + ease
         sholder_top_l = (width - neck_w) / 2 
         # TODO dart depends on measurements?
-        self.edges, r_dart, r_interface = pyp.EdgeSequence.side_with_dart(
+        self.edges, r_dart, r_interface = pyp.esf.side_with_dart(
             [0, 0], [0, length], 
             width=d_width, depth=d_depth, dart_position=0.3, right=True)
 
-        self.edges.append(pyp.EdgeSequence.from_verts(
+        self.edges.append(pyp.esf.from_verts(
             self.edges[-1].end, 
             [sholder_top_l, length], 
             [width / 2, length - c_depth], 
             [sholder_top_l + neck_w, length], 
             [width, length]))
 
-        l_edge, l_dart, l_interface = pyp.EdgeSequence.side_with_dart(
+        l_edge, l_dart, l_interface = pyp.esf.side_with_dart(
             self.edges[-1].end, [width, 0], 
             width=d_width, depth=d_depth, dart_position=0.7, right=True)
         self.edges.append(l_edge)
@@ -158,7 +158,7 @@ class TShirt(pyp.Component):
         _, bl_sleeve_int = pyp.ops.cut_corner(self.l_sleeve.interfaces[0].edges, self.btorso, 5, 6)
 
         # DRAFT tests of cut-outs
-        # dart = pyp.EdgeSequence.from_verts([0,0], [5, 10], [10, 0], loop=False)
+        # dart = pyp.esf.from_verts([0,0], [5, 10], [10, 0], loop=False)
         # eid = 1
         # edges, _ = pyp.ops.cut_into_edge(dart, self.ftorso.edges[eid], 0.3, right=False)
 

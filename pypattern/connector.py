@@ -1,7 +1,8 @@
 from numpy.linalg import norm
 
 # Custom
-from .edge import LogicalEdge, EdgeSequence
+from .edge import EdgeSequence
+from .edge_factory import EdgeSeqFactory
 
 class Interface():
     """Single edge of a panel that can be used for connecting to"""
@@ -93,7 +94,7 @@ class StitchingRule():
 
         # Subdivide edges in the target interface
         base_edge = self.int2.edges[0]
-        subdiv = EdgeSequence.from_fractions(base_edge.start, base_edge.end, fractions)
+        subdiv = EdgeSeqFactory.from_fractions(base_edge.start, base_edge.end, fractions)
         # Substitute
         self.int2.panel.edges.substitute(base_edge, subdiv)
         self.int2.edges = subdiv
