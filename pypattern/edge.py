@@ -235,6 +235,44 @@ class EdgeSequence():
 
         return self
 
+    def extend(self, factor):
+        """Extend or shrink the edges along the line from start of the first edge to the 
+        end of the last edge in sequence
+        """
+
+        # TODO With preservation of total length?
+        self.isChained()
+        if self.isLoop():
+            print(f'{self.__class__.__name__}::Warning::Extending looped edge sequences is not available')
+            return self
+        
+        target_line = np.array(self.edges[-1].end) - np.array(self.edges[0].start)
+        target_line = target_line / norm(target_line)
+
+        # gather vertices
+        verts_coords = [self.edges[0].start]
+        for e in self.edges:
+            if verts_coords[-1] is not e.start:  # don't miss vertices if there is a break in the chain
+                verts_coords.append(e.start)
+            verts_coords.append(e.end)
+
+        nverts_coords = np.array(verts_coords)
+        
+        # adjust their position based on projection to the target line
+        verts_projection = np.empty(nverts_coords.shape)
+        fixed = nverts_coords[0]
+        for i in range(nverts_coords.shape[0]):
+            verts_projection[i] = (nverts_coords[i] - fixed).dot(target_line) * target_line
+
+        new_verts = verts_coords - (1 - factor) * verts_projection
+
+        # Update vertex objects
+        for i in range(len(verts_coords)):
+            verts_coords[i][:] = new_verts[i]
+
+        return self
+
+
     # ANCHOR Factories for some tipical edge sequences
     def copy(self):
         """Create a copy of a current edge sequence preserving the chaining property of edge sequences"""

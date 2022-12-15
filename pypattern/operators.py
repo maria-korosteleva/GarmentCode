@@ -98,7 +98,7 @@ def cut_corner(target_shape:EdgeSequence, panel, eid1, eid2):
         corner_shape.snap_to((shifted[0] - shifted[1]) * out.x[0])
 
         # Move internal vertices according to predicred scale s.w. the final vertex can be placed correctly
-        _scale_edges_from_start(corner_shape, scale=scale)
+        corner_shape.extend(scale)
     
     # ----- UPD panel ----
     # Complete to the full corner -- connect with the initial vertices
@@ -226,18 +226,6 @@ def distribute_horisontally(component, n_copies, stride=20, name_tag='panel'):
 
 
 # ---- Utils ----
-def _scale_edges_from_start(edge_seq, scale):
-    """Scale the edge sizes by scale, using start of the first edge as a fixes point
-    """
-    # FIXME this will not work non-aligned internal edges:
-    # Need to use projected vertices as in multi-edge parameters from ParametricPattern!!
-    v_start = edge_seq[0].start
-    for e in edge_seq:  # NOTE this part assumes that edges are chained
-
-        #v = scale * (v - v_start) + v_start
-        e.end[0] = scale * (e.end[0] - v_start[0]) + v_start[0]
-        e.end[1] = scale * (e.end[0] - v_start[0]) + v_start[0]
-
 
 def _dist(v1, v2):
     return norm(v2-v1)
