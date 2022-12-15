@@ -125,7 +125,7 @@ class EdgeSeqFactory:
         dart_shape.append(LogicalEdge(dart_shape[-1].end, end))
 
         # prepare the interfaces to conveniently create stitches for a dart and non-dart edges
-        dart_stitch = None if panel is None else (Interface(panel, dart_shape[1]), Interface(panel, dart_shape[1]))
+        dart_stitch = None if panel is None else (Interface(panel, dart_shape[1]), Interface(panel, dart_shape[2]))
         
         out_interface = EdgeSequence(dart_shape[0], dart_shape[-1]) 
         out_interface = out_interface if panel is None else Interface(panel, out_interface)
