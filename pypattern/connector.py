@@ -1,29 +1,7 @@
 from numpy.linalg import norm
 
 # Custom
-from .edge import EdgeSequence
 from .edge_factory import EdgeSeqFactory
-
-class Interface():
-    """Single edge of a panel that can be used for connecting to"""
-    def __init__(self, panel, edges):
-        """
-        Parameters:
-            * panel - Panel object
-            * edges - LogicalEdge or EdgeSequence -- edges in the panel that are allowed to connect to
-        """
-
-        self.panel = panel
-        self.edges = edges if isinstance(edges, EdgeSequence) else EdgeSequence(edges)
-
-    def __len__(self):
-        return len(self.edges)
-    
-    def __str__(self) -> str:
-        return f'{self.panel.name}: {str(self.edges)}'
-    
-    def __repr__(self) -> str:
-        return self.__str__()
 
 class StitchingRule():
     """High-level stitching instructions connecting two component interfaces"""
@@ -127,7 +105,6 @@ class StitchingRule():
                 }
             ])
         return stitches
-
 
 class Stitches():
     """Describes a collection of StitchingRule objects

@@ -8,7 +8,7 @@ from scipy.optimize import minimize
 
 # Custom 
 from .edge import LogicalEdge, EdgeSequence
-from .connector import Interface
+from .interface import Interface
 from ._generic_utils import vector_angle
 from .base import BaseComponent
 
