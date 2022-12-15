@@ -2,7 +2,7 @@ import math
 
 # Custom
 import pypattern as pyp
-from .skirt_paneled import RuffleSkirtPanel
+from .skirt_paneled import SkirtPanel
 
 
 class Insert(pyp.Panel):
@@ -21,18 +21,18 @@ class GodetSkirt(pyp.Component):
     def __init__(self, ins_w=30, ins_depth=20, sk_length=70) -> None:
         super().__init__(f'{self.__class__.__name__}')
 
-        self.front = RuffleSkirtPanel('front', ruffles=1, length=sk_length, bottom_cut=2).center_x().translate_by([0, 0, 20])
-        self.back = RuffleSkirtPanel('back', ruffles=1, length=sk_length, bottom_cut=2).center_x().translate_by([0, 0, -15])
+        self.front = SkirtPanel('front', ruffles=1, length=sk_length, bottom_cut=0).center_x().translate_by([0, 0, 20])
+        self.back = SkirtPanel('back', ruffles=1, length=sk_length, bottom_cut=0).center_x().translate_by([0, 0, -15])
 
         # front and back of a skirt
         self.stitching_rules.append((self.front.interfaces[0], self.back.interfaces[0]))
         self.stitching_rules.append((self.front.interfaces[2], self.back.interfaces[2]))
 
-        self.inserts(self.front, 25, 0, ins_w, ins_depth, sk_length, right=False)
-        self.inserts(self.back, -20, 5, ins_w, ins_depth, sk_length, right=True)
+        self.inserts(self.front, 25, ins_w, ins_depth, sk_length, right=False)
+        self.inserts(self.back, -20, ins_w, ins_depth, sk_length, right=True)
 
 
-    def inserts(self, panel, z_transl, bottom_id, ins_w, ins_depth, sk_length, right=True):
+    def inserts(self, panel, z_transl, ins_w, ins_depth, sk_length, right=True):
 
         # Inserts for front of the skirt
         insert = Insert(0, width=ins_w, depth=ins_depth).translate_by([-35, -sk_length, z_transl])
@@ -43,7 +43,7 @@ class GodetSkirt(pyp.Component):
         self.subs += pyp.ops.distribute_horisontally(insert, 3, -ins_w, panel.name)
 
         # make appropriate cuts and stitches
-        bottom_edge = panel.edges[bottom_id]  # TODO which id?
+        bottom_edge = panel.bottom 
         for i in range(3):
             # TODO Offset specification should make more sense
             # TODO determining orientation is not obvious due to normal swaps..

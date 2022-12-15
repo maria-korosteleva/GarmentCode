@@ -14,31 +14,31 @@ class HipRuffleSkirtPanel(pyp.Panel):
         low_width = base_width + 2*flare
         x_shift_top = (low_width - top_width) / 2  # to account for flare at the bottom
 
-        
-        self.edges = pyp.esf.side_with_cut([0,0], [flare, length], start_cut=bottom_cut / length)
+        left = pyp.esf.side_with_cut([0,0], [flare, length], start_cut=bottom_cut / length) if bottom_cut else pyp.EdgeSequence(pyp.LogicalEdge([0,0], [flare, length]))
+        self.edges = left
         # Modify vertex position to account for ruffles
         self.edges[-1].end[0] = x_shift_top
 
-        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, [x_shift_top + top_width, length]))  # on the waist
+        waist = pyp.LogicalEdge(self.edges[-1].end, [x_shift_top + top_width, length])
+        self.edges.append(waist)  # on the waist
 
         self.edges[-1].end[0] = flare + base_width
         e_id = len(self.edges) - 1
 
-        self.edges.append(pyp.esf.side_with_cut(self.edges[-1].end, [low_width, 0], end_cut=bottom_cut / length))
+        right = pyp.esf.side_with_cut(self.edges[-1].end, [low_width, 0], end_cut=bottom_cut / length) if bottom_cut else pyp.EdgeSequence(pyp.LogicalEdge(self.edges[-1].end, [low_width, 0]))
+        self.edges.append(right)
         self.edges[e_id].end[0] = x_shift_top + top_width  # back
 
         self.edges.append(pyp.LogicalEdge(self.edges[-1].end, self.edges[0].start))
 
         # define interface
-        # TODO references with vs without cuts? What is the cut parameter is zero?
-        # TODO More semantic references?
-        self.interfaces.append(pyp.Interface(self, self.edges[1]))
-        # Create ruffles by the differences in edge length
+        self.interfaces.append(pyp.Interface(self, left[-1]))
+        # Ruffles are created by the differences in edge length
         # NOTE ruffles are only created when connecting with something
-        self.interfaces.append(pyp.Interface(self, self.edges[2]))
-        self.interfaces.append(pyp.Interface(self, self.edges[3]))
+        self.interfaces.append(pyp.Interface(self, waist))
+        self.interfaces.append(pyp.Interface(self, right[0]))
 
-class RuffleSkirtPanel(pyp.Panel):
+class SkirtPanel(pyp.Panel):
     """One panel of a panel skirt with ruffles on the waist"""
 
     def __init__(self, name, ruffles=1.5, waist_length=70, length=70, bottom_cut=20, flare=20) -> None:
@@ -50,20 +50,23 @@ class RuffleSkirtPanel(pyp.Panel):
         x_shift_top = (low_width - top_width) / 2  # to account for flare at the bottom
 
         # define edge loop
-        # TODO Remove ruffles from edges
-        self.edges = pyp.esf.side_with_cut([0,0], [x_shift_top, length], start_cut=bottom_cut / length)
-        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, [x_shift_top + top_width, length]))  # on the waist
-        self.edges.append(pyp.esf.side_with_cut(self.edges[-1].end, [low_width, 0], end_cut=bottom_cut / length))
-        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, self.edges[0].start))
+        self.left = pyp.esf.side_with_cut([0,0], [x_shift_top, length], start_cut=bottom_cut / length) if bottom_cut else pyp.EdgeSequence(pyp.LogicalEdge([0,0], [x_shift_top, length]))
+        self.waist = pyp.LogicalEdge(self.left[-1].end, [x_shift_top + top_width, length])
+        self.right = pyp.esf.side_with_cut(self.waist.end, [low_width, 0], end_cut=bottom_cut / length) if bottom_cut else pyp.EdgeSequence(pyp.LogicalEdge(self.waist.end, [low_width, 0]))
+        self.bottom = pyp.LogicalEdge(self.right[-1].end, self.left[0].start)
+        
+        # Single sequence for correct assembly
+        self.edges = self.left
+        self.edges.append(self.waist)  # on the waist
+        self.edges.append(self.right)
+        self.edges.append(self.bottom)
 
         # define interface
-        # TODO references with vs without cuts? What is the cut parameter is zero?
-        # TODO More semantic references?
-        self.interfaces.append(pyp.Interface(self, self.edges[1]))
+        self.interfaces.append(pyp.Interface(self, self.left[-1]))
         # Create ruffles by the differences in edge length
         # NOTE ruffles are only created when connecting with something
-        self.interfaces.append(pyp.Interface(self, self.edges[2]))
-        self.interfaces.append(pyp.Interface(self, self.edges[3]))
+        self.interfaces.append(pyp.Interface(self, self.waist))
+        self.interfaces.append(pyp.Interface(self, self.right[0]))
 
         # default placement
         self.center_x()  # Already know that this panel should be centered over Y
@@ -107,9 +110,9 @@ class Skirt2(pyp.Component):
     def __init__(self, ruffle_rate=1, flare=20) -> None:
         super().__init__(self.__class__.__name__)
 
-        self.front = RuffleSkirtPanel('front', ruffle_rate, flare=flare).translate_by([0, 0, 20])
+        self.front = SkirtPanel('front', ruffle_rate, flare=flare).translate_by([0, 0, 20])
 
-        self.back = RuffleSkirtPanel('back', ruffle_rate, flare=flare).translate_by([0, 0, -15])
+        self.back = SkirtPanel('back', ruffle_rate, flare=flare).translate_by([0, 0, -15])
 
         self.stitching_rules = pyp.Stitches(
             (self.front.interfaces[0], self.back.interfaces[0]),

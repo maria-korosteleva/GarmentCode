@@ -151,7 +151,6 @@ class TShirt(pyp.Component):
         self.btorso = TorsoPanel('btorso').translate_by([0, 0, -20])
 
         # Cut the sleeve shapes to connect them nicely
-        # TODO Try with ruffle sleeves! O_o
         _, fr_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[0].edges, self.ftorso, 5, 6)
         _, fl_sleeve_int = pyp.ops.cut_corner(self.l_sleeve.interfaces[0].edges, self.ftorso, 1, 2)
         _, br_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[1].edges, self.btorso, 0, 1)
