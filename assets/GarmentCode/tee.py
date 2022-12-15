@@ -59,7 +59,6 @@ class RuffleSleeve(pyp.Component):
             self.b_sleeve.interfaces[1],
         ]
 
-
 class TorsoPanel(pyp.Panel):
     """Panel for the front/back of upper garments"""
 
@@ -97,9 +96,10 @@ class TorsoFittedPanel(pyp.Panel):
         width = sholder_w + ease
         sholder_top_l = (width - neck_w) / 2 
         # TODO dart depends on measurements?
-        self.edges, r_dart, r_interface = pyp.esf.side_with_dart(
+        self.edges, _, r_interface, r_dart_stitch = pyp.esf.side_with_dart(
             [0, 0], [0, length], 
-            width=d_width, depth=d_depth, dart_position=0.3, right=True)
+            width=d_width, depth=d_depth, dart_position=0.3, right=True, 
+            panel=self)
 
         self.edges.append(pyp.esf.from_verts(
             self.edges[-1].end, 
@@ -108,9 +108,10 @@ class TorsoFittedPanel(pyp.Panel):
             [sholder_top_l + neck_w, length], 
             [width, length]))
 
-        l_edge, l_dart, l_interface = pyp.esf.side_with_dart(
+        l_edge, _, l_interface, l_dart_stitch = pyp.esf.side_with_dart(
             self.edges[-1].end, [width, 0], 
-            width=d_width, depth=d_depth, dart_position=0.7, right=True)
+            width=d_width, depth=d_depth, dart_position=0.7, right=True, 
+            panel=self)
         self.edges.append(l_edge)
         self.edges.close_loop()
 
@@ -119,17 +120,16 @@ class TorsoFittedPanel(pyp.Panel):
 
         # TODO Finding ids of edges is a pain..
         self.interfaces = [
-            pyp.Interface(self, r_interface),
+            r_interface,
             pyp.Interface(self, self.edges[4]),
             pyp.Interface(self, self.edges[7]),
-            pyp.Interface(self, l_interface),
+            l_interface,
         ]
 
         # Stitch the darts
-        self.stitching_rules = pyp.Stitches(
-            (pyp.Interface(self, r_dart[0]), pyp.Interface(self, r_dart[1])),
-            (pyp.Interface(self, l_dart[0]), pyp.Interface(self, l_dart[1]))
-        )
+        self.stitching_rules.append(r_dart_stitch)
+        self.stitching_rules.append(l_dart_stitch)
+
 
 # TODO condition T-Shirts to be fitted or not
 class TShirt(pyp.Component):

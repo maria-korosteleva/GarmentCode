@@ -31,6 +31,7 @@ class StitchingRule():
         """Check if we are dealing with T-stitch"""
         return (len(self.int1) > 1 and len(self.int2) == 1) or (len(self.int2) == 1 and len(self.int2) > 1)
 
+
     def isTraversalMatching(self):
         """Check if the traversal direction of edge sequences matches or needs to be swapped"""
 
@@ -61,14 +62,10 @@ class StitchingRule():
             # SIM specific
         """
 
-        print('We are here!!')  # DEBUG
-
         # Eval the fraction corresponding to every segment in the "from" interface
         fractions = self.int1.edges.fractions()
         if not self.isTraversalMatching():      # Make sure connectivity order will be correct even if edge directions are not aligned
             fractions.reverse()
-
-        print(fractions)  # DEBUG
 
         # Subdivide edges in the target interface
         base_edge = self.int2.edges[0]
@@ -76,8 +73,6 @@ class StitchingRule():
         # Substitute
         self.int2.panel.edges.substitute(base_edge, subdiv)
         self.int2.edges = subdiv
-
-        print(subdiv)  # DEBUG
 
 
     def assembly(self):

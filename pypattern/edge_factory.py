@@ -5,6 +5,7 @@ from numpy.linalg import norm
 # Custom
 from .edge import EdgeSequence, LogicalEdge
 from ._generic_utils import vector_angle
+from .interface import Interface
 
 class EdgeSeqFactory:
     """Create EdgeSequence objects for some common edge seqeunce patterns
@@ -74,7 +75,7 @@ class EdgeSeqFactory:
 
     #DRAFT
     @staticmethod
-    def side_with_dart(start=(0,0), end=(1,0), width=5, depth=10, dart_position=0, right=True):
+    def side_with_dart(start=(0,0), end=(1,0), width=5, depth=10, dart_position=0, right=True, panel=None):
         """Create a seqence of edges that represent a side with a dart with given parameters
         Parameters:
             * start and end -- vertices between which side with a dart is located
@@ -123,7 +124,13 @@ class EdgeSeqFactory:
         dart_shape.insert(0, LogicalEdge(start, dart_shape[0].start))
         dart_shape.append(LogicalEdge(dart_shape[-1].end, end))
 
-        return dart_shape, dart_shape[1:-1], EdgeSequence(dart_shape[0], dart_shape[-1])
+        # prepare the interfaces to conveniently create stitches for a dart and non-dart edges
+        dart_stitch = None if panel is None else (Interface(panel, dart_shape[1]), Interface(panel, dart_shape[1]))
+        
+        out_interface = EdgeSequence(dart_shape[0], dart_shape[-1]) 
+        out_interface = out_interface if panel is None else Interface(panel, out_interface)
+
+        return dart_shape, dart_shape[1:-1], out_interface, dart_stitch
 
 # Utils
 def _rel_to_abs_coords(start, end, vrel):
