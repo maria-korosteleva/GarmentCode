@@ -18,8 +18,12 @@ class Insert(pyp.Panel):
         print(self.interfaces[-1])  # DEBUG
 
 class GodetSkirt(pyp.Component):
-    def __init__(self, ins_w=30, ins_depth=20, sk_length=70) -> None:
+    def __init__(self, body, design) -> None:
         super().__init__(f'{self.__class__.__name__}')
+
+        sk_length = design['skirt']['length']['v']
+        ins_w = design['godet-skirt']['insert_w']['v']
+        ins_depth = design['godet-skirt']['insert_depth']['v']
 
         self.front = SkirtPanel('front', ruffles=1, length=sk_length, bottom_cut=0).center_x().translate_by([0, 0, 20])
         self.back = SkirtPanel('back', ruffles=1, length=sk_length, bottom_cut=0).center_x().translate_by([0, 0, -15])

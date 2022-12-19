@@ -5,8 +5,13 @@ import pypattern as pyp
 class SleevePanel(pyp.Panel):
     """Simple panel for a sleeve with optional ruffles on the sholder connection"""
 
-    def __init__(self, name, length=35, arm_width=30, ease=3, ruffle=1) -> None:
+    def __init__(self, name, body_opt, design_opt) -> None:
         super().__init__(name)
+
+        arm_width = body_opt['arm_width']
+        length = design_opt['sleeve']['length']['v']
+        ease = design_opt['sleeve']['ease']['v']
+        ruffle = design_opt['sleeve']['ruffle']['v']
 
         width = ruffle * (arm_width + ease) / 2 
         self.edges = pyp.esf.from_verts([0, 0], [0, width], [length, width], [length - 7, 0], loop=True)
@@ -22,32 +27,12 @@ class SleevePanel(pyp.Panel):
 
 class SimpleSleeve(pyp.Component):
     """Very simple sleeve"""
-    def __init__(self, tag) -> None:
+    def __init__(self, tag, body_opt, design_opt) -> None:
         super().__init__(f'{self.__class__.__name__}_{tag}')
 
         # sleeves
-        self.f_sleeve = SleevePanel(f'{tag}_f_sleeve').translate_by([0, 0, 15])
-        self.b_sleeve = SleevePanel(f'{tag}_b_sleeve').translate_by([0, 0, -15])
-
-        self.stitching_rules = pyp.Stitches(
-            (self.f_sleeve.interfaces[0], self.b_sleeve.interfaces[0]),
-            (self.f_sleeve.interfaces[2], self.b_sleeve.interfaces[2]),
-        )
-
-        self.interfaces = [
-            self.f_sleeve.interfaces[1],
-            self.b_sleeve.interfaces[1],
-        ]
-
-class RuffleSleeve(pyp.Component):
-    """Very simple sleeve"""
-    # TODO Make it work as ruffles from a sleeve definition!!
-    def __init__(self, tag, ruffle_rate=1.5, arm_width=30) -> None:
-        super().__init__(f'{self.__class__.__name__}_{tag}')
-
-        # sleeves
-        self.f_sleeve = SleevePanel(f'{tag}_f_sleeve', arm_width=arm_width, ruffle=ruffle_rate).translate_by([0, 0, 15])
-        self.b_sleeve = SleevePanel(f'{tag}_b_sleeve', arm_width=arm_width, ruffle=ruffle_rate).translate_by([0, 0, -15])
+        self.f_sleeve = SleevePanel(f'{tag}_f_sleeve', body_opt, design_opt).translate_by([0, 0, 15])
+        self.b_sleeve = SleevePanel(f'{tag}_b_sleeve', body_opt, design_opt).translate_by([0, 0, -15])
 
         self.stitching_rules = pyp.Stitches(
             (self.f_sleeve.interfaces[0], self.b_sleeve.interfaces[0]),
@@ -179,21 +164,18 @@ class BodiceFront(pyp.Component):
 class TShirt(pyp.Component):
     """Definition of a simple T-Shirt"""
 
-    def __init__(self, length=45, sholder_w=40, ruffle_sleeve=False) -> None:
-        name_with_params = f'{self.__class__.__name__}_l{length}_s{sholder_w}'
-        super().__init__(name_with_params if not ruffle_sleeve else f'{name_with_params}_Ruffle_sl')
+    def __init__(self, body_opt, design_opt) -> None:
+        name_with_params = f"{self.__class__.__name__}_l{design_opt['bodice']['length']['v']}_s{body_opt['sholder_w']}_b{body_opt['bust_line']}"
+
+        super().__init__(name_with_params if design_opt['sleeve']['ruffle']['v'] == 1 else f'{name_with_params}_Ruffle_sl')
 
         # sleeves
-        if ruffle_sleeve:
-            self.r_sleeve = RuffleSleeve('r')
-            self.l_sleeve = RuffleSleeve('l').mirror()
-        else:
-            self.r_sleeve = SimpleSleeve('r')
-            self.l_sleeve = SimpleSleeve('l').mirror()
+        self.r_sleeve = SimpleSleeve('r', body_opt, design_opt)
+        self.l_sleeve = SimpleSleeve('l', body_opt, design_opt).mirror()
 
         # Torso
-        self.ftorso = TorsoPanel('ftorso', length=length, sholder_w=sholder_w).translate_by([0, 0, 20])
-        self.btorso = TorsoPanel('btorso', length=length, sholder_w=sholder_w).translate_by([0, 0, -20])
+        self.ftorso = TorsoPanel('ftorso', body_opt, design_opt).translate_by([0, 0, 20])
+        self.btorso = TorsoPanel('btorso', body_opt, design_opt).translate_by([0, 0, -20])
 
         # Cut the sleeve shapes to connect them nicely
         _, fr_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[0].projecting_edges(), self.ftorso, 5, 6)
@@ -237,8 +219,8 @@ class FittedTShirt(pyp.Component):
         super().__init__(name_with_params)
 
         # sleeves
-        self.r_sleeve = SimpleSleeve('r')
-        self.l_sleeve = SimpleSleeve('l').mirror()
+        self.r_sleeve = SimpleSleeve('r', body_opt, design_opt)
+        self.l_sleeve = SimpleSleeve('l', body_opt, design_opt).mirror()
 
         # Torso
         self.ftorso = BodiceFront('ftorso', body_opt, design_opt).translate_by([0, 0, 20])

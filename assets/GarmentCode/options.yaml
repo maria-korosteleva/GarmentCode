@@ -10,8 +10,10 @@ body:
   arm_width: 30
 
 # design parameters
+
 # May specify sampling range per parameter for automatic 
 # design sampling
+# Final designs might not use all the parameters specified
 design: 
   bodice: 
     c_depth:   # Collar depth
@@ -35,5 +37,21 @@ design:
       v: 35
       range: [3, 100]
     ruffle:
-      v: 1
+      v: 1.5
       range: [1, 20]
+    ease:
+      v: 3
+      range: null
+
+  skirt: 
+    length:
+      v: 70
+      range: [30, 120]
+  
+  godet-skirt: 
+    insert_w: 
+      v: 20
+      range: [10, 50]  # TODO ranges don't work that well..
+    insert_depth:   # Cannot be longer then length
+      v: 50
+      range: [10, 50]
