@@ -97,11 +97,7 @@ class EdgeSeqFactory:
         NOTE: Darts always have the same length on the sides
         """
         # TODO Curvatures?? -- on edges, dart sides
-
         # TODO Multiple darts on one side (can we make this fucntions re-usable/chainable?)
-
-        # TODO One of the end locations is modified. how will it affect other edges?
-        # TODO opening angle
 
         # Targets
         v0, v1 = np.asarray(start), np.asarray(end)
@@ -149,7 +145,6 @@ class EdgeSeqFactory:
         end[:] = _rel_to_abs_coords(v0, v1, np.array([long_side, 0]))
 
         # Gather all together
-        # TODO After adjustments?
         dart_shape = EdgeSeqFactory.from_verts(p1.tolist(), p_tip.tolist(), p2.tolist())
         if not right:
             # flip dart to be the left of the vector
@@ -159,22 +154,21 @@ class EdgeSeqFactory:
         dart_shape.append(LogicalEdge(dart_shape[-1].end, end))
 
         # re-distribute the changes & adjust the opening angle as requested
-        angle_diff = np.deg2rad(180 - opening_angle)
+        angle_diff = np.deg2rad(180 - opening_angle) * 1 if right else -1    # TODO right/left dart modificaiton flip not tested
         if modify == 'both':
             dart_shape.translate_by(-shift / 2)
-            # TODO check direction
             dart_shape[0].reverse().rotate(-angle_diff / 2).reverse()
             dart_shape[-1].rotate(angle_diff / 2)
         elif modify == 'end':
             # Align the beginning of the dart with original direction
             dart_shape.rotate(vector_angle(p1-v0, v1-v0))
-            dart_shape[-1].rotate(angle_diff)  # TODO check direction
+            dart_shape[-1].rotate(angle_diff)
         elif modify == 'start':
             # Align the end of the dart with original direction & shift the change onto the start vertex
             dart_shape.translate_by(-shift)
             dart_shape.reverse()  # making the end vertex the start (to rotate around)
             dart_shape.rotate(vector_angle(p2-new_end, -(v1-v0)))
-            dart_shape[-1].rotate(-angle_diff)    # TODO check direction
+            dart_shape[-1].rotate(-angle_diff)
             dart_shape.reverse()  # original order
 
         # DEBUG
