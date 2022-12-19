@@ -1,3 +1,5 @@
+from copy import copy
+
 # Custom
 import pypattern as pyp
 
@@ -99,24 +101,40 @@ class BodiceFrontHalf(pyp.Panel):
         dart_from_top = body['bust_line']
         bottom_width = 0.6 * body['waist'] / 2
 
-        # TODO dart depends on bust measurements?
-        # Bottom dart
+        b_section = bottom_width / 3
 
+        print(b_section)  # DEBUG
+
+        # Bottom dart
         b_edge, _, _, b_dart_stitch = pyp.esf.side_with_dart(
-            [0, 0], [-bottom_width, 0], 
-            width=5, depth=20, dart_position=7, 
+            [-b_section, 0], [-bottom_width + b_section, 0], 
+            width=5, depth=20, dart_position=b_section/2, 
             opening_angle=180,
             right=True, modify='end',
             panel=self)
-        self.edges = b_edge
 
+        self.edges.append(pyp.LogicalEdge([0, 0], b_edge[0].start))
+        self.edges.append(b_edge)
+        self.edges.append(pyp.LogicalEdge(b_edge[-1].end, [-bottom_width, 0]))
+
+        l_section = length / 3
+        print(l_section)  # DEBUG
+
+        # TODO dart depends on bust measurements?
         side_edges, _, side_interface, side_dart_stitch = pyp.esf.side_with_dart(
-            b_edge[-1].end, [-width/2, length], 
-            width=d_width, depth=d_depth, dart_position=(length - dart_from_top), 
+            [-width/2 - 5, l_section], [-width/2 - 5, 2*l_section], 
+            width=d_width, depth=d_depth, dart_position=(l_section - (dart_from_top - l_section)),   # NOTE Assuming l_section is shorter
             opening_angle=180,
             right=True, modify='start', 
             panel=self)
+
+        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, side_edges[0].start))
         self.edges.append(side_edges)
+        self.edges.append(pyp.LogicalEdge(side_edges[-1].end, [-width/2, length]))
+
+        print(self.edges)  # DEBUG
+        
+        #self.edges.append(side_edges)
 
         self.edges.append(pyp.esf.from_verts(
             self.edges[-1].end, 
@@ -228,8 +246,8 @@ class FittedTShirt(pyp.Component):
 
         # Order of edges updated after (autonorm)..
         # TODO Simplify the choice of the edges to project from/to (regardless of autonorm)
-        _, fr_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[0].projecting_edges(), self.ftorso.right, 2, 3)
-        _, fl_sleeve_int = pyp.ops.cut_corner(self.l_sleeve.interfaces[0].projecting_edges(), self.ftorso.left, 4 + 3, 5 + 3)
+        # _, fr_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[0].projecting_edges(), self.ftorso.right, 2, 3)
+        # _, fl_sleeve_int = pyp.ops.cut_corner(self.l_sleeve.interfaces[0].projecting_edges(), self.ftorso.left, 4 + 3, 5 + 3)
         _, br_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[1].projecting_edges(), self.btorso, 0, 1)
         _, bl_sleeve_int = pyp.ops.cut_corner(self.l_sleeve.interfaces[1].projecting_edges(), self.btorso, 5, 6)
 
@@ -243,8 +261,8 @@ class FittedTShirt(pyp.Component):
             (self.ftorso.interfaces[2], self.btorso.interfaces[2]),
 
             # Sleeves are connected by new interfaces
-            (self.r_sleeve.interfaces[0], fr_sleeve_int),
-            (self.l_sleeve.interfaces[0], fl_sleeve_int),
+            # (self.r_sleeve.interfaces[0], fr_sleeve_int),
+            # (self.l_sleeve.interfaces[0], fl_sleeve_int),
             (self.r_sleeve.interfaces[1], br_sleeve_int),
             (self.l_sleeve.interfaces[1], bl_sleeve_int),
 
