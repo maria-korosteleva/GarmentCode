@@ -2,6 +2,9 @@ from copy import deepcopy, copy
 import numpy as np
 from numpy.linalg import norm
 
+# Custom
+from ._generic_utils import R2D
+
 # TODO rename 
 class LogicalEdge():
     """Edge -- an individual segement of a panel border connecting two panel vertices, 
@@ -71,11 +74,38 @@ class LogicalEdge():
         return self.__str__()
 
     # Actions
-    def flip(self):
+    def reverse(self):
         """Flip the direction of the edge"""
         self.start, self.end = self.end, self.start
 
         # TODO flip curvatures
+        return self
+    
+    def snap_to(self, new_start=[0, 0]):
+        """Translate the edge vertices s.t. the start is at new_start
+        """
+        self.end[0] = self.end[0] - self.start[0] + new_start[0]
+        self.end[1] = self.end[1] - self.start[1] + new_start[1]
+
+        self.start[:] = new_start
+        return self
+
+    def rotate(self, angle):
+        """Rotate edge by angle in place, using first point as a reference
+
+        Parameters: 
+            angle -- desired rotation angle in radians (!)
+        """
+        curr_start = copy(self.start)
+        
+        # set the start point to zero
+        self.snap_to([0, 0])
+        self.end[:] = np.matmul(R2D(angle), self.end)
+        
+        # recover the original location
+        self.snap_to(curr_start)
+
+        return self
         
     # Assembly into serializable object
     def assembly(self):
@@ -206,7 +236,7 @@ class EdgeSequence():
         """Reverse edge sequence in-place"""
         self.edges.reverse()
         for edge in self.edges:
-            edge.flip()
+            edge.reverse()
         return self
 
     # EdgeSequence-specific
@@ -243,7 +273,7 @@ class EdgeSequence():
         
         # set the start point to zero
         self.snap_to([0, 0])
-        rot = np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
+        rot = R2D(angle)
 
         for v in self.verts():
             v[:] = np.matmul(rot, v)

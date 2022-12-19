@@ -28,3 +28,7 @@ def vector_angle(v1, v2):
     angle = np.arccos(cos) * np.sign(np.cross(v1, v2))
 
     return angle
+
+def R2D(angle):
+    """2D rotation matrix by an angle"""
+    return np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])

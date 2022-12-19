@@ -75,13 +75,14 @@ class EdgeSeqFactory:
 
     #DRAFT
     @staticmethod
-    def side_with_dart(start=(0,0), end=(100,0), width=5, depth=10, dart_position=0, right=True, modify='both', panel=None):
+    def side_with_dart(start=(0,0), end=(100,0), width=5, depth=10, dart_position=50, opening_angle=180, right=True, modify='both', panel=None):
         """Create a seqence of edges that represent a side with a dart with given parameters
         Parameters:
             * start and end -- vertices between which side with a dart is located
             * width -- width of a dart opening
             * depth -- depth of a dart (distance between the opening and the farthest vertex)
             * dart_position -- position along the edge (from the start vertex)
+            * opening angle (deg) -- angle between side edges after the dart is stitched (as evaluated opposite from the dart). default = 180 (straight line)
             * right -- whether the dart is created on the right from the edge direction (otherwise created on the left). Default - Right (True)
             * modify -- which vertex position to update to accomodate for contraints: 'start', 'end', or 'both'. Default: 'both'
 
@@ -100,6 +101,7 @@ class EdgeSeqFactory:
         # TODO Multiple darts on one side (can we make this fucntions re-usable/chainable?)
 
         # TODO One of the end locations is modified. how will it affect other edges?
+        # TODO opening angle
 
         # Targets
         v0, v1 = np.asarray(start), np.asarray(end)
@@ -147,6 +149,7 @@ class EdgeSeqFactory:
         end[:] = _rel_to_abs_coords(v0, v1, np.array([long_side, 0]))
 
         # Gather all together
+        # TODO After adjustments?
         dart_shape = EdgeSeqFactory.from_verts(p1.tolist(), p_tip.tolist(), p2.tolist())
         if not right:
             # flip dart to be the left of the vector
@@ -155,13 +158,24 @@ class EdgeSeqFactory:
         dart_shape.insert(0, LogicalEdge(start, dart_shape[0].start))
         dart_shape.append(LogicalEdge(dart_shape[-1].end, end))
 
-        # center the shift of the end vertex to distribute the change equally
+        # re-distribute the changes & adjust the opening angle as requested
+        angle_diff = np.deg2rad(180 - opening_angle)
         if modify == 'both':
             dart_shape.translate_by(-shift / 2)
-        else:
-            raise NotImplementedError('Other types of dart modification are not implemented')
+            # TODO check direction
+            dart_shape[0].reverse().rotate(-angle_diff / 2).reverse()
+            dart_shape[-1].rotate(angle_diff / 2)
+        elif modify == 'end':
             # Align the beginning of the dart with original direction
-            # dart_shape.rotate(vector_angle((p1-v0, v1-v0)))
+            dart_shape.rotate(vector_angle(p1-v0, v1-v0))
+            dart_shape[-1].rotate(angle_diff)  # TODO check direction
+        elif modify == 'start':
+            # Align the end of the dart with original direction & shift the change onto the start vertex
+            dart_shape.translate_by(-shift)
+            dart_shape.reverse()  # making the end vertex the start (to rotate around)
+            dart_shape.rotate(vector_angle(p2-new_end, -(v1-v0)))
+            dart_shape[-1].rotate(-angle_diff)    # TODO check direction
+            dart_shape.reverse()  # original order
 
         # DEBUG
         print(f'Fin side length: {dart_shape[0].length() + dart_shape[-1].length()}')

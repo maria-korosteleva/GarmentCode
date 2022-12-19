@@ -99,7 +99,9 @@ class TorsoFittedPanel(pyp.Panel):
         # TODO dart depends on measurements?
         self.edges, _, r_interface, r_dart_stitch = pyp.esf.side_with_dart(
             [0, 0], [0, length], 
-            width=d_width, depth=d_depth, dart_position=(length - dart_from_top), right=True, 
+            width=d_width, depth=d_depth, dart_position=(length - dart_from_top), 
+            opening_angle=150,
+            right=True, modify='both', 
             panel=self)
 
         self.edges.append(pyp.esf.from_verts(
@@ -111,7 +113,9 @@ class TorsoFittedPanel(pyp.Panel):
 
         l_edge, _, l_interface, l_dart_stitch = pyp.esf.side_with_dart(
             self.edges[-1].end, [width, 0], 
-            width=d_width, depth=d_depth, dart_position=dart_from_top, right=True, 
+            width=d_width, depth=d_depth, dart_position=dart_from_top, 
+            opening_angle=150,
+            right=True, modify='both',
             panel=self)
         self.edges.append(l_edge)
         self.edges.close_loop()
