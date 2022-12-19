@@ -55,18 +55,18 @@ class SkirtPanel(pyp.Panel):
         self.right = pyp.esf.side_with_cut(self.waist.end, [low_width, 0], end_cut=bottom_cut / length) if bottom_cut else pyp.EdgeSequence(pyp.LogicalEdge(self.waist.end, [low_width, 0]))
         self.bottom = pyp.LogicalEdge(self.right[-1].end, self.left[0].start)
         
-        # Single sequence for correct assembly
-        self.edges = self.left
-        self.edges.append(self.waist)  # on the waist
-        self.edges.append(self.right)
-        self.edges.append(self.bottom)
-
         # define interface
         self.interfaces.append(pyp.Interface(self, self.left[-1]))
         # Create ruffles by the differences in edge length
         # NOTE ruffles are only created when connecting with something
         self.interfaces.append(pyp.Interface(self, self.waist))
         self.interfaces.append(pyp.Interface(self, self.right[0]))
+
+        # Single sequence for correct assembly
+        self.edges = self.left
+        self.edges.append(self.waist)  # on the waist
+        self.edges.append(self.right)
+        self.edges.append(self.bottom)
 
         # default placement
         self.center_x()  # Already know that this panel should be centered over Y
