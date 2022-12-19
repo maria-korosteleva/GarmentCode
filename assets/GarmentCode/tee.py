@@ -62,8 +62,16 @@ class RuffleSleeve(pyp.Component):
 class TorsoPanel(pyp.Panel):
     """Panel for the front/back of upper garments"""
 
-    def __init__(self, name, length=50, neck_w=15, sholder_w=40, c_depth=15, ease=3) -> None:
+    def __init__(self, name, body, design) -> None:
         super().__init__(name)
+
+        neck_w = body['neck_w']
+        sholder_w = body['sholder_w']
+        
+        design = design['bodice']
+        length = design['length']['v']
+        c_depth = design['c_depth']['v']
+        ease = design['ease']['v']
 
         width = sholder_w + ease
         shoulder_top_l = (width - neck_w) / 2 
@@ -91,13 +99,20 @@ class TorsoPanel(pyp.Panel):
 class BodiceFrontHalf(pyp.Panel):
     """Half of the front of the Fitted bodice pattern"""
 
-    def __init__(self, name, length=50, neck_w=15, sholder_w=40, waist=70, c_depth=15, ease=3, d_width=4, d_depth=10, bust_line=30) -> None:
+    def __init__(self, name, body, design) -> None:
         super().__init__(name)
 
-        width = sholder_w + ease
-        sholder_top_l = (width - neck_w) / 2 
-        dart_from_top = bust_line
-        bottom_width = 0.6 * waist / 2
+        design = design['bodice']
+        length = design['length']['v']
+        d_width = design['d_width']['v']
+        d_depth = design['d_depth']['v']
+        c_depth = design['c_depth']['v']
+        ease = design['ease']['v']
+
+        width = body['sholder_w'] + ease
+        sholder_top_l = (width - body['neck_w']) / 2 
+        dart_from_top = body['bust_line']
+        bottom_width = 0.6 * body['waist'] / 2
 
         # TODO dart depends on bust measurements?
         # Bottom dart
@@ -143,11 +158,11 @@ class BodiceFrontHalf(pyp.Panel):
 class BodiceFront(pyp.Component):
     """Panel for the front of upper garments with darts to properly fit it to the shape"""
 
-    def __init__(self, name, length=50, neck_w=15, sholder_w=40, waist=70, c_depth=15, ease=3, d_width=4, d_depth=10, bust_line=30) -> None:
+    def __init__(self, name, body, design) -> None:
         super().__init__(name)
 
-        self.right = BodiceFrontHalf(f'{name}_right', length, neck_w, sholder_w, waist, c_depth, ease, d_width, d_depth, bust_line)
-        self.left = BodiceFrontHalf(f'{name}_left',length, neck_w, sholder_w, waist, c_depth, ease, d_width, d_depth, bust_line).mirror()
+        self.right = BodiceFrontHalf(f'{name}_right', body, design)
+        self.left = BodiceFrontHalf(f'{name}_left', body, design).mirror()
 
         self.stitching_rules.append((self.right.interfaces[-1], self.left.interfaces[-1]))
 
@@ -216,8 +231,9 @@ class TShirt(pyp.Component):
 class FittedTShirt(pyp.Component):
     """Definition of a simple T-Shirt"""
 
-    def __init__(self, length=45, sholder_w=40, bust_line=30) -> None:
-        name_with_params = f'{self.__class__.__name__}_l{length}_s{sholder_w}_b{bust_line}'
+    def __init__(self, body_opt, design_opt) -> None:
+        # TODO Add params to the base classes?
+        name_with_params = f"{self.__class__.__name__}_l{design_opt['bodice']['length']['v']}_s{body_opt['sholder_w']}_b{body_opt['bust_line']}"
         super().__init__(name_with_params)
 
         # sleeves
@@ -225,8 +241,8 @@ class FittedTShirt(pyp.Component):
         self.l_sleeve = SimpleSleeve('l').mirror()
 
         # Torso
-        self.ftorso = BodiceFront('ftorso', length=length, sholder_w=sholder_w, d_width=5, d_depth=13, bust_line=bust_line).translate_by([0, 0, 20])
-        self.btorso = TorsoPanel('btorso', length=length, sholder_w=sholder_w).translate_by([0, 0, -20])
+        self.ftorso = BodiceFront('ftorso', body_opt, design_opt).translate_by([0, 0, 20])
+        self.btorso = TorsoPanel('btorso', body_opt, design_opt).translate_by([0, 0, -20])
 
         # Order of edges updated after (autonorm)..
         # TODO Simplify the choice of the edges to project from/to (regardless of autonorm)

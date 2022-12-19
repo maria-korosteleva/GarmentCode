@@ -18,7 +18,7 @@
 * wmi
     * May require pypiwin32
     * [Troubleshooting 'DLL load failed while importing win32api'](https://stackoverflow.com/questions/58612306/how-to-fix-importerror-dll-load-failed-while-importing-win32api) error on Win
-
+* pyaml
 
 <details>
     <summary> <b>NOTE: Lib versions used in development</b></summary>

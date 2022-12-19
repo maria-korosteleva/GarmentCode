@@ -1,6 +1,7 @@
 
 from datetime import datetime
 from pathlib import Path
+import yaml
 
 # Custom
 from customconfig import Properties
@@ -10,6 +11,8 @@ from assets.GarmentCode.godet import *
 
 if __name__ == '__main__':
 
+    with open('./assets/GarmentCode/options.yaml', 'r') as f:
+        options = yaml.safe_load(f)
     test_garments = [
         # SkirtWB(1),
         # SkirtWB(1.5, 0),
@@ -22,7 +25,7 @@ if __name__ == '__main__':
         # SkirtManyPanels(n_panels=10),
         # TShirt(45, 40),
         # TShirt(ruffle_sleeve=True),
-        FittedTShirt(45, 40, bust_line=28),
+        FittedTShirt(options['body'], options['design']),
         # GodetSkirt(20, 50)
     ]
 

@@ -1,0 +1,39 @@
+
+# Measurments of the body
+body: 
+  neck_w: 15
+  sholder_w: 40
+  waist: 70
+  bust_line: 28
+  bust: 100
+  hips: 110   # TODO check the measurements though!
+  arm_width: 30
+
+# design parameters
+# May specify sampling range per parameter for automatic 
+# design sampling
+design: 
+  bodice: 
+    c_depth:   # Collar depth
+      v: 15
+      range: [3, 25]
+    ease:
+      v: 3
+      range: null
+    length: 
+      v: 45
+      range: null
+    d_width:
+      v: 4
+      range: null
+    d_depth:
+      v: 10
+      range: null
+    
+  sleeve:
+    length: 
+      v: 35
+      range: [3, 100]
+    ruffle:
+      v: 1
+      range: [1, 20]
