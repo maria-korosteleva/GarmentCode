@@ -18,7 +18,7 @@ def _rel_to_abs_coords(start, end, vrel):
 
         return new_point 
 
-def dart(v0, v1, width, depth, location=0.5):
+def dart(v0, v1, width, depth, location=0.5, right=True):
 
     # Targets
     L = norm(v1 - v0)
@@ -65,15 +65,35 @@ def dart(v0, v1, width, depth, location=0.5):
     print('Width: ', norm(p2 - p1))
     print('Total Length requested: ', d1, d2, norm(v1 - v0))
     print('Total Length: ', norm(p1 - v0), norm(p2 - new_v1), norm(p1 - v0) + norm(p2 - new_v1))
+
+    dart_points = [p1, p_tip, p2]
+
+    if not right:
+        # flip dart to be the left of the vector
+        dart_points = _reflect(dart_points, v0, new_v1)
     
 
     # return np.array([v0, dart_st_point, _rel_to_abs_coords(v0, v1, p_tip),  _rel_to_abs_coords(v0, v1, p2), new_v1_1])
-    return np.array([v0, p1, p_tip, p2, new_v1])
+    return np.array([v0] + dart_points + [new_v1])
     # return np.array([v0, dart_st_point, dart_st_point + np.array([width / 2, -depth_perp]), dart_st_point + np.array([width, 0]), new_v1, new_v1_1])
 
 
+def _reflect(points, v0, v1):
+    """Reflect 2D points w.r.t. 1D line defined by two points"""
+    vec = v1 - v0
+    vec = vec / norm(vec)  # normalize
 
-edge_side = dart(np.array([0, 0]), np.array([50, -15]), 5, 20, location=0.2)
+    # https://demonstrations.wolfram.com/ReflectionMatrixIn2D/#more
+    Ref = np.array([
+        [ 1 - 2 * vec[1]**2,  2*vec[0]*vec[1]],
+        [ 2*vec[0]*vec[1],    - 1 + 2 * vec[1]**2 ]
+        ])
+    
+    # translate -> reflect -> translate back
+    return [np.matmul(Ref, p - v0) + v0 for p in points]
+
+
+edge_side = dart(np.array([50, -20]), np.array([50, 15]), 5, 20, location=0.2, right=False)
 
 plt.plot(edge_side[:, 0], edge_side[:, 1], marker='o')
 plt.title('Dart')
