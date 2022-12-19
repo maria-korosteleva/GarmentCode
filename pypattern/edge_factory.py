@@ -75,54 +75,97 @@ class EdgeSeqFactory:
 
     #DRAFT
     @staticmethod
-    def side_with_dart(start=(0,0), end=(1,0), width=5, depth=10, dart_position=0, right=True, panel=None):
+    def side_with_dart(start=(0,0), end=(100,0), width=5, depth=10, dart_position=0, right=True, modify='both', panel=None):
         """Create a seqence of edges that represent a side with a dart with given parameters
         Parameters:
             * start and end -- vertices between which side with a dart is located
             * width -- width of a dart opening
             * depth -- depth of a dart (distance between the opening and the farthest vertex)
-            * dart_position -- position along the edge (to the beginning of the dart)
+            * dart_position -- position along the edge (from the start vertex)
             * right -- whether the dart is created on the right from the edge direction (otherwise created on the left). Default - Right (True)
+            * modify -- which vertex position to update to accomodate for contraints: 'start', 'end', or 'both'. Default: 'both'
 
         Returns: 
             * Full edge with a dart
             * References to dart edges
             * References to non-dart edges
+            * Suggested dart stitch
 
+        NOTE: (!!) the end of the edge might shift to accomodate the constraints
+        NOTE: The routine makes sure that the the edge is straight after the dart is stitched
         NOTE: Darts always have the same length on the sides
         """
         # TODO Curvatures?? -- on edges, dart sides
-        # TODO Non-straight darts? They won't have the sides of the same length, so it makes things complicated..
 
-        # TODO The side edge need to be angled s.t. the sewed thing is straight (original edge)..
-        # TODO Target edge length / shapes as input
         # TODO Multiple darts on one side (can we make this fucntions re-usable/chainable?)
 
-        dart_shape = EdgeSeqFactory.from_verts([0, 0], [width / 2, depth], [width, 0])
+        # TODO One of the end locations is modified. how will it affect other edges?
 
-        # Align with the direction between vertices
-        angle = vector_angle(
-            np.array(end) - np.array(start),
-            np.array(dart_shape[0].start) - np.array(dart_shape[-1].end))
-        angle *= -1 if right else 1  # account for a desired orientation of the cut
-        dart_shape.rotate(angle)
+        # Targets
+        v0, v1 = np.asarray(start), np.asarray(end)
+        L = norm(v1 - v0)
+        d0, d1 = dart_position, L - dart_position
+        depth_perp = np.sqrt((depth**2 - (width / 2)**2))
+        dart_side = depth
+
+        # Extended triangle -- sides
+        delta_l = dart_side * width / (2 * depth_perp)  # extention of edge length beyong the dart points
+        side0, side1 = d0 + delta_l, d1 + delta_l
         
-        # TODO support positions other then in the middle between vertices
+        # long side (connects original vertices)
+        alpha = abs(np.arctan(width / 2 / depth_perp))  # half of dart tip angle
+        top_angle = np.pi - 2*alpha  # top of the triangle (v0, imaginative dart top, v1)
+        long_side = np.sqrt(side0**2 + side1**2 - 2*side0*side1*np.cos(top_angle))
+        
+        # angles of extended triangle
+        sin0, sin1 = side1 * np.sin(top_angle) / long_side, side0 * np.sin(top_angle) / long_side
+        angle0, angle1 = np.arcsin(sin0), np.arcsin(sin1)
 
-        # Create new vertex that the dart will start from
-        d_to_center = norm(np.array(end) - np.array(start))
-        # coords relative to start vertex
-        dart_st_point = [(d_to_center - width) / 2, 0]
-        dart_st_point[1] = dart_st_point[0] * width / 2 / depth
-        # absolute position
-        dart_st_point = _rel_to_abs_coords(start, end, dart_st_point)
+        # Find the location of dart points: start of dart cut
+        p1x = d0 * np.cos(angle0)
+        p1y = d0 * sin0
+        p1 = np.array([p1x, p1y])
 
-        # Collect all together
-        if right:
-            dart_shape.reverse()
-        dart_shape.snap_to(dart_st_point)
+        p1 = _rel_to_abs_coords(v0, v1, p1)
+
+        # end of dart cut
+        p2x = long_side - (d1 * np.cos(angle1))
+        p2y = d1 * sin1
+        p2 = np.array([p2x, p2y])
+        p2 = _rel_to_abs_coords(v0, v1, p2)
+
+        # Tip of the dart
+        p_vec = p2 - p1
+        p_perp = np.array([-p_vec[1], p_vec[0]])
+        p_perp = p_perp / norm(p_perp) * depth_perp
+
+        p_tip = p1 + p_vec / 2 - p_perp
+
+        # New location of the dart end to satisfy the requested length
+        new_end = _rel_to_abs_coords(v0, v1, np.array([long_side, 0]))
+        shift = new_end - v1
+        end[:] = _rel_to_abs_coords(v0, v1, np.array([long_side, 0]))
+
+        # Gather all together
+        dart_shape = EdgeSeqFactory.from_verts(p1.tolist(), p_tip.tolist(), p2.tolist())
+        if not right:
+            # flip dart to be the left of the vector
+            dart_shape.reflect(start, end)
+
         dart_shape.insert(0, LogicalEdge(start, dart_shape[0].start))
         dart_shape.append(LogicalEdge(dart_shape[-1].end, end))
+
+        # center the shift of the end vertex to distribute the change equally
+        if modify == 'both':
+            dart_shape.translate_by(-shift / 2)
+        else:
+            raise NotImplementedError('Other types of dart modification are not implemented')
+            # Align the beginning of the dart with original direction
+            # dart_shape.rotate(vector_angle((p1-v0, v1-v0)))
+
+        # DEBUG
+        print(f'Fin side length: {dart_shape[0].length() + dart_shape[-1].length()}')
+        print(f'Fin tri length: {long_side}')
 
         # prepare the interfaces to conveniently create stitches for a dart and non-dart edges
         dart_stitch = None if panel is None else (Interface(panel, dart_shape[1]), Interface(panel, dart_shape[2]))

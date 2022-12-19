@@ -90,15 +90,16 @@ class TorsoPanel(pyp.Panel):
 class TorsoFittedPanel(pyp.Panel):
     """Panel for the front of upper garments with darts to properly fit it to the shape"""
 
-    def __init__(self, name, length=50, neck_w=15, sholder_w=40, c_depth=15, ease=3, d_width=4, d_depth=10) -> None:
+    def __init__(self, name, length=50, neck_w=15, sholder_w=40, c_depth=15, ease=3, d_width=4, d_depth=10, bust_line=30) -> None:
         super().__init__(name)
 
         width = sholder_w + ease
         sholder_top_l = (width - neck_w) / 2 
+        dart_from_top = bust_line
         # TODO dart depends on measurements?
         self.edges, _, r_interface, r_dart_stitch = pyp.esf.side_with_dart(
             [0, 0], [0, length], 
-            width=d_width, depth=d_depth, dart_position=0.3, right=True, 
+            width=d_width, depth=d_depth, dart_position=(length - dart_from_top), right=True, 
             panel=self)
 
         self.edges.append(pyp.esf.from_verts(
@@ -110,7 +111,7 @@ class TorsoFittedPanel(pyp.Panel):
 
         l_edge, _, l_interface, l_dart_stitch = pyp.esf.side_with_dart(
             self.edges[-1].end, [width, 0], 
-            width=d_width, depth=d_depth, dart_position=0.7, right=True, 
+            width=d_width, depth=d_depth, dart_position=dart_from_top, right=True, 
             panel=self)
         self.edges.append(l_edge)
         self.edges.close_loop()
@@ -135,8 +136,9 @@ class TorsoFittedPanel(pyp.Panel):
 class TShirt(pyp.Component):
     """Definition of a simple T-Shirt"""
 
-    def __init__(self, ruffle_sleeve=False) -> None:
-        super().__init__(self.__class__.__name__ if not ruffle_sleeve else f'{self.__class__.__name__}_Ruffle_sl')
+    def __init__(self, length=45, sholder_w=40, ruffle_sleeve=False) -> None:
+        name_with_params = f'{self.__class__.__name__}_l{length}_s{sholder_w}'
+        super().__init__(name_with_params if not ruffle_sleeve else f'{name_with_params}_Ruffle_sl')
 
         # sleeves
         if ruffle_sleeve:
@@ -147,8 +149,8 @@ class TShirt(pyp.Component):
             self.l_sleeve = SimpleSleeve('l').mirror()
 
         # Torso
-        self.ftorso = TorsoPanel('ftorso').translate_by([0, 0, 20])
-        self.btorso = TorsoPanel('btorso').translate_by([0, 0, -20])
+        self.ftorso = TorsoPanel('ftorso', length=length, sholder_w=sholder_w).translate_by([0, 0, 20])
+        self.btorso = TorsoPanel('btorso', length=length, sholder_w=sholder_w).translate_by([0, 0, -20])
 
         # Cut the sleeve shapes to connect them nicely
         _, fr_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[0].projecting_edges(), self.ftorso, 5, 6)
@@ -186,16 +188,17 @@ class TShirt(pyp.Component):
 class FittedTShirt(pyp.Component):
     """Definition of a simple T-Shirt"""
 
-    def __init__(self) -> None:
-        super().__init__(self.__class__.__name__)
+    def __init__(self, length=45, sholder_w=40, bust_line=30) -> None:
+        name_with_params = f'{self.__class__.__name__}_l{length}_s{sholder_w}_b{bust_line}'
+        super().__init__(name_with_params)
 
         # sleeves
         self.r_sleeve = SimpleSleeve('r')
         self.l_sleeve = SimpleSleeve('l').mirror()
 
         # Torso
-        self.ftorso = TorsoFittedPanel('ftorso', d_width=7, d_depth=17).translate_by([0, 0, 20])
-        self.btorso = TorsoPanel('btorso').translate_by([0, 0, -20])
+        self.ftorso = TorsoFittedPanel('ftorso', length=length, sholder_w=sholder_w, d_width=5, d_depth=13, bust_line=bust_line).translate_by([0, 0, 20])
+        self.btorso = TorsoPanel('btorso', length=length, sholder_w=sholder_w).translate_by([0, 0, -20])
 
         # Order of edges updated after (autonorm)..
         # TODO Simplify the choice of the edges to project from/to (regardless of autonorm)

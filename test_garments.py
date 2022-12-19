@@ -20,9 +20,9 @@ if __name__ == '__main__':
         # SkirtManyPanels(n_panels=2),
         # SkirtManyPanels(n_panels=4),
         # SkirtManyPanels(n_panels=10),
-        TShirt(),
-        TShirt(ruffle_sleeve=True),
-        # FittedTShirt(),
+        # TShirt(45, 40),
+        # TShirt(ruffle_sleeve=True),
+        FittedTShirt(45, 40, bust_line=28),
         # GodetSkirt(20, 50)
     ]
 

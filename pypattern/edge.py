@@ -112,6 +112,7 @@ class EdgeSequence():
         return next(i for i, e in enumerate(self.edges) if elem is e)
 
     def __len__(self):
+        """Number of edges in the sequence"""
         return len(self.edges)
 
     def __contains__(self, item):
@@ -123,6 +124,10 @@ class EdgeSequence():
     
     def __repr__(self) -> str:
         return self.__str__()
+
+    def length(self):
+        """Total length of edges"""
+        return sum([e.length() for e in self.edges])
 
     def isLoop(self):
         return self.edges[0].start is self.edges[-1].end and len(self) > 1
@@ -146,6 +151,16 @@ class EdgeSequence():
         total_len = sum([e.length() for e in self.edges])
 
         return [e.length() / total_len for e in self.edges]
+
+
+    def verts(self):
+        """Return all vertex objects"""
+        verts = [self.edges[0].start]
+        for e in self.edges:
+            if e.start is not verts[-1]:  # avoid adding the vertices of chained edges twice
+                verts.append(e.start)
+            verts.append(e.end)
+        return verts
 
     # ANCHOR Modifiers
     # All modifiers return self object to allow chaining
@@ -195,17 +210,20 @@ class EdgeSequence():
         return self
 
     # EdgeSequence-specific
+    def translate_by(self, shift):
+        """Translate the edge seq vertices s.t. the first vertex is at new_origin
+        """
+        for v in self.verts():
+            v[0] += shift[0]
+            v[1] += shift[1]
+        return self
+
     def snap_to(self, new_origin=[0, 0]):
         """Translate the edge seq vertices s.t. the first vertex is at new_origin
         """
         start = copy(self[0].start)
         shift = [new_origin[0] - start[0], new_origin[1] - start[1]]
-        for edge in self:
-            edge.end[0] += shift[0]
-            edge.end[1] += shift[1]
-
-        self[0].start[0] += shift[0]
-        self[0].start[1] += shift[1]
+        self.translate_by(shift)
 
         return self
 
@@ -227,8 +245,8 @@ class EdgeSequence():
         self.snap_to([0, 0])
         rot = np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
 
-        for edge in self.edges:
-            edge.end[:] = np.matmul(rot, edge.end)
+        for v in self.verts():
+            v[:] = np.matmul(rot, v)
         
         # recover the original location
         self.snap_to(curr_start)
@@ -250,12 +268,7 @@ class EdgeSequence():
         target_line = target_line / norm(target_line)
 
         # gather vertices
-        verts_coords = [self.edges[0].start]
-        for e in self.edges:
-            if verts_coords[-1] is not e.start:  # don't miss vertices if there is a break in the chain
-                verts_coords.append(e.start)
-            verts_coords.append(e.end)
-
+        verts_coords = self.verts()
         nverts_coords = np.array(verts_coords)
         
         # adjust their position based on projection to the target line
@@ -272,6 +285,23 @@ class EdgeSequence():
 
         return self
 
+    def reflect(self, v0, v1):
+        """Reflect 2D points w.r.t. 1D line defined by two points"""
+        v0, v1 = np.asarray(v0), np.asarray(v1)
+        vec = np.asarray(v1) - np.asarray(v0)
+        vec = vec / norm(vec)  # normalize
+
+        # https://demonstrations.wolfram.com/ReflectionMatrixIn2D/#more
+        Ref = np.array([
+            [ 1 - 2 * vec[1]**2,  2*vec[0]*vec[1]],
+            [ 2*vec[0]*vec[1],    - 1 + 2 * vec[1]**2 ]
+            ])
+        
+        # translate -> reflect -> translate back
+        for v in self.verts():
+            v[:] = np.matmul(Ref, np.asarray(v) - v0) + v0
+
+        return self
 
     # ANCHOR Factories for some tipical edge sequences
     def copy(self):

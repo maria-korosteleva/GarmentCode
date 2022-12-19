@@ -22,13 +22,13 @@ def dart(v0, v1, width, depth, location=0.5, right=True):
 
     # Targets
     L = norm(v1 - v0)
-    d1, d2 = L * location, L * (1 - location)
+    d0, d1 = L * location, L * (1 - location)
     depth_perp = np.sqrt((depth**2 - (width / 2)**2))
     dart_side = depth
 
     # Extended triangle 
     delta_l = dart_side * width / (2 * depth_perp)  # extention of edge length beyong the dart points
-    side0, side1 = d1 + delta_l, d2 + delta_l
+    side0, side1 = d0 + delta_l, d1 + delta_l
     
     # long side
     alpha = abs(np.arctan(width / 2 / depth_perp))  # half of dart tip angle
@@ -40,16 +40,16 @@ def dart(v0, v1, width, depth, location=0.5, right=True):
     angle0, angle1 = np.arcsin(sin0), np.arcsin(sin1)
 
     # Find the location of dart points
-    p1x = d1 * np.cos(angle0)
-    p1y = d1 * sin0
+    p1x = d0 * np.cos(angle0)
+    p1y = d0 * sin0
     p1 = np.array([p1x, p1y])
 
     p1 = _rel_to_abs_coords(v0, v1, p1)
     new_v1 = _rel_to_abs_coords(v0, v1, np.array([long_side, 0]))
 
     # Other dart vertices
-    p2x = long_side - (d2 * np.cos(angle1))
-    p2y = d2 * sin1
+    p2x = long_side - (d1 * np.cos(angle1))
+    p2y = d1 * sin1
     p2 = np.array([p2x, p2y])
     p2 = _rel_to_abs_coords(v0, v1, p2)
 
@@ -63,7 +63,7 @@ def dart(v0, v1, width, depth, location=0.5, right=True):
 
     print('Depth: ', norm(p_tip - p1), norm(p_tip - p2))
     print('Width: ', norm(p2 - p1))
-    print('Total Length requested: ', d1, d2, norm(v1 - v0))
+    print('Total Length requested: ', d0, d1, norm(v1 - v0))
     print('Total Length: ', norm(p1 - v0), norm(p2 - new_v1), norm(p1 - v0) + norm(p2 - new_v1))
 
     dart_points = [p1, p_tip, p2]

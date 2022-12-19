@@ -168,6 +168,7 @@ def cut_into_edge(target_shape, base_edge, offset=0, right=True, tol=1e-4):
     # find starting vertex for insertion & place edges there
     ins_point = offset * (edge_vec[1] - edge_vec[0]) + edge_vec[0] if offset > tol else base_edge.start    
     if right:  # We need to flip it's orientation of cut shape and then cut
+        # FIXME Need to use reflection instead
         new_edges.reverse().snap_to([0, 0])  # new first vertex to be zero
     new_edges.snap_to(ins_point)
 
