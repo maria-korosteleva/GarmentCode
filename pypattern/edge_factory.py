@@ -106,6 +106,9 @@ class EdgeSeqFactory:
         depth_perp = np.sqrt((depth**2 - (width / 2)**2))
         dart_side = depth
 
+        if d1 < 0:
+            raise ValueError(f'EdgeFactory::Error::Invalid value supplied for dart position: {d0} out of {L}')
+
         # Extended triangle -- sides
         delta_l = dart_side * width / (2 * depth_perp)  # extention of edge length beyong the dart points
         side0, side1 = d0 + delta_l, d1 + delta_l

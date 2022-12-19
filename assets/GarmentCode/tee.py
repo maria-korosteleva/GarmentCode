@@ -87,53 +87,77 @@ class TorsoPanel(pyp.Panel):
             pyp.Interface(self, self.edges[5]),
         ]
 
-class TorsoFittedPanel(pyp.Panel):
-    """Panel for the front of upper garments with darts to properly fit it to the shape"""
 
-    def __init__(self, name, length=50, neck_w=15, sholder_w=40, c_depth=15, ease=3, d_width=4, d_depth=10, bust_line=30) -> None:
+class BodiceFrontHalf(pyp.Panel):
+    """Half of the front of the Fitted bodice pattern"""
+
+    def __init__(self, name, length=50, neck_w=15, sholder_w=40, waist=70, c_depth=15, ease=3, d_width=4, d_depth=10, bust_line=30) -> None:
         super().__init__(name)
 
         width = sholder_w + ease
         sholder_top_l = (width - neck_w) / 2 
         dart_from_top = bust_line
-        # TODO dart depends on measurements?
-        self.edges, _, r_interface, r_dart_stitch = pyp.esf.side_with_dart(
-            [0, 0], [0, length], 
-            width=d_width, depth=d_depth, dart_position=(length - dart_from_top), 
-            opening_angle=150,
-            right=True, modify='both', 
+        bottom_width = 0.6 * waist / 2
+
+        # TODO dart depends on bust measurements?
+        # Bottom dart
+
+        b_edge, _, _, b_dart_stitch = pyp.esf.side_with_dart(
+            [0, 0], [-bottom_width, 0], 
+            width=5, depth=20, dart_position=7, 
+            opening_angle=180,
+            right=True, modify='end',
             panel=self)
+        self.edges = b_edge
+
+        side_edges, _, side_interface, side_dart_stitch = pyp.esf.side_with_dart(
+            b_edge[-1].end, [-width/2, length], 
+            width=d_width, depth=d_depth, dart_position=(length - dart_from_top), 
+            opening_angle=180,
+            right=True, modify='start', 
+            panel=self)
+        self.edges.append(side_edges)
 
         self.edges.append(pyp.esf.from_verts(
             self.edges[-1].end, 
-            [sholder_top_l, length], 
-            [width / 2, length - c_depth], 
-            [sholder_top_l + neck_w, length], 
-            [width, length]))
+            [-width/2 + sholder_top_l, length], 
+            [0, length - c_depth]))
 
-        l_edge, _, l_interface, l_dart_stitch = pyp.esf.side_with_dart(
-            self.edges[-1].end, [width, 0], 
-            width=d_width, depth=d_depth, dart_position=dart_from_top, 
-            opening_angle=150,
-            right=True, modify='both',
-            panel=self)
-        self.edges.append(l_edge)
         self.edges.close_loop()
 
-        # default placement
-        self.translate_by([-width / 2, 30 - length, 0])
+        # Stitch the darts
+        self.stitching_rules.append(side_dart_stitch)
+        self.stitching_rules.append(b_dart_stitch)
 
-        # TODO Finding ids of edges is a pain..
+        # default placement
+        self.translate_by([0, 30 - length, 0])
+
+        # Out interfaces
         self.interfaces = [
-            r_interface,
-            pyp.Interface(self, self.edges[4]),
-            pyp.Interface(self, self.edges[7]),
-            l_interface,
+            side_interface,
+            pyp.Interface(self, self.edges[-3]),
+            pyp.Interface(self, self.edges[-1])
         ]
 
-        # Stitch the darts
-        self.stitching_rules.append(r_dart_stitch)
-        self.stitching_rules.append(l_dart_stitch)
+
+class BodiceFront(pyp.Component):
+    """Panel for the front of upper garments with darts to properly fit it to the shape"""
+
+    def __init__(self, name, length=50, neck_w=15, sholder_w=40, waist=70, c_depth=15, ease=3, d_width=4, d_depth=10, bust_line=30) -> None:
+        super().__init__(name)
+
+        self.right = BodiceFrontHalf(f'{name}_right', length, neck_w, sholder_w, waist, c_depth, ease, d_width, d_depth, bust_line)
+        self.left = BodiceFrontHalf(f'{name}_left',length, neck_w, sholder_w, waist, c_depth, ease, d_width, d_depth, bust_line).mirror()
+
+        self.stitching_rules.append((self.right.interfaces[-1], self.left.interfaces[-1]))
+
+        self.interfaces = [
+            self.right.interfaces[0],
+            self.right.interfaces[1],
+            self.left.interfaces[1],
+            self.left.interfaces[0],
+        ]
+
 
 
 # TODO condition T-Shirts to be fitted or not
@@ -201,14 +225,13 @@ class FittedTShirt(pyp.Component):
         self.l_sleeve = SimpleSleeve('l').mirror()
 
         # Torso
-        self.ftorso = TorsoFittedPanel('ftorso', length=length, sholder_w=sholder_w, d_width=5, d_depth=13, bust_line=bust_line).translate_by([0, 0, 20])
+        self.ftorso = BodiceFront('ftorso', length=length, sholder_w=sholder_w, d_width=5, d_depth=13, bust_line=bust_line).translate_by([0, 0, 20])
         self.btorso = TorsoPanel('btorso', length=length, sholder_w=sholder_w).translate_by([0, 0, -20])
 
         # Order of edges updated after (autonorm)..
         # TODO Simplify the choice of the edges to project from/to (regardless of autonorm)
-
-        _, fr_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[0].projecting_edges(), self.ftorso, 8, 9)
-        _, fl_sleeve_int = pyp.ops.cut_corner(self.l_sleeve.interfaces[0].projecting_edges(), self.ftorso, 4, 5)
+        _, fr_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[0].projecting_edges(), self.ftorso.right, 2, 3)
+        _, fl_sleeve_int = pyp.ops.cut_corner(self.l_sleeve.interfaces[0].projecting_edges(), self.ftorso.left, 4 + 3, 5 + 3)
         _, br_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[1].projecting_edges(), self.btorso, 0, 1)
         _, bl_sleeve_int = pyp.ops.cut_corner(self.l_sleeve.interfaces[1].projecting_edges(), self.btorso, 5, 6)
 
