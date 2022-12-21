@@ -6,6 +6,7 @@ from numpy.linalg import norm
 from .edge import EdgeSequence, LogicalEdge
 from ._generic_utils import vector_angle
 from .interface import Interface
+from scipy.optimize import minimize
 
 class EdgeSeqFactory:
     """Create EdgeSequence objects for some common edge seqeunce patterns
@@ -75,7 +76,7 @@ class EdgeSeqFactory:
 
     #DRAFT
     @staticmethod
-    def side_with_dart(start=(0,0), end=(100,0), width=5, depth=10, dart_position=50, opening_angle=180, right=True, modify='both', panel=None):
+    def side_with_dart_by_width(start=(0,0), end=(100,0), width=5, depth=10, dart_position=50, opening_angle=180, right=True, modify='both', panel=None):
         """Create a seqence of edges that represent a side with a dart with given parameters
         Parameters:
             * start and end -- vertices between which side with a dart is located
@@ -98,6 +99,8 @@ class EdgeSeqFactory:
         """
         # TODO Curvatures?? -- on edges, dart sides
         # TODO Multiple darts on one side (can we make this fucntions re-usable/chainable?)
+        # TODO Angled darts (no 90 degree angles on connection)
+        # TODO width from fixed L and target length
 
         # Targets
         v0, v1 = np.asarray(start), np.asarray(end)
@@ -186,6 +189,73 @@ class EdgeSeqFactory:
 
         return dart_shape, dart_shape[1:-1], out_interface, dart_stitch
 
+    @staticmethod
+    def side_with_dart_by_len(start=(0,0), end=(50,0), target_len=35, depth=10, dart_position=25, right=True, panel=None):
+        """Create a seqence of edges that represent a side with a dart with given parameters
+        Parameters:
+            * start and end -- vertices between which side with a dart is located
+            * target_len # TODO 
+            * depth -- depth of a dart (distance between the opening and the farthest vertex)
+            * dart_position -- position along the edge (from the start vertex)
+            * right -- whether the dart is created on the right from the edge direction (otherwise created on the left). Default - Right (True)
+
+        Returns: 
+            * Full edge with a dart
+            * References to dart edges
+            * References to non-dart edges
+            * Suggested dart stitch
+
+        NOTE: (!!) the end of the edge might shift to accomodate the constraints
+        NOTE: The routine makes sure that the the edge is straight after the dart is stitched
+        NOTE: Darts always have the same length on the sides
+        """
+        # TODO Curvatures?? -- on edges, dart sides
+        # TODO Multiple darts on one side (can we make this fucntions re-usable/chainable?)
+        # TODO Angled darts (no 90 degree angles on connection)
+        # TODO Opening angle control?
+
+        # Targets
+        v0, v1 = np.asarray(start), np.asarray(end)
+        d0, d1 = dart_position, target_len - dart_position
+
+        if (d0 + d1) >= norm(v0 - v1):
+            raise ValueError(f'EdgeFactory::Error::Invalid value supplied for dart position: {d0} does not satisfy triangle inequality for edge length {norm(v0 - v1)}')
+
+        # Solve for dart constraints
+        out = minimize(
+            _fit_dart, np.zeros(6), args=(v0, v1, d0, d1, depth, 80))
+
+        if not out.success:
+            raise ValueError(f'EdgeFactory::Error::Solving dart was unsuccessful =(')
+
+        p0, p_tip, p1 = out.x[:2], out.x[2:4], out.x[4:]
+
+        # As edge seq object
+        dart_shape = EdgeSeqFactory.from_verts(p0.tolist(), p_tip.tolist(), p1.tolist())
+
+        # Check direction
+        right_position = np.sign(np.cross(v1 - v0, p0 - v0)) == 1  # TODO Correct?
+        if not right and right_position or right and not right_position:
+            # flip dart to match the requested direction
+            print('Flipped!!')  # DEBUG
+            dart_shape.reflect(start, end)
+
+        dart_shape.insert(0, LogicalEdge(start, dart_shape[0].start))
+        dart_shape.append(LogicalEdge(dart_shape[-1].end, end))
+
+        # DEBUG
+        print(f'Fin side length: {dart_shape[0].length() + dart_shape[-1].length()}')
+
+        # prepare the interfaces to conveniently create stitches for a dart and non-dart edges
+        dart_stitch = None if panel is None else (Interface(panel, dart_shape[1]), Interface(panel, dart_shape[2]))
+        
+        out_interface = EdgeSequence(dart_shape[0], dart_shape[-1]) 
+        out_interface = out_interface if panel is None else Interface(panel, out_interface)
+
+        return dart_shape, dart_shape[1:-1], out_interface, dart_stitch
+
+    
+
 # Utils
 def _rel_to_abs_coords(start, end, vrel):
         """Convert coordinates specified relative to vector v2 - v1 to world coords"""
@@ -198,3 +268,31 @@ def _rel_to_abs_coords(start, end, vrel):
         new_point = new_start + vrel[1] * vec_perp
 
         return new_point 
+
+
+def _fit_dart(coords, v0, v1, d0, d1, depth, theta=90):
+    """Placements of three dart points respecting the constraints"""
+    p0, p, p1 = coords[:2], coords[2:4], coords[4:]
+
+    # Distance constraints
+    error = (norm(p0 - v0) - d0)**2
+    error += (norm(p1 - v1) - d1)**2
+
+    # Depth constraint
+    error += (norm(p0 - p) - depth)**2
+    error += (norm(p1 - p) - depth)**2
+
+    # Angle constraint
+    error += (np.dot(p - p0, v0 - p0))**2
+    error += (np.dot(p - p1, v1 - p1))**2
+    # TODO arbitrary angle 
+    # DRAFT -- doesn't give good solution
+    # error += (np.dot(p - p0, v0 - p0) - np.cos(theta) * d0 * depth)**2
+    # cos(pi - theta) = - cos(theta)
+    # error += (np.dot(p - p1, v1 - p1) + np.cos(theta) * d1 * depth)**2
+
+    # same side w.r.t to v0-v1
+    error += (np.sign(np.cross(v1 - v0, p0 - v0)) - 1)**2
+    error += (np.sign(np.cross(v1 - v0, p1 - v0)) - 1)**2
+
+    return error

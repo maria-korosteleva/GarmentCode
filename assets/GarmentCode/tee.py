@@ -99,48 +99,42 @@ class BodiceFrontHalf(pyp.Panel):
         width = body['sholder_w'] + ease
         sholder_top_l = (width - body['neck_w']) / 2 
         dart_from_top = body['bust_line']
-        bottom_width = 0.6 * body['waist'] / 2
+        bottom_width = body['waist'] / 4 + d_width
 
         b_section = bottom_width / 3
 
         print(b_section)  # DEBUG
 
         # Bottom dart
-        b_edge, _, _, b_dart_stitch = pyp.esf.side_with_dart(
-            [-b_section, 0], [-bottom_width + b_section, 0], 
-            width=5, depth=20, dart_position=b_section/2, 
-            opening_angle=180,
-            right=True, modify='end',
+        b_edge, _, _, b_dart_stitch = pyp.esf.side_with_dart_by_len(
+            [0, 0], [-bottom_width, 0], 
+            target_len=body['waist'] / 4, depth=20, dart_position=b_section, 
+            right=True,
             panel=self)
 
-        self.edges.append(pyp.LogicalEdge([0, 0], b_edge[0].start))
         self.edges.append(b_edge)
-        self.edges.append(pyp.LogicalEdge(b_edge[-1].end, [-bottom_width, 0]))
 
         l_section = length / 3
         print(l_section)  # DEBUG
 
         # TODO dart depends on bust measurements?
-        side_edges, _, side_interface, side_dart_stitch = pyp.esf.side_with_dart(
-            [-width/2 - 5, l_section], [-width/2 - 5, 2*l_section], 
-            width=d_width, depth=d_depth, dart_position=(l_section - (dart_from_top - l_section)),   # NOTE Assuming l_section is shorter
-            opening_angle=180,
-            right=True, modify='start', 
+        side_edges, _, side_interface, side_dart_stitch = pyp.esf.side_with_dart_by_len(
+            self.edges[-1].end, [-width/2, length], 
+            target_len=length*0.95, depth=10, dart_position=(length * 0.95 - dart_from_top),   # NOTE Assuming l_section is shorter
+            right=True, 
             panel=self)
 
-        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, side_edges[0].start))
         self.edges.append(side_edges)
-        self.edges.append(pyp.LogicalEdge(side_edges[-1].end, [-width/2, length]))
 
         print(self.edges)  # DEBUG
         
         #self.edges.append(side_edges)
 
+        # Collar
         self.edges.append(pyp.esf.from_verts(
             self.edges[-1].end, 
             [-width/2 + sholder_top_l, length], 
             [0, length - c_depth]))
-
         self.edges.close_loop()
 
         # Stitch the darts
