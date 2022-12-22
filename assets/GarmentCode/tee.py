@@ -110,7 +110,7 @@ class BodiceFrontHalf(pyp.Panel):
         width = bust_size + ease
         sholder_top_l = width - body['neck_w']/ 2 
         side_dart_from_top = body['bust_line']
-        side_d_depth = bust_size - bust_point + ease   # NOTE: calculated value
+        side_d_depth = bust_size - bust_point - ease   # NOTE: calculated value
 
         # Bottom dart
         # TODO DO as cutout for nice line at the bottom
