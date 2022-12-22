@@ -1,4 +1,5 @@
 
+from copy import copy
 import numpy as np
 from numpy.linalg import norm
 
@@ -190,7 +191,7 @@ class EdgeSeqFactory:
         return dart_shape, dart_shape[1:-1], out_interface, dart_stitch
 
     @staticmethod
-    def side_with_dart_by_len(start=(0,0), end=(50,0), target_len=35, depth=10, dart_position=25, right=True, panel=None):
+    def side_with_dart_by_len(start=(0,0), end=(50,0), target_len=35, depth=10, dart_position=25, dart_angle=90, right=True, panel=None, tol=1e-4):
         """Create a seqence of edges that represent a side with a dart with given parameters
         Parameters:
             * start and end -- vertices between which side with a dart is located
@@ -216,17 +217,25 @@ class EdgeSeqFactory:
 
         # Targets
         v0, v1 = np.asarray(start), np.asarray(end)
+        L = norm(v0 - v1)
         d0, d1 = dart_position, target_len - dart_position
 
-        if (d0 + d1) >= norm(v0 - v1):
+        if (d0 + d1) >= L:
             raise ValueError(f'EdgeFactory::Error::Invalid value supplied for dart position: {d0} does not satisfy triangle inequality for edge length {norm(v0 - v1)}')
 
-        # Solve for dart constraints
-        out = minimize(
-            _fit_dart, np.zeros(6), args=(v0, v1, d0, d1, depth, 80))
+        # Initial guess
+        v = (v1 - v0) / L
+        p0 = v0 + v * L * (d0 / (d0 + d1))
+        p1 = copy(p0)
+        vperp = np.asarray([v[1], -v[0]])
+        p_tip = p0 + depth * vperp
+        guess = np.concatenate([p0, p_tip, p1])
 
-        if not out.success:
-            raise ValueError(f'EdgeFactory::Error::Solving dart was unsuccessful =(')
+        # Solve for dart constraints
+        out = minimize(_fit_dart, guess, args=(v0, v1, d0, d1, depth, dart_angle))
+        if abs(out.fun) > tol:
+            print(out)
+            raise ValueError(f'EdgeFactory::Error::Solving dart was unsuccessful for L: {L}, Ds: {d0, d1}, Depth: {depth}')
 
         p0, p_tip, p1 = out.x[:2], out.x[2:4], out.x[4:]
 
@@ -272,27 +281,28 @@ def _rel_to_abs_coords(start, end, vrel):
 
 def _fit_dart(coords, v0, v1, d0, d1, depth, theta=90):
     """Placements of three dart points respecting the constraints"""
-    p0, p, p1 = coords[:2], coords[2:4], coords[4:]
+    p0, p_tip, p1 = coords[:2], coords[2:4], coords[4:]
+    error = {}
 
     # Distance constraints
-    error = (norm(p0 - v0) - d0)**2
-    error += (norm(p1 - v1) - d1)**2
+    error['d0'] = (norm(p0 - v0) - d0)**2
+    error['d1'] = (norm(p1 - v1) - d1)**2
 
     # Depth constraint
-    error += (norm(p0 - p) - depth)**2
-    error += (norm(p1 - p) - depth)**2
+    error['depth0'] = (norm(p0 - p_tip) - depth)**2
+    error['depth1'] = (norm(p1 - p_tip) - depth)**2
 
-    # Angle constraint
-    error += (np.dot(p - p0, v0 - p0))**2
-    error += (np.dot(p - p1, v1 - p1))**2
-    # TODO arbitrary angle 
-    # DRAFT -- doesn't give good solution
-    # error += (np.dot(p - p0, v0 - p0) - np.cos(theta) * d0 * depth)**2
+    # Angle constraint 
+    # allows for arbitraty angle of the dart tip w.r.t. edge side after stitching
+    theta = np.deg2rad(theta)
+    error['angle0'] = (np.dot(p_tip - p0, v0 - p0) - np.cos(theta) * d0 * depth)**2
     # cos(pi - theta) = - cos(theta)
-    # error += (np.dot(p - p1, v1 - p1) + np.cos(theta) * d1 * depth)**2
+    error['angle1'] = (np.dot(p_tip - p1, v1 - p1) + np.cos(theta) * d1 * depth)**2
 
-    # same side w.r.t to v0-v1
-    error += (np.sign(np.cross(v1 - v0, p0 - v0)) - 1)**2
-    error += (np.sign(np.cross(v1 - v0, p1 - v0)) - 1)**2
+    # Maintain P0, P1 on the same side w.r.t to v0-v1
+    error['side'] = (_softsign(np.cross(v1 - v0, p1 - v0)) - _softsign(np.cross(v1 - v0, p0 - v0)))**2 / 4
 
-    return error
+    return sum(error.values())
+
+def _softsign(x):
+    return x / (abs(x) + 1)
