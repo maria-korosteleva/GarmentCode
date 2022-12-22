@@ -97,11 +97,12 @@ class BodiceFrontHalf(pyp.Panel):
         underbust_size = body['underbust'] / 4
         side_length = body['waist_line']
         max_length = body['waist_over_bust_line']
+        bust_point = body['bust_points'] / 2
 
         bottom_width = bust_size - 0.5 * (bust_size - waist)  # with unstitches dart
         bottom_d_width = design['bottom_d_width']['v']
         bottom_d_depth = design['bottom_d_depth']['v']
-        bottom_d_position = bottom_width / 2     # TODO Depends on the peak position
+        bottom_d_position = bust_point
     
         collar_depth = design['c_depth']['v']
         ease = design['ease']['v'] / 4
@@ -109,9 +110,10 @@ class BodiceFrontHalf(pyp.Panel):
         width = bust_size + ease
         sholder_top_l = width - body['neck_w']/ 2 
         side_dart_from_top = body['bust_line']
-        side_d_depth = design['side_d_depth']['v']    # TODO Depends on the peak position
+        side_d_depth = bust_size - bust_point + ease   # NOTE: calculated value
 
         # Bottom dart
+        # TODO DO as cutout for nice line at the bottom
         b_edge, _, _, b_dart_stitch = pyp.esf.side_with_dart_by_len(
             [0, 0], [-bottom_width, 0], 
             target_len=waist, depth=bottom_d_depth, dart_position=bottom_d_position, 
@@ -233,8 +235,12 @@ class FittedTShirt(pyp.Component):
         self.r_sleeve = SimpleSleeve('r', body_opt, design_opt)
         self.l_sleeve = SimpleSleeve('l', body_opt, design_opt).mirror()
 
+        # TODO Make it half from the start
+
         # Torso
         self.ftorso = BodiceFront('ftorso', body_opt, design_opt).translate_by([0, 0, 20])
+
+        # TODO fitted back as well
         self.btorso = TorsoPanel('btorso', body_opt, design_opt).translate_by([0, 0, -20])
 
         # Order of edges updated after (autonorm)..
