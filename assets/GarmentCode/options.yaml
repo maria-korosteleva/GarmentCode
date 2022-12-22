@@ -4,8 +4,11 @@ body:
   neck_w: 15
   sholder_w: 40
   waist: 70
+  waist_line: 45
+  waist_over_bust_line: 55
   bust_line: 28
   bust: 100
+  underbust: 80
   hips: 110   # TODO check the measurements though!
   arm_width: 30
 
@@ -25,10 +28,13 @@ design:
     length: 
       v: 45
       range: null
-    d_width:
+    bottom_d_width:
       v: 4
       range: null
-    d_depth:
+    side_d_depth:
+      v: 20
+      range: null
+    bottom_d_depth:
       v: 10
       range: null
     
@@ -37,7 +43,7 @@ design:
       v: 35
       range: [3, 100]
     ruffle:
-      v: 1.5
+      v: 1
       range: [1, 20]
     ease:
       v: 3
