@@ -4,11 +4,11 @@ body:
   neck_w: 15
   sholder_w: 40
   waist: 70
-  waist_line: 45
-  waist_over_bust_line: 55
+  waist_line: 40
+  waist_over_bust_line: 43
   bust_line: 28
-  bust: 100
-  underbust: 80
+  bust: 97
+  underbust: 75
   hips: 110   # TODO check the measurements though!
   arm_width: 30
 
@@ -17,6 +17,7 @@ body:
 # May specify sampling range per parameter for automatic 
 # design sampling
 # Final designs might not use all the parameters specified
+# TODO Connecting some parameters?
 design: 
   bodice: 
     c_depth:   # Collar depth
@@ -26,16 +27,16 @@ design:
       v: 3
       range: null
     length: 
-      v: 45
+      v: 40
       range: null
     bottom_d_width:
       v: 4
       range: null
     side_d_depth:
-      v: 20
+      v: 10
       range: null
     bottom_d_depth:
-      v: 10
+      v: 15
       range: null
     
   sleeve:

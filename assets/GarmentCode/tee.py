@@ -98,10 +98,10 @@ class BodiceFrontHalf(pyp.Panel):
         side_length = body['waist_line']
         max_length = body['waist_over_bust_line']
 
-        bottom_width = underbust_size - 0.5 * (underbust_size - waist)  # with unstitches dart
+        bottom_width = bust_size - 0.5 * (bust_size - waist)  # with unstitches dart
         bottom_d_width = design['bottom_d_width']['v']
         bottom_d_depth = design['bottom_d_depth']['v']
-        bottom_d_position = bottom_width / 3     # TODO Depends on the peak position
+        bottom_d_position = bottom_width / 2     # TODO Depends on the peak position
     
         collar_depth = design['c_depth']['v']
         ease = design['ease']['v'] / 4
@@ -140,7 +140,7 @@ class BodiceFrontHalf(pyp.Panel):
         self.stitching_rules.append(b_dart_stitch)
 
         # default placement
-        self.translate_by([0, 30 - side_length, 0])
+        self.translate_by([0, 30 - max_length, 0])
 
         # Out interfaces
         # TODO Corner by reference self.sleeve_corner = [side_edges[-1], top_and_collar[0]]
