@@ -1,18 +1,4 @@
 
-# Measurments of the body
-body: 
-  neck_w: 15
-  sholder_w: 40
-  waist: 70
-  waist_line: 40
-  waist_over_bust_line: 43
-  bust_line: 28
-  bust: 97
-  bust_points: 23
-  underbust: 75
-  hips: 110   # TODO check the measurements though!
-  arm_width: 30
-
 # design parameters
 
 # May specify sampling range per parameter for automatic 
