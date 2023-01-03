@@ -30,8 +30,8 @@ class SimpleSleeve(pyp.Component):
         super().__init__(f'{self.__class__.__name__}_{tag}')
 
         # sleeves
-        self.f_sleeve = SleevePanel(f'{tag}_f_sleeve', body_opt, design_opt).translate_by([0, 0, 15])
-        self.b_sleeve = SleevePanel(f'{tag}_b_sleeve', body_opt, design_opt).translate_by([0, 0, -15])
+        self.f_sleeve = SleevePanel(f'{tag}_f', body_opt, design_opt).translate_by([0, 0, 15])
+        self.b_sleeve = SleevePanel(f'{tag}_b', body_opt, design_opt).translate_by([0, 0, -15])
 
         self.stitching_rules = pyp.Stitches(
             (self.f_sleeve.interfaces[0], self.b_sleeve.interfaces[0]),

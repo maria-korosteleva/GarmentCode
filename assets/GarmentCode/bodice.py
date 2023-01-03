@@ -5,7 +5,6 @@ import pypattern as pyp
 
 # other assets
 from .sleeves import *
-from .tee import TorsoPanel
 
 
 class BodiceFrontHalf(pyp.Panel):
@@ -39,7 +38,7 @@ class BodiceFrontHalf(pyp.Panel):
 
         # Bottom dart
         # TODO DO as cutout for nice line at the bottom
-        b_edge, _, _, b_dart_stitch = pyp.esf.side_with_dart_by_len(
+        b_edge, _, b_interface, b_dart_stitch = pyp.esf.side_with_dart_by_len(
             [0, 0], [-bottom_width, 0], 
             target_len=waist, depth=bottom_d_depth, dart_position=bottom_d_position, 
             right=True, panel=self)
@@ -71,77 +70,111 @@ class BodiceFrontHalf(pyp.Panel):
 
         # Out interfaces
         # TODO Corner by reference self.sleeve_corner = [side_edges[-1], top_and_collar[0]]
-        self.interfaces = [
-            side_interface,
-            pyp.Interface(self, self.edges[-3]),
-            pyp.Interface(self, self.edges[-1])
-        ]
+        self.interfaces = {
+            'outside': side_interface,
+            'inside': pyp.Interface(self, self.edges[-1]),
+            'shoulder': pyp.Interface(self, self.edges[-3]),
+            'bottom': b_interface
+        }
 
-
-class BodiceFront(pyp.Component):
-    """Panel for the front of upper garments with darts to properly fit it to the shape"""
+class BodiceBackHalf(pyp.Panel):
+    """Panel for the front/back of upper garments"""
 
     def __init__(self, name, body, design) -> None:
         super().__init__(name)
 
-        self.right = BodiceFrontHalf(f'{name}_right', body, design)
-        self.left = BodiceFrontHalf(f'{name}_left', body, design).mirror()
+        # TODO Make an actual fitted back
 
-        self.stitching_rules.append((self.right.interfaces[-1], self.left.interfaces[-1]))
+        neck_w = body['neck_w']
+        sholder_w = body['sholder_w']
+        
+        design = design['bodice']
+        length = design['length']['v']
+        c_depth = design['c_depth']['v']
+        ease = design['ease']['v']
 
-        self.interfaces = [
-            self.right.interfaces[0],
-            self.right.interfaces[1],
-            self.left.interfaces[1],
-            self.left.interfaces[0],
-        ]
+        width = sholder_w + ease
+        shoulder_top_l = (width - neck_w) / 2 
+        self.edges = pyp.esf.from_verts(
+            [0, 0], 
+            [0, length], 
+            [shoulder_top_l, length], 
+            [width / 2, length - c_depth], 
+            [width / 2, 0], 
+            loop=True)
+
+        # default placement
+        self.translate_by([-width / 2, 30 - length, 0])
+
+        self.interfaces = {
+            'outside': pyp.Interface(self, self.edges[0]),
+            'inside': pyp.Interface(self, self.edges[3]),
+            'shoulder': pyp.Interface(self, self.edges[1]),
+            'bottom': pyp.Interface(self, self.edges[4]),
+        }
+
 
 # TODO Add design conditions -- e.g. with bottom dart or with ruffles
-class FittedTShirt(pyp.Component):
+class FittedShirtHalf(pyp.Component):
     """Definition of a simple T-Shirt"""
 
-    def __init__(self, body_opt, design_opt) -> None:
+    def __init__(self, name, body_opt, design_opt) -> None:
         # TODO Add params to the base classes?
-        name_with_params = f"{self.__class__.__name__}_l{design_opt['bodice']['length']['v']}_s{body_opt['sholder_w']}_b{body_opt['bust_line']}"
-        super().__init__(name_with_params)
+        super().__init__(name)
 
         # sleeves
-        self.r_sleeve = SimpleSleeve('r', body_opt, design_opt)
-        self.l_sleeve = SimpleSleeve('l', body_opt, design_opt).mirror()
-
-        # TODO Make it half from the start
+        self.sleeve = SimpleSleeve(f'{name}_sl', body_opt, design_opt)
 
         # Torso
-        self.ftorso = BodiceFront('ftorso', body_opt, design_opt).translate_by([0, 0, 20])
+        self.ftorso = BodiceFrontHalf(f'{name}_ftorso', body_opt, design_opt).translate_by([0, 0, 20])
 
         # TODO fitted back as well
-        self.btorso = TorsoPanel('btorso', body_opt, design_opt).translate_by([0, 0, -20])
+        self.btorso = BodiceBackHalf(f'{name}_btorso', body_opt, design_opt).translate_by([0, 0, -20])
 
         # Order of edges updated after (autonorm)..
         # TODO Simplify the choice of the edges to project from/to (regardless of autonorm)
-        _, fr_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[0].projecting_edges(), self.ftorso.right, 2, 3)
-        _, fl_sleeve_int = pyp.ops.cut_corner(self.l_sleeve.interfaces[0].projecting_edges(), self.ftorso.left, 4 + 3, 5 + 3)
-        _, br_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[1].projecting_edges(), self.btorso, 0, 1)
-        _, bl_sleeve_int = pyp.ops.cut_corner(self.l_sleeve.interfaces[1].projecting_edges(), self.btorso, 5, 6)
+        _, fr_sleeve_int = pyp.ops.cut_corner(self.sleeve.interfaces[0].projecting_edges(), self.ftorso, 2, 3)
+        _, br_sleeve_int = pyp.ops.cut_corner(self.sleeve.interfaces[1].projecting_edges(), self.btorso, 0, 1)
 
         self.stitching_rules = pyp.Stitches(
             # sides
-            (self.ftorso.interfaces[0], self.btorso.interfaces[0]),
-            (self.ftorso.interfaces[3], self.btorso.interfaces[3]),
+            (self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']),
 
             # tops
-            (self.ftorso.interfaces[1], self.btorso.interfaces[1]),
-            (self.ftorso.interfaces[2], self.btorso.interfaces[2]),
+            (self.ftorso.interfaces['shoulder'], self.btorso.interfaces['shoulder']),
 
             # Sleeves are connected by new interfaces
-            (self.r_sleeve.interfaces[0], fr_sleeve_int),
-            (self.l_sleeve.interfaces[0], fl_sleeve_int),
-            (self.r_sleeve.interfaces[1], br_sleeve_int),
-            (self.l_sleeve.interfaces[1], bl_sleeve_int),
-
+            (self.sleeve.interfaces[0], fr_sleeve_int),
+            (self.sleeve.interfaces[1], br_sleeve_int),
         )
 
-        # DEBUG
-        print('After connecting: ')
-        print(self.btorso.interfaces[0])
-        print(self.btorso.interfaces[3])
+        self.interfaces = [
+            self.ftorso.interfaces['inside'],  # TODO correct ids??
+            self.btorso.interfaces['inside'],
+
+            # bottom
+            self.ftorso.interfaces['bottom'],
+            self.btorso.interfaces['bottom'],
+        ]
+
+
+class FittedShirt(pyp.Component):
+    """Panel for the front of upper garments with darts to properly fit it to the shape"""
+
+    def __init__(self, body, design) -> None:
+        name_with_params = f"{self.__class__.__name__}_l{design['bodice']['length']['v']}_s{body['sholder_w']}_b{body['bust_line']}"
+        super().__init__(name_with_params)
+
+        # TODO resolving names..
+        self.right = FittedShirtHalf(f'right', body, design)
+        self.left = FittedShirtHalf(f'left', body, design).mirror()
+
+        self.stitching_rules.append((self.right.interfaces[0], self.left.interfaces[0]))
+        self.stitching_rules.append((self.right.interfaces[1], self.left.interfaces[1]))
+
+        self.interfaces = [   # Bottom connection
+            self.right.interfaces[2],
+            self.right.interfaces[3],
+            self.left.interfaces[2],
+            self.left.interfaces[3],
+        ]

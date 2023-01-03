@@ -119,7 +119,8 @@ def cut_corner(target_shape:EdgeSequence, panel, eid1, eid2):
     panel.edges.insert(eid1, corner_shape)
 
     # Update interface definitions
-    for intr in panel.interfaces:
+    iter = panel.interfaces if isinstance(panel.interfaces, list) else panel.interfaces.values()   # TODO Uniform interfaces list
+    for intr in iter:
         # Substitute old edges with what's left from them after cutting
         if edge1 in intr.edges:
             intr.edges.substitute(edge1, corner_shape[0])
@@ -127,9 +128,13 @@ def cut_corner(target_shape:EdgeSequence, panel, eid1, eid2):
             intr.edges.substitute(edge2, corner_shape[-1])
 
     # Add new interface corresponding to the introduced cut
-    panel.interfaces.append(Interface(panel, corner_shape[1:-1]))
+    new_int = Interface(panel, corner_shape[1:-1])
+    if isinstance(panel.interfaces, list):
+        panel.interfaces.append(new_int)
+    else:
+        panel.interfaces[f'int_{len(panel.interfaces)}'] = new_int   # TODO Uniqueness of the name?
 
-    return corner_shape[1:-1], panel.interfaces[-1]
+    return corner_shape[1:-1], new_int
 
 def cut_into_edge(target_shape, base_edge, offset=0, right=True, tol=1e-4):
     """ Insert edges of the target_shape into the given base_edge, starting from offset
