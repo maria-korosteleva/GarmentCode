@@ -15,7 +15,7 @@ from .base import BaseComponent
 # ANCHOR ----- Edge Sequences Modifiers ----
 # TODO also part of EdgeSequence class?
 
-def cut_corner(target_shape:EdgeSequence, panel, eid1, eid2):
+def cut_corner(target_shape:EdgeSequence, panel, target_edges:EdgeSequence):
     """ Cut the corner made of edges 1 and 2 following the shape of target_shape
         This routine updated the panel geometry and interfaces appropriately
 
@@ -24,7 +24,7 @@ def cut_corner(target_shape:EdgeSequence, panel, eid1, eid2):
             (next one starts from the end vertex of the one before)
             # NOTE: 'target_shape' might be scaled (along the main direction) to fit the corner size
         * Panel to modify
-        * eid1, eid2 -- ids of the chained pairs of edges that form the corner to cut, s.t. the end vertex of eid1 is at the corner
+        * target_edges -- the chained pairs of edges that form the corner to cut, s.t. the end vertex of eid1 is at the corner
             # NOTE: Onto edges are expected to be straight lines for simplicity
 
         # NOTE There might be slight computational errors in the resulting shape, 
@@ -43,9 +43,14 @@ def cut_corner(target_shape:EdgeSequence, panel, eid1, eid2):
 
     # ---- Evaluate optimal projection of the target shape onto the corner
     corner_shape = target_shape.copy()
+    
     # Get rid of directions by working on vertices
-    vc = np.array(panel.edges[eid1].end)
-    v1, v2 = np.array(panel.edges[eid1].start), np.array(panel.edges[eid2].end)
+    if target_edges[0].start is target_edges[-1].end:
+        # Orginal edges have beed reversed in normalization or smth
+        target_edges.edges.reverse()  # UPD the order
+
+    vc = np.array(target_edges[0].end)
+    v1, v2 = np.array(target_edges[0].start), np.array(target_edges[1].end)
     swaped = False
     if v1[1] > v2[1]:
         v1, v2 = v2, v1  
@@ -106,26 +111,21 @@ def cut_corner(target_shape:EdgeSequence, panel, eid1, eid2):
         # The edges are aligned as v2 -> vc -> v1
         corner_shape.reverse()
 
-    corner_shape.insert(0, LogicalEdge(panel.edges[eid1].start, corner_shape[0].start))
-    corner_shape.append(LogicalEdge(corner_shape[-1].end, panel.edges[eid2].end))
+    corner_shape.insert(0, LogicalEdge(target_edges[0].start, corner_shape[0].start))
+    corner_shape.append(LogicalEdge(corner_shape[-1].end, target_edges[1].end))
 
     # Substitute edges in the panel definition
-    edge1, edge2 = panel.edges[eid1], panel.edges[eid2]  # remember the old ones
-    if eid2 < eid1:  # making sure that elements are removed in correct order
-        eid1, eid2 = eid2, eid1
-    panel.edges.pop(eid2)
-    panel.edges.pop(eid1)   
-
-    panel.edges.insert(eid1, corner_shape)
+    panel.edges.pop(target_edges[0])
+    panel.edges.substitute(target_edges[1], corner_shape)
 
     # Update interface definitions
     iter = panel.interfaces if isinstance(panel.interfaces, list) else panel.interfaces.values()   # TODO Uniform interfaces list
     for intr in iter:
         # Substitute old edges with what's left from them after cutting
-        if edge1 in intr.edges:
-            intr.edges.substitute(edge1, corner_shape[0])
-        if edge2 in intr.edges:
-            intr.edges.substitute(edge2, corner_shape[-1])
+        if target_edges[0] in intr.edges:
+            intr.edges.substitute(target_edges[0], corner_shape[0])
+        if target_edges[1] in intr.edges:
+            intr.edges.substitute(target_edges[1], corner_shape[-1])
 
     # Add new interface corresponding to the introduced cut
     new_int = Interface(panel, corner_shape[1:-1])
@@ -146,45 +146,58 @@ def cut_into_edge(target_shape, base_edge, offset=0, right=True, tol=1e-4):
         * target_shape -- list of single edge or chained edges to be inserted in the edge. 
         * base_edge -- edge object, defining the border
         * right -- which direction the cut should be oriented w.r.t. the direction of base edge
-        * Offset -- fraction [0, 1 - <target_shape_size>], defines position of the target shape along the edge.
+        * Offset -- position of the center of the target shape along the edge.   # TODO Update other uses of offser (godet skirt)
 
         Returns:
         * Newly created edges that accomodate the cut
-        * Edges corresponding to the cut area
+        * Edges corresponding to the target shape
+        * Edges that lir on the original base edge 
     """
     # TODO Allow insertion into curved edges
-    # TODO Is it needed? Or edge loop specification is enough?
     target_shape = EdgeSequence(target_shape)
-
     new_edges = target_shape.copy().snap_to([0, 0])  # copy and normalize translation of vertices
 
     # Simplify to vectors
     shortcut = np.array([new_edges[0].start, new_edges[-1].end])  # "Interface" of the shape to insert
+    target_shape_w = norm(shortcut)
     edge_vec = np.array([base_edge.start, base_edge.end])  
+    edge_len = norm(edge_vec[1] - edge_vec[0])
 
-    if offset < 0 or offset > 1:   # TODO account also for the length of a shortcut
-        raise ValueError(f'Operators-CutingIntoEdge::Error::offset value shoulf be between 0 and 1')
+    if offset < target_shape_w / 2 or offset > (edge_len - target_shape_w / 2):   
+        raise ValueError(f'Operators-CutingIntoEdge::Error::offset value is not within the base_edge length')
 
-    # find rotation to apply on target shape to alight it with an edge
+    # Align the shape with an edge
+    # find rotation to apply on target shape 
     angle = vector_angle(edge_vec[1] - edge_vec[0], shortcut[1] - shortcut[0])
-    angle *= 1 if right else -1  # account for a desired orientation of the cut
     new_edges.rotate(angle)
-    
+
     # find starting vertex for insertion & place edges there
-    ins_point = offset * (edge_vec[1] - edge_vec[0]) + edge_vec[0] if offset > tol else base_edge.start    
-    if right:  # We need to flip it's orientation of cut shape and then cut
-        # FIXME Need to use reflection instead
-        new_edges.reverse().snap_to([0, 0])  # new first vertex to be zero
+    rel_offset = (offset - target_shape_w / 2) / edge_len   # relative to the length of the base edge
+    ins_point = rel_offset * (edge_vec[1] - edge_vec[0]) + edge_vec[0] if rel_offset > tol else base_edge.start    
     new_edges.snap_to(ins_point)
 
-    # re-create edges and return 
-    if offset > tol:
-        new_edges.insert(0, LogicalEdge(base_edge.start, new_edges[0].start))
-    
-    # TODO Check if the end is not the same as base_edge already / goes beyong the end edge
-    new_edges.append(LogicalEdge(new_edges[-1].end, base_edge.end))
+    # Check orientation 
+    avg_vertex = np.asarray(new_edges.verts()).mean(0)
+    right_position = np.sign(np.cross(edge_vec[1] - edge_vec[0], avg_vertex - np.asarray(new_edges[0].start))) == -1  # TODO Correct?
+    if not right and right_position or right and not right_position:
+        # flip shape to match the requested direction
+        new_edges.reflect(new_edges[0].start, new_edges[-1].end)
 
-    return new_edges, new_edges[1:-1]
+    # re-create edges and return 
+    # NOTE: no need to create extra edges if the the shape is incerted right at the beggining or end of the edge
+    base_edge_leftovers = EdgeSequence()
+    start_id, end_id = 0, len(new_edges)
+    if offset > target_shape_w / 2 + tol:  
+        new_edges.insert(0, LogicalEdge(base_edge.start, new_edges[0].start))
+        base_edge_leftovers.append(new_edges[0])
+        start_id = 1 
+    
+    if offset < (edge_len - target_shape_w / 2) - tol:
+        new_edges.append(LogicalEdge(new_edges[-1].end, base_edge.end))
+        base_edge_leftovers.append(new_edges[-1])
+        end_id = -1
+
+    return new_edges, new_edges[start_id:end_id], base_edge_leftovers
 
 # ANCHOR ----- Panel operations ------
 def distribute_Y(component, n_copies):

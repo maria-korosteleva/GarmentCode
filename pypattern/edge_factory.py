@@ -243,10 +243,9 @@ class EdgeSeqFactory:
         dart_shape = EdgeSeqFactory.from_verts(p0.tolist(), p_tip.tolist(), p1.tolist())
 
         # Check direction
-        right_position = np.sign(np.cross(v1 - v0, p0 - v0)) == 1  # TODO Correct?
+        right_position = np.sign(np.cross(v1 - v0, p_tip - v0)) == -1 
         if not right and right_position or right and not right_position:
             # flip dart to match the requested direction
-            print('Flipped!!')  # DEBUG
             dart_shape.reflect(start, end)
 
         dart_shape.insert(0, LogicalEdge(start, dart_shape[0].start))
@@ -263,7 +262,13 @@ class EdgeSeqFactory:
 
         return dart_shape, dart_shape[1:-1], out_interface, dart_stitch
 
-    
+    @staticmethod
+    def dart_shape(width, depth):
+        """Shape of simple triangular dart"""
+        depth_perp = np.sqrt((depth**2 - (width / 2)**2))
+
+        return EdgeSeqFactory.from_verts([0, 0], [width / 2, -depth_perp], [width, 0])
+
 
 # Utils
 def _rel_to_abs_coords(start, end, vrel):

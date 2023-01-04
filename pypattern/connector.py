@@ -110,7 +110,7 @@ class Stitches():
 
         self.rules = [StitchingRule(int1, int2) for int1, int2 in rules]
 
-    def append(self, pair):
+    def append(self, pair):  # TODO two parameters explicitely rather then "pair" object?
         self.rules.append(StitchingRule(*pair))
     
     def assembly(self):

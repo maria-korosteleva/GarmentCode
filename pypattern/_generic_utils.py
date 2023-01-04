@@ -24,9 +24,11 @@ def vector_angle(v1, v2):
     """Find an angle between two vectors"""
     v1, v2 = np.asarray(v1), np.asarray(v2)
     cos = np.dot(v1, v2) / (norm(v1) * norm(v2))
+    angle = np.arccos(cos) 
     # Cross to indicate correct relative orienataion of v2 w.r.t. v1
-    angle = np.arccos(cos) * np.sign(np.cross(v1, v2))
-
+    cross = np.cross(v1, v2)
+    if cross > 1e-5:
+        angle *= np.sign(cross)
     return angle
 
 def R2D(angle):

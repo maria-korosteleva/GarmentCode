@@ -218,6 +218,8 @@ class EdgeSequence():
         return self
     
     def pop(self, i):
+        if isinstance(i, LogicalEdge):
+            i = self.index(i)
         self.edges.pop(i)
         return self
 
