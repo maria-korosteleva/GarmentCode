@@ -18,7 +18,7 @@ class BodiceFrontHalf(pyp.Panel):
         ease = design['ease']['v'] / 4
 
         shoulder_width = body['sholder_w'] / 2  # TODO Also use?
-        waist = body['waist'] / 4
+        
         bust_size = body['bust'] / 4
         underbust_size = body['underbust'] / 4
 
@@ -26,6 +26,8 @@ class BodiceFrontHalf(pyp.Panel):
         max_length = body['waist_over_bust_line']
         bust_point = body['bust_points'] / 2
         front_width = (body['bust'] - body['back_width'] - body['bust_points']) / 4 + bust_point + ease
+        front_fraction = front_width / (body['bust'] + ease * 4)
+        waist = (body['waist'] + ease*4) * front_fraction
 
         bottom_d_width = (body['bust'] - body['waist']) / 6
 
@@ -107,7 +109,10 @@ class BodiceBackHalf(pyp.Panel):
 
         # Overall measurements
         width = body['back_width'] / 2 + (body['bust'] - body['back_width'] - body['bust_points']) / 4 + ease
-        waist_width = body['waist'] / 4 + bottom_d_width
+
+        back_fraction = width / (body['bust'] + ease * 4)
+        waist = (body['waist'] + ease*4) * back_fraction
+        waist_width = waist + bottom_d_width
         shoulder_top_l = width - neck_w / 2 
 
         # Base edge loop

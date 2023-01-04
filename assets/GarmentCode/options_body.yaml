@@ -4,14 +4,14 @@ body:
   neck_w: 15
   sholder_w: 40
 
-  waist: 70
+  waist: 84.5
   waist_line: 40  # Nape of the Neck to waist (on the back)
   waist_over_bust_line: 45
 
   bust_line: 28
-  bust: 97
+  bust: 96
   bust_points: 23
-  underbust: 75
+  underbust: 83
   back_width: 31 
 
   armscye_depth: 23  # Nape of the Neck to armscye depth on the back

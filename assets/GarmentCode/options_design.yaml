@@ -11,7 +11,7 @@ design:
       v: 15
       range: [3, 25]
     ease:
-      v: 3
+      v: 1
       range: null
     length: 
       v: 40
