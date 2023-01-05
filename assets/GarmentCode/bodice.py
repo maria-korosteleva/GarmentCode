@@ -4,7 +4,7 @@ from copy import copy
 import pypattern as pyp
 
 # other assets
-from .sleeves import *
+from . import sleeves
 
 
 class BodiceFrontHalf(pyp.Panel):
@@ -160,18 +160,21 @@ class FittedShirtHalf(pyp.Component):
         # TODO fitted back as well
         self.btorso = BodiceBackHalf(f'{name}_btorso', body_opt, design_opt).translate_by([0, 0, -20])
 
-        if sleeve:
-            self.sleeve = SimpleSleeve(f'{name}_sl', body_opt, design_opt)
+        sleeve_type = getattr(sleeves, design_opt['bodice']['sleeves']['v'])
+        self.sleeve = sleeve_type(f'{name}_sl', body_opt, design_opt)
+        if isinstance(self.sleeve, pyp.Component):
             # Order of edges updated after (autonorm)..
-            # TODO Simplify the choice of the edges to project from/to (regardless of autonorm)
             _, fr_sleeve_int = pyp.ops.cut_corner(self.sleeve.interfaces[0].projecting_edges(), self.ftorso, self.ftorso.shoulder_corner)
             _, br_sleeve_int = pyp.ops.cut_corner(self.sleeve.interfaces[1].projecting_edges(), self.btorso, self.btorso.shoulder_corner)
 
             # Sleeves are connected by new interfaces
             self.stitching_rules.append((self.sleeve.interfaces[0], fr_sleeve_int))
             self.stitching_rules.append((self.sleeve.interfaces[1], br_sleeve_int))
+        else:   # it's just an edge sequence to define sleeve shape
+            # Simply do the projection -- no new stitches needed
+            _, fr_sleeve_int = pyp.ops.cut_corner(self.sleeve, self.ftorso, self.ftorso.shoulder_corner)
+            _, br_sleeve_int = pyp.ops.cut_corner(self.sleeve, self.btorso, self.btorso.shoulder_corner)
 
-        
         self.stitching_rules.append((self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
         self.stitching_rules.append((self.ftorso.interfaces['shoulder'], self.btorso.interfaces['shoulder']))  # tops
 

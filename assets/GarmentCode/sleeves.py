@@ -42,3 +42,14 @@ class SimpleSleeve(pyp.Component):
             self.f_sleeve.interfaces[1],
             self.b_sleeve.interfaces[1],
         ]
+
+# Armhole shapes withough sleeves
+# TODO I need here the matching interface for interchengeability ..
+def ArmholeSimple(tag, body, design):
+    arm_width = body['arm_width']
+    ease = design['sleeve']['ease']['v'] 
+    width = (arm_width + ease) / 2
+
+    edges = pyp.EdgeSequence(pyp.LogicalEdge([0, 0], [7, width]))
+    
+    return edges

@@ -25,6 +25,9 @@ design:
     bottom_d_depth:
       v: 15
       range: null
+    sleeves:
+      v: ArmholeSimple
+      range: [SimpleSleeve, ArmholeSimple]
     
   sleeve:
     length: 
