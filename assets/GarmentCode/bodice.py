@@ -8,7 +8,7 @@ import pypattern as pyp
 from . import sleeves
 from . import collars
 
-
+# DRAFT Tried proper back-front assymetry, but failed
 class BodiceFrontHalfAsymm(pyp.Panel):
     """Half of the front of the Fitted bodice pattern"""
 
@@ -156,7 +156,7 @@ class BodiceFrontHalf(pyp.Panel):
             'collar_corner': pyp.Interface(self, [self.edges[-2], self.edges[-1]])
         }
 
-
+# DRAFT Tried proper back-front assymetry, but failed
 class BodiceBackHalfAsymm(pyp.Panel):
     """Panel for the front/back of upper garments"""
 
