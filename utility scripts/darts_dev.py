@@ -80,7 +80,7 @@ def dart(v0, v1, width, depth, location=0.5, right=True):
     # return np.array([v0, dart_st_point, dart_st_point + np.array([width / 2, -depth_perp]), dart_st_point + np.array([width, 0]), new_v1, new_v1_1])
 
 
-def dart_len(v0, v1, target_length, depth, location=0.5, right=True):
+def dart_len(v0, v1, target_length, depth, location=0.5, right=True, theta=90):
 
     # Targets
     d0, d1 = target_length * location, target_length * (1 - location)
@@ -90,8 +90,7 @@ def dart_len(v0, v1, target_length, depth, location=0.5, right=True):
     v = (v1 - v0) / norm(v1 - v0)
     p0 = v0 + v * norm(v1-v0) * location
     p1 = copy(p0)
-    # vperp = np.asarray([-v[1], v[0]])   # TODO Which direction?
-    vperp = np.asarray([v[1], -v[0]])   # TODO Which direction?
+    vperp = np.asarray([v[1], -v[0]]) 
     p_tip = p0 + depth * vperp
     guess = np.concatenate([p0, p_tip, p1])
 
@@ -100,7 +99,7 @@ def dart_len(v0, v1, target_length, depth, location=0.5, right=True):
 
     # Optimize
     out = minimize(
-        equations, guess, args=(v0, v1, d0, d1, depth, 80))
+        equations, guess, args=(v0, v1, d0, d1, depth, theta))
 
     p0, p_tip, p1 = out.x[:2], out.x[2:4], out.x[4:]
 
@@ -118,7 +117,8 @@ def dart_len(v0, v1, target_length, depth, location=0.5, right=True):
 
     dart_points = [p0, p_tip, p1]
 
-    if not right:
+    right_position = np.sign(np.cross(v1 - v0, p_tip - v0)) == -1 
+    if not right and right_position or right and not right_position:
         # flip dart to be the left of the vector
         dart_points = _reflect(dart_points, v0, v1)
 
@@ -186,7 +186,9 @@ def equations(coords, v0, v1, d0, d1, depth, theta=90):
 # edge_side = dart(np.array([50, -20]), np.array([50, 15]), 5, 20, location=0.2, right=False)
 # edge_side = dart_len(np.array([-21.5, 0]), np.array([-21.5, 70]), 70*0.95, 20, location=0.3, right=False)
 # edge_side = dart_len(np.array([-20, 0]), np.array([15, 0]), 30, 20, location=0.2, right=False)
-edge_side = dart_len(np.array([0, 0]), np.array([0, 60]), 50, 20, location=22/50, right=False)
+edge_side = dart_len(
+    np.array([0, 0]), np.array([60, -5]), 55, 20, 
+    location=22/50, right=True, theta=90)
 
 plt.plot(edge_side[:, 0], edge_side[:, 1], marker='o')
 plt.title('Dart')
