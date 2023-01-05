@@ -25,13 +25,14 @@ class BodiceFrontHalf(pyp.Panel):
         side_length = body['waist_line']
         max_length = body['waist_over_bust_line']
         bust_point = body['bust_points'] / 2
-        front_width = (body['bust'] - body['back_width'] - body['bust_points']) / 4 + bust_point + ease
+        front_width = (body['bust'] - body['back_width'] - body['bust_points'] * 2) / 4 + body['bust_points'] + ease
         front_fraction = front_width / (body['bust'] + ease * 4)
         waist = (body['waist'] + ease*4) * front_fraction
 
+        print('front: ', front_width, waist, front_fraction)  # DEBUG
+
         bottom_d_width = (body['bust'] - body['waist']) / 6
 
-        # DRAFT bottom_width = bust_size - 0.5 * (bust_size - waist)  # with unstitches dart
         bottom_width = waist + bottom_d_width
         bottom_d_depth = design['bottom_d_depth']['v']
         bottom_d_position = bust_point
@@ -108,12 +109,14 @@ class BodiceBackHalf(pyp.Panel):
         bottom_d_position = body['bust_points'] / 2
 
         # Overall measurements
-        width = body['back_width'] / 2 + (body['bust'] - body['back_width'] - body['bust_points']) / 4 + ease
+        width = body['back_width'] / 2 + (body['bust'] - body['back_width'] - 2 * body['bust_points']) / 4 + ease
 
         back_fraction = width / (body['bust'] + ease * 4)
         waist = (body['waist'] + ease*4) * back_fraction
         waist_width = waist + bottom_d_width
         shoulder_top_l = width - neck_w / 2 
+
+        print('back: ', width, waist, back_fraction)  # DEBUG
 
         # Base edge loop
         self.edges = pyp.esf.from_verts(
