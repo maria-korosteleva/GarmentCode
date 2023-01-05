@@ -13,8 +13,7 @@ from ._generic_utils import vector_angle
 from .base import BaseComponent
 
 # ANCHOR ----- Edge Sequences Modifiers ----
-# TODO also part of EdgeSequence class?
-
+# TODO Interface as an input
 def cut_corner(target_shape:EdgeSequence, panel, target_edges:EdgeSequence):
     """ Cut the corner made of edges 1 and 2 following the shape of target_shape
         This routine updated the panel geometry and interfaces appropriately
@@ -39,7 +38,6 @@ def cut_corner(target_shape:EdgeSequence, panel, target_edges:EdgeSequence):
             * New interface object corresponding to new edges
     """
     # TODO specifying desired 2D rotation of target_shape?
-    # TODO component on component?? Interface / stitching rules re-calibration probelem
 
     # ---- Evaluate optimal projection of the target shape onto the corner
     corner_shape = target_shape.copy()
@@ -119,6 +117,9 @@ def cut_corner(target_shape:EdgeSequence, panel, target_edges:EdgeSequence):
     panel.edges.substitute(target_edges[1], corner_shape)
 
     # Update interface definitions
+    target_edges = EdgeSequence(target_edges.edges)  # keep the same edge references, 
+                                                     # but not the same edge sequence reference
+                                                     # In case it matches one of the interfaces (we don't want target edges to be overriden)
     iter = panel.interfaces if isinstance(panel.interfaces, list) else panel.interfaces.values()   # TODO Uniform interfaces list
     for intr in iter:
         # Substitute old edges with what's left from them after cutting

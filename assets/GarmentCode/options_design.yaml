@@ -7,9 +7,6 @@
 # TODO Connecting some parameters?
 design: 
   bodice: 
-    c_depth:   # Collar depth
-      v: 15
-      range: [3, 25]
     ease:
       v: 1
       range: null
@@ -28,6 +25,18 @@ design:
     sleeves:
       v: ArmholeSimple
       range: [SimpleSleeve, ArmholeSimple]
+    f_collar: 
+      v: VNeckHalf
+      range: [VNeckHalf]
+    b_collar: 
+      v: VNeckHalf
+      range: [VNeckHalf]
+    fc_depth:   # Front collar depth
+      v: 15
+      range: [3, 25]
+    bc_depth:   # back collar depth
+      v: 3
+      range: [3, 25]
     
   sleeve:
     length: 
