@@ -315,7 +315,7 @@ class FittedShirtHalf(pyp.Component):
         b_collar = collar_type("", design_opt['bodice']['bc_depth']['v'], body_opt['neck_w'])
         pyp.ops.cut_corner(b_collar, self.btorso.interfaces['collar_corner'])
 
-        # DEBUG self.stitching_rules.append((self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
+        self.stitching_rules.append((self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
         self.stitching_rules.append((self.ftorso.interfaces['shoulder'], self.btorso.interfaces['shoulder']))  # tops
 
 
