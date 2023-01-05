@@ -187,8 +187,8 @@ def equations(coords, v0, v1, d0, d1, depth, theta=90):
 # edge_side = dart_len(np.array([-21.5, 0]), np.array([-21.5, 70]), 70*0.95, 20, location=0.3, right=False)
 # edge_side = dart_len(np.array([-20, 0]), np.array([15, 0]), 30, 20, location=0.2, right=False)
 edge_side = dart_len(
-    np.array([0, 0]), np.array([60, -5]), 55, 20, 
-    location=22/50, right=True, theta=90)
+    np.array([0, 0]), np.array([45, 0]), target_length=40, depth=12, 
+    location=12/40, right=True, theta=90)
 
 plt.plot(edge_side[:, 0], edge_side[:, 1], marker='o')
 plt.title('Dart')
