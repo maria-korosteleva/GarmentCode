@@ -161,27 +161,27 @@ class FittedShirtHalf(pyp.Component):
         self.sleeve = sleeve_type(f'{name}_sl', body_opt, design_opt)
         if isinstance(self.sleeve, pyp.Component):
             # Order of edges updated after (autonorm)..
-            _, fr_sleeve_int = pyp.ops.cut_corner(self.sleeve.interfaces[0].projecting_edges(), self.ftorso, self.ftorso.interfaces['shoulder_corner'].edges)
-            _, br_sleeve_int = pyp.ops.cut_corner(self.sleeve.interfaces[1].projecting_edges(), self.btorso, self.btorso.interfaces['shoulder_corner'].edges)
+            _, fr_sleeve_int = pyp.ops.cut_corner(self.sleeve.interfaces[0].projecting_edges(), self.ftorso.interfaces['shoulder_corner'])
+            _, br_sleeve_int = pyp.ops.cut_corner(self.sleeve.interfaces[1].projecting_edges(), self.btorso.interfaces['shoulder_corner'])
 
             # Sleeves are connected by new interfaces
             self.stitching_rules.append((self.sleeve.interfaces[0], fr_sleeve_int))
             self.stitching_rules.append((self.sleeve.interfaces[1], br_sleeve_int))
         else:   # it's just an edge sequence to define sleeve shape
             # Simply do the projection -- no new stitches needed
-            pyp.ops.cut_corner(self.sleeve, self.ftorso, self.ftorso.interfaces['shoulder_corner'].edges)
-            pyp.ops.cut_corner(self.sleeve, self.btorso, self.btorso.interfaces['shoulder_corner'].edges)
+            pyp.ops.cut_corner(self.sleeve, self.ftorso.interfaces['shoulder_corner'])
+            pyp.ops.cut_corner(self.sleeve, self.btorso.interfaces['shoulder_corner'])
 
         # Collars
         # TODO collars with extra panels!
         # Front
         collar_type = getattr(collars, design_opt['bodice']['f_collar']['v'])
         f_collar = collar_type("", design_opt['bodice']['fc_depth']['v'], body_opt['neck_w'])
-        pyp.ops.cut_corner(f_collar, self.ftorso, self.ftorso.interfaces['collar_corner'].edges)
+        pyp.ops.cut_corner(f_collar, self.ftorso.interfaces['collar_corner'])
         # Back
         collar_type = getattr(collars, design_opt['bodice']['b_collar']['v'])
         b_collar = collar_type("", design_opt['bodice']['bc_depth']['v'], body_opt['neck_w'])
-        pyp.ops.cut_corner(b_collar, self.btorso, self.btorso.interfaces['collar_corner'].edges)
+        pyp.ops.cut_corner(b_collar, self.btorso.interfaces['collar_corner'])
 
         self.stitching_rules.append((self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
         self.stitching_rules.append((self.ftorso.interfaces['shoulder'], self.btorso.interfaces['shoulder']))  # tops

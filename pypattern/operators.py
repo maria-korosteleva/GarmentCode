@@ -13,8 +13,7 @@ from ._generic_utils import vector_angle
 from .base import BaseComponent
 
 # ANCHOR ----- Edge Sequences Modifiers ----
-# TODO Interface as an input
-def cut_corner(target_shape:EdgeSequence, panel, target_edges:EdgeSequence):
+def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
     """ Cut the corner made of edges 1 and 2 following the shape of target_shape
         This routine updated the panel geometry and interfaces appropriately
 
@@ -38,9 +37,12 @@ def cut_corner(target_shape:EdgeSequence, panel, target_edges:EdgeSequence):
             * New interface object corresponding to new edges
     """
     # TODO specifying desired 2D rotation of target_shape?
+    # TODO Support any number of edges in the target corner edges
 
     # ---- Evaluate optimal projection of the target shape onto the corner
     corner_shape = target_shape.copy()
+    panel = target_interface.panel
+    target_edges = target_interface.edges
     
     # Get rid of directions by working on vertices
     if target_edges[0].start is target_edges[-1].end:
