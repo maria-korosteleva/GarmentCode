@@ -75,3 +75,6 @@ design:
     length: 
       v: 30
       range: [10, 40]   # TODO related with height and body proportions? 
+    width: 
+      v: 20
+      range: [10, 40]   # TODO related with thigh width? 
