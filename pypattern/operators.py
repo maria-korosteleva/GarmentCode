@@ -227,13 +227,13 @@ def distribute_horisontally(component, n_copies, stride=20, name_tag='panel'):
     component.name = f'{name_tag}_0'   # Unique
 
     if isinstance(component, BaseComponent):
-        translation_dir = component.rotation.apply([0, 0, 1])   # TODO panel norm
+        translation_dir = component.rotation.apply([0, 0, 1])   # Horisontally along the panel
         # FIXME What if it's looking up?
-        translation_dir = np.cross(translation_dir, [0, 1, 0])   # TODO control direction better?
+        translation_dir = np.cross(translation_dir, [0, 1, 0])   # perpendicular to Y
         translation_dir = translation_dir / norm(translation_dir)
         delta_translation = translation_dir * stride
     else:
-        translation_dir = [1, 0, 0]  # TODO specify?
+        translation_dir = [1, 0, 0] 
 
     for i in range(n_copies - 1):
         new_component = deepcopy(copies[-1])   # TODO proper copy
@@ -255,8 +255,6 @@ def _dist(v1, v2):
 
 def _fit_translation(shift, shortcut, v1, v2, vc, d_v1, d_v2):
     """Evaluate how good a shortcut fits the corner with given global shift"""
-
-    # TODO is it fast enoughs??
     # Shortcut can be used as 2D vector, not a set of 2D points, e.g.
     shifted = shortcut + shift
 
@@ -268,8 +266,6 @@ def _fit_translation(shift, shortcut, v1, v2, vc, d_v1, d_v2):
 def _fit_scale(s, shortcut, v1, v2, vc, d_v1, d_v2):
     """Evaluate how good a shortcut fits the corner if the vertices are shifted 
         a little along the line"""
-
-    # TODO is it fast enoughs??
     # Shortcut can be used as 2D vector, not a set of 2D points, e.g.
     shifted = deepcopy(shortcut)
     shifted[0] += (shortcut[0] - shortcut[1]) * s[0]  # this only changes the end vertex though

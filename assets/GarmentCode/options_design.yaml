@@ -59,5 +59,15 @@ design:
       v: 20
       range: [10, 50]  # TODO ranges don't work that well..
     insert_depth:   # Cannot be longer then length
-      v: 50
-      range: [10, 50]
+      v: 40
+      range: [10, 50]  # TODO DEpends on the skirt length though
+    num_inserts:  # total
+      v: 4
+      range: [2, 4, 6, 8, 10]   # selective options
+    cuts_distance:
+      v: 10
+      range: [0, 10]  # TODO this param needs to depend on the num_inserts and skirt width
+    length:
+      v: 70
+      range: [30, 120]
+    

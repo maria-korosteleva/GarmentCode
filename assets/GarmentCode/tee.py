@@ -71,17 +71,6 @@ class TShirt(pyp.Component):
         _, br_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[1].projecting_edges(), self.btorso.interfaces['shoulder_corner_r'])
         _, bl_sleeve_int = pyp.ops.cut_corner(self.l_sleeve.interfaces[1].projecting_edges(), self.btorso.interfaces['shoulder_corner_l'])
 
-        # DRAFT tests of cut-outs
-        # dart = pyp.esf.from_verts([0,0], [5, 10], [10, 0], loop=False)
-        # eid = 1
-        # edges, _ = pyp.ops.cut_into_edge(dart, self.ftorso.edges[eid], 0.3, right=False)
-
-        # self.ftorso.edges.substitute(eid, edges)
-
-        # eid = 0
-        # edges, _ = pyp.ops.cut_into_edge(dart, self.btorso.edges[eid], 0.3, right=True)
-        # self.btorso.edges.substitute(eid, edges)
-
         self.stitching_rules = pyp.Stitches(
             # sides
             (self.ftorso.interfaces['outside_r'], self.btorso.interfaces['outside_r']),
