@@ -73,21 +73,23 @@ class Panel(BaseComponent):
             NOTE: for best results, call autonorm after translation specification
         """
 
-        # Current norm direction 
-        first_edge_dr = np.append((np.array(self.edges[0].end) - np.array(self.edges[0].start)), 0)  # eval and make 3D
-        last_edge_dr = np.append((np.array(self.edges[-1].start) - np.array(self.edges[-1].end)), 0)  # eval and make 3D
+        # center of mass
+        verts = self.edges.verts()
+        center = np.mean(verts, axis=0)
+        center_3d = self.point_to_3D(center)
 
-        # Account for panel rotation
-        first_edge_dr = self.rotation.apply(first_edge_dr)
-        last_edge_dr = self.rotation.apply(last_edge_dr)
+        # Fist vector
+        vert_0 = self.point_to_3D(self.edges[0].start)
+        vert_1 = self.point_to_3D(self.edges[0].end)
 
+        # Current norm direction
         # Pylance + NP error for unreachanble code -- see https://github.com/numpy/numpy/issues/22146
         # Works ok for numpy 1.23.4+
-        norm_dr = np.cross(first_edge_dr, last_edge_dr)  # TODO Check the order
+        norm_dr = np.cross(vert_1 - vert_0, center_3d - vert_0)  # TODO Check the order
         
         # NOTE: Nothing happens if self.translation is zero
         if np.dot(norm_dr, self.translation) < 0: 
-            # Swap if wrong
+            # Swap if wrong  
             self.edges.reverse()
         
         return self
