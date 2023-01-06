@@ -71,3 +71,7 @@ design:
       v: 70
       range: [30, 120]
     
+  pants: 
+    length: 
+      v: 30
+      range: [10, 40]   # TODO related with height and body proportions? 

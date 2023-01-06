@@ -3,6 +3,9 @@
 body: 
   neck_w: 15
   sholder_w: 40
+  arm_width: 30
+  armscye_depth: 23  # Nape of the Neck to armscye depth on the back
+
 
   waist: 84.5
   waist_line: 40  # Nape of the Neck to waist (on the back)
@@ -14,7 +17,6 @@ body:
   underbust: 83
   back_width: 31 
 
-  armscye_depth: 23  # Nape of the Neck to armscye depth on the back
-
   hips: 110   # TODO check the measurements though!
-  arm_width: 30
+  crouch_depth: 30
+  

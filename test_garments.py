@@ -9,6 +9,7 @@ from assets.GarmentCode.skirt_paneled import *
 from assets.GarmentCode.tee import *
 from assets.GarmentCode.godet import *
 from assets.GarmentCode.bodice import *
+from assets.GarmentCode.pants import *
 
 if __name__ == '__main__':
 
@@ -28,7 +29,8 @@ if __name__ == '__main__':
         # SkirtManyPanels(n_panels=10),
         # TShirt(body, design),
         # FittedShirt(body, design),
-        GodetSkirt(body, design)
+        # GodetSkirt(body, design)
+        Pants(body, design)
     ]
 
     # test_garments[0].translate_by([2, 0, 0])
