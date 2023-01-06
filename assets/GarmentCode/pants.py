@@ -5,6 +5,8 @@ import pypattern as pyp
 from .bands import WB
 
 
+# TODO different fit in thighs and   
+
 class PantFront(pyp.Panel):
     def __init__(self, name, body, design) -> None:
         super().__init__(name)
@@ -26,21 +28,17 @@ class PantFront(pyp.Panel):
             [hw_diff + waist, 5],
             [hips, 0],
             [hips - 5, - 5],
-            [hips - 5 - b_shift, -length],
-            [hips - 5 - b_shift - pant_width, -length],
+            [hips, -length],
+            [hips - pant_width, -length],
             loop=True
         )
         self.translation = [-hips, -crouch_depth, 0]
-
-        print(len(self.edges), self.edges)  # DEBUG
 
         self.interfaces = {
             'outside': pyp.Interface(self, pyp.EdgeSequence(self.edges[-1], self.edges[0])),
             'crouch': pyp.Interface(self, self.edges[2:4]),
             'inside': pyp.Interface(self, self.edges[4:6]),
         }
-
-        print(self.interfaces)
 
 
 class Pants(pyp.Component):
