@@ -26,7 +26,7 @@ if __name__ == '__main__':
         # SkirtManyPanels(n_panels=2),
         # SkirtManyPanels(n_panels=4),
         # SkirtManyPanels(n_panels=10),
-        # TShirt(body, design),
+        TShirt(body, design),
         FittedShirt(body, design),
         # GodetSkirt(body, design)
     ]

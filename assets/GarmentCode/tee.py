@@ -18,7 +18,7 @@ class TorsoPanel(pyp.Panel):
         
         design = design['bodice']
         length = design['length']['v']
-        c_depth = design['c_depth']['v']
+        c_depth = design['fc_depth']['v']
         ease = design['ease']['v']
 
         width = sholder_w + ease
@@ -36,12 +36,15 @@ class TorsoPanel(pyp.Panel):
         # default placement
         self.translate_by([-width / 2, 30 - length, 0])
 
-        self.interfaces = [
-            pyp.Interface(self, self.edges[0]),
-            pyp.Interface(self, self.edges[1]),
-            pyp.Interface(self, self.edges[4]),
-            pyp.Interface(self, self.edges[5]),
-        ]
+        self.interfaces = {
+            'outside_r': pyp.Interface(self, self.edges[0]),
+            'shoulder_r': pyp.Interface(self, self.edges[1]),
+            'shoulder_l': pyp.Interface(self, self.edges[4]),
+            'outside_l': pyp.Interface(self, self.edges[5]),
+            # Reference to the corners for sleeve and collar projections
+            'shoulder_corner_r': pyp.Interface(self, pyp.EdgeSequence(self.edges[0], self.edges[1])),
+            'shoulder_corner_l': pyp.Interface(self, pyp.EdgeSequence(self.edges[-3], self.edges[-2])),
+        }
 
 
 # TODO add collar variations
@@ -63,10 +66,10 @@ class TShirt(pyp.Component):
         self.btorso = TorsoPanel('btorso', body_opt, design_opt).translate_by([0, 0, -20])
 
         # Cut the sleeve shapes to connect them nicely
-        _, fr_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[0].projecting_edges(), self.ftorso, 5, 6)
-        _, fl_sleeve_int = pyp.ops.cut_corner(self.l_sleeve.interfaces[0].projecting_edges(), self.ftorso, 1, 2)
-        _, br_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[1].projecting_edges(), self.btorso, 0, 1)
-        _, bl_sleeve_int = pyp.ops.cut_corner(self.l_sleeve.interfaces[1].projecting_edges(), self.btorso, 5, 6)
+        _, fr_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[0].projecting_edges(), self.ftorso.interfaces['shoulder_corner_r'])
+        _, fl_sleeve_int = pyp.ops.cut_corner(self.l_sleeve.interfaces[0].projecting_edges(), self.ftorso.interfaces['shoulder_corner_l'])
+        _, br_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[1].projecting_edges(), self.btorso.interfaces['shoulder_corner_r'])
+        _, bl_sleeve_int = pyp.ops.cut_corner(self.l_sleeve.interfaces[1].projecting_edges(), self.btorso.interfaces['shoulder_corner_l'])
 
         # DRAFT tests of cut-outs
         # dart = pyp.esf.from_verts([0,0], [5, 10], [10, 0], loop=False)
@@ -81,12 +84,12 @@ class TShirt(pyp.Component):
 
         self.stitching_rules = pyp.Stitches(
             # sides
-            (self.ftorso.interfaces[0], self.btorso.interfaces[0]),
-            (self.ftorso.interfaces[3], self.btorso.interfaces[3]),
+            (self.ftorso.interfaces['outside_r'], self.btorso.interfaces['outside_r']),
+            (self.ftorso.interfaces['outside_l'], self.btorso.interfaces['outside_l']),
 
             # tops
-            (self.ftorso.interfaces[1], self.btorso.interfaces[1]),
-            (self.ftorso.interfaces[2], self.btorso.interfaces[2]),
+            (self.ftorso.interfaces['shoulder_r'], self.btorso.interfaces['shoulder_r']),
+            (self.ftorso.interfaces['shoulder_l'], self.btorso.interfaces['shoulder_l']),
 
             # Sleeves are connected by new interfaces
             (self.r_sleeve.interfaces[0], fr_sleeve_int),
