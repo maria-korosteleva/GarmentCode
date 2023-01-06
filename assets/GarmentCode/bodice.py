@@ -252,7 +252,7 @@ class BodiceBackHalf(pyp.Panel):
             loop=True)
         
         self.interfaces = {
-            'outside': pyp.Interface(self, [self.edges[1], self.edges[2]]),
+            'outside': pyp.Interface(self, self.edges[1]),
             'inside': pyp.Interface(self, self.edges[-1]),
             'shoulder': pyp.Interface(self, self.edges[-2]),
             # Reference to the corners for sleeve and collar projections
