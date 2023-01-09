@@ -6,7 +6,6 @@ body:
   arm_width: 30
   armscye_depth: 23  # Nape of the Neck to armscye depth on the back
 
-
   waist: 84.5
   waist_line: 40  # Nape of the Neck to waist (on the back)
   waist_over_bust_line: 45
@@ -18,5 +17,6 @@ body:
   back_width: 31 
 
   hips: 110   # TODO check the measurements though!
-  crouch_depth: 30
+  crotch_depth: 27  # 27
+  bum_points: 18.5
   

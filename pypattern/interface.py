@@ -19,13 +19,19 @@ class Interface():
 
         self.edges = edges if isinstance(edges, EdgeSequence) else EdgeSequence(edges)
         self.panel = [panel for _ in range(len(self.edges))]  # matches every edge 
-        self.ruffle = ruffle
+        self.ruffle = [dict(coeff=ruffle, sec=(0, len(self.edges)))]
 
     def projecting_edges(self):
         """Return edges shape that should be used when projecting interface onto another panel
             NOTE: reflects current state of the edge object. Call this function again if egdes change (e.g. their direction)
         """
-        return self.edges.copy() if abs(self.ruffle - 1) < 1e-3 else self.edges.copy().extend(1 / self.ruffle)    
+        # Per edge set ruffle application
+        projected = self.edges.copy()
+        for r in self.ruffle:
+            if abs(r['coeff'] - 1) > 1e-3:
+                projected[r['sec'][0]:r['sec'][1]].extend(1 / r['coeff'])
+        
+        return projected
 
     def __len__(self):
         return len(self.edges)
@@ -45,8 +51,14 @@ class Interface():
         new_int = copy(ints[0])  # shallow copy -- don't create unnecessary objects
         new_int.edges = EdgeSequence()
         new_int.panel = []
+        new_int.ruffle = []
         
         for elem in ints:
+            shift = len(new_int.edges)
+            new_int.ruffle += [copy(r) for r in elem.ruffle]
+            for r in new_int.ruffle[-len(elem.ruffle):]:
+                r.update(sec=(r['sec'][0] + shift, r['sec'][1] + shift))
+
             # Adding edges while aligning their order right away!
             # (following the same clockwise/counterclockwise orientation regardless of 
             # in-panel orientation)
@@ -58,7 +70,7 @@ class Interface():
                 # swap the order of new edges
                 to_add = EdgeSequence(elem.edges)  # Edge sequence object with the same edge objects
                 to_add.edges.reverse()  # reverse the order of edge objects withough flippling them
-                
+
                 to_add_panels = copy(elem.panel)
                 to_add_panels.reverse()  # shallow copy
             else:
@@ -68,7 +80,7 @@ class Interface():
             new_int.edges.append(to_add)
             new_int.panel += to_add_panels
             
-        return new_int   # TODO ruffles as well!
+        return new_int 
 
     @staticmethod
     def _is_order_matching(panel_s, vert_s, panel_1, vert1, panel_2, vert2):

@@ -10,63 +10,64 @@ from .bands import WB
 class PantPanel(pyp.Panel):
     def __init__(
         self, name, waist, pant_width, 
-        crouch_depth, length, rise=1,
-        dart_position=None, dart_depth=10, ruffle=False, crouch_extention=5) -> None:
+        crotch_depth, length, rise=1,
+        dart_position=None, ruffle=False, crotch_extention=5) -> None:
         """
             Basic pant panel with option to be fitted (with darts) or ruffled at waist area.
             
-            * rise -- the pant rize. 1 = waistline, 0 = crouch line (I'd not recommend to go all the way to zero 😅)
+            * rise -- the pant rize. 1 = waistline, 0 = crotch line (I'd not recommend to go all the way to zero 😅)
             * dart_position -- from the center of the body to the dart
-            * If ruffle = False, the dart_position and dart_depth need to be specified
-            * crouch_extention amount of exta fabric between legs
+            * ruffle -- use ruffles instead of fitting with darts. If ruffle = False, the dart_position needs to be specified
+            * crotch_extention amount of exta fabric between legs
         """
         super().__init__(name)
 
         # adjust for a rise
-        adj_crouch_depth = rise * crouch_depth
+        adj_crotch_depth = rise * crotch_depth
         adj_waist = pant_width - rise * (pant_width - waist)
+        dart_depth = crotch_depth * 0.6    # TODO remove from parameters
+        dart_depth = max(dart_depth - (crotch_depth - adj_crotch_depth), 0)
 
+        # eval pants shape
+        hips = pant_width + crotch_extention
+        default_width = pant_width - crotch_extention # / 2
         # Check for ruffle
         if ruffle:  # TODO Try and debug
-            ruffle_rate = pant_width / adj_waist
-            adj_waist = pant_width   # TODO Or default waist?
+            ruffle_rate = default_width / adj_waist
+            adj_waist = default_width   # TODO Or default waist?  pant_width
         else:
             ruffle_rate = 1
 
-        # eval pants shape
-        hips = pant_width + crouch_extention
-        default_width = pant_width - crouch_extention / 2
+        # amount of extra fabric
         w_diff = default_width - adj_waist   # Assume its positive since waist is smaller then hips
         # We distribute w_diff among the side angle and a dart 
-
-        # hw_shift = pant_width - waist - crouch_extention / 2    
         hw_shift = w_diff / 3
-        dart_width = w_diff - hw_shift
         
         self.edges = pyp.esf.from_verts(
-            [0, 0],
-            [hw_shift, adj_crouch_depth], 
-            [hw_shift + adj_waist, adj_crouch_depth],
-            [hw_shift + adj_waist, crouch_extention],
+            [0, adj_crotch_depth - dart_depth],
+            [hw_shift, adj_crotch_depth], 
+            [w_diff + adj_waist, adj_crotch_depth],
+            [w_diff + adj_waist, crotch_extention],
             [hips, 0],
-            [hips - crouch_extention, - crouch_extention],
+            [hips - crotch_extention, - crotch_extention],
             [hips, -length],
             [hips - pant_width, -length],
             loop=True
         )
 
         # Default placement
-        self.translation = [-hips, -crouch_depth, 0]
+        self.translation = [-hips, -crotch_depth-10, 0]
 
         # Out interfaces (easier to define before adding a dart)
         self.interfaces = {
             'outside': pyp.Interface(self, pyp.EdgeSequence(self.edges[-1], self.edges[0])),
-            'crouch': pyp.Interface(self, self.edges[2:4]),
+            'crotch': pyp.Interface(self, self.edges[2:4]),
             'inside': pyp.Interface(self, self.edges[4:6]),
         }
 
         # Add top dart 
-        if dart_position is not None: 
+        if not ruffle and dart_depth: 
+            dart_width = w_diff - hw_shift
             dart_shape = pyp.esf.dart_shape(dart_width, dart_depth)
             top_edges, dart_edges, int_edges = pyp.ops.cut_into_edge(
                 dart_shape, self.edges[1], offset=(hw_shift + adj_waist - dart_position), right=True)
@@ -84,27 +85,28 @@ class PantsHalf(pyp.Component):
         super().__init__(tag)
         design = design['pants']
 
-        # TODO Ruffles on this level
         # TODO assymmetric front/back
         self.front = PantPanel(
             f'pant_f_{tag}',   
             body['waist'] / 4, 
             design['width']['v'], 
-            body['crouch_depth'],
+            body['crotch_depth'],
             design['length']['v'],
             rise=design['rise']['v'],
             dart_position=body['bust_points'] / 2,
-            dart_depth=10,
+            ruffle=design['ruffle']['v'][0],    # TODO different ruffles for front and back
+            crotch_extention=design['crotch_extention']['v']
             ).translate_by([0, 0, 25])
         self.back = PantPanel(
             f'pant_b_{tag}', 
             body['waist'] / 4, 
-            body['hips'] / 4, 
-            body['crouch_depth'],
+            design['width']['v'],
+            body['crotch_depth'],
             design['length']['v'],
             rise=design['rise']['v'],
-            dart_position=body['bust_points'] / 2,
-            dart_depth=10
+            dart_position=body['bum_points'] / 2,
+            ruffle=design['ruffle']['v'][1],
+            crotch_extention=design['crotch_extention']['v']
             ).translate_by([0, 0, -20])
 
         self.stitching_rules = pyp.Stitches(
@@ -113,8 +115,8 @@ class PantsHalf(pyp.Component):
         )
         
         self.interfaces = {
-            'crouch_f': self.front.interfaces['crouch'],
-            'crouch_b': self.back.interfaces['crouch'],
+            'crotch_f': self.front.interfaces['crotch'],
+            'crotch_b': self.back.interfaces['crotch'],
             'top_f': self.front.interfaces['top'],
             'top_b': self.back.interfaces['top'],
         }
@@ -128,9 +130,8 @@ class Pants(pyp.Component):
         self.left = PantsHalf('l', body, design).mirror()
 
         self.stitching_rules = pyp.Stitches(
-
-            (self.right.interfaces['crouch_f'], self.left.interfaces['crouch_f']),
-            (self.right.interfaces['crouch_b'], self.left.interfaces['crouch_b']),
+            (self.right.interfaces['crotch_f'], self.left.interfaces['crotch_f']),
+            (self.right.interfaces['crotch_b'], self.left.interfaces['crotch_b']),
         )
 
         self.interfaces = {
@@ -150,11 +151,11 @@ class WBPants(pyp.Component):
         # pants top
         wb_len = (self.pants.interfaces['top_b'].projecting_edges().length() + 
                     self.pants.interfaces['top_f'].projecting_edges().length())
+
         self.wb = WB(wb_len, design['wb_pants']['width']['v'])
 
         self.stitching_rules = pyp.Stitches(
             (self.pants.interfaces['top_b'], self.wb.interfaces['bottom_b']),
             (self.pants.interfaces['top_f'], self.wb.interfaces['bottom_f']),
-
         )
 
