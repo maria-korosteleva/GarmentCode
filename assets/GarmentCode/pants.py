@@ -6,28 +6,23 @@ from .bands import WB
 
 
 # TODO different fit in thighs and   
-
-class PantFront(pyp.Panel):
-    def __init__(self, name, body, design) -> None:
+# TODO different rise
+class PantPanel(pyp.Panel):
+    def __init__(self, name, waist, pant_width, crouch_depth, length) -> None:
         super().__init__(name)
 
-        waist = body['waist'] / 4
-        hips = body['hips'] / 4
-        crouch_depth = body['crouch_depth']
-
-        length = design['length']['v']
-
-        pant_width = hips - 5
+        crouch_extention = 5
+        hips = pant_width + crouch_extention
 
         hw_diff = (hips - waist) / 2
-        b_shift = 5
+        
         self.edges = pyp.esf.from_verts(
             [0, 0],
             [hw_diff, crouch_depth], 
             [hw_diff + waist, crouch_depth],
-            [hw_diff + waist, 5],
+            [hw_diff + waist, crouch_extention],
             [hips, 0],
-            [hips - 5, - 5],
+            [hips - crouch_extention, - crouch_extention],
             [hips, -length],
             [hips - pant_width, -length],
             loop=True
@@ -41,27 +36,49 @@ class PantFront(pyp.Panel):
         }
 
 
+class PantsHalf(pyp.Component):
+    def __init__(self, tag, body, design) -> None:
+        super().__init__(tag)
+        design = design['pants']
+
+        self.front = PantPanel(
+            f'pant_f_{tag}', 
+            body['waist'] / 4, 
+            body['hips'] / 4, 
+            body['crouch_depth'],
+            design['length']['v']
+            ).translate_by([0, 0, 25])
+        self.back = PantPanel(
+            f'pant_b_{tag}', 
+            body['waist'] / 4, 
+            body['hips'] / 4, 
+            body['crouch_depth'],
+            design['length']['v']
+            ).translate_by([0, 0, -20])
+
+        self.stitching_rules = pyp.Stitches(
+            (self.front.interfaces['outside'], self.back.interfaces['outside']),
+            (self.front.interfaces['inside'], self.back.interfaces['inside'])
+        )
+        
+        self.interfaces = {
+            'crouch_f': self.front.interfaces['crouch'],
+            'crouch_b': self.back.interfaces['crouch']
+
+        }
+
 class Pants(pyp.Component):
     def __init__(self, body, design) -> None:
         super().__init__('Pants')
 
-        design = design['pants']
 
-        self.fr = PantFront('pant_fr', body, design).translate_by([0, 0, 25])
-        self.fl = PantFront('pant_fl', body, design).translate_by([0, 0, 25]).mirror()
-
-        self.br = PantFront('pant_br', body, design).translate_by([0, 0, -20])
-        self.bl = PantFront('pant_bl', body, design).translate_by([0, 0, -20]).mirror()
+        self.right = PantsHalf('r', body, design)
+        self.left = PantsHalf('l', body, design).mirror()
 
         self.stitching_rules = pyp.Stitches(
-            (self.fr.interfaces['outside'], self.br.interfaces['outside']),
-            (self.fl.interfaces['outside'], self.bl.interfaces['outside']),
 
-            (self.fr.interfaces['crouch'], self.fl.interfaces['crouch']),
-            (self.br.interfaces['crouch'], self.bl.interfaces['crouch']),
-
-            (self.fr.interfaces['inside'], self.br.interfaces['inside']),
-            (self.fl.interfaces['inside'], self.bl.interfaces['inside']),
+            (self.right.interfaces['crouch_f'], self.left.interfaces['crouch_f']),
+            (self.right.interfaces['crouch_b'], self.left.interfaces['crouch_b']),
 
         )
 
