@@ -8,19 +8,34 @@ from .bands import WB
 # TODO different fit in thighs and   
 # TODO different rise
 class PantPanel(pyp.Panel):
-    def __init__(self, name, waist, pant_width, crouch_depth, length) -> None:
+    def __init__(self, name, waist, pant_width, crouch_depth, length, dart_position=None, ruffle=False, crouch_extention=5) -> None:
+        """
+            Basic pant panel with option to be fitted (with darts) or ruffled at waist area.
+            * If ruffle = False, the dart_position needs to be specified
+
+            * crouch_extention amount of exta fabric between legs
+        """
         super().__init__(name)
 
-        crouch_extention = 5
         hips = pant_width + crouch_extention
+        if ruffle:
+            ruffle_rate = pant_width / waist
+            waist = pant_width   # TODO Or default waist?
+        else:
+            ruffle_rate = 1
 
-        hw_diff = (hips - waist) / 2
+        # eval pants shape
+        default_width = pant_width - crouch_extention / 2
+        w_diff = default_width - waist   # Assume its positive since waist is smaller then hips
+        # We distribute w_diff among the side angle and a dart 
+
+        hw_shift = pant_width - waist - crouch_extention / 2    
         
         self.edges = pyp.esf.from_verts(
             [0, 0],
-            [hw_diff, crouch_depth], 
-            [hw_diff + waist, crouch_depth],
-            [hw_diff + waist, crouch_extention],
+            [hw_shift, crouch_depth], 
+            [hw_shift + waist, crouch_depth],
+            [hw_shift + waist, crouch_extention],
             [hips, 0],
             [hips - crouch_extention, - crouch_extention],
             [hips, -length],
@@ -33,6 +48,7 @@ class PantPanel(pyp.Panel):
             'outside': pyp.Interface(self, pyp.EdgeSequence(self.edges[-1], self.edges[0])),
             'crouch': pyp.Interface(self, self.edges[2:4]),
             'inside': pyp.Interface(self, self.edges[4:6]),
+            'top': pyp.Interface(self, self.edges[1], ruffle=ruffle_rate)   # TODO this one needs multi-panel stitch!
         }
 
 
