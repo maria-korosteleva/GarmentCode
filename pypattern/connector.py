@@ -35,7 +35,6 @@ class StitchingRule():
     def isTraversalMatching(self):
         """Check if the traversal direction of edge sequences matches or needs to be swapped"""
 
-        # FIXME traversal direction might be different for different panels
         if len(self.int1.edges) > 1:
             # Make sure the direction is matching
             # 3D distance between corner vertices
@@ -73,7 +72,7 @@ class StitchingRule():
         subdiv = EdgeSeqFactory.from_fractions(base_edge.start, base_edge.end, fractions)
 
         # Substitute
-        # TODO multiple panels!!!
+        # TODO multiple panels!!! (but that's in many-to-many stitches)
         self.int2.panel[0].edges.substitute(base_edge, subdiv)
         self.int2.edges = subdiv
         self.int2.panel = [self.int2.panel[0] for _ in range(len(subdiv))]
@@ -81,11 +80,7 @@ class StitchingRule():
 
     def assembly(self):
         """Produce a stitch that connects two interfaces
-
-        NOTE: the interface geometry matching is not checked, and generally not required 
         """
-        # TODO Matching direction -- are the edge sequences match traversal orientation ? 
-
         if not self.isMatching():
             raise RuntimeError(f'{self.__class__.__name__}::Error::Stitch sides do not matched!!')
 
