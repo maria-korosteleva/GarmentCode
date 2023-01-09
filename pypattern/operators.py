@@ -154,7 +154,7 @@ def cut_into_edge(target_shape, base_edge, offset=0, right=True, tol=1e-4):
         Returns:
         * Newly created edges that accomodate the cut
         * Edges corresponding to the target shape
-        * Edges that lir on the original base edge 
+        * Edges that lie on the original base edge 
     """
     # TODO Allow insertion into curved edges
     target_shape = EdgeSequence(target_shape)

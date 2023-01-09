@@ -73,8 +73,14 @@ design:
     
   pants: 
     length: 
-      v: 30
+      v: 70
       range: [10, 40]   # TODO related with height and body proportions? 
     width: 
-      v: 20
-      range: [10, 40]   # TODO related with thigh width? 
+      v: 35
+      range: [27.5, 40]   # TODO related with thigh width? 
+    rise:
+      v: 0.75
+      range: [0.5, 1]
+    ruffle:
+      v: False
+      range: [True, False]
