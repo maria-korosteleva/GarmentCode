@@ -182,7 +182,6 @@ class EdgeSequence():
 
         return [e.length() / total_len for e in self.edges]
 
-
     def verts(self):
         """Return all vertex objects"""
         verts = [self.edges[0].start]
@@ -335,7 +334,6 @@ class EdgeSequence():
 
         return self
 
-    # ANCHOR Factories for some tipical edge sequences
     def copy(self):
         """Create a copy of a current edge sequence preserving the chaining property of edge sequences"""
         new_seq = deepcopy(self)
@@ -344,9 +342,9 @@ class EdgeSequence():
         # in chaned edges those vertex objects are supposed to be shared
         # by neighbor edges
 
-        # fix vertex sharing
         for i in range(1, len(new_seq)):
-            new_seq[i].start = new_seq[i-1].end
+            if self[i].start is self[i-1].end:
+                new_seq[i].start = new_seq[i-1].end
             
         if self.isLoop():
             new_seq[-1].end = new_seq[0].start

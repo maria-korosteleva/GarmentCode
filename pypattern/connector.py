@@ -92,9 +92,6 @@ class StitchingRule():
         stitches = []
         swap = not self.isTraversalMatching()  # traverse edge sequences correctly
 
-        # DEBUG
-        print(self.int1, self.int2)
-
         for i, j in zip(range(len(self.int1.edges)), range(len(self.int2.edges) - 1, -1, -1) if swap else range(len(self.int2.edges))):
             stitches.append([
                 {
