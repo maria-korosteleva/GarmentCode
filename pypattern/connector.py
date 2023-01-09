@@ -35,14 +35,15 @@ class StitchingRule():
     def isTraversalMatching(self):
         """Check if the traversal direction of edge sequences matches or needs to be swapped"""
 
+        # FIXME traversal direction might be different for different panels
         if len(self.int1.edges) > 1:
             # Make sure the direction is matching
             # 3D distance between corner vertices
-            start_1 = self.int1.panel.point_to_3D(self.int1.edges[0].start)
-            start_2 = self.int2.panel.point_to_3D(self.int2.edges[0].start)
+            start_1 = self.int1.panel[0].point_to_3D(self.int1.edges[0].start)
+            start_2 = self.int2.panel[0].point_to_3D(self.int2.edges[0].start)
 
-            end_1 = self.int1.panel.point_to_3D(self.int1.edges[-1].end)
-            end_2 = self.int2.panel.point_to_3D(self.int2.edges[-1].end)
+            end_1 = self.int1.panel[-1].point_to_3D(self.int1.edges[-1].end)
+            end_2 = self.int2.panel[-1].point_to_3D(self.int2.edges[-1].end)
             
             stitch_dist_straight = norm(start_2 - start_1) + norm(end_2 - end_1)
             stitch_dist_reverse = norm(start_2 - end_1) + norm(end_2 - start_1)
@@ -70,9 +71,12 @@ class StitchingRule():
         # Subdivide edges in the target interface
         base_edge = self.int2.edges[0]
         subdiv = EdgeSeqFactory.from_fractions(base_edge.start, base_edge.end, fractions)
+
         # Substitute
-        self.int2.panel.edges.substitute(base_edge, subdiv)
+        # TODO multiple panels!!!
+        self.int2.panel[0].edges.substitute(base_edge, subdiv)
         self.int2.edges = subdiv
+        self.int2.panel = [self.int2.panel[0] for _ in range(len(subdiv))]
 
 
     def assembly(self):
@@ -87,15 +91,19 @@ class StitchingRule():
 
         stitches = []
         swap = not self.isTraversalMatching()  # traverse edge sequences correctly
+
+        # DEBUG
+        print(self.int1, self.int2)
+
         for i, j in zip(range(len(self.int1.edges)), range(len(self.int2.edges) - 1, -1, -1) if swap else range(len(self.int2.edges))):
             stitches.append([
                 {
-                    'panel': self.int1.panel.name,  # corresponds to a name. 
+                    'panel': self.int1.panel[i].name,  # corresponds to a name. 
                                             # Only one element of the first level is expected
                     'edge': self.int1.edges[i].geometric_id
                 },
                 {
-                    'panel': self.int2.panel.name,
+                    'panel': self.int2.panel[j].name,
                     'edge': self.int2.edges[j].geometric_id
                 }
             ])

@@ -41,7 +41,7 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
 
     # ---- Evaluate optimal projection of the target shape onto the corner
     corner_shape = target_shape.copy()
-    panel = target_interface.panel
+    panel = target_interface.panel[0]   # TODO Support multiple panels???
     target_edges = target_interface.edges
     
     # Get rid of directions by working on vertices

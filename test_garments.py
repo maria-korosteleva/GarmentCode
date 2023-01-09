@@ -30,7 +30,8 @@ if __name__ == '__main__':
         # TShirt(body, design),
         # FittedShirt(body, design),
         # GodetSkirt(body, design),
-        Pants(body, design)
+        # Pants(body, design),
+        WBPants(body, design)
     ]
 
     # test_garments[0].translate_by([2, 0, 0])

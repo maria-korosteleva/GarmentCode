@@ -84,3 +84,8 @@ design:
     ruffle:
       v: False
       range: [True, False]
+
+  wb_pants:
+    width: 
+      v: 5
+      range: [3, 8]

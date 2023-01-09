@@ -84,9 +84,8 @@ class PantsHalf(pyp.Component):
         super().__init__(tag)
         design = design['pants']
 
-        print(body['hips'] / 4)
-
         # TODO Ruffles on this level
+        # TODO assymmetric front/back
         self.front = PantPanel(
             f'pant_f_{tag}',   
             body['waist'] / 4, 
@@ -115,8 +114,9 @@ class PantsHalf(pyp.Component):
         
         self.interfaces = {
             'crouch_f': self.front.interfaces['crouch'],
-            'crouch_b': self.back.interfaces['crouch']
-
+            'crouch_b': self.back.interfaces['crouch'],
+            'top_f': self.front.interfaces['top'],
+            'top_b': self.back.interfaces['top'],
         }
 
 class Pants(pyp.Component):
@@ -131,7 +131,30 @@ class Pants(pyp.Component):
 
             (self.right.interfaces['crouch_f'], self.left.interfaces['crouch_f']),
             (self.right.interfaces['crouch_b'], self.left.interfaces['crouch_b']),
-
         )
 
+        self.interfaces = {
+            'top_f': pyp.Interface.from_multiple(
+                self.right.interfaces['top_f'], self.left.interfaces['top_f']),
+            'top_b': pyp.Interface.from_multiple(
+                self.right.interfaces['top_b'], self.left.interfaces['top_b'])
+        }
+
+class WBPants(pyp.Component):
+    def __init__(self, body, design) -> None:
+        super().__init__('WBPants')
+
+        
+        self.pants = Pants(body, design)
+
+        # pants top
+        wb_len = (self.pants.interfaces['top_b'].projecting_edges().length() + 
+                    self.pants.interfaces['top_f'].projecting_edges().length())
+        self.wb = WB(wb_len, design['wb_pants']['width']['v'])
+
+        self.stitching_rules = pyp.Stitches(
+            (self.pants.interfaces['top_b'], self.wb.interfaces['bottom_b']),
+            (self.pants.interfaces['top_f'], self.wb.interfaces['bottom_f']),
+
+        )
 
