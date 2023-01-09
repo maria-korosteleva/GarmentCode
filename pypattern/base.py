@@ -11,7 +11,7 @@ class BaseComponent():
     def __init__(self, name) -> None:
         self.name = name
 
-        # List of the interfaces of this components
+        # List or dictionary of the interfaces of this components
         # available for connectivity with other components
         self.interfaces = []
 

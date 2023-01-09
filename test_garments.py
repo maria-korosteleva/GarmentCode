@@ -19,19 +19,19 @@ if __name__ == '__main__':
         design = yaml.safe_load(f)['design']
     test_garments = [
         # SkirtWB(1),
-        # SkirtWB(1.5, 0),
+        SkirtWB(1.5, 0),
         # SkirtWB(2, 0),
         # SkirtWB(2),
         # WB(),
         # Skirt2(),
         # SkirtManyPanels(n_panels=2),
         # SkirtManyPanels(n_panels=4),
-        # SkirtManyPanels(n_panels=10),
+        SkirtManyPanels(n_panels=10),
         # TShirt(body, design),
         # FittedShirt(body, design),
         # GodetSkirt(body, design),
         # Pants(body, design),
-        WBPants(body, design)
+        # WBPants(body, design)
     ]
 
     # test_garments[0].translate_by([2, 0, 0])
