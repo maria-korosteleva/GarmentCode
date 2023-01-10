@@ -156,6 +156,64 @@ class BodiceFrontHalf(pyp.Panel):
             'collar_corner': pyp.Interface(self, [self.edges[-2], self.edges[-1]])
         }
 
+class BodiceFrontHalfFlat(pyp.Panel):
+    def __init__(self, name, body, design) -> None:
+        super().__init__(name)
+
+        # TODO Optimal set of body measurements?
+        design = design['bodice']
+        ease = design['ease']['v'] / 4
+
+        shoulder_width = body['sholder_w'] / 2  # TODO Also use?
+        armscye_depth = body['armscye_depth']
+        underbust_size = body['underbust'] / 4
+
+        # sizes
+        side_depth = body['waist_line']
+        max_length = body['waist_over_bust_line']
+        bust_point = body['bust_points'] / 2
+        front_width = body['bust'] / 4 + ease
+        waist = body['waist'] / 4 + ease
+
+        print('front: ', front_width, waist)  # DEBUG
+
+        # bottom
+        
+
+        self.edges = pyp.esf.from_verts(
+            [0, 0], [-front_width, 0], [-front_width, max_length], [0, max_length], 
+            loop=True
+        )
+
+        # Side dart
+
+        # Bottom dart
+        bottom_d_width = front_width - waist
+        bottom_d_depth = 0.8 * (side_depth - body['bust_line'])  # calculated value
+        bottom_d_position = bust_point
+
+        b_edge, b_dart_edges, b_interface = pyp.ops.cut_into_edge(
+            pyp.esf.dart_shape(bottom_d_width, bottom_d_depth), b_edge, 
+            offset=bottom_d_position, right=True)
+        self.edges.substitute(0, b_edge)
+
+        # Stitches
+        
+
+        # Interfaces
+        self.interfaces = {
+            'outside': side_interface,
+            'inside': pyp.Interface(self, self.edges[-1]),
+            'shoulder': pyp.Interface(self, self.edges[-2]),
+            'bottom': b_interface,
+            
+            # Reference to the corner for sleeve and collar projections
+            'shoulder_corner': pyp.Interface(self, [self.edges[-3], self.edges[-2]]),
+            'collar_corner': pyp.Interface(self, [self.edges[-2], self.edges[-1]])
+        }
+
+
+
 # DRAFT Tried proper back-front assymetry, but failed
 class BodiceBackHalfAsymm(pyp.Panel):
     """Panel for the front/back of upper garments"""
