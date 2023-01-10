@@ -37,7 +37,7 @@ class Interface():
         return len(self.edges)
     
     def __str__(self) -> str:
-        return f'{[p.name for p in self.panel]}: {str(self.edges)}'
+        return f'Interface: {[p.name for p in self.panel]}: {str(self.edges)}'
     
     def __repr__(self) -> str:
         return self.__str__()

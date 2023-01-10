@@ -150,7 +150,7 @@ class EdgeSequence():
         return any([item is e for e in self.edges])
 
     def __str__(self) -> str:
-        return str(self.edges)
+        return 'EdgeSeq: ' + str(self.edges)
     
     def __repr__(self) -> str:
         return self.__str__()
