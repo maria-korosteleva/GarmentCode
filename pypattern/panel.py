@@ -9,6 +9,7 @@ from pattern.wrappers import VisPattern
 from .base import BaseComponent
 from .edge import EdgeSequence
 from .connector import Stitches
+from ._generic_utils import close_enough
 
 class Panel(BaseComponent):
     """ A Base class for defining a Garment component corresponding to a single flat fiece of fabric
@@ -101,7 +102,7 @@ class Panel(BaseComponent):
         """
 
         # Case Around Y
-        if abs(axis[0]) < 1e-4:  # reflection around Y
+        if close_enough(axis[0], tol=1e-4):  # reflection around Y
 
             # Vertices
             for i in range(len(self.edges) - 1):

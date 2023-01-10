@@ -5,7 +5,7 @@ from numpy.linalg import norm
 
 # Custom
 from .edge import EdgeSequence, LogicalEdge
-from ._generic_utils import vector_angle
+from ._generic_utils import vector_angle, close_enough
 from .interface import Interface
 from scipy.optimize import minimize
 
@@ -39,7 +39,7 @@ class EdgeSeqFactory:
         """
         # TODO fractions of curvy edges?
         frac = [abs(f) for f in frac]
-        if abs(sum(frac) - 1) > 1e-4:
+        if close_enough(sum(frac), 1, 1e-4):
             raise RuntimeError(f'EdgeSequence::Error::fraction list does not follow the requirements')
 
         vec = np.asarray(end) - np.asarray(start)
@@ -233,7 +233,7 @@ class EdgeSeqFactory:
 
         # Solve for dart constraints
         out = minimize(_fit_dart, guess, args=(v0, v1, d0, d1, depth, dart_angle))
-        if abs(out.fun) > tol:
+        if not close_enough(out.fun, tol=tol):
             print(out)
             raise ValueError(f'EdgeFactory::Error::Solving dart was unsuccessful for L: {L}, Ds: {d0, d1}, Depth: {depth}')
 

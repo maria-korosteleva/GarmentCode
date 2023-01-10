@@ -9,7 +9,7 @@ from scipy.optimize import minimize
 # Custom 
 from .edge import LogicalEdge, EdgeSequence
 from .interface import Interface
-from ._generic_utils import vector_angle
+from ._generic_utils import vector_angle, close_enough
 from .base import BaseComponent
 
 # ANCHOR ----- Edge Sequences Modifiers ----
@@ -79,7 +79,7 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
         ])
 
     # Then, find scaling parameter that allows to place the end vertces exactly -- another SLE
-    if abs(out.fun) > 1e-3:  
+    if not close_enough(out.fun, tol=1e-3):  
         # TODO this part is NOT properly tested!!!! 
 
         # Fit with translation is not perfect -- try to adjust the length

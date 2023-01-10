@@ -3,6 +3,7 @@ from numpy.linalg import norm
 
 # Custom
 from .edge import EdgeSequence
+from ._generic_utils import close_enough
 
 class Interface():
     """Description of an interface of a panel or component
@@ -21,14 +22,14 @@ class Interface():
         self.panel = [panel for _ in range(len(self.edges))]  # matches every edge 
         self.ruffle = [dict(coeff=ruffle, sec=(0, len(self.edges)))]
 
-    def projecting_edges(self):
+    def projecting_edges(self) -> EdgeSequence:
         """Return edges shape that should be used when projecting interface onto another panel
             NOTE: reflects current state of the edge object. Call this function again if egdes change (e.g. their direction)
         """
         # Per edge set ruffle application
         projected = self.edges.copy()
         for r in self.ruffle:
-            if abs(r['coeff'] - 1) > 1e-3:
+            if not close_enough(r['coeff'], 1, 1e-3):
                 projected[r['sec'][0]:r['sec'][1]].extend(1 / r['coeff'])
         
         return projected
@@ -83,7 +84,7 @@ class Interface():
         return new_int 
 
     @staticmethod
-    def _is_order_matching(panel_s, vert_s, panel_1, vert1, panel_2, vert2):
+    def _is_order_matching(panel_s, vert_s, panel_1, vert1, panel_2, vert2) -> bool:
         """Check which of the vertices from panel_t is closer to the vert_s 
             from panel_s in 3D"""
         s_3d = panel_s.point_to_3D(vert_s)

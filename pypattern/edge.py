@@ -182,6 +182,10 @@ class EdgeSequence():
 
         return [e.length() / total_len for e in self.edges]
 
+    def lengths(self) -> list:
+        """Lengths of individual edges in the sequence"""
+        return [e.length() for e in self.edges]
+
     def verts(self):
         """Return all vertex objects"""
         verts = [self.edges[0].start]

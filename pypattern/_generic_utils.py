@@ -34,3 +34,8 @@ def vector_angle(v1, v2):
 def R2D(angle):
     """2D rotation matrix by an angle"""
     return np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
+
+
+def close_enough(f1, f2=0, tol=1e-4):
+    """Compare two floats correctly """
+    return abs(f1 - f2) < tol
