@@ -2,6 +2,8 @@ from numpy.linalg import norm
 
 # Custom
 from .edge_factory import EdgeSeqFactory
+from .interface import Interface
+from ._generic_utils import close_enough
 
 class StitchingRule():
     """High-level stitching instructions connecting two component interfaces"""
@@ -10,26 +12,16 @@ class StitchingRule():
             * edges-to-edges (same number of edges on both sides, matching order)
             * T-stitch: multiple edges to single edge
         """
-        # TODO Multuple edges and multiple panels??
+        # TODO Multiple interfaces in the same stitch (3-way stitches?)
         self.int1 = int1
         self.int2 = int2
 
-        if not self.isMatching() and not self.isT():
-            raise ValueError(f'{self.__class__.__name__}::Error::Many-to-many stitches are not supported')
-        
-        if self.isT(): # swap to always have long single edge at int2 location
-            if len(int2) > 1:
-                self.int1, self.int2 = int2, int1
+        if not self.isMatching():
             self.match_edge_count()
             
 
     def isMatching(self):
         return len(self.int1) == len(self.int2)
-
-
-    def isT(self):
-        """Check if we are dealing with T-stitch"""
-        return (len(self.int1) > 1 and len(self.int2) == 1) or (len(self.int2) == 1 and len(self.int2) > 1)
 
 
     def isTraversalMatching(self):
@@ -53,30 +45,84 @@ class StitchingRule():
         return True
 
 
-    def match_edge_count(self):
-        """In T-stitches, subdivide single side to match the number of edges 
-        on the other side
+    def match_edge_count(self, tol=0.1):
+        """ Subdivide the interface edges on both sides s.t. they have the matching number of edges on each side and
+            can be safely connected
         
             Serializable format does not natively support t-stitches, 
-            so the long edge needs to be broken down into matching segments
+            so the longer edges needs to be broken down into matching segments
             # SIM specific
         """
 
         # Eval the fraction corresponding to every segment in the "from" interface
-        fractions = self.int1.edges.fractions()
+        # Using projecting edges to match desired gather patterns
+        lengths1 = self.int1.projecting_edges().lengths()
         if not self.isTraversalMatching():      # Make sure connectivity order will be correct even if edge directions are not aligned
-            fractions.reverse()
+            lengths1.reverse()
 
-        # Subdivide edges in the target interface
-        base_edge = self.int2.edges[0]
-        subdiv = EdgeSeqFactory.from_fractions(base_edge.start, base_edge.end, fractions)
+        lengths2 = self.int2.projecting_edges().lengths()
+        if not self.isTraversalMatching():      # Make sure connectivity order will be correct even if edge directions are not aligned
+            lengths2.reverse()   # match the other edge orientation before passing on
 
-        # Substitute
-        # TODO multiple panels!!! (but that's in many-to-many stitches)
-        self.int2.panel[0].edges.substitute(base_edge, subdiv)
-        self.int2.edges = subdiv
-        self.int2.panel = [self.int2.panel[0] for _ in range(len(subdiv))]
+        if not close_enough(sum(lengths1), sum(lengths2), tol):
+            # TODO Can we do it for fraction now that we figured out length??
+            raise RuntimeError(f'{self.__class__.__name__}::Error::Projected edges do not match for two stitches')
 
+        self._match_side_count(self.int1, lengths2, tol=tol)
+        self._match_side_count(self.int2, lengths1, tol=tol)
+
+    def _match_side_count(self, inter:Interface, to_add, tol=0.1):
+        """Add the vertices at given location to the edge sequence in a given interface
+
+        Parameters:
+            * inter -- interface to modify
+            * to_add -- the length of segements to be projects onto the edge sequence in the inter
+            * tol -- the proximity of vertices when they can be regarded as the same vertex.  
+                    NOTE: tol should be shorter then the smallest expected edge
+        """
+
+        # NOTE Edge sequences to subdivide might be disconnected 
+        # (even belong to different panels), so we need to subdivide per edge
+
+        # Go over the edges keeping track of their fractions
+        add_id, in_id = 0, 0
+        covered_init, covered_added = 0, 0
+        while in_id < len(inter.edges) and add_id < len(to_add):
+            next_init = covered_init + inter.projecting_edges()[in_id].length()  # projected edges though
+            next_added = covered_added + to_add[add_id]
+            if close_enough(next_init, next_added, tol):
+                # the vertex exists, skip
+                in_id += 1
+                add_id += 1
+                covered_init, covered_added = next_init, next_added
+            elif next_init < next_added:
+                # add on the next step
+                in_id += 1
+                covered_init = next_init
+            else:
+                # add a vertex to the edge at the new location
+                # Eval on projected edge
+                projected_edge = inter.projecting_edges()[in_id]
+                new_v_loc = projected_edge.length() - (next_init - next_added)
+                frac = new_v_loc / projected_edge.length()
+                base_edge = inter.edges[in_id]
+
+                # add with the same fraction to the base edge
+                subdiv = EdgeSeqFactory.from_fractions(base_edge.start, base_edge.end, [frac, 1 - frac])
+
+                inter.panel[in_id].edges.substitute(base_edge, subdiv)  # Update the panel
+                inter.edges.substitute(base_edge, subdiv)  # interface
+                inter.panel.insert(in_id, inter.panel[in_id])  # update panel correspondance
+
+                # next step
+                in_id += 1
+                add_id += 1
+                covered_init += subdiv[0].length()
+                covered_added = next_added
+
+        if add_id != len(to_add):
+            raise RuntimeError(f'{self.__class__.__name__}::Error::Projection failed')
+                
 
     def assembly(self):
         """Produce a stitch that connects two interfaces
@@ -100,6 +146,7 @@ class StitchingRule():
                 }
             ])
         return stitches
+
 
 class Stitches():
     """Describes a collection of StitchingRule objects
