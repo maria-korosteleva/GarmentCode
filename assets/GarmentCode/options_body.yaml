@@ -8,7 +8,7 @@ body:
 
   waist: 84.5
   waist_line: 40  # Nape of the Neck to waist (on the back)
-  waist_over_bust_line: 45
+  waist_over_bust_line: 47
 
   bust_line: 28
   bust: 96
