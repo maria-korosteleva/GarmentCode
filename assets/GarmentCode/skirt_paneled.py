@@ -18,10 +18,10 @@ class SkirtPanel(pyp.Panel):
         x_shift_top = (low_width - top_width) / 2  # to account for flare at the bottom
 
         # define edge loop
-        self.right = pyp.esf.side_with_cut([0,0], [x_shift_top, length], start_cut=bottom_cut / length) if bottom_cut else pyp.EdgeSequence(pyp.LogicalEdge([0,0], [x_shift_top, length]))
-        self.waist = pyp.LogicalEdge(self.right[-1].end, [x_shift_top + top_width, length])
-        self.left = pyp.esf.side_with_cut(self.waist.end, [low_width, 0], end_cut=bottom_cut / length) if bottom_cut else pyp.EdgeSequence(pyp.LogicalEdge(self.waist.end, [low_width, 0]))
-        self.bottom = pyp.LogicalEdge(self.left[-1].end, self.right[0].start)
+        self.right = pyp.esf.side_with_cut([0,0], [x_shift_top, length], start_cut=bottom_cut / length) if bottom_cut else pyp.EdgeSequence(pyp.Edge([0,0], [x_shift_top, length]))
+        self.waist = pyp.Edge(self.right[-1].end, [x_shift_top + top_width, length])
+        self.left = pyp.esf.side_with_cut(self.waist.end, [low_width, 0], end_cut=bottom_cut / length) if bottom_cut else pyp.EdgeSequence(pyp.Edge(self.waist.end, [low_width, 0]))
+        self.bottom = pyp.Edge(self.left[-1].end, self.right[0].start)
         
         # define interface
         self.interfaces = {

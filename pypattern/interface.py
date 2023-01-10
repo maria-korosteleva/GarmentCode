@@ -13,7 +13,7 @@ class Interface():
         """
         Parameters:
             * panel - Panel object
-            * edges - LogicalEdge or EdgeSequence -- edges in the panel that are allowed to connect to
+            * edges - Edge or EdgeSequence -- edges in the panel that are allowed to connect to
             * ruffle - ruffle coefficient for a particular edge. Interface object will supply projecting_edges() shape
                 s.t. the ruffles with the given rate are created. Default = 1. (no ruffles, smooth connection)
         """

@@ -50,6 +50,6 @@ def ArmholeSimple(tag, body, design):
     ease = design['sleeve']['ease']['v'] 
     width = (arm_width + ease) / 2
 
-    edges = pyp.EdgeSequence(pyp.LogicalEdge([0, 0], [7, width]))
+    edges = pyp.EdgeSequence(pyp.Edge([0, 0], [7, width]))
     
     return edges

@@ -40,7 +40,7 @@ class BodiceFrontHalfAsymm(pyp.Panel):
         bottom_d_position = bust_point
     
         # Bottom dart as cutout -- for straight line
-        b_edge = pyp.LogicalEdge([0, 0], [-bottom_width, 0])
+        b_edge = pyp.Edge([0, 0], [-bottom_width, 0])
         b_edge, b_dart_edges, b_interface = pyp.ops.cut_into_edge(
             pyp.esf.dart_shape(bottom_d_width, bottom_d_depth), b_edge, 
             offset=bottom_d_position, right=True)
@@ -61,9 +61,9 @@ class BodiceFrontHalfAsymm(pyp.Panel):
         self.edges.append(side_edges)
 
         # top and front -- close the pattern
-        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, [-shoulder_width, max_length]))
+        self.edges.append(pyp.Edge(self.edges[-1].end, [-shoulder_width, max_length]))
         side_interface.edges.append(self.edges[-1])
-        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, [0, max_length]))
+        self.edges.append(pyp.Edge(self.edges[-1].end, [0, max_length]))
         self.edges.close_loop()
 
         # Stitch the darts
@@ -116,7 +116,7 @@ class BodiceFrontHalf(pyp.Panel):
         bottom_d_position = bust_point
     
         # Bottom dart as cutout -- for straight line
-        b_edge = pyp.LogicalEdge([0, 0], [-bottom_width, 0])
+        b_edge = pyp.Edge([0, 0], [-bottom_width, 0])
         b_edge, b_dart_edges, b_interface = pyp.ops.cut_into_edge(
             pyp.esf.dart_shape(bottom_d_width, bottom_d_depth), b_edge, 
             offset=bottom_d_position, right=True)
@@ -133,7 +133,7 @@ class BodiceFrontHalf(pyp.Panel):
         self.edges.append(side_edges)
 
         # top and front -- close the pattern
-        self.edges.append(pyp.LogicalEdge(self.edges[-1].end, [0, max_length]))
+        self.edges.append(pyp.Edge(self.edges[-1].end, [0, max_length]))
         self.edges.close_loop()
 
         # Stitch the darts

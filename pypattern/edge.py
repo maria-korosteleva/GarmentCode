@@ -6,15 +6,11 @@ from numpy.linalg import norm
 from ._generic_utils import R2D
 
 # TODO rename 
-class LogicalEdge():
+class Edge():
     """Edge -- an individual segement of a panel border connecting two panel vertices, 
-    where the sharp change of direction occures, the basic building block of panels
+     the basic building block of panels
 
     Edges are defined on 2D coordinate system with Start vertex as an origin and (End-Start) as Ox axis
-
-    Logical edges may be constructred from multiple geometric edges (e.g., if an edge is cut with a dart), 
-    and contain internal vertices at assembly time, and be defined as smooth curves.
-    
     """
 
     def __init__(self, start=[0,0], end=[0,0]) -> None:
@@ -47,7 +43,7 @@ class LogicalEdge():
             Edges are the same if their interface representation (no ruffles) is the same up to rigid transformation (rotation/translation)
                 => vertices do not have to be on the same locations
         """
-        if not isinstance(__o, LogicalEdge):
+        if not isinstance(__o, Edge):
             return False
 
         # Base length is the same
@@ -199,10 +195,10 @@ class EdgeSequence():
     # All modifiers return self object to allow chaining
     # Wrappers around python's list
     def append(self, item):
-        if isinstance(item, LogicalEdge):
+        if isinstance(item, Edge):
             self.edges.append(item)
             # TODO check if chained right away!
-        elif isinstance(item, list):  # Assuming list of LogicalEdge objects
+        elif isinstance(item, list):  # Assuming list of Edge objects
             self.edges += item
         elif isinstance(item, EdgeSequence):
             self.edges += item.edges
@@ -211,7 +207,7 @@ class EdgeSequence():
         return self
 
     def insert(self, i, item):
-        if isinstance(item, LogicalEdge):
+        if isinstance(item, Edge):
             self.edges.insert(i, item)
         elif isinstance(item, list) or isinstance(item, EdgeSequence):
             for j in range(len(item)):
@@ -221,7 +217,7 @@ class EdgeSequence():
         return self
     
     def pop(self, i):
-        if isinstance(i, LogicalEdge):
+        if isinstance(i, Edge):
             i = self.index(i)
         self.edges.pop(i)
         return self
@@ -229,9 +225,9 @@ class EdgeSequence():
     def substitute(self, orig, new):
         """Remove orign item from the list and place seq into it's place
             orig can be either an id of an item to remove 
-            or an instance of LogicalEdge that exists in the current sequence
+            or an instance of Edge that exists in the current sequence
         """
-        if isinstance(orig, LogicalEdge):
+        if isinstance(orig, Edge):
             orig = self.index(orig)
         self.pop(orig)
         self.insert(orig, new)
@@ -266,7 +262,7 @@ class EdgeSequence():
         """if edge loop is not closed, add and edge to close it"""
         self.isChained()  # print worning if smth is wrong
         if not self.isLoop():
-            self.append(LogicalEdge(self[-1].end, self[0].start))
+            self.append(Edge(self[-1].end, self[0].start))
 
     def rotate(self, angle):
         """Rotate edge sequence by angle in place, using first point as a reference

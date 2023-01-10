@@ -7,6 +7,6 @@ import pypattern as pyp
 def VNeckHalf(tag, depth, width):
     """Simple VNeck design"""
 
-    edges = pyp.EdgeSequence(pyp.LogicalEdge([0, 0], [width / 2,-depth]))
+    edges = pyp.EdgeSequence(pyp.Edge([0, 0], [width / 2,-depth]))
     
     return edges

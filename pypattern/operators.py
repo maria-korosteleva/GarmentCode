@@ -7,7 +7,7 @@ from scipy.spatial.transform import Rotation as R
 from scipy.optimize import minimize
 
 # Custom 
-from .edge import LogicalEdge, EdgeSequence
+from .edge import Edge, EdgeSequence
 from .interface import Interface
 from ._generic_utils import vector_angle, close_enough
 from .base import BaseComponent
@@ -18,7 +18,7 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
         This routine updated the panel geometry and interfaces appropriately
 
         Parameters:
-        * 'target_shape' is an EdgeSequence that is expected to contain one LogicalEdge or sequence of chained LogicalEdges 
+        * 'target_shape' is an EdgeSequence that is expected to contain one Edge or sequence of chained Edges 
             (next one starts from the end vertex of the one before)
             # NOTE: 'target_shape' might be scaled (along the main direction) to fit the corner size
         * Panel to modify
@@ -111,8 +111,8 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
         # The edges are aligned as v2 -> vc -> v1
         corner_shape.reverse()
 
-    corner_shape.insert(0, LogicalEdge(target_edges[0].start, corner_shape[0].start))
-    corner_shape.append(LogicalEdge(corner_shape[-1].end, target_edges[1].end))
+    corner_shape.insert(0, Edge(target_edges[0].start, corner_shape[0].start))
+    corner_shape.append(Edge(corner_shape[-1].end, target_edges[1].end))
 
     # Substitute edges in the panel definition
     panel.edges.pop(target_edges[0])
@@ -191,12 +191,12 @@ def cut_into_edge(target_shape, base_edge, offset=0, right=True, tol=1e-4):
     base_edge_leftovers = EdgeSequence()
     start_id, end_id = 0, len(new_edges)
     if offset > target_shape_w / 2 + tol:  
-        new_edges.insert(0, LogicalEdge(base_edge.start, new_edges[0].start))
+        new_edges.insert(0, Edge(base_edge.start, new_edges[0].start))
         base_edge_leftovers.append(new_edges[0])
         start_id = 1 
     
     if offset < (edge_len - target_shape_w / 2) - tol:
-        new_edges.append(LogicalEdge(new_edges[-1].end, base_edge.end))
+        new_edges.append(Edge(new_edges[-1].end, base_edge.end))
         base_edge_leftovers.append(new_edges[-1])
         end_id = -1
 

@@ -4,7 +4,7 @@ import numpy as np
 from numpy.linalg import norm
 
 # Custom
-from .edge import EdgeSequence, LogicalEdge
+from .edge import EdgeSequence, Edge
 from ._generic_utils import vector_angle, close_enough
 from .interface import Interface
 from scipy.optimize import minimize
@@ -19,12 +19,12 @@ class EdgeSeqFactory:
         """
         # TODO Curvatures
 
-        seq = EdgeSequence(LogicalEdge(verts[0], verts[1]))
+        seq = EdgeSequence(Edge(verts[0], verts[1]))
         for i in range(2, len(verts)):
-            seq.append(LogicalEdge(seq[-1].end, verts[i]))
+            seq.append(Edge(seq[-1].end, verts[i]))
 
         if loop:
-            seq.append(LogicalEdge(seq[-1].end, seq[0].start))
+            seq.append(Edge(seq[-1].end, seq[0].start))
         
         seq.isChained()
         return seq
@@ -157,8 +157,8 @@ class EdgeSeqFactory:
             # flip dart to be the left of the vector
             dart_shape.reflect(start, end)
 
-        dart_shape.insert(0, LogicalEdge(start, dart_shape[0].start))
-        dart_shape.append(LogicalEdge(dart_shape[-1].end, end))
+        dart_shape.insert(0, Edge(start, dart_shape[0].start))
+        dart_shape.append(Edge(dart_shape[-1].end, end))
 
         # re-distribute the changes & adjust the opening angle as requested
         angle_diff = np.deg2rad(180 - opening_angle) * 1 if right else -1    # TODO right/left dart modificaiton flip not tested
@@ -248,8 +248,8 @@ class EdgeSeqFactory:
             # flip dart to match the requested direction
             dart_shape.reflect(start, end)
 
-        dart_shape.insert(0, LogicalEdge(start, dart_shape[0].start))
-        dart_shape.append(LogicalEdge(dart_shape[-1].end, end))
+        dart_shape.insert(0, Edge(start, dart_shape[0].start))
+        dart_shape.append(Edge(dart_shape[-1].end, end))
 
         # DEBUG
         print(f'Fin side length: {dart_shape[0].length() + dart_shape[-1].length()}')
