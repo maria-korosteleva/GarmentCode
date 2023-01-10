@@ -6,13 +6,14 @@ from .interface import Interface
 from ._generic_utils import close_enough
 
 class StitchingRule():
-    """High-level stitching instructions connecting two component interfaces"""
+    """High-level stitching instructions connecting two component interfaces
+    """
     def __init__(self, int1, int2) -> None:
-        """Supported combinations: 
-            * edges-to-edges (same number of edges on both sides, matching order)
-            * T-stitch: multiple edges to single edge
+        """NOTE: When connecting interfaces with different edge count on both sides, 
+            note that the edge sequences change their structure.
+            Use of the same interfaces in other stitches (creating 3+way stitch edge) may fail. 
         """
-        # TODO Multiple interfaces in the same stitch (3-way stitches?)
+        # TODO Explicitely support 3+way stitches
         self.int1 = int1
         self.int2 = int2
 
@@ -113,6 +114,9 @@ class StitchingRule():
                 inter.panel[in_id].edges.substitute(base_edge, subdiv)  # Update the panel
                 inter.edges.substitute(base_edge, subdiv)  # interface
                 inter.panel.insert(in_id, inter.panel[in_id])  # update panel correspondance
+
+                # TODO what if these edges are used in other interfaces? Do they need to be updated as well?
+                # TODO Support the use in other Stitching rules -- multi-way stitches. Some recursion may work
 
                 # next step
                 in_id += 1
