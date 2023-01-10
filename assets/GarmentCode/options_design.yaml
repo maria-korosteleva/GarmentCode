@@ -23,7 +23,7 @@ design:
       v: 15
       range: null
     sleeves:
-      v: ArmholeSimple
+      v: SimpleSleeve
       range: [SimpleSleeve, ArmholeSimple]
     f_collar: 
       v: VNeckHalf
@@ -76,7 +76,7 @@ design:
       v: 70
       range: [10, 40]   # TODO related with height and body proportions? 
     width: 
-      v: 34
+      v: 32
       range: [27.5, 40]   # TODO min is related with thigh width? 
     rise:
       v: 1
