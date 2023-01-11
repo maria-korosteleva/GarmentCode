@@ -39,8 +39,8 @@ class EdgeSeqFactory:
         """
         # TODO fractions of curvy edges?
         frac = [abs(f) for f in frac]
-        if close_enough(sum(frac), 1, 1e-4):
-            raise RuntimeError(f'EdgeSequence::Error::fraction list does not follow the requirements')
+        if not close_enough(fsum:=sum(frac), 1, 1e-4):
+            raise RuntimeError(f'EdgeSequence::Error::fraction is incorrect. The sum {fsum} is not 1')
 
         vec = np.asarray(end) - np.asarray(start)
         verts = [start]

@@ -8,7 +8,7 @@ from ._generic_utils import close_enough
 class StitchingRule():
     """High-level stitching instructions connecting two component interfaces
     """
-    def __init__(self, int1, int2) -> None:
+    def __init__(self, int1:Interface, int2:Interface) -> None:
         """NOTE: When connecting interfaces with different edge count on both sides, 
             note that the edge sequences change their structure.
             Use of the same interfaces in other stitches (creating 3+way stitch edge) may fail. 
@@ -19,7 +19,12 @@ class StitchingRule():
 
         if not self.isMatching():
             self.match_edge_count()
-            
+
+        if not close_enough(len1:=int1.projecting_edges().length(), len2:=int2.projecting_edges().length(), 0.1):
+            print(
+                f'{self.__class__.__name__}::Warning::Projected edges do not match in the stitch: \n'
+                f'{len1}: {int1}\n{len2}: {int2}')
+    
 
     def isMatching(self):
         return len(self.int1) == len(self.int2)
@@ -55,29 +60,25 @@ class StitchingRule():
             # SIM specific
         """
 
-        # Eval the fraction corresponding to every segment in the "from" interface
+        # Eval the fractions corresponding to every segments in the interfaces
         # Using projecting edges to match desired gather patterns
-        lengths1 = self.int1.projecting_edges().lengths()
-        if not self.isTraversalMatching():      # Make sure connectivity order will be correct even if edge directions are not aligned
-            lengths1.reverse()
+        frac1 = self.int1.projecting_edges().fractions()
+        if not self.isTraversalMatching():      # match the other edge orientation before passing on
+            frac1.reverse()
 
-        lengths2 = self.int2.projecting_edges().lengths()
-        if not self.isTraversalMatching():      # Make sure connectivity order will be correct even if edge directions are not aligned
-            lengths2.reverse()   # match the other edge orientation before passing on
+        frac2 = self.int2.projecting_edges().fractions()
+        if not self.isTraversalMatching():      # match the other edge orientation before passing on
+            frac2.reverse()   
 
-        if not close_enough(sum(lengths1), sum(lengths2), tol):
-            # TODO Can we do it for fraction now that we figured out length??
-            raise RuntimeError(f'{self.__class__.__name__}::Error::Projected edges do not match for two stitches')
-
-        self._match_side_count(self.int1, lengths2, tol=tol)
-        self._match_side_count(self.int2, lengths1, tol=tol)
+        self._match_side_count(self.int1, frac2, tol=tol)
+        self._match_side_count(self.int2, frac1, tol=tol)
 
     def _match_side_count(self, inter:Interface, to_add, tol=0.1):
         """Add the vertices at given location to the edge sequence in a given interface
 
         Parameters:
             * inter -- interface to modify
-            * to_add -- the length of segements to be projects onto the edge sequence in the inter
+            * to_add -- the faractions of segements to be projected onto the edge sequence in the inter
             * tol -- the proximity of vertices when they can be regarded as the same vertex.  
                     NOTE: tol should be shorter then the smallest expected edge
         """
@@ -88,8 +89,10 @@ class StitchingRule():
         # Go over the edges keeping track of their fractions
         add_id, in_id = 0, 0
         covered_init, covered_added = 0, 0
+        total_len = inter.projecting_edges().length()
         while in_id < len(inter.edges) and add_id < len(to_add):
-            next_init = covered_init + inter.projecting_edges()[in_id].length()  # projected edges though
+            # projected edges since they represent the stitch sizes
+            next_init = covered_init + inter.projecting_edges()[in_id].length() / total_len
             next_added = covered_added + to_add[add_id]
             if close_enough(next_init, next_added, tol):
                 # the vertex exists, skip
@@ -104,8 +107,9 @@ class StitchingRule():
                 # add a vertex to the edge at the new location
                 # Eval on projected edge
                 projected_edge = inter.projecting_edges()[in_id]
-                new_v_loc = projected_edge.length() - (next_init - next_added)
-                frac = new_v_loc / projected_edge.length()
+                projected_edge_frac = projected_edge.length() / total_len
+                new_v_loc = projected_edge_frac - (next_init - next_added)
+                frac = new_v_loc / projected_edge_frac
                 base_edge = inter.edges[in_id]
 
                 # add with the same fraction to the base edge
@@ -121,7 +125,7 @@ class StitchingRule():
                 # next step
                 in_id += 1
                 add_id += 1
-                covered_init += subdiv[0].length()
+                covered_init += subdiv[0].length() / total_len
                 covered_added = next_added
 
         if add_id != len(to_add):
