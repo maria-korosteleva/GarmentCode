@@ -20,7 +20,10 @@ class StitchingRule():
         if not self.isMatching():
             self.match_edge_count()
 
-        if not close_enough(len1:=int1.projecting_edges().length(), len2:=int2.projecting_edges().length(), 0.1):
+        if not close_enough(
+                len1:=int1.projecting_edges().length(), 
+                len2:=int2.projecting_edges().length(), 
+                tol=0.3):   # NOTE = 3 mm
             print(
                 f'{self.__class__.__name__}::Warning::Projected edges do not match in the stitch: \n'
                 f'{len1}: {int1}\n{len2}: {int2}')
