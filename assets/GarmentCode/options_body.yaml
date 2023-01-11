@@ -5,6 +5,7 @@ body:
   sholder_w: 38
   arm_width: 30
   armscye_depth: 20  # Nape of the Neck to armscye depth on the back
+  shoulder_incl: 10  # degrees
 
   waist: 82  # 84.5
   waist_line: 37   # 40   # Nape of the Neck to waist (on the back)

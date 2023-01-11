@@ -298,14 +298,13 @@ class BodiceFrontHalfSide(pyp.Panel):
         }
 
 class BodiceFrontHalfSideAsymm(pyp.Panel):
-    def __init__(self, name, body, design, shoulder_incl, shoulder_shift=2) -> None:
+    def __init__(self, name, body, design, shoulder_shift=2) -> None:
         super().__init__(name)
 
         # TODO Optimal set of body measurements?
         design = design['bodice']
         ease = design['ease']['v'] / 4
 
-        
         armscye_depth = body['armscye_depth']
         underbust_size = body['underbust'] / 4
 
@@ -320,8 +319,9 @@ class BodiceFrontHalfSideAsymm(pyp.Panel):
         self.front_width = self.front_width + ease
         waist = front_frac * body['waist'] + ease
         shoulder_width = body['sholder_w'] / 2
+        shoulder_incl = np.tan(np.deg2rad(body['shoulder_incl'])) * self.front_width
 
-        print('front: ', self.front_width, waist)  # DEBUG
+        print('front: ', shoulder_shift, self.front_width, waist)  # DEBUG
 
 
         self.edges = pyp.esf.from_verts(
@@ -329,7 +329,7 @@ class BodiceFrontHalfSideAsymm(pyp.Panel):
             [-self.front_width, 0], 
             [-self.front_width, max_len - armscye_depth], 
             [-self.front_width, max_len + shoulder_shift], 
-            [0, max_len + shoulder_incl], 
+            [0, max_len + shoulder_shift + shoulder_incl], 
             loop=True
         )
 
@@ -618,7 +618,7 @@ class BodiceBackHalfSide(pyp.Panel):
 class BodiceBackHalfSideAsymm(pyp.Panel):
     """Panel for the front/back of upper garments"""
 
-    def __init__(self, name, body, design, shoulder_incl) -> None:
+    def __init__(self, name, body, design) -> None:
         super().__init__(name)
 
         
@@ -634,8 +634,9 @@ class BodiceBackHalfSideAsymm(pyp.Panel):
 
         waist_width = self.back_width - (self.back_width - waist) / 3   # slight inclanation on the side
 
-        shoulder_width = body['sholder_w'] / 2
+        shoulder_width = body['sholder_w'] / 2   # Might be used in the sleeves? 
         armscye_depth = body['armscye_depth']   # TODO also non-symmetric
+        shoulder_incl = np.tan(np.deg2rad(body['shoulder_incl'])) * self.back_width
 
 
         print('back: ', self.back_width, waist_width, waist)  # DEBUG
@@ -689,8 +690,8 @@ class FittedShirtHalf(pyp.Component):
 
         # Torso
         # self.ftorso = BodiceFrontHalf(f'{name}_ftorso', body_opt, design_opt).translate_by([0, 0, 20])
-        self.ftorso = BodiceFrontHalfSideAsymm(f'{name}_ftorso', body_opt, design_opt, 0, 0).translate_by([0, 0, 20])
-        self.btorso = BodiceBackHalfSideAsymm(f'{name}_btorso', body_opt, design_opt, 0).translate_by([0, 0, -20])
+        self.ftorso = BodiceFrontHalfSideAsymm(f'{name}_ftorso', body_opt, design_opt, 0).translate_by([0, 0, 20])
+        self.btorso = BodiceBackHalfSideAsymm(f'{name}_btorso', body_opt, design_opt).translate_by([0, 0, -20])
 
         # Sleeves
         if design_opt['bodice']['sleeves']['v']:
