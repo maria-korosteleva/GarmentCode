@@ -184,7 +184,7 @@ class BodiceFrontHalfFlat(pyp.Panel):
 
         # Side dart
         side_dart_from_top = body['bust_line']
-        side_d_depth = 0.8 * (front_width - bust_point)    # NOTE: calculated value
+        side_d_depth = 0.85 * (front_width - bust_point)    # NOTE: calculated value 0.8
         side_d_width = max_len - side_len
         s_edge, s_dart_edges, side_interface = pyp.ops.cut_into_edge(
             pyp.esf.dart_shape(side_d_width, side_d_depth), self.edges[1], 
@@ -195,7 +195,7 @@ class BodiceFrontHalfFlat(pyp.Panel):
 
         # Bottom dart
         bottom_d_width = front_width - waist
-        bottom_d_depth = 0.8 * (side_len - body['bust_line'])  # calculated value
+        bottom_d_depth = 0.9 * (side_len - body['bust_line'])  # calculated value 0.8
         bottom_d_position = bust_point
 
         b_edge, b_dart_edges, b_interface = pyp.ops.cut_into_edge(
@@ -220,7 +220,6 @@ class BodiceFrontHalfFlat(pyp.Panel):
             'shoulder_corner': pyp.Interface(self, [self.edges[-3], self.edges[-2]]),
             'collar_corner': pyp.Interface(self, [self.edges[-2], self.edges[-1]])
         }
-
 
 
 # DRAFT Tried proper back-front assymetry, but failed
@@ -302,7 +301,7 @@ class BodiceBackHalf(pyp.Panel):
         bottom_d_width = (body['bust'] - body['waist']) / 6
         bottom_d_depth = 0.9 * (length - body['bust_line'])  # calculated value
         bottom_d_position = body['bust_points'] / 2
-
+        
         # Overall measurements
         back_width = body['bust'] / 4 + ease
         waist = body['waist'] / 4 + ease
@@ -341,6 +340,64 @@ class BodiceBackHalf(pyp.Panel):
         # Stitch the dart
         self.stitching_rules.append((pyp.Interface(self, b_dart_edges[0]), pyp.Interface(self, b_dart_edges[1])))
 
+class BodiceBackHalfFlat(pyp.Panel):
+    """Panel for the front/back of upper garments"""
+
+    def __init__(self, name, body, design) -> None:
+        super().__init__(name)
+
+        # TODO Make an actual fitted back
+        sholder_w = body['sholder_w'] / 2
+        armscye_depth = body['armscye_depth']
+        
+        design = design['bodice']
+        length = body['waist_line']
+        ease = design['ease']['v'] / 4
+
+        
+        # Overall measurements
+        back_width = body['bust'] / 4 + ease
+        waist = body['waist'] / 4 + ease
+        waist_width = back_width  # MAximally flat
+
+        print('back: ', back_width, waist)  # DEBUG
+
+        # Base edge loop
+        self.edges = pyp.esf.from_verts(
+            [0, 0], 
+            [-waist_width, 0],
+            [-back_width, length], 
+            [0, length], 
+            loop=True)
+        
+        self.interfaces = {
+            'outside': pyp.Interface(self, self.edges[1]),
+            'inside': pyp.Interface(self, self.edges[-1]),
+            'shoulder': pyp.Interface(self, self.edges[-2]),
+            # Reference to the corners for sleeve and collar projections
+            'shoulder_corner': pyp.Interface(self, pyp.EdgeSequence(self.edges[-3], self.edges[-2])),
+            'collar_corner': pyp.Interface(self, pyp.EdgeSequence(self.edges[-2], self.edges[-1]))
+        }
+
+        # Bottom dart as cutout -- for straight line
+        bottom_d_width = back_width - waist
+        bottom_d_depth = 0.9 * (length - body['bust_line'])  # calculated value
+        bottom_d_position = body['bust_points'] / 2
+
+        b_edge, b_dart_edges, b_interface = pyp.ops.cut_into_edge(
+            pyp.esf.dart_shape(bottom_d_width, bottom_d_depth), self.edges[0], 
+            offset=bottom_d_position, right=True)
+
+        self.edges.substitute(0, b_edge)
+        self.interfaces['bottom'] = b_interface
+
+        # default placement
+        self.translate_by([0, 30 - length, 0])
+
+        # Stitch the dart
+        self.stitching_rules.append((pyp.Interface(self, b_dart_edges[0]), pyp.Interface(self, b_dart_edges[1])))
+
+
 
 # TODO Add design conditions -- e.g. with bottom dart or with ruffles
 class FittedShirtHalf(pyp.Component):
@@ -353,7 +410,7 @@ class FittedShirtHalf(pyp.Component):
         # Torso
         # self.ftorso = BodiceFrontHalf(f'{name}_ftorso', body_opt, design_opt).translate_by([0, 0, 20])
         self.ftorso = BodiceFrontHalfFlat(f'{name}_ftorso', body_opt, design_opt).translate_by([0, 0, 20])
-        self.btorso = BodiceBackHalf(f'{name}_btorso', body_opt, design_opt).translate_by([0, 0, -20])
+        self.btorso = BodiceBackHalfFlat(f'{name}_btorso', body_opt, design_opt).translate_by([0, 0, -20])
 
         # Sleeves
         sleeve_type = getattr(sleeves, design_opt['bodice']['sleeves']['v'])
