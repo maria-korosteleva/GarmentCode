@@ -327,7 +327,6 @@ class BodiceFrontHalfSideAsymm(pyp.Panel):
         self.edges = pyp.esf.from_verts(
             [0, 0], 
             [-self.front_width, 0], 
-            [-self.front_width, max_len - armscye_depth], 
             [-self.front_width, max_len + shoulder_shift], 
             [0, max_len + shoulder_shift + shoulder_incl], 
             loop=True
@@ -646,7 +645,6 @@ class BodiceBackHalfSideAsymm(pyp.Panel):
             [0, 0], 
             [-waist_width, 0],
             [-self.back_width, length - body['bust_line']],
-            [-self.back_width, length - armscye_depth],
             [-self.back_width, length],   # DRAFT shoulder_width   # Take some fabric from the shoulders
             [0, length + shoulder_incl],   # Add some fabric for the neck (inclanation of shoulders)
             loop=True)
