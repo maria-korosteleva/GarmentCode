@@ -5,7 +5,6 @@ from numpy.linalg import norm
 # Custom
 from ._generic_utils import R2D
 
-# TODO rename 
 class Edge():
     """Edge -- an individual segement of a panel border connecting two panel vertices, 
      the basic building block of panels
@@ -112,9 +111,7 @@ class Edge():
 
 
 class EdgeSequence():
-    # TODO 2D rotation of edge sequences
-    # TODO Scaling of edge sequences
-    """Represents a sequence of (chained) edges (e.g. every next edge starts from the same vertex that the previous edge ends with
+    """Represents a sequence of (possibly chained) edges (e.g. every next edge starts from the same vertex that the previous edge ends with
         and allows building some typical edge sequences
     """
     def __init__(self, *args) -> None:
@@ -197,9 +194,9 @@ class EdgeSequence():
     def append(self, item):
         if isinstance(item, Edge):
             self.edges.append(item)
-            # TODO check if chained right away!
-        elif isinstance(item, list):  # Assuming list of Edge objects
-            self.edges += item
+        elif isinstance(item, list):  # List of edge / EdgeSeq objects
+            for e in item:
+                self.append(e)
         elif isinstance(item, EdgeSequence):
             self.edges += item.edges
         else:
