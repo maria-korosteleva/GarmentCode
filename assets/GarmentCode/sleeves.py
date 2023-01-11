@@ -11,9 +11,10 @@ class SleevePanel(pyp.Panel):
         length = design_opt['sleeve']['length']['v']
         ease = design_opt['sleeve']['ease']['v']
         ruffle = design_opt['sleeve']['ruffle']['v']
+        incl = design_opt['sleeve']['inclanation']['v']
 
         width = ruffle * (arm_width + ease) / 2 
-        self.edges = pyp.esf.from_verts([0, 0], [0, width], [length, width], [length - 7, 0], loop=True)
+        self.edges = pyp.esf.from_verts([0, 0], [0, width], [length, width], [length - incl, 0], loop=True)
 
         # default placement
         self.translate_by([-length - 20, 15, 0])
@@ -48,8 +49,9 @@ class SimpleSleeve(pyp.Component):
 def ArmholeSimple(tag, body, design):
     arm_width = body['arm_width']
     ease = design['sleeve']['ease']['v'] 
+    incl = design['sleeve']['inclanation']['v']
     width = (arm_width + ease) / 2
 
-    edges = pyp.EdgeSequence(pyp.Edge([0, 0], [7, width]))
+    edges = pyp.EdgeSequence(pyp.Edge([0, 0], [incl, width]))
     
     return edges

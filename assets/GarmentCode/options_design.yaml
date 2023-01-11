@@ -10,21 +10,9 @@ design:
     ease:
       v: 1
       range: null
-    length: 
-      v: 40
-      range: null
-    bottom_d_width:
-      v: 4
-      range: null
-    side_d_depth:
-      v: 10
-      range: null
-    bottom_d_depth:
-      v: 15
-      range: null
     sleeves:
-      v: SimpleSleeve
-      range: [SimpleSleeve, ArmholeSimple]
+      v: ArmholeSimple
+      range: [SimpleSleeve, ArmholeSimple, null]  # NOTE Null is only for degubbing purposes. Does not produce correct pattern
     f_collar: 
       v: VNeckHalf
       range: [VNeckHalf]
@@ -47,6 +35,9 @@ design:
       range: [1, 20]
     ease:
       v: 3
+      range: null
+    inclanation: 
+      v: 5
       range: null
 
   skirt: 
