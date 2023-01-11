@@ -64,12 +64,17 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
     shortcut = np.array([corner_shape[0].start, corner_shape[-1].end]) 
 
     # find translation s.t. start of shortcut is on [v1,vc], and end of shortcut is on [v2,vc] -- as best as possible
-    # SLE!!! LOL
+    # Match the center of mass as init point
+    start = (v1 + vc + v2) / 3 - shortcut.mean(0)
     out = minimize(
-        _fit_translation, np.zeros(2), args=(shortcut, v1, v2, vc, _dist(v1, vc), _dist(v2, vc)))
+        _fit_translation, start, args=(shortcut, v1, v2, vc, _dist(v1, vc), _dist(v2, vc)))
     if not out.success:
         raise RuntimeError(f'Cut_corner::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
     shift = out.x
+
+    if not close_enough(out.fun):
+        print(f'Cut_corner::Warning::projection on {target_interface.panel[0].name} finished with fun={out.fun}')
+        print(out)   # TODO Better interface printing?
 
     # re-align corner_shape with found shifts
     corner_shape.snap_to([
