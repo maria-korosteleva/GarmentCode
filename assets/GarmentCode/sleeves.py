@@ -52,6 +52,30 @@ def ArmholeSimple(tag, body, design):
     incl = design['sleeve']['inclanation']['v']
     width = (arm_width + ease) / 2
 
-    edges = pyp.EdgeSequence(pyp.Edge([0, 0], [incl, width]))
+    edges_front = pyp.EdgeSequence(pyp.Edge([0, 0], [incl, width]))
+    edges_back = pyp.EdgeSequence(pyp.Edge([0, 0], [incl, width]))
+    
+    return edges_front, edges_back
+
+# TODO parameters are a bit stupid
+def ArmholeSquare(tag, body, design, shift, incl):
+    arm_width = body['arm_width']
+    ease = design['sleeve']['ease']['v'] 
+    # DRAFT incl = design['sleeve']['inclanation']['v']
+    width = (arm_width + ease) / 2
+
+    edges_front = pyp.esf.from_verts([0, 0], [incl, 0],  [incl, width + shift])
+    edges_back = pyp.esf.from_verts([0, 0], [incl, 0],  [incl, width - shift])
+    
+    return edges_front, edges_back
+
+
+def ArmholeSquareSide(tag, body, design, shift, incl):
+    arm_width = body['arm_width']
+    ease = design['sleeve']['ease']['v'] 
+    # DRAFT incl = design['sleeve']['inclanation']['v']
+    width = (arm_width + ease) / 2
+
+    edges = pyp.esf.from_verts([0, 0], [incl, 0],  [incl, width + shift])
     
     return edges

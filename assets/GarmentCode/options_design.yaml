@@ -11,8 +11,8 @@ design:
       v: 1
       range: null
     sleeves:
-      v: ArmholeSimple
-      range: [SimpleSleeve, ArmholeSimple, null]  # NOTE Null is only for degubbing purposes. Does not produce correct pattern
+      v: ArmholeSquare
+      range: [SimpleSleeve, ArmholeSimple, ArmholeSquare, null]  # NOTE Null is only for degubbing purposes. Does not produce correct pattern
     f_collar: 
       v: VNeckHalf
       range: [VNeckHalf]
@@ -37,7 +37,7 @@ design:
       v: 3
       range: null
     inclanation: 
-      v: 5
+      v: 3
       range: null
 
   skirt: 
