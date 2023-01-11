@@ -69,7 +69,6 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
         _fit_translation, np.zeros(2), args=(shortcut, v1, v2, vc, _dist(v1, vc), _dist(v2, vc)))
     if not out.success:
         raise RuntimeError(f'Cut_corner::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
-    shifted = shortcut + out.x
     shift = out.x
 
     # re-align corner_shape with found shifts
@@ -77,33 +76,6 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
         corner_shape[0].start[0] + shift[0], 
         corner_shape[0].start[1] + shift[1]
         ])
-
-    # Then, find scaling parameter that allows to place the end vertces exactly -- another SLE
-    if not close_enough(out.fun, tol=1e-3):  
-        # TODO this part is NOT properly tested!!!! 
-
-        # Fit with translation is not perfect -- try to adjust the length
-        out = minimize(
-            _fit_scale, np.zeros(2), args=(shifted, v1, v2, vc, _dist(v1, vc), _dist(v2, vc)))
-        if not out.success:
-            raise RuntimeError(f'Cut_corner::Error::finding the projection (scaling) is unsuccessful. Likely an error in edges choice')
-
-        shifted[0] += (shifted[0] - shifted[1]) * out.x[0]
-        shifted[1] += (shifted[1] - shifted[0]) * out.x[1]  
-
-        # DEBUG
-        print(f'Cut_corner::WARNING!!::Using untested re-scaling of edges')
-        print(shifted)
-        print(f'Predicted:  {out.x}, func value {out.fun}')  # {shortcut + shift},
-        print(f'Predicted:  {out}')  # {shortcut + shift},
-
-        scale = _dist(shifted[0], shifted[1]) / _dist(shortcut[1], shortcut[0])
-
-        # move the sequence s.t. the initial vertex is places correctly
-        corner_shape.snap_to((shifted[0] - shifted[1]) * out.x[0])
-
-        # Move internal vertices according to predicred scale s.w. the final vertex can be placed correctly
-        corner_shape.extend(scale)
     
     # ----- UPD panel ----
     # Complete to the full corner -- connect with the initial vertices
