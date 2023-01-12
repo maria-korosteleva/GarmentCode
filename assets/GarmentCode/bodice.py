@@ -694,7 +694,7 @@ class BodiceBackHalfSideAsymm(pyp.Panel):
         self.edges = pyp.esf.from_verts(
             [0, 0], 
             [-waist_width, 0],
-            [-self.back_width, length - body['bust_line']],
+            [-self.back_width, body['waist_line'] - body['bust_line']],  # from the bottom
             [-self.back_width, length],   # DRAFT shoulder_width   # Take some fabric from the shoulders
             [0, length + shoulder_incl],   # Add some fabric for the neck (inclanation of shoulders)
             loop=True)
@@ -789,6 +789,9 @@ class FittedShirtHalf(pyp.Component):
         self.stitching_rules.append((self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
         self.stitching_rules.append((self.ftorso.interfaces['shoulder'], self.btorso.interfaces['shoulder']))  # tops
 
+        # DEBUG
+        print('Front ls: ', self.ftorso.interfaces['outside'].edges.length(), self.ftorso.interfaces['outside'].edges.lengths())
+        print('Back ls: ', self.ftorso.interfaces['outside'].edges.length(), self.btorso.interfaces['outside'].edges.lengths())
 
         self.interfaces = [
             self.ftorso.interfaces['inside'],  

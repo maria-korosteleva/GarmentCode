@@ -1,4 +1,5 @@
 from numpy.linalg import norm
+import numpy as np
 
 # Custom
 from .edge_factory import EdgeSeqFactory
@@ -18,7 +19,7 @@ class StitchingRule():
         self.int2 = int2
 
         if not self.isMatching():
-            self.match_edge_count()
+            self.match_interfaces()
 
         if not close_enough(
                 len1:=int1.projecting_edges().length(), 
@@ -29,8 +30,12 @@ class StitchingRule():
                 f'{len1}: {int1}\n{len2}: {int2}')
     
 
-    def isMatching(self):
-        return len(self.int1) == len(self.int2)
+    def isMatching(self, tol=0.1):
+        # if both the breakdown and relative partitioning is similar
+        return (len(self.int1) == len(self.int2) 
+                and np.allclose(
+                    self.int1.edges.fractions(), 
+                    self.int2.edges.fractions(), atol=tol))
 
 
     def isTraversalMatching(self):
@@ -54,9 +59,10 @@ class StitchingRule():
         return True
 
 
-    def match_edge_count(self, tol=0.1):
-        """ Subdivide the interface edges on both sides s.t. they have the matching number of edges on each side and
-            can be safely connected
+    def match_interfaces(self, tol=0.1):
+        """ Subdivide the interface edges on both sides s.t. they are matching 
+            and can be safely connected
+            (same number of edges on each side and same relative fractions)
         
             Serializable format does not natively support t-stitches, 
             so the longer edges needs to be broken down into matching segments
@@ -73,10 +79,10 @@ class StitchingRule():
         if not self.isTraversalMatching():      # match the other edge orientation before passing on
             frac2.reverse()   
 
-        self._match_side_count(self.int1, frac2, tol=tol)
-        self._match_side_count(self.int2, frac1, tol=tol)
+        self._match_to_fractions(self.int1, frac2, tol=tol)
+        self._match_to_fractions(self.int2, frac1, tol=tol)
 
-    def _match_side_count(self, inter:Interface, to_add, tol=0.1):
+    def _match_to_fractions(self, inter:Interface, to_add, tol=0.1):
         """Add the vertices at given location to the edge sequence in a given interface
 
         Parameters:
