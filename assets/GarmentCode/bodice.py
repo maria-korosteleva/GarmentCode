@@ -356,6 +356,7 @@ class BodiceFrontHalfSideAsymm(pyp.Panel):
 
         # TODO check the length of the waist now and adjust
         # DEBUG
+        print('Front side w: ', self.front_width * 2)
         print(
             'Front after side_dart: ', 
             self.edges[0].length(), waist, 
@@ -376,9 +377,9 @@ class BodiceFrontHalfSideAsymm(pyp.Panel):
         #     (pyp.Interface(self, s_dart_edges[0]), pyp.Interface(self, s_dart_edges[1])))
 
         # Bottom dart
-        # DRAFT bottom_d_width = (self.front_width - waist) * 2 / 3
-        bottom_d_width = self.edges[0].length() - waist
-        if bottom_d_width > 0:
+        bottom_d_width = (self.front_width - waist) * 2 / 3
+        # DRAFT bottom_d_width = self.edges[0].length() - waist
+        if bottom_d_width > 0:  # TODO remove conditionining if this works
             bottom_d_depth = 0.98 * (side_len - body['bust_line'])  # calculated value 0.8
             bottom_d_position = bust_point
 
@@ -395,6 +396,8 @@ class BodiceFrontHalfSideAsymm(pyp.Panel):
 
         # Take some fabric from side in the bottom 
         #  DRAFT b_edge[-1].end[0] += (self.front_width - waist) / 3 
+        # get the proper waist size regardless of dart inclination
+        b_edge[-1].end[0] = - (waist + bottom_d_width)
 
         # Take some fabric from the shoulders
         # DRAFT self.edges[-2].start[0] = -shoulder_width 
@@ -673,6 +676,8 @@ class BodiceBackHalfSideAsymm(pyp.Panel):
 
         waist_width = self.back_width - (self.back_width - waist) / 3   # slight inclanation on the side
 
+        print('Back side w: ', self.back_width * 2)
+
         # shoulder incl
         shoulder_width = body['sholder_w'] / 2   # Might be used in the sleeves? 
         armscye_depth = body['armscye_depth']   # TODO also non-symmetric
@@ -711,7 +716,7 @@ class BodiceBackHalfSideAsymm(pyp.Panel):
             offset=bottom_d_position, right=True)
 
         self.edges.substitute(0, b_edge)
-        self.interfaces['bottom'] = b_interface
+        self.interfaces['bottom'] = pyp.Interface(self, b_interface)
 
         # default placement
         self.translate_by([0, 30 - length, 0])
@@ -733,6 +738,13 @@ class FittedShirtHalf(pyp.Component):
         # self.ftorso = BodiceFrontHalf(f'{name}_ftorso', body_opt, design_opt).translate_by([0, 0, 20])
         self.ftorso = BodiceFrontHalfSideAsymm(f'{name}_ftorso', body_opt, design_opt, 0).translate_by([0, 0, 20])
         self.btorso = BodiceBackHalfSideAsymm(f'{name}_btorso', body_opt, design_opt).translate_by([0, 0, -20])
+
+        print(
+            'Final waist: ',
+            2* (self.ftorso.interfaces['bottom'].edges.length() + self.btorso.interfaces['bottom'].edges.length()),
+            self.ftorso.interfaces['bottom'].edges.length(),
+            self.btorso.interfaces['bottom'].edges.length()
+        )
 
         # Sleeves
         if design_opt['bodice']['sleeves']['v']:
