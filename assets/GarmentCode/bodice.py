@@ -307,13 +307,11 @@ class BodiceFrontHalfSideAsymm(pyp.Panel):
         m_bust = body['bust'] + design['ease']['v']
         m_waist = body['waist'] + design['ease']['v']
 
-        ease = design['ease']['v'] / 4
-
         armscye_depth = body['armscye_depth']
         underbust_size = body['underbust'] / 4
 
         # sizes
-        side_len = body['waist_line']
+        
         max_len = body['waist_over_bust_line']
         bust_point = body['bust_points'] / 2
 
@@ -323,6 +321,12 @@ class BodiceFrontHalfSideAsymm(pyp.Panel):
         waist = front_frac * m_waist
         shoulder_width = body['sholder_w'] / 2
         shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.front_width
+
+        # side length is adjusted due to shoulder inclanation
+        # for the correct sleeve fitting
+        #DRAFT side_len = body['waist_line']
+        fb_diff = (front_frac - (0.5 - front_frac)) * body['bust']
+        side_len = body['waist_line'] - sh_tan * fb_diff
 
 
         self.edges = pyp.esf.from_verts(
@@ -334,7 +338,7 @@ class BodiceFrontHalfSideAsymm(pyp.Panel):
         )
 
         # Side dart
-        side_dart_from_top = body['bust_line']   # TODO Should it also be adjusted? 
+        side_d_loc = body['waist_line'] - body['bust_line']
         side_d_depth = 0.85 * (self.front_width - bust_point)    # 0.85 NOTE: calculated value 0.8
 
         # DRAFT  calculated dart
@@ -373,7 +377,7 @@ class BodiceFrontHalfSideAsymm(pyp.Panel):
         side_d_width = max_len - side_len
         s_edge, s_dart_edges, side_interface = pyp.ops.cut_into_edge(
             pyp.esf.dart_shape(side_d_width, side_d_depth), self.edges[1], 
-            offset=side_len - side_dart_from_top + side_d_width / 2, right=True)
+            offset=side_d_loc + side_d_width / 2, right=True)
         self.edges.substitute(1, s_edge)
         self.stitching_rules.append(
             (pyp.Interface(self, s_dart_edges[0]), pyp.Interface(self, s_dart_edges[1])))
@@ -687,8 +691,9 @@ class BodiceBackHalfSideAsymm(pyp.Panel):
 
         # side length is adjusted due to shoulder inclanation
         # for the correct sleeve fitting
-        fb_diff = ((0.5 - back_fraction) - back_fraction) * body['bust']
-        length = body['waist_line'] + sh_tan * fb_diff
+        # DRAFT fb_diff = ((0.5 - back_fraction) - back_fraction) * body['bust']
+        # length = body['waist_line'] + sh_tan * fb_diff
+        length = body['waist_line']
 
         # Base edge loop
         self.edges = pyp.esf.from_verts(
