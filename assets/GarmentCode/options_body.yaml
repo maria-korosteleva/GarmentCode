@@ -9,7 +9,7 @@ body:
 
   waist: 82  # 84.5
   waist_line: 37   # 40   # Nape of the Neck to waist (on the back)
-  waist_over_bust_line: 43   #43 -- measurement + addition for the shoulder  # 47
+  waist_over_bust_line: 40   #43 -- measurement + addition for the shoulder  # 47
 
   bust_line: 23 # 25  # 30   # 28
   bust: 96

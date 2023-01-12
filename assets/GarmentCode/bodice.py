@@ -331,7 +331,7 @@ class BodiceFrontHalfSideAsymm(pyp.Panel):
 
         # Side dart
         side_dart_from_top = body['bust_line']
-        side_d_depth = 0.85 * (self.front_width - bust_point)    # NOTE: calculated value 0.8
+        side_d_depth = 0.98 * (self.front_width - bust_point)    # 0.85 NOTE: calculated value 0.8
         side_d_width = max_len - side_len
 
         side_edges, _, side_interface, side_dart_stitch = pyp.esf.side_with_dart_by_len(
@@ -352,10 +352,18 @@ class BodiceFrontHalfSideAsymm(pyp.Panel):
         self.stitching_rules.append(side_dart_stitch)
 
         # TODO check the length of the waist now and adjust
+        # DEBUG
         print(
             'Front after side_dart: ', 
             self.edges[0].length(), waist, 
             side_interface.edges.length())
+        print(
+            'Front: side diff: ', 
+            self.front_width - self.edges[0].length(),
+            (self.front_width - waist) / 3 * 2/3,
+            (body['bust'] - body['waist']) / 6 * 2/3, 
+            self.edges[0].length() - waist
+            )
 
         # s_edge, s_dart_edges, side_interface = pyp.ops.cut_into_edge(
         #     pyp.esf.dart_shape(side_d_width, side_d_depth), self.edges[1], 
@@ -365,16 +373,22 @@ class BodiceFrontHalfSideAsymm(pyp.Panel):
         #     (pyp.Interface(self, s_dart_edges[0]), pyp.Interface(self, s_dart_edges[1])))
 
         # Bottom dart
-        bottom_d_width = (self.front_width - waist) * 2 / 3
-        bottom_d_depth = 0.98 * (side_len - body['bust_line'])  # calculated value 0.8
-        bottom_d_position = bust_point
+        # DRAFT bottom_d_width = (self.front_width - waist) * 2 / 3
+        bottom_d_width = self.edges[0].length() - waist
+        if bottom_d_width > 0:
+            bottom_d_depth = 0.98 * (side_len - body['bust_line'])  # calculated value 0.8
+            bottom_d_position = bust_point
 
-        b_edge, b_dart_edges, b_interface = pyp.ops.cut_into_edge(
-            pyp.esf.dart_shape(bottom_d_width, bottom_d_depth), self.edges[0], 
-            offset=bottom_d_position, right=True)
-        self.edges.substitute(0, b_edge)
-        self.stitching_rules.append(
-            (pyp.Interface(self, b_dart_edges[0]), pyp.Interface(self, b_dart_edges[1])))
+            b_edge, b_dart_edges, b_interface = pyp.ops.cut_into_edge(
+                pyp.esf.dart_shape(bottom_d_width, bottom_d_depth), self.edges[0], 
+                offset=bottom_d_position, right=True)
+            self.edges.substitute(0, b_edge)
+            self.stitching_rules.append(
+                (pyp.Interface(self, b_dart_edges[0]), pyp.Interface(self, b_dart_edges[1])))
+
+        else:
+            # maybe it's ok though..
+            raise RuntimeError('BodiceFront::Error::Wrong fitting')
 
         # Take some fabric from side in the bottom 
         #  DRAFT b_edge[-1].end[0] += (self.front_width - waist) / 3 
