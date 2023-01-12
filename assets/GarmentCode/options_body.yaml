@@ -9,13 +9,13 @@ body:
 
   waist: 82  # 84.5
   waist_line: 37   # 40   # Nape of the Neck to waist (on the back)
-  waist_over_bust_line: 40   #43 -- measurement + addition for the shoulder  # 47
+  waist_over_bust_line: 43   #43 -- measurement + addition for the shoulder  # 47
 
-  bust_line: 23 # 25  # 30   # 28
+  bust_line: 25 # 25  # 30   # 28
   bust: 96
   bust_points: 23
   underbust: 83
-  back_width: 42  # 32 + 2 * between-size
+  back_width: 38  #42  # 32 + 2 * between-size
 
   hips: 110   # TODO check the measurements though!
   crotch_depth: 27  # 27
