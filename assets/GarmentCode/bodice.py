@@ -377,7 +377,7 @@ class BodiceFrontHalfSideAsymm(pyp.Panel):
             (pyp.Interface(self, b_dart_edges[0]), pyp.Interface(self, b_dart_edges[1])))
 
         # Take some fabric from side in the bottom 
-        b_edge[-1].end[0] += (self.front_width - waist) / 3 
+        #  DRAFT b_edge[-1].end[0] += (self.front_width - waist) / 3 
 
         # Take some fabric from the shoulders
         # DRAFT self.edges[-2].start[0] = -shoulder_width 
