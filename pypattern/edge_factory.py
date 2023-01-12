@@ -5,7 +5,7 @@ from numpy.linalg import norm
 
 # Custom
 from .edge import EdgeSequence, Edge
-from ._generic_utils import vector_angle, close_enough
+from .generic_utils import vector_angle, close_enough
 from .interface import Interface
 from scipy.optimize import minimize
 

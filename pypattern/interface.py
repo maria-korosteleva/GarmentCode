@@ -3,7 +3,7 @@ from numpy.linalg import norm
 
 # Custom
 from .edge import EdgeSequence
-from ._generic_utils import close_enough
+from .generic_utils import close_enough
 
 class Interface():
     """Description of an interface of a panel or component

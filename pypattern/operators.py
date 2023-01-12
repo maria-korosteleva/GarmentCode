@@ -9,7 +9,7 @@ from scipy.optimize import minimize
 # Custom 
 from .edge import Edge, EdgeSequence
 from .interface import Interface
-from ._generic_utils import vector_angle, close_enough
+from .generic_utils import vector_angle, close_enough
 from .base import BaseComponent
 
 # ANCHOR ----- Edge Sequences Modifiers ----

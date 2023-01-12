@@ -3,7 +3,7 @@ import numpy as np
 from numpy.linalg import norm
 
 # Custom
-from ._generic_utils import R2D
+from .generic_utils import R2D
 
 class Edge():
     """Edge -- an individual segement of a panel border connecting two panel vertices, 

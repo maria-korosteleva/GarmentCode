@@ -3,7 +3,7 @@ from numpy.linalg import norm
 # Custom
 from .edge_factory import EdgeSeqFactory
 from .interface import Interface
-from ._generic_utils import close_enough
+from .generic_utils import close_enough
 
 class StitchingRule():
     """High-level stitching instructions connecting two component interfaces
