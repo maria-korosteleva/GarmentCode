@@ -303,6 +303,10 @@ class BodiceFrontHalfSideAsymm(pyp.Panel):
 
         # TODO Optimal set of body measurements?
         design = design['bodice']
+        # account for ease in basic measurements
+        m_bust = body['bust'] + design['ease']['v']
+        m_waist = body['waist'] + design['ease']['v']
+
         ease = design['ease']['v'] / 4
 
         armscye_depth = body['armscye_depth']
@@ -313,13 +317,13 @@ class BodiceFrontHalfSideAsymm(pyp.Panel):
         max_len = body['waist_over_bust_line']
         bust_point = body['bust_points'] / 2
 
-        self.front_width = (body['bust'] - body['back_width']) / 2
-        front_frac = self.front_width / body['bust'] 
+        front_frac = (body['bust'] - body['back_width']) / 2 / body['bust'] 
 
-        self.front_width = self.front_width + ease
-        waist = front_frac * body['waist'] + ease
+        self.front_width = front_frac * m_bust
+        waist = front_frac * m_waist
         shoulder_width = body['sholder_w'] / 2
-        shoulder_incl = np.tan(np.deg2rad(body['shoulder_incl'])) * self.front_width
+        shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.front_width
+
 
         self.edges = pyp.esf.from_verts(
             [0, 0], 
@@ -330,9 +334,8 @@ class BodiceFrontHalfSideAsymm(pyp.Panel):
         )
 
         # Side dart
-        side_dart_from_top = body['bust_line']
-        side_d_depth = 0.98 * (self.front_width - bust_point)    # 0.85 NOTE: calculated value 0.8
-        side_d_width = max_len - side_len
+        side_dart_from_top = body['bust_line']   # TODO Should it also be adjusted? 
+        side_d_depth = 0.9 * (self.front_width - bust_point)    # 0.85 NOTE: calculated value 0.8
 
         side_edges, _, side_interface, side_dart_stitch = pyp.esf.side_with_dart_by_len(
             self.edges[1].start, self.edges[1].end, 
@@ -657,20 +660,28 @@ class BodiceBackHalfSideAsymm(pyp.Panel):
 
         
         design = design['bodice']
-        length = body['waist_line']
-        ease = design['ease']['v'] / 4
+
+        # account for ease in basic measurements
+        m_bust = body['bust'] + design['ease']['v']
+        m_waist = body['waist'] + design['ease']['v']
 
         # Overall measurements
-        back_fraction = body['back_width'] / body['bust']
-
-        self.back_width = body['back_width'] / 2 + ease
-        waist = back_fraction * body['waist'] / 2 + ease
+        back_fraction = body['back_width'] / body['bust'] / 2
+        
+        self.back_width = back_fraction * m_bust
+        waist = back_fraction * m_waist
 
         waist_width = self.back_width - (self.back_width - waist) / 3   # slight inclanation on the side
 
+        # shoulder incl
         shoulder_width = body['sholder_w'] / 2   # Might be used in the sleeves? 
         armscye_depth = body['armscye_depth']   # TODO also non-symmetric
-        shoulder_incl = np.tan(np.deg2rad(body['shoulder_incl'])) * self.back_width
+        shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.back_width
+
+        # side length is adjusted due to shoulder inclanation
+        # for the correct sleeve fitting
+        fb_diff = ((0.5 - back_fraction) - back_fraction) * body['bust']
+        length = body['waist_line'] + sh_tan * fb_diff
 
         # Base edge loop
         self.edges = pyp.esf.from_verts(
@@ -689,8 +700,6 @@ class BodiceBackHalfSideAsymm(pyp.Panel):
             'shoulder_corner': pyp.Interface(self, pyp.EdgeSequence(self.edges[-3], self.edges[-2])),
             'collar_corner': pyp.Interface(self, pyp.EdgeSequence(self.edges[-2], self.edges[-1]))
         }
-
-        print('Back side expectation: ', self.interfaces['outside'].edges.length())  # DEBUG
 
         # Bottom dart as cutout -- for straight line
         bottom_d_width = (self.back_width - waist) * 2 / 3
@@ -751,10 +760,6 @@ class FittedShirtHalf(pyp.Component):
             #     # Simply do the projection -- no new stitches needed
             #     pyp.ops.cut_corner(self.sleeve[0], self.ftorso.interfaces['shoulder_corner'])
             #     pyp.ops.cut_corner(self.sleeve[1], self.btorso.interfaces['shoulder_corner'])
-
-        print('Back side expectation after cut: ', self.btorso.interfaces['outside'].edges.length())  # DEBUG
-        print('Front side expectation after cut: ', self.ftorso.interfaces['outside'].edges.length())  # DEBUG
-
 
         # Collars
         # TODO collars with extra panels!
