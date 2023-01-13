@@ -43,15 +43,19 @@ class Panel(BaseComponent):
 
         return self
     
-    def rotate_by(self, delta_rotation):
-        """Rotate panel by a given rotation"""
+    def rotate_by(self, delta_rotation: R):
+        """Rotate panel by a given rotation
+            * delta_rotation: scipy rotation object
+        """
         self.rotation = delta_rotation * self.rotation
         self.autonorm()
 
         return self
 
     def rotate_to(self, new_rot: R):
-        """Set panel rotation to be exactly given rotation"""   
+        """Set panel rotation to be exactly the given rotation
+            * new_rot: scipy rotation object
+        """   
         if not isinstance(new_rot, R):
             raise ValueError(f'{self.__class__.__name__}::Error::Only accepting rotations in scipy format')
         self.rotation = new_rot
