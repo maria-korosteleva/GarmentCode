@@ -98,11 +98,7 @@ class Panel(BaseComponent):
         if close_enough(axis[0], tol=1e-4):  # reflection around Y
 
             # Vertices
-            # FIXME Use reflect function inslead!
-            for i in range(len(self.edges) - 1):
-                # Swap the x of end vertex only 
-                # TODO multiple edge loops??
-                self.edges[i].end[0] *= -1
+            self.edges.reflect([0, 0], [0, 1])
             
             # Position
             self.translation[0] *= -1
