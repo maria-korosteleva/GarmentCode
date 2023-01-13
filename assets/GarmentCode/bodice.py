@@ -144,23 +144,44 @@ class BodiceBackHalf(pyp.Panel):
 class FittedShirtHalf(pyp.Component):
     """Definition of a simple T-Shirt"""
 
-    def __init__(self, name, body_opt, design_opt) -> None:
+    def __init__(self, name, body, design) -> None:
         super().__init__(name)
 
         # Torso
-        self.ftorso = BodiceFrontHalf(f'{name}_ftorso', body_opt, design_opt).translate_by([0, 0, 20])
-        self.btorso = BodiceBackHalf(f'{name}_btorso', body_opt, design_opt).translate_by([0, 0, -20])
+        self.ftorso = BodiceFrontHalf(f'{name}_ftorso', body, design).translate_by([0, 0, 20])
+        self.btorso = BodiceBackHalf(f'{name}_btorso', body, design).translate_by([0, 0, -20])
 
         # Sleeves
-        if design_opt['bodice']['sleeves']['v']:
+        if design['bodice']['sleeve_shape']['v']:
             
-            incl = design_opt['sleeve']['inclanation']['v']
+            incl = design['sleeve']['inclanation']['v']
             diff = self.ftorso.front_width - self.btorso.back_width
-            front_sl = sleeves.ArmholeSquareSide('', body_opt, design_opt, shift=0, incl=incl + diff)
-            back_sl = sleeves.ArmholeSquareSide('', body_opt, design_opt, shift=0, incl=incl)
+
+            self.sleeve = sleeves.SleeveSquareOpening(name, body, incl, width_shift=0, depth_diff=diff)
+
+            # DEBUG 
+            front_sl = sleeves.ArmholeSquareSide('', body, design, shift=0, incl=incl + diff)
+            back_sl = sleeves.ArmholeSquareSide('', body, design, shift=0, incl=incl)
+
+            print('Original shapes')
+            print('Front: ', front_sl)
+            print('Back: ', back_sl)
             
-            pyp.ops.cut_corner(front_sl, self.ftorso.interfaces['shoulder_corner'])
-            pyp.ops.cut_corner(back_sl, self.btorso.interfaces['shoulder_corner'])
+            _, f_sleeve_int = pyp.ops.cut_corner(
+                self.sleeve.interfaces['front_cut'].projecting_edges(), 
+                self.ftorso.interfaces['shoulder_corner'])
+            _, b_sleeve_int = pyp.ops.cut_corner(
+                self.sleeve.interfaces['back_cut'].projecting_edges(), 
+                self.btorso.interfaces['shoulder_corner'])
+
+            if design['bodice']['sleeveless']['v']:  
+                # No sleeve component, only the cut remains
+                del self.sleeve
+            else:
+                # FIXME merging f&b into one interface results in 
+                # edge ordering ambiguity
+                self.stitching_rules.append((self.sleeve.interfaces['in_front'], f_sleeve_int))
+                self.stitching_rules.append((self.sleeve.interfaces['in_back'], b_sleeve_int))
 
             # DRAFT
             # sleeve_type = getattr(sleeves, design_opt['bodice']['sleeves']['v'])
@@ -181,12 +202,12 @@ class FittedShirtHalf(pyp.Component):
         # Collars
         # TODO collars with extra panels!
         # Front
-        collar_type = getattr(collars, design_opt['bodice']['f_collar']['v'])
-        f_collar = collar_type("", design_opt['bodice']['fc_depth']['v'], body_opt['neck_w'])
+        collar_type = getattr(collars, design['bodice']['f_collar']['v'])
+        f_collar = collar_type("", design['bodice']['fc_depth']['v'], body['neck_w'])
         pyp.ops.cut_corner(f_collar, self.ftorso.interfaces['collar_corner'])
         # Back
-        collar_type = getattr(collars, design_opt['bodice']['b_collar']['v'])
-        b_collar = collar_type("", design_opt['bodice']['bc_depth']['v'], body_opt['neck_w'])
+        collar_type = getattr(collars, design['bodice']['b_collar']['v'])
+        b_collar = collar_type("", design['bodice']['bc_depth']['v'], body['neck_w'])
         pyp.ops.cut_corner(b_collar, self.btorso.interfaces['collar_corner'])
 
         self.stitching_rules.append((self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides

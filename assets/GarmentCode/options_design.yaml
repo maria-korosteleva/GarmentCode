@@ -10,9 +10,13 @@ design:
     ease:
       v: 0
       range: null
-    sleeves:
-      v: ArmholeSquare
-      range: [SimpleSleeve, ArmholeSimple, ArmholeSquare, null]  # NOTE Null is only for degubbing purposes. Does not produce correct pattern
+    sleeve_shape:
+      v: SleeveSquareOpening
+      range: [SleeveSquare, SimpleSleeve, ArmholeSimple, ArmholeSquare, null]  # NOTE Null is only for degubbing purposes. Does not produce correct pattern
+    sleeveless: 
+      v: False
+      range: [True, False]
+    
     f_collar: 
       v: VNeckHalf
       range: [VNeckHalf]

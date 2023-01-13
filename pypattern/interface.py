@@ -55,6 +55,8 @@ class Interface():
         new_int.panel = []
         new_int.ruffle = []
         
+        # FIXME the order may not be optimal, 
+        # if the orientation of the first sequence points outside of the edge sequence
         for elem in ints:
             shift = len(new_int.edges)
             new_int.ruffle += [copy(r) for r in elem.ruffle]
