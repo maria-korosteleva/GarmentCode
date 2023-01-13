@@ -8,7 +8,7 @@ import pypattern as pyp
 from . import sleeves
 from . import collars
 
-class BodiceFrontHalfSideAsymm(pyp.Panel):
+class BodiceFrontHalf(pyp.Panel):
     def __init__(self, name, body, design) -> None:
         super().__init__(name)
 
@@ -81,7 +81,7 @@ class BodiceFrontHalfSideAsymm(pyp.Panel):
             'collar_corner': pyp.Interface(self, [self.edges[-2], self.edges[-1]])
         }
 
-class BodiceBackHalfSideAsymm(pyp.Panel):
+class BodiceBackHalf(pyp.Panel):
     """Panel for the front/back of upper garments"""
 
     def __init__(self, name, body, design) -> None:
@@ -148,8 +148,8 @@ class FittedShirtHalf(pyp.Component):
         super().__init__(name)
 
         # Torso
-        self.ftorso = BodiceFrontHalfSideAsymm(f'{name}_ftorso', body_opt, design_opt).translate_by([0, 0, 20])
-        self.btorso = BodiceBackHalfSideAsymm(f'{name}_btorso', body_opt, design_opt).translate_by([0, 0, -20])
+        self.ftorso = BodiceFrontHalf(f'{name}_ftorso', body_opt, design_opt).translate_by([0, 0, 20])
+        self.btorso = BodiceBackHalf(f'{name}_btorso', body_opt, design_opt).translate_by([0, 0, -20])
 
         # Sleeves
         if design_opt['bodice']['sleeves']['v']:
