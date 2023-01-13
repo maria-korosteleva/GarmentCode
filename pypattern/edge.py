@@ -68,6 +68,10 @@ class Edge():
         """
         return self.__str__()
 
+    def midpoint(self):
+        """Center of the edge"""
+        return (np.array(self.start) + np.array(self.end)) / 2
+
     # Actions
     def reverse(self):
         """Flip the direction of the edge"""

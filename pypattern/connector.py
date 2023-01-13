@@ -32,10 +32,15 @@ class StitchingRule():
 
     def isMatching(self, tol=0.1):
         # if both the breakdown and relative partitioning is similar
+
+        rev_frac1 = self.int1.edges.fractions()
+        rev_frac1.reverse()
+
         return (len(self.int1) == len(self.int2) 
-                and np.allclose(
-                    self.int1.edges.fractions(), 
-                    self.int2.edges.fractions(), atol=tol))
+                and (np.allclose(self.int1.edges.fractions(), self.int2.edges.fractions(), atol=tol)
+                    or np.allclose(rev_frac1, self.int2.edges.fractions(), atol=tol)
+                )
+        )
 
 
     def isTraversalMatching(self):
@@ -44,11 +49,11 @@ class StitchingRule():
         if len(self.int1.edges) > 1:
             # Make sure the direction is matching
             # 3D distance between corner vertices
-            start_1 = self.int1.panel[0].point_to_3D(self.int1.edges[0].start)
-            start_2 = self.int2.panel[0].point_to_3D(self.int2.edges[0].start)
+            start_1 = self.int1.panel[0].point_to_3D(self.int1.edges[0].midpoint())
+            start_2 = self.int2.panel[0].point_to_3D(self.int2.edges[0].midpoint())
 
-            end_1 = self.int1.panel[-1].point_to_3D(self.int1.edges[-1].end)
-            end_2 = self.int2.panel[-1].point_to_3D(self.int2.edges[-1].end)
+            end_1 = self.int1.panel[-1].point_to_3D(self.int1.edges[-1].midpoint())
+            end_2 = self.int2.panel[-1].point_to_3D(self.int2.edges[-1].midpoint())
             
             stitch_dist_straight = norm(start_2 - start_1) + norm(end_2 - end_1)
             stitch_dist_reverse = norm(start_2 - end_1) + norm(end_2 - start_1)
@@ -145,7 +150,7 @@ class StitchingRule():
         """Produce a stitch that connects two interfaces
         """
         if not self.isMatching():
-            raise RuntimeError(f'{self.__class__.__name__}::Error::Stitch sides do not matched!!')
+            raise RuntimeError(f'{self.__class__.__name__}::Error::Stitch sides do not match!!')
 
         stitches = []
         swap = not self.isTraversalMatching()  # traverse edge sequences correctly
