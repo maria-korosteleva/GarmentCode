@@ -73,8 +73,8 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
     shift = out.x
 
     if not close_enough(out.fun):
-        print(f'Cut_corner::Warning::projection on {target_interface.panel[0].name} finished with fun={out.fun}')
-        print(out)   # TODO Better interface printing?
+        print(f'Cut_corner::Warning::projection on {target_interface} finished with fun={out.fun}')
+        print(out) 
 
     # re-align corner_shape with found shifts
     corner_shape.snap_to([

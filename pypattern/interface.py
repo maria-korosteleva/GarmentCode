@@ -38,6 +38,7 @@ class Interface():
         return len(self.edges)
     
     def __str__(self) -> str:
+        # TODO More clear priting? Verbose level options?
         return f'Interface: {[p.name for p in self.panel]}: {str(self.edges)}'
     
     def __repr__(self) -> str:
