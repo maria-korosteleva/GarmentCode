@@ -8,7 +8,7 @@
 design: 
   bodice: 
     ease:
-      v: 1
+      v: 0
       range: null
     sleeves:
       v: ArmholeSquare
@@ -37,7 +37,7 @@ design:
       v: 3
       range: null
     inclanation: 
-      v: 3
+      v: 5
       range: null
 
   skirt: 

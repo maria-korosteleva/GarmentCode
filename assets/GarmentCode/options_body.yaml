@@ -1,19 +1,19 @@
 
 # Measurments of the body
 body: 
-  neck_w: 15
+  neck_w: 18
   sholder_w: 38
-  arm_width: 30
+  arm_width: 40
   armscye_depth: 20  # Nape of the Neck to armscye depth on the back
   shoulder_incl: 10  # degrees
 
-  waist: 82  # 84.5
-  waist_line: 37   # 40   # Nape of the Neck to waist (on the back)
-  waist_over_bust_line: 43   #43 -- measurement + addition for the shoulder  # 47
+  waist:  80  # 82  # 84.5
+  waist_line:  35  # 37   # 40   # Nape of the Neck to waist (on the back)
+  waist_over_bust_line: 40   #43 -- measurement + addition for the shoulder  # 47
 
-  bust_line: 25 # 25  # 30   # 28
-  bust: 96
-  bust_points: 23
+  bust_line: 23  # 30   # 28
+  bust: 96 
+  bust_points:  21 # 23
   underbust: 83
   back_width: 38  #42  # 32 + 2 * between-size
 

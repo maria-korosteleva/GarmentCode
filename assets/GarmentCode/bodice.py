@@ -339,7 +339,7 @@ class BodiceFrontHalfSideAsymm(pyp.Panel):
 
         # Side dart
         side_d_loc = body['waist_line'] - body['bust_line']
-        side_d_depth = 0.85 * (self.front_width - bust_point)    # 0.85 NOTE: calculated value 0.8
+        side_d_depth = 0.8 * (self.front_width - bust_point)    # 0.85 NOTE: calculated value 0.8
 
         # DRAFT  calculated dart
         # side_edges, _, side_interface, side_dart_stitch = pyp.esf.side_with_dart_by_len(
@@ -386,7 +386,7 @@ class BodiceFrontHalfSideAsymm(pyp.Panel):
         bottom_d_width = (self.front_width - waist) * 2 / 3
         # DRAFT bottom_d_width = self.edges[0].length() - waist
         if bottom_d_width > 0:  # TODO remove conditionining if this works
-            bottom_d_depth = 0.98 * (side_len - body['bust_line'])  # calculated value 0.8
+            bottom_d_depth = 1. * side_d_loc  # calculated value 0.8
             bottom_d_position = bust_point
 
             b_edge, b_dart_edges, b_interface = pyp.ops.cut_into_edge(
