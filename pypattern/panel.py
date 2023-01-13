@@ -79,20 +79,7 @@ class Panel(BaseComponent):
 
             NOTE: for best results, call autonorm after translation specification
         """
-
-        # center of mass
-        verts = self.edges.verts()
-        center = np.mean(verts, axis=0)
-        center_3d = self.point_to_3D(center)
-
-        # Fist vector
-        vert_0 = self.point_to_3D(self.edges[0].start)
-        vert_1 = self.point_to_3D(self.edges[0].end)
-
-        # Current norm direction
-        # Pylance + NP error for unreachanble code -- see https://github.com/numpy/numpy/issues/22146
-        # Works ok for numpy 1.23.4+
-        norm_dr = np.cross(vert_1 - vert_0, center_3d - vert_0)  # TODO Check the order
+        norm_dr = self.norm()
         
         # NOTE: Nothing happens if self.translation is zero
         if np.dot(norm_dr, self.translation) < 0: 
@@ -206,3 +193,26 @@ class Panel(BaseComponent):
 
         return point_3d
 
+    def norm(self):
+        """Normal direction for the current panel"""
+        # center of mass
+        verts = self.edges.verts()
+        center = np.mean(verts, axis=0)
+        center_3d = self.point_to_3D(center)
+
+        # To make norm evaluation work for non-convex panels
+        # Evalute norm candidates for all edges and then weight them. 
+        # The dominant norm direction should be the correct one 
+        norms = []
+        for e in self.edges:
+            vert_0 = self.point_to_3D(e.start)
+            vert_1 = self.point_to_3D(e.end)
+            # Pylance + NP error for unreachanble code -- see https://github.com/numpy/numpy/issues/22146
+            # Works ok for numpy 1.23.4+
+            norm = np.cross(vert_1 - vert_0, center_3d - vert_0)
+            norm /= np.linalg.norm(norm)
+            norms.append(norm)
+
+        # Current norm direction
+        avg_norm = sum(norms) / len(norms)
+        return avg_norm / np.linalg.norm(avg_norm)

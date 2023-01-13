@@ -190,6 +190,8 @@ class EdgeSequence():
             if e.start is not verts[-1]:  # avoid adding the vertices of chained edges twice
                 verts.append(e.start)
             verts.append(e.end)
+        if verts[0] is verts[-1]:  # don't double count the loop origin
+            verts.pop(-1)
         return verts
 
     # ANCHOR Modifiers
