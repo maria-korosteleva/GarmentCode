@@ -49,6 +49,10 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
         # Orginal edges have beed reversed in normalization or smth
         target_edges.edges.reverse()  # UPD the order
 
+    if corner_shape[0].start is corner_shape[-1].end:
+        # Orginal edges have beed reversed in normalization or smth
+        corner_shape.edges.reverse()  # UPD the order
+
     vc = np.array(target_edges[0].end)
     v1, v2 = np.array(target_edges[0].start), np.array(target_edges[1].end)
     swaped = False
@@ -60,6 +64,7 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
     if corner_shape[0].start[1] > corner_shape[-1].end[1]:
         # now corner shape is oriented the same way as vertices
         corner_shape.reverse()
+        corner_shape.snap_to([0,0])
 
     shortcut = np.array([corner_shape[0].start, corner_shape[-1].end]) 
 

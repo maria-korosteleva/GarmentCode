@@ -67,9 +67,9 @@ class Interface():
             # (following the same clockwise/counterclockwise orientation regardless of 
             # in-panel orientation)
             if len(new_int.panel) > 0 and not Interface._is_order_matching(
-                new_int.panel[-1], new_int.edges[-1].end,
-                elem.panel[0], elem.edges[0].start,
-                elem.panel[-1], elem.edges[-1].start   # start or end -- anything works for this check
+                new_int.panel[-1], new_int.edges[-1].midpoint(),
+                elem.panel[0], elem.edges[0].midpoint(),
+                elem.panel[-1], elem.edges[-1].midpoint() 
             ):
                 # swap the order of new edges
                 to_add = EdgeSequence(elem.edges)  # Edge sequence object with the same edge objects
