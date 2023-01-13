@@ -157,7 +157,7 @@ class FittedShirtHalf(pyp.Component):
             incl = design['sleeve']['inclanation']['v']
             diff = self.ftorso.front_width - self.btorso.back_width
 
-            self.sleeve = sleeves.SleeveSquareOpening(name, body, incl, width_shift=0, depth_diff=diff)
+            self.sleeve = sleeves.SleeveOpening(name, body, incl, depth_diff=diff)
 
             # DEBUG 
             front_sl = sleeves.ArmholeSquareSide('', body, design, shift=0, incl=incl + diff)
@@ -168,16 +168,17 @@ class FittedShirtHalf(pyp.Component):
             print('Back: ', back_sl)
             
             _, f_sleeve_int = pyp.ops.cut_corner(
-                self.sleeve.interfaces['front_cut'].projecting_edges(), 
+                self.sleeve.interfaces['in_front'].projecting_edges(), 
                 self.ftorso.interfaces['shoulder_corner'])
             _, b_sleeve_int = pyp.ops.cut_corner(
-                self.sleeve.interfaces['back_cut'].projecting_edges(), 
+                self.sleeve.interfaces['in_back'].projecting_edges(), 
                 self.btorso.interfaces['shoulder_corner'])
 
             if design['bodice']['sleeveless']['v']:  
                 # No sleeve component, only the cut remains
                 del self.sleeve
             else:
+                pass
                 # FIXME merging f&b into one interface results in 
                 # edge ordering ambiguity
                 self.stitching_rules.append((self.sleeve.interfaces['in_front'], f_sleeve_int))
