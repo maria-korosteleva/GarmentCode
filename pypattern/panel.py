@@ -38,7 +38,7 @@ class Panel(BaseComponent):
     
     def translate_to(self, new_translation):
         """Set panel translation to be exactly that vector"""
-        self.translation = new_translation
+        self.translation = np.asarray(new_translation)
         self.autonorm()
 
         return self
@@ -50,8 +50,10 @@ class Panel(BaseComponent):
 
         return self
 
-    def rotate_to(self, new_rot):
-        """Set panel rotation to be exactly given rotation"""
+    def rotate_to(self, new_rot: R):
+        """Set panel rotation to be exactly given rotation"""   
+        if not isinstance(new_rot, R):
+            raise ValueError(f'{self.__class__.__name__}::Error::Only accepting rotations in scipy format')
         self.rotation = new_rot
         self.autonorm()
 
@@ -105,6 +107,7 @@ class Panel(BaseComponent):
         if close_enough(axis[0], tol=1e-4):  # reflection around Y
 
             # Vertices
+            # FIXME Use reflect function inslead!
             for i in range(len(self.edges) - 1):
                 # Swap the x of end vertex only 
                 # TODO multiple edge loops??
