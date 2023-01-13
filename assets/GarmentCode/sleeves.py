@@ -48,24 +48,46 @@ class SimpleSleeve(pyp.Component):
         ]
 
 
-class SleeveOpeningPanel(pyp.Panel):
+class SleeveOpeningPanelBack(pyp.Panel):
     def __init__(self, name, body, width, low_depth, top_depth) -> None:
         super().__init__(name)
 
         self.edges = pyp.esf.from_verts(
             [0, 0], [low_depth, 0],  [low_depth, width], 
             [low_depth - top_depth, width], 
+            [low_depth * 0.2, 0.6 * width],
             loop=True)
 
         # Interfaces
         self.interfaces = {
             'in': pyp.Interface(self, self.edges[:2]),
-            'shoulder': pyp.Interface(self, self.edges[-2]),
+            'shoulder': pyp.Interface(self, self.edges[2]),
             'out': pyp.Interface(self, self.edges[-1]),
         }
 
         # Default placement
-        self.translate_to([-body['sholder_w'] / 2 - low_depth, body['waist_line'] - body['bust_line'] + 4, 0])
+        self.translate_to([-body['sholder_w'] / 2 - low_depth, body['height'] - body['head_l'] - body['armscye_depth'] + 4, 0])
+
+class SleeveOpeningPanelFront(pyp.Panel):
+    def __init__(self, name, body, width, low_depth, top_depth) -> None:
+        super().__init__(name)
+
+        self.edges = pyp.esf.from_verts(
+            [0, 0], [low_depth, 0],  [low_depth, width], 
+            [low_depth - top_depth, width], 
+            [low_depth - top_depth, 0.2 * width], 
+            loop=True)
+
+        # Interfaces
+        self.interfaces = {
+            'in': pyp.Interface(self, self.edges[:2]),
+            'shoulder': pyp.Interface(self, self.edges[2]),
+            'out': pyp.Interface(self, self.edges[-1]),
+        }
+
+                # Default placement
+        self.translate_to([-body['sholder_w'] / 2 - low_depth, body['height'] - body['head_l'] - body['armscye_depth'] + 4, 0])
+
 
 class SleeveOpening(pyp.Component):
 
@@ -75,8 +97,8 @@ class SleeveOpening(pyp.Component):
         width = body['armscye_depth'] * 2
         
         # sleeves
-        self.f_sleeve = SleeveOpeningPanel(f'{tag}_f', body, width/2, inclanation + depth_diff, (inclanation + depth_diff) / 2).translate_by([0, 0, 15])
-        self.b_sleeve = SleeveOpeningPanel(f'{tag}_b', body, width/2, inclanation, (inclanation + depth_diff) / 2).translate_by([0, 0, -15])
+        self.f_sleeve = SleeveOpeningPanelFront(f'{tag}_f', body, width/2, inclanation + depth_diff, (inclanation + depth_diff) / 2).translate_by([0, 0, 15])
+        self.b_sleeve = SleeveOpeningPanelBack(f'{tag}_b', body, width/2, inclanation, (inclanation + depth_diff) / 2).translate_by([0, 0, -15])
 
         self.stitching_rules = pyp.Stitches(
             (self.f_sleeve.interfaces['shoulder'], self.b_sleeve.interfaces['shoulder']),

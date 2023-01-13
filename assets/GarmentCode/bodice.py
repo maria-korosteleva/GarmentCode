@@ -66,9 +66,6 @@ class BodiceFrontHalf(pyp.Panel):
         # Take some fabric from side in the bottom 
         b_edge[-1].end[0] = - (waist + bottom_d_width)
 
-        # default placement
-        self.translate_by([0, 30 - max_len, 0])
-
         # Interfaces
         self.interfaces = {
             'outside':  pyp.Interface(self, side_interface),   # side_interface,    # pyp.Interface(self, [side_interface]),  #, self.edges[-3]]),
@@ -80,6 +77,10 @@ class BodiceFrontHalf(pyp.Panel):
             'shoulder_corner': pyp.Interface(self, [self.edges[-3], self.edges[-2]]),
             'collar_corner': pyp.Interface(self, [self.edges[-2], self.edges[-1]])
         }
+
+        # default placement
+        self.translate_by([0, body['height'] - body['head_l'] - max_len, 0])
+
 
 class BodiceBackHalf(pyp.Panel):
     """Panel for the front/back of upper garments"""
@@ -134,7 +135,7 @@ class BodiceBackHalf(pyp.Panel):
         self.interfaces['bottom'] = pyp.Interface(self, b_interface)
 
         # default placement
-        self.translate_by([0, 30 - length, 0])
+        self.translate_by([0, body['height'] - body['head_l'] - length, 0])
 
         # Stitch the dart
         self.stitching_rules.append((pyp.Interface(self, b_dart_edges[0]), pyp.Interface(self, b_dart_edges[1])))
@@ -160,12 +161,8 @@ class FittedShirtHalf(pyp.Component):
             self.sleeve = sleeves.SleeveOpening(name, body, incl, depth_diff=diff)
 
             # DEBUG 
-            front_sl = sleeves.ArmholeSquareSide('', body, design, shift=0, incl=incl + diff)
-            back_sl = sleeves.ArmholeSquareSide('', body, design, shift=0, incl=incl)
-
-            print('Original shapes')
-            print('Front: ', front_sl)
-            print('Back: ', back_sl)
+            # front_sl = sleeves.ArmholeSquareSide('', body, design, shift=0, incl=incl + diff)
+            # back_sl = sleeves.ArmholeSquareSide('', body, design, shift=0, incl=incl)
             
             _, f_sleeve_int = pyp.ops.cut_corner(
                 self.sleeve.interfaces['in_front'].projecting_edges(), 
