@@ -10,7 +10,7 @@ from pattern.wrappers import VisPattern
 from .base import BaseComponent
 from .edge import EdgeSequence
 from .connector import Stitches
-from .generic_utils import close_enough
+from .generic_utils import close_enough, vector_align_3D
 
 class Panel(BaseComponent):
     """ A Base class for defining a Garment component corresponding to a single flat fiece of fabric
@@ -112,8 +112,10 @@ class Panel(BaseComponent):
     def rotate_align(self, vector):
         """Set panel rotation s.t. it's norm is aligned with a given 3D vetor"""
 
+        vector = np.asarray(vector)
+        vector = vector / np.linalg.norm(vector)
         n = self.norm()
-        self.rotation, _ = R.align_vectors([vector], [n])
+        self.rotation = vector_align_3D(n, vector)
 
         return self
 

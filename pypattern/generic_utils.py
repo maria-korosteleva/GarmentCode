@@ -1,5 +1,6 @@
 import numpy as np
 from numpy.linalg import norm
+from scipy.spatial.transform import Rotation
 from typing import TypeVar, Generic, Sequence, Callable
 
 
@@ -34,6 +35,19 @@ def vector_angle(v1, v2):
 def R2D(angle):
     """2D rotation matrix by an angle"""
     return np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
+
+def vector_align_3D(v1, v2):
+    """Find a rotation to align v1 with v2"""
+
+    v1, v2 = np.asarray(v1), np.asarray(v2)
+    cos = np.dot(v1, v2) / (norm(v1) * norm(v2))
+    angle = np.arccos(cos) 
+
+    # Cross to get the axis of rotation
+    cross = np.cross(v1, v2)
+    cross = cross / norm(cross)
+
+    return Rotation.from_rotvec(cross * angle)
 
 
 def close_enough(f1, f2=0, tol=1e-4):
