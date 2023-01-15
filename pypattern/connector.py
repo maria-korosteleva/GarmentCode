@@ -64,7 +64,7 @@ class StitchingRule():
         return True
 
 
-    def match_interfaces(self, tol=0.1):
+    def match_interfaces(self):
         """ Subdivide the interface edges on both sides s.t. they are matching 
             and can be safely connected
             (same number of edges on each side and same relative fractions)
@@ -84,10 +84,10 @@ class StitchingRule():
         if not self.isTraversalMatching():      # match the other edge orientation before passing on
             frac2.reverse()   
 
-        self._match_to_fractions(self.int1, frac2, tol=tol)
-        self._match_to_fractions(self.int2, frac1, tol=tol)
+        self._match_to_fractions(self.int1, frac2)
+        self._match_to_fractions(self.int2, frac1)
 
-    def _match_to_fractions(self, inter:Interface, to_add, tol=0.1):
+    def _match_to_fractions(self, inter:Interface, to_add, tol=1e-3):
         """Add the vertices at given location to the edge sequence in a given interface
 
         Parameters:
@@ -104,6 +104,7 @@ class StitchingRule():
         add_id, in_id = 0, 0
         covered_init, covered_added = 0, 0
         total_len = inter.projecting_edges().length()
+
         while in_id < len(inter.edges) and add_id < len(to_add):
             # projected edges since they represent the stitch sizes
             next_init = covered_init + inter.projecting_edges()[in_id].length() / total_len
