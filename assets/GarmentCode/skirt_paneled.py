@@ -54,7 +54,7 @@ class ThinSkirtPanel(pyp.Panel):
         self.edges = pyp.esf.from_verts(
             [0,0], [self.flare, length], [self.flare + top_width, length], [self.flare * 2 + top_width, 0], loop=True)
 
-        # w.r.t. 
+        # w.r.t. top left point
         self.set_pivot(self.edges[0].end)
 
         self.interfaces = {
@@ -62,8 +62,6 @@ class ThinSkirtPanel(pyp.Panel):
             'top': pyp.Interface(self, self.edges[1]),
             'left': pyp.Interface(self, self.edges[2])
         }
-
-        self.translation = [0, -length, 0]
 
 
 class Skirt2(pyp.Component):
@@ -109,12 +107,16 @@ class SkirtManyPanels(pyp.Component):
         self.n_panels = n_panels
 
         waist = body['waist']
-        self.front = ThinSkirtPanel('front', waist / n_panels)
-        self.front.translate_by([-waist / 4, body['height'] - body['head_l'] - body['waist_line'], 0])
-        self.front.rotate_by(R.from_euler('XYZ', [0, 90, 0]))
+        self.front = ThinSkirtPanel('front', panel_w:=waist / n_panels)
+        self.front.translate_to(
+            [-waist / 4, 
+            body['height'] - body['head_l'] - body['waist_line'], 
+            0])
+        self.front.rotate_by(R.from_euler('XYZ', [0, -90, 0], degrees=True))
 
         # TODO collisions
         self.subs = pyp.ops.distribute_Y(self.front, n_panels)
+
 
         # Stitch new components
         for i in range(1, n_panels):

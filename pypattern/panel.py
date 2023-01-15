@@ -28,15 +28,21 @@ class Panel(BaseComponent):
         self.edges =  EdgeSequence()  # TODO Dummy square?
 
     # ANCHOR - Operations -- update object in-place 
-    def set_pivot(self, point_2d):
+    def set_pivot(self, point_2d, replicate_placement=False):
         """Specify 2D point w.r.t. panel local space
             to be used as pivot for translation and rotation
+
+        Parameters:
+            * point_2d -- desired point 2D point w.r.t current pivot (origin) of panel local space
+            * replicate_placement -- will replicate the location of the panel as it was before pivot change
+                default - False (no adjustment, the panel may "jump" in 3D)
         """
         point_2d = copy(point_2d)  # Remove unwanted object reference 
                                    # In case an actual vertex was used as a target point
 
-        # TODO  Check if I need to acocunt for rotation
-        self.translation = self.point_to_3D(point_2d)
+        if replicate_placement:
+            # TODO  Check if I need to account for rotation
+            self.translation = self.point_to_3D(point_2d)
 
         # UPD vertex locations relative to new pivot
         for v in self.edges.verts():
@@ -47,7 +53,7 @@ class Panel(BaseComponent):
         """One of the most useful pivots 
             is the one in the middle of the top edge of the panel 
         """
-        vertices = self.edges.verts()
+        vertices = np.asarray(self.edges.verts())
 
         # out of 2D bounding box sides' midpoints choose the one that is highest in 3D
         top_right = vertices.max(axis=0)
@@ -163,6 +169,10 @@ class Panel(BaseComponent):
     def assembly(self):
         # TODO Logical VS qualoth assembly?
 
+        # always start from zero for consistency between panels
+        self.set_pivot(self.edges[0].start, replicate_placement=True)
+
+        # Basics
         panel = Namespace(
             translation=self.translation.tolist(),
             rotation=self.rotation.as_euler('XYZ', degrees=True).tolist(), 

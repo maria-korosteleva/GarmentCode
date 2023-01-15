@@ -188,11 +188,10 @@ def cut_into_edge(target_shape, base_edge, offset=0, right=True, tol=1e-4):
 def distribute_Y(component, n_copies):
     """Distribute copies of component over the circle around Oy"""
     copies = [ component ]
+    delta_rotation = R.from_euler('XYZ', [0, 360 / n_copies, 0], degrees=True)
     for i in range(n_copies - 1):
         new_component = deepcopy(copies[-1])
         new_component.name = f'panel_{i}'   # Unique
-        delta_rotation = R.from_euler('XYZ', [0, 360 / n_copies, 0], degrees=True)
-
         new_component.rotate_by(delta_rotation)
         new_component.translate_to(delta_rotation.apply(new_component.translation))
 
