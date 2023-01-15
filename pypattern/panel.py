@@ -115,7 +115,7 @@ class Panel(BaseComponent):
         vector = np.asarray(vector)
         vector = vector / np.linalg.norm(vector)
         n = self.norm()
-        self.rotation = vector_align_3D(n, vector)
+        self.rotate_by(vector_align_3D(n, vector))
 
         return self
 
