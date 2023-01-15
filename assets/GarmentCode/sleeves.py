@@ -117,6 +117,8 @@ class SleevePanelBack(pyp.Panel):
             'in': pyp.Interface(self, self.edges[:2]),
             'shoulder': pyp.Interface(self, self.edges[2]),
             'out': pyp.Interface(self, self.edges[-1]),
+            'top': pyp.Interface(self, self.edges[-3]),
+            'bottom': pyp.Interface(self, self.edges[-1])
         }
 
         # Default placement
@@ -157,6 +159,8 @@ class SleeveOpening(pyp.Component):
 
         self.stitching_rules = pyp.Stitches(
             (self.f_sleeve.interfaces['shoulder'], self.b_sleeve.interfaces['shoulder']),
+            (self.f_sleeve.interfaces['top'], self.b_sleeve.interfaces['top']),
+            (self.f_sleeve.interfaces['bottom'], self.b_sleeve.interfaces['bottom']),
         )
 
         self.interfaces = {
