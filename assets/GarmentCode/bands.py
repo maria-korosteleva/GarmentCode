@@ -40,9 +40,14 @@ class WB(pyp.Component):
         )
 
         self.interfaces = {
-            'bottom_f': self.front.interfaces['bottom'],
+            'bottom_f': self.front.interfaces['bottom'],   # TODO Remove these if the connected one does not work
             'bottom_b': self.back.interfaces['bottom'],
+
+            
             'top_f': self.front.interfaces['top'],
             'top_b': self.back.interfaces['top'],
+
+            'bottom': pyp.Interface.from_multiple(self.front.interfaces['bottom'], self.back.interfaces['bottom']),
+            'top': pyp.Interface.from_multiple(self.front.interfaces['top'], self.back.interfaces['top']),
         }
 

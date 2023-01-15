@@ -24,11 +24,10 @@ if __name__ == '__main__':
         # SkirtWB(2),
         # WB(),
         # Skirt2(),
-        # SkirtManyPanels(n_panels=2),
-        # SkirtManyPanels(n_panels=4),
-        # SkirtManyPanels(n_panels=10),
+        # SkirtManyPanels(body, n_panels=10),
+        SkirtManyPanelsWB(body, n_panels=9)
         # TShirt(body, design),
-        FittedShirt(body, design),
+        # FittedShirt(body, design),
         # GodetSkirt(body, design),
         # Pants(body, design),
         # WBPants(body, design)

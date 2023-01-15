@@ -46,18 +46,20 @@ class ThinSkirtPanel(pyp.Panel):
     def __init__(self, name, top_width=10) -> None:
         super().__init__(name)
 
+        # TODO parameterization
         # define edge loop
-        self.edges = pyp.esf.from_verts([0,0], [10, 70], [10 + top_width, 70], [20 + top_width, 0], loop=True)
+        length = 70
+        self.flare = 10
+        self.edges = pyp.esf.from_verts(
+            [0,0], [self.flare, length], [self.flare + top_width, length], [self.flare * 2 + top_width, 0], loop=True)
 
         self.interfaces = {
             'right': pyp.Interface(self, self.edges[0]),
             'top': pyp.Interface(self, self.edges[1]),
             'left': pyp.Interface(self, self.edges[2])
         }
-        # DRAFT
-        # self.interfaces.append(pyp.Interface(self, self.edges[0]))
-        # self.interfaces.append(pyp.Interface(self, self.edges[1]))
-        # self.interfaces.append(pyp.Interface(self, self.edges[2]))
+
+        self.translation = [0, -length, 0]
 
 
 class Skirt2(pyp.Component):
@@ -73,7 +75,6 @@ class Skirt2(pyp.Component):
             (self.front.interfaces['left'], self.back.interfaces['left'])
         )
 
-        # TODO use dict for interface references?
         # Reusing interfaces of sub-panels as interfaces of this component
         self.interfaces = {
             'top_f': self.front.interfaces['top'],
@@ -98,18 +99,37 @@ class SkirtWB(pyp.Component):
 class SkirtManyPanels(pyp.Component):
     """Round Skirt with many panels"""
 
-    def __init__(self, n_panels = 4) -> None:
+    def __init__(self, body, n_panels = 4) -> None:
         super().__init__(f'{self.__class__.__name__}_{n_panels}')
 
         self.n_panels = n_panels
 
-        self.front = ThinSkirtPanel('front', 72 / n_panels).translate_by([-72 / n_panels, -75, 20]).center_x()
+        # TODO body parameters
+        waist = body['waist']
+        self.front = ThinSkirtPanel('front', waist / n_panels)
+        self.front.center_x().translate_by([-waist / 4, body['height'] - body['head_l'] - body['waist_line'], 20])
 
+        # TODO collisions
         self.subs = pyp.ops.distribute_Y(self.front, n_panels)
 
         # Stitch new components
         for i in range(1, n_panels):
             self.stitching_rules.append((self.subs[i - 1].interfaces['left'], self.subs[i].interfaces['right']))
+            
         self.stitching_rules.append((self.subs[-1].interfaces['left'], self.subs[0].interfaces['right']))
 
-        # No interfaces
+        self.interfaces = {'top': pyp.Interface.from_multiple(*[sub.interfaces['top'] for sub in self.subs])}
+
+
+class SkirtManyPanelsWB(pyp.Component):
+    def __init__(self, body, n_panels = 4) -> None:
+        super().__init__(f'{self.__class__.__name__}_{n_panels}')
+
+        wb_width = 5
+        self.skirt = SkirtManyPanels(body, n_panels=n_panels).translate_by([0, -wb_width, 0])
+        self.wb = WB(body['waist'], wb_width).translate_by([0, body['height'] - body['head_l'] - body['waist_line'], 0])
+
+        self.stitching_rules.append(
+            (self.skirt.interfaces['top'], self.wb.interfaces['bottom']))
+
+

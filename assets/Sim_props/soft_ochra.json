@@ -53,7 +53,7 @@
       "max_sim_steps": 1500,
       "non_static_percent": 1.5,
       "object_intersect_border_threshold": 100,
-      "resolution_scale": 12.0,
+      "resolution_scale": 10.0,
       "self_intersect_hit_threshold": 0,
       "static_threshold": 0.01,
       "zero_gravity_steps": 5
