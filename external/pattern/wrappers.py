@@ -1,7 +1,7 @@
 """
     To be used in Python 3.6+ due to dependencies
 """
-import copy
+from copy import copy
 import random
 import string
 import os
@@ -10,6 +10,8 @@ import numpy as np
 import svgwrite
 from svglib import svglib
 from reportlab.graphics import renderPM
+
+import matplotlib.pyplot as plt
 
 # my
 import customconfig
@@ -42,14 +44,17 @@ class VisPattern(core.ParametrizedPattern):
         self.scaling_for_drawing = self._verts_to_px_scaling_factor()
         self.view_ids = view_ids  # whatever to render vertices & endes indices
 
-    def serialize(self, path, to_subfolder=True, tag=''):
+    def serialize(self, path, to_subfolder=True, tag='', with_3d=True):
 
         log_dir = super().serialize(path, to_subfolder, tag=tag)
         svg_file = os.path.join(log_dir, (self.name + tag + '_pattern.svg'))
         png_file = os.path.join(log_dir, (self.name + tag + '_pattern.png'))
+        png_3d_file = os.path.join(log_dir, (self.name + tag + '_3d_pattern.png'))
 
         # save visualtisation
         self._save_as_image(svg_file, png_file)
+        if with_3d:
+            self._save_as_image_3D(png_3d_file)
 
         return log_dir
 
@@ -189,6 +194,30 @@ class VisPattern(core.ParametrizedPattern):
         # to png
         svg_pattern = svglib.svg2rlg(svg_filename)
         renderPM.drawToFile(svg_pattern, png_filename, fmt='PNG')
+
+    def _save_as_image_3D(self, png_filename):
+        """Save the patterns with 3D positioning using matplotlib visualization"""
+
+        ax = plt.figure().add_subplot(projection='3d')
+        for panel in self.pattern['panels']:
+            p = self.pattern['panels'][panel]
+            rot = p['rotation']
+            tr = p['translation']
+            verts_2d = p['vertices']
+
+            verts_to_plot = copy(verts_2d)
+            verts_to_plot.append(verts_to_plot[0])
+
+            verts3d = np.vstack(tuple([self._point_in_3D(v, rot, tr) for v in verts_to_plot]))
+            x = np.squeeze(np.asarray(verts3d[:, 0]))
+            y = np.squeeze(np.asarray(verts3d[:, 1]))
+            z = np.squeeze(np.asarray(verts3d[:, 2]))
+
+            ax.plot(x, y, z)
+
+        ax.view_init(elev=115, azim=-59, roll=30)
+        plt.show()
+        plt.savefig(png_filename, dpi=300, transparent=True)
 
 
 class RandomPattern(VisPattern):
