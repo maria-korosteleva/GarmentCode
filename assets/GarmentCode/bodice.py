@@ -141,7 +141,6 @@ class BodiceBackHalf(pyp.Panel):
         self.stitching_rules.append((pyp.Interface(self, b_dart_edges[0]), pyp.Interface(self, b_dart_edges[1])))
 
 
-# TODO Add design conditions -- e.g. with bottom dart or with ruffles
 class FittedShirtHalf(pyp.Component):
     """Definition of a simple T-Shirt"""
 
