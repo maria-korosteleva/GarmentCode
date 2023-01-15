@@ -1,0 +1,1 @@
+The contects of this directory are modified from the code of https://github.com/maria-korosteleva/Garment-Pattern-Generator pattern package

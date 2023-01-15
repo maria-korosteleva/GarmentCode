@@ -2,6 +2,11 @@
 from datetime import datetime
 from pathlib import Path
 import yaml
+import site
+import sys
+
+# DRAFT site.addsitedir('../external/')
+sys.path.insert(0, './external/')
 
 # Custom
 from customconfig import Properties
