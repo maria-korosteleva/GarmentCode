@@ -1,6 +1,7 @@
 # Custom
 import pypattern as pyp
 from scipy.spatial.transform import Rotation as R
+import numpy as np
 
 # other assets
 from .bands import WB
@@ -44,13 +45,11 @@ class SkirtPanel(pyp.Panel):
 class ThinSkirtPanel(pyp.Panel):
     """One panel of a panel skirt"""
 
-    def __init__(self, name, top_width=10) -> None:
+    def __init__(self, name, top_width=10, bottom_width=20, length=70) -> None:
         super().__init__(name)
 
-        # TODO parameterization
         # define edge loop
-        length = 70
-        self.flare = 10
+        self.flare = (bottom_width - top_width) / 2
         self.edges = pyp.esf.from_verts(
             [0,0], [self.flare, length], [self.flare + top_width, length], [self.flare * 2 + top_width, 0], loop=True)
 
@@ -101,13 +100,20 @@ class SkirtWB(pyp.Component):
 class SkirtManyPanels(pyp.Component):
     """Round Skirt with many panels"""
 
-    def __init__(self, body, n_panels = 4) -> None:
-        super().__init__(f'{self.__class__.__name__}_{n_panels}')
-
-        self.n_panels = n_panels
+    def __init__(self, body, design) -> None:
+        super().__init__(f'{self.__class__.__name__}_{design["flare-skirt"]["n_panels"]["v"]}')
 
         waist = body['waist']
-        self.front = ThinSkirtPanel('front', panel_w:=waist / n_panels)
+        waist_rad = waist / np.pi / 2
+
+        design = design['flare-skirt']
+        n_panels = design['n_panels']['v']
+        length = design['length']['v']
+        flare_coeff = design['suns']['v'] * (1 + length / waist_rad)
+
+        self.front = ThinSkirtPanel('front', panel_w:=waist / n_panels,
+                                    bottom_width=panel_w * flare_coeff,
+                                    length=length )
         self.front.translate_to(
             [-waist / 4, 
             body['height'] - body['head_l'] - body['waist_line'], 
@@ -125,15 +131,17 @@ class SkirtManyPanels(pyp.Component):
             
         self.stitching_rules.append((self.subs[-1].interfaces['left'], self.subs[0].interfaces['right']))
 
-        self.interfaces = {'top': pyp.Interface.from_multiple(*[sub.interfaces['top'] for sub in self.subs])}
+        self.interfaces = {
+            'top': pyp.Interface.from_multiple(*[sub.interfaces['top'] for sub in self.subs])
+        }
 
 
 class SkirtManyPanelsWB(pyp.Component):
-    def __init__(self, body, n_panels = 4) -> None:
-        super().__init__(f'{self.__class__.__name__}_{n_panels}')
+    def __init__(self, body, design) -> None:
+        super().__init__(f'{self.__class__.__name__}')
 
         wb_width = 5
-        self.skirt = SkirtManyPanels(body, n_panels=n_panels).translate_by([0, -wb_width, 0])
+        self.skirt = SkirtManyPanels(body, design).translate_by([0, -wb_width, 0])
         self.wb = WB(body['waist'], wb_width).translate_by([0, body['height'] - body['head_l'] - body['waist_line'], 0])
 
         self.stitching_rules.append(

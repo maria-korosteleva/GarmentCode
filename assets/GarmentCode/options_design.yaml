@@ -48,7 +48,18 @@ design:
     length:
       v: 70
       range: [30, 120]
-  
+
+  flare-skirt:
+    length:
+      v: 70
+      range: [30, 120]
+    n_panels:
+      v: 12
+      range: [4, 15]
+    suns:     # one "sun" is 360 skirt
+      v: 0.5
+      range: [0.5, 2]
+
   godet-skirt: 
     insert_w: 
       v: 20
