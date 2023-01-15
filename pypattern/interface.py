@@ -49,40 +49,26 @@ class Interface():
         """Create interface from other interfaces: 
             * Allows to use different panels in one interface
             * different ruffle values in one interface
+            
+            # NOTE the relative order of edges is preserved from the
+            original interfaces and the incoming interface sequence
+            This order will then be used in the SrtitchingRule when
+            determing connectivity between interfaces
         """
         new_int = copy(ints[0])  # shallow copy -- don't create unnecessary objects
         new_int.edges = EdgeSequence()
         new_int.panel = []
         new_int.ruffle = []
         
-        # FIXME the order may not be optimal, 
-        # if the orientation of the first sequence points outside of the edge sequence
+        
         for elem in ints:
             shift = len(new_int.edges)
             new_int.ruffle += [copy(r) for r in elem.ruffle]
             for r in new_int.ruffle[-len(elem.ruffle):]:
                 r.update(sec=(r['sec'][0] + shift, r['sec'][1] + shift))
 
-            # Adding edges while aligning their order right away!
-            # (following the same clockwise/counterclockwise orientation regardless of 
-            # in-panel orientation)
-            if len(new_int.panel) > 0 and not Interface._is_order_matching(
-                new_int.panel[-1], new_int.edges[-1].midpoint(),
-                elem.panel[0], elem.edges[0].midpoint(),
-                elem.panel[-1], elem.edges[-1].midpoint() 
-            ):
-                # swap the order of new edges
-                to_add = EdgeSequence(elem.edges)  # Edge sequence object with the same edge objects
-                to_add.edges.reverse()  # reverse the order of edge objects withough flippling them
-
-                to_add_panels = copy(elem.panel)
-                to_add_panels.reverse()  # shallow copy
-            else:
-                to_add = elem.edges
-                to_add_panels = elem.panel 
-
-            new_int.edges.append(to_add)
-            new_int.panel += to_add_panels
+            new_int.edges.append(elem.edges)
+            new_int.panel += elem.panel 
             
         return new_int 
 

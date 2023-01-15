@@ -10,9 +10,12 @@ class StitchingRule():
     """High-level stitching instructions connecting two component interfaces
     """
     def __init__(self, int1:Interface, int2:Interface) -> None:
-        """NOTE: When connecting interfaces with different edge count on both sides, 
-            note that the edge sequences change their structure.
-            Use of the same interfaces in other stitches (creating 3+way stitch edge) may fail. 
+        """
+        NOTE: When connecting interfaces with different edge count on both sides, 
+            1) Note that the edge sequences change their structure.
+                Use of the same interfaces in other stitches (creating 3+way stitch edge) may fail. 
+            2) The interfaces are matched based on the original or reversed order in the interface 
+                EdgeSequences. The order can be controlled at the moment of interface creation
         """
         # TODO Explicitely support 3+way stitches
         self.int1 = int1
