@@ -185,10 +185,11 @@ def cut_into_edge(target_shape, base_edge, offset=0, right=True, tol=1e-4):
     return new_edges, new_edges[start_id:end_id], base_edge_leftovers
 
 # ANCHOR ----- Panel operations ------
-def distribute_Y(component, n_copies):
+def distribute_Y(component, n_copies, odd_copy_shift=10):
     """Distribute copies of component over the circle around Oy"""
     copies = [ component ]
     delta_rotation = R.from_euler('XYZ', [0, 360 / n_copies, 0], degrees=True)
+    
     for i in range(n_copies - 1):
         new_component = deepcopy(copies[-1])
         new_component.name = f'panel_{i}'   # Unique
@@ -197,8 +198,12 @@ def distribute_Y(component, n_copies):
 
         copies.append(new_component)
 
-    # TODO resolve collisions though!
-
+    # shift around to resolve collisions (hopefully)
+    if odd_copy_shift:
+        for i in range(n_copies):
+            if not i % 2:
+                copies[i].translate_by(copies[i].norm() * odd_copy_shift)
+        
     return copies
 
 

@@ -30,7 +30,7 @@ if __name__ == '__main__':
         # WB(),
         # Skirt2(),
         # SkirtManyPanels(body, n_panels=10),
-        SkirtManyPanelsWB(body, n_panels=5)
+        SkirtManyPanelsWB(body, n_panels=8)
         # TShirt(body, design),
         # FittedShirt(body, design),
         # GodetSkirt(body, design),

@@ -116,9 +116,8 @@ class SkirtManyPanels(pyp.Component):
         self.front.rotate_by(R.from_euler('XYZ', [0, -90, 0], degrees=True))
         self.front.rotate_align([-waist / 4, 0, panel_w / 2])
         
-        # TODO collisions
-        self.subs = pyp.ops.distribute_Y(self.front, n_panels)
-
+        # Create new panels
+        self.subs = pyp.ops.distribute_Y(self.front, n_panels, odd_copy_shift=15)
 
         # Stitch new components
         for i in range(1, n_panels):
