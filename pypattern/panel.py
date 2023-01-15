@@ -1,5 +1,6 @@
 
 import numpy as np
+from copy import copy
 from argparse import Namespace
 from scipy.spatial.transform import Rotation as R
 
@@ -19,8 +20,6 @@ class Panel(BaseComponent):
     NOTE: All operations methods return 'self' object to allow sequential applications
 
     """
-    # TODO __get_item__ implementation? Return edges??
-
     def __init__(self, name) -> None:
         super().__init__(name)
 
@@ -29,6 +28,47 @@ class Panel(BaseComponent):
         self.edges =  EdgeSequence()  # TODO Dummy square?
 
     # ANCHOR - Operations -- update object in-place 
+    def set_pivot(self, point_2d):
+        """Specify 2D point w.r.t. panel local space
+            to be used as pivot for translation and rotation
+        """
+        point_2d = copy(point_2d)  # Remove unwanted object reference 
+                                   # In case an actual vertex was used as a target point
+
+        # TODO  Check if I need to acocunt for rotation
+        self.translation = self.point_to_3D(point_2d)
+
+        # UPD vertex locations relative to new pivot
+        for v in self.edges.verts():
+            v[0] -= point_2d[0]
+            v[1] -= point_2d[1]
+
+    def top_center_pivot(self):
+        """One of the most useful pivots 
+            is the one in the middle of the top edge of the panel 
+        """
+        vertices = self.edges.verts()
+
+        # out of 2D bounding box sides' midpoints choose the one that is highest in 3D
+        top_right = vertices.max(axis=0)
+        low_left = vertices.min(axis=0)
+        mid_x = (top_right[0] + low_left[0]) / 2
+        mid_y = (top_right[1] + low_left[1]) / 2
+        mid_points_2D = [
+            [mid_x, top_right[1]], 
+            [mid_x, low_left[1]],
+            [top_right[0], mid_y],
+            [low_left[0], mid_y]
+        ]
+        mid_points_3D = np.vstack(tuple(
+            [self.point_to_3D(coords) for coords in mid_points_2D]
+        ))
+        top_mid_point = mid_points_3D[:, 1].argmax()
+
+        self.set_pivot(mid_points_2D[top_mid_point])
+
+        return self
+
     def translate_by(self, delta_vector):
         """Translate panel by a vector"""
         self.translation = self.translation + np.array(delta_vector)

@@ -1,5 +1,6 @@
 # Custom
 import pypattern as pyp
+from scipy.spatial.transform import Rotation as R
 
 # other assets
 from .bands import WB
@@ -53,6 +54,9 @@ class ThinSkirtPanel(pyp.Panel):
         self.edges = pyp.esf.from_verts(
             [0,0], [self.flare, length], [self.flare + top_width, length], [self.flare * 2 + top_width, 0], loop=True)
 
+        # w.r.t. 
+        self.set_pivot(self.edges[0].end)
+
         self.interfaces = {
             'right': pyp.Interface(self, self.edges[0]),
             'top': pyp.Interface(self, self.edges[1]),
@@ -104,10 +108,10 @@ class SkirtManyPanels(pyp.Component):
 
         self.n_panels = n_panels
 
-        # TODO body parameters
         waist = body['waist']
         self.front = ThinSkirtPanel('front', waist / n_panels)
-        self.front.center_x().translate_by([-waist / 4, body['height'] - body['head_l'] - body['waist_line'], 20])
+        self.front.translate_by([-waist / 4, body['height'] - body['head_l'] - body['waist_line'], 0])
+        self.front.rotate_by(R.from_euler('XYZ', [0, 90, 0]))
 
         # TODO collisions
         self.subs = pyp.ops.distribute_Y(self.front, n_panels)
