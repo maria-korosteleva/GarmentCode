@@ -109,6 +109,15 @@ class Panel(BaseComponent):
 
         return self
 
+    def rotate_align(self, vector):
+        """Set panel rotation s.t. it's norm is aligned with a given 3D vetor"""
+
+        n = self.norm()
+        self.rotation, _ = R.align_vectors([vector], [n])
+
+        return self
+
+
     def center_x(self):
         """Adjust translation over x s.t. the center of the panel is aligned with the Y axis (center of the body)"""
 
