@@ -1,3 +1,4 @@
+from copy import copy
 from numpy.linalg import norm
 import numpy as np
 
@@ -79,18 +80,28 @@ class StitchingRule():
 
         # Eval the fractions corresponding to every segments in the interfaces
         # Using projecting edges to match desired gather patterns
+
+        # Remember the state of interfaces before projection (for later)
+        edges1 = self.int1.edges.copy()
+        panels1 = copy(self.int1.panel) 
         frac1 = self.int1.projecting_edges().fractions()
         if not self.isTraversalMatching():      # match the other edge orientation before passing on
             frac1.reverse()
+            panels1.reverse()
+            edges1.edges.reverse()
 
+        edges2 = self.int2.edges.copy()
+        panels2 = copy(self.int2.panel) 
         frac2 = self.int2.projecting_edges().fractions()
         if not self.isTraversalMatching():      # match the other edge orientation before passing on
-            frac2.reverse()   
+            frac2.reverse()
+            panels2.reverse()
+            edges2.edges.reverse()
 
-        self._match_to_fractions(self.int1, frac2)
-        self._match_to_fractions(self.int2, frac1)
+        self._match_to_fractions(self.int1, frac2, edges2, panels2)
+        self._match_to_fractions(self.int2, frac1, edges1, panels1)
 
-    def _match_to_fractions(self, inter:Interface, to_add, tol=1e-3):
+    def _match_to_fractions(self, inter:Interface, to_add, edges, panels, tol=1e-3):
         """Add the vertices at given location to the edge sequence in a given interface
 
         Parameters:
@@ -124,16 +135,35 @@ class StitchingRule():
             else:
                 # add a vertex to the edge at the new location
                 # Eval on projected edge
-                projected_edge = inter.projecting_edges()[in_id]
-                projected_edge_frac = projected_edge.length() / total_len
-                new_v_loc = projected_edge_frac - (next_init - next_added)
-                frac = new_v_loc / projected_edge_frac
-                base_edge = inter.edges[in_id]
+                in_frac = inter.projecting_edges()[in_id].length() / total_len
+                new_v_loc = in_frac - (next_init - next_added)
+                split_frac = new_v_loc / in_frac
+                base_edge, base_panel = inter.edges[in_id], inter.panel[in_id]
 
-                # add with the same fraction to the base edge
-                subdiv = EdgeSeqFactory.from_fractions(base_edge.start, base_edge.end, [frac, 1 - frac])
+                # Match the order 
+                # if base edge start->end or end->start order matches 
+                # the edge to_add better when connecting in 3D
+                adding_edge, adding_e_panel = edges[add_id], panels[add_id]
+                add_3d = adding_e_panel.point_to_3D(adding_edge.start)
+
+                # Is is closer to the start or to the end of base edge?
+                base_start_3d = base_panel.point_to_3D(base_edge.start)
+                base_end_3d = base_panel.point_to_3D(base_edge.end)
+                if swap:=(norm(add_3d - base_end_3d) < norm(add_3d - base_start_3d)):
+                    split_frac = 1 - split_frac
+                    print(f'{self.__class__.__name__}::INFO::Swapping projection'
+                          f' on edge {base_edge} from {base_panel.name}')
+
+                # Split the base edge accrordingly
+                subdiv = EdgeSeqFactory.from_fractions(
+                    base_edge.start, base_edge.end, [split_frac, 1 - split_frac])
 
                 inter.panel[in_id].edges.substitute(base_edge, subdiv)  # Update the panel
+                                                                        # Always follows the edge order in the panel
+                if swap:
+                    # match current segment of the edge from to_add to 
+                    # the end segment of the splitted base_edge
+                    subdiv.edges.reverse()
                 inter.edges.substitute(base_edge, subdiv)  # interface
                 inter.panel.insert(in_id, inter.panel[in_id])  # update panel correspondance
 

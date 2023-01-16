@@ -34,8 +34,7 @@ class MetaGarment(pyp.Component):
 
             # TODO Connection is crossing over for T-Shirt. Need to be fixed =(
             self.stitching_rules.append(
-                # DRAFT (self.upper.interfaces['bottom'], self.wb.interfaces['top']))
-                (self.wb.interfaces['top'], self.upper.interfaces['bottom']))
+                (self.upper.interfaces['bottom'], self.wb.interfaces['top']))
 
         # Lower garment
         lower_name = design['meta']['bottom']['v']
