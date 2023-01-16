@@ -141,7 +141,7 @@ class BodiceBackHalf(pyp.Panel):
         self.stitching_rules.append((pyp.Interface(self, b_dart_edges[0]), pyp.Interface(self, b_dart_edges[1])))
 
 
-class FittedShirtHalf(pyp.Component):
+class BodiceHalf(pyp.Component):
     """Definition of a simple T-Shirt"""
 
     def __init__(self, name, body, design) -> None:
@@ -203,8 +203,8 @@ class FittedShirt(pyp.Component):
         super().__init__(name_with_params)
 
         # TODO resolving names..
-        self.right = FittedShirtHalf(f'right', body, design)
-        self.left = FittedShirtHalf(f'left', body, design).mirror()
+        self.right = BodiceHalf(f'right', body, design)
+        self.left = BodiceHalf(f'left', body, design).mirror()
 
         self.stitching_rules.append((self.right.interfaces['front_in'], self.left.interfaces['front_in']))
         self.stitching_rules.append((self.right.interfaces['back_in'], self.left.interfaces['back_in']))
