@@ -46,7 +46,12 @@ design:
     inclanation: 
       v: 3
       range: null
-
+    opening_width:
+      v: 30
+      range: [20, 40]
+    shoulder_len:   # can create "Standing" shoulder
+      v: 10
+      range: [4, 10]
 
   skirt: 
     length:

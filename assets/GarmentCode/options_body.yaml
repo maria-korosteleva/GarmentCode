@@ -18,7 +18,7 @@ body:
   bust: 96 
   bust_points:  21 # 23
   underbust: 83
-  back_width: 38  #42  # 32 + 2 * between-size
+  back_width:  40  # 38  #42  # 32 + 2 * between-size
 
   hips: 110   # TODO check the measurements though!
   crotch_depth: 27  # 27

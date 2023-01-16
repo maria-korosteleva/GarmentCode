@@ -99,36 +99,44 @@ class SleevePanel(pyp.Panel):
         length = design['length']['v']
         armhole = globals()[design['armhole_shape']['v']]
         
-        proj_shape, open_shape = armhole(low_depth, width, angle=angle, incl_coeff=0.2, w_coeff=0.2)
+        proj_shape, open_shape = armhole(low_depth, width, angle=angle, incl_coeff=0.2, w_coeff=0.1)
 
         open_shape.rotate(-angle)  
-        arm_width = abs(open_shape[0].start[1] - open_shape[-1].end[1])
+        arm_width = design['opening_width']['v'] / 2   # DRAFT  abs(open_shape[0].start[1] - open_shape[-1].end[1])
 
-        # TODO add smooth angle on top
-
+        # Smoothing the top
+        # FIXME Which doesn't work that effificently..
         self.edges = pyp.esf.from_verts(
             [0, 0], [0, -arm_width], [length, -arm_width]
         )
         open_shape.snap_to(self.edges[-1].end)
         open_shape[0].start = self.edges[-1].end   # chain
         self.edges.append(open_shape)
-        self.edges.close_loop()
 
         # align the angle
         self.edges.rotate(angle) 
+
+        # top smooting 
+        end = self.edges[-1].end
+        shoulder_angle = np.deg2rad(body['shoulder_incl'])
+        len = design['shoulder_len']['v']
+        self.edges.append(pyp.Edge(end, [end[0] - len * np.cos(shoulder_angle), end[1] - len * np.sin(shoulder_angle)]))
+
+        # Fin
+        self.edges.close_loop()
+        
 
         # Interfaces
         self.interfaces = {
             'in': pyp.Interface(self, open_shape),
             'in_shape': pyp.Interface(self, proj_shape),
-            # DRAFT 'shoulder': pyp.Interface(self, self.edges[2]),
             'out': pyp.Interface(self, self.edges[0]),
-            'top': pyp.Interface(self, self.edges[-1]),
+            'top': pyp.Interface(self, self.edges[-2:]),   
             'bottom': pyp.Interface(self, self.edges[1])
         }
 
         # Default placement
-        self.set_pivot(self.edges[-1].start)
+        self.set_pivot(self.edges[-2].start)
         self.translate_to([- body['sholder_w'] / 2 - low_depth * 1.5, body['height'] - body['head_l'] + 4, 0])  #  - low_depth / 2
 
 
