@@ -90,90 +90,64 @@ class SleeveOpeningPanelFront(pyp.Panel):
 
 
 class SleevePanel(pyp.Panel):
-    def __init__(self, name, body, width, low_depth, top_depth) -> None:
+    def __init__(self, name, body, design, width, low_depth, top_depth) -> None:
         super().__init__(name)
 
         # TODO Cuffs, ruffles start, fulles end, opening shape..
 
         angle = np.deg2rad(50)
-        sina, cosa = np.sin(angle), np.cos(angle)
-        length = 30
+        length = design['length']['v']
+        armhole = globals()[design['armhole_shape']['v']]
+        
+        proj_shape, open_shape = armhole(low_depth, width, angle=angle, incl_coeff=0.2, w_coeff=0.2)
 
-        # Sleeve opening location
-        bottom_v = [-length * sina, - length * cosa]
-        delta_l = sina / cosa * (length * cosa + width) - low_depth + bottom_v[0]
-        delta_y = delta_l * sina * cosa
-        delta_x = delta_l * cosa * cosa
+        open_shape.rotate(-angle)  
+        arm_width = abs(open_shape[0].start[1] - open_shape[-1].end[1])
 
+        # TODO add smooth angle on top
 
         self.edges = pyp.esf.from_verts(
-            [0, 0], [length, 0], [length, low_depth],
-            [length + width * cosa, low_depth + width * sina],
-            [0, low_depth + width * sina],
-            loop=True
+            [0, 0], [0, -arm_width], [length, -arm_width]
         )
-        # align the angle
-        self.edges.rotate(angle)
+        open_shape.snap_to(self.edges[-1].end)
+        open_shape[0].start = self.edges[-1].end   # chain
+        self.edges.append(open_shape)
+        self.edges.close_loop()
 
-        # DRAFT self.edges = pyp.esf.from_verts(
-        #     [0, 0], [low_depth, 0],  [low_depth, width], 
-        #     [low_depth - top_depth, width], 
-        #     [bottom_v[0] - delta_x, bottom_v[1] + delta_y],
-        #     [-length * sina, - length * cosa],
-        #     loop=True)
+        # align the angle
+        self.edges.rotate(angle) 
 
         # Interfaces
         self.interfaces = {
-            'in': pyp.Interface(self, self.edges[1:3]),
-            'in_shape': pyp.Interface(self, pyp.esf.from_verts([0, 0], [low_depth, 0],  [low_depth, width])),
+            'in': pyp.Interface(self, open_shape),
+            'in_shape': pyp.Interface(self, proj_shape),
             # DRAFT 'shoulder': pyp.Interface(self, self.edges[2]),
-            'out': pyp.Interface(self, self.edges[-1]),
-            'top': pyp.Interface(self, self.edges[-2]),
-            'bottom': pyp.Interface(self, self.edges[0])
+            'out': pyp.Interface(self, self.edges[0]),
+            'top': pyp.Interface(self, self.edges[-1]),
+            'bottom': pyp.Interface(self, self.edges[1])
         }
 
         # Default placement
-        self.set_pivot(self.edges[0].end)
-        self.translate_to([- body['sholder_w'] / 2 - low_depth, body['height'] - body['head_l'] - body['armscye_depth']+ 4, 0])
-
-
-class SleeveStripPanel(pyp.Panel):
-    def __init__(self, name, body, depth, length, angle) -> None:
-        super().__init__(name)
-
-        # TODO Cuffs, ruffles start, fulles end, opening shape..
-
-        # Sleeve opening location
-        self.edges = pyp.esf.from_verts(
-            [0, 0], [length, 0], [length, depth], [0, depth],
-            loop=True
-        )
-        # align the angle
-        self.edges.rotate(angle)
-
-        # Interfaces
-        self.interfaces = {
-            'in': pyp.Interface(self, self.edges[1:3]),
-            'out': pyp.Interface(self, self.edges[-1]),
-            'top': pyp.Interface(self, self.edges[-2]),
-            'bottom': pyp.Interface(self, self.edges[0])
-        }
-
-        # Default placement
-        self.set_pivot(self.edges[0].end)
-        self.translate_to([- body['sholder_w'] / 2 - depth, body['height'] - body['head_l'] - body['armscye_depth']+ 4, 0])
+        self.set_pivot(self.edges[-1].start)
+        self.translate_to([- body['sholder_w'] / 2 - low_depth * 1.5, body['height'] - body['head_l'] + 4, 0])  #  - low_depth / 2
 
 
 class SleeveOpening(pyp.Component):
 
-    def __init__(self, tag, body, inclanation, depth_diff) -> None:
+    def __init__(self, tag, body, design, depth_diff) -> None:
         super().__init__(f'{self.__class__.__name__}_{tag}')
 
         width = body['armscye_depth'] * 2
+        design = design['sleeve']
+        inclanation = design['inclanation']['v']
         
         # sleeves
-        self.f_sleeve = SleevePanel(f'{tag}_f', body, width/2, inclanation + depth_diff, (inclanation + depth_diff) / 2).translate_by([0, 0, 15])
-        self.b_sleeve = SleevePanel(f'{tag}_b', body, width/2, inclanation, (inclanation + depth_diff) / 2).translate_by([0, 0, -15])
+        self.f_sleeve = SleevePanel(
+            f'{tag}_f', body, design, 
+            width/2, inclanation + depth_diff, (inclanation + depth_diff) / 2).translate_by([0, 0, 30])
+        self.b_sleeve = SleevePanel(
+            f'{tag}_b', body, design, 
+            width/2, inclanation, (inclanation + depth_diff) / 2).translate_by([0, 0, -25])
 
         self.stitching_rules = pyp.Stitches(
             # DRAFT (self.f_sleeve.interfaces['shoulder'], self.b_sleeve.interfaces['shoulder']),
@@ -183,7 +157,7 @@ class SleeveOpening(pyp.Component):
 
         self.interfaces = {
             'in_front': self.f_sleeve.interfaces['in'],
-            'in_front_shape': pyp.Interface(self, pyp.esf.from_verts([0, 0], [inclanation, 0],  [inclanation, width])),
+            'in_front_shape': self.f_sleeve.interfaces['in_shape'],
             'in_back': self.b_sleeve.interfaces['in'],
             'in_back_shape': self.b_sleeve.interfaces['in_shape'],
             'out': pyp.Interface.from_multiple(self.f_sleeve.interfaces['out'], self.b_sleeve.interfaces['out'])
@@ -236,38 +210,35 @@ class SleeveSquareOpening(pyp.Panel):
 
 
 
-# Armhole shapes withough sleeves
-# TODO I need here the matching interface for interchengeability ..
-def ArmholeSimple(tag, body, design):
-    arm_width = body['arm_width']
-    ease = design['sleeve']['ease']['v'] 
-    incl = design['sleeve']['inclanation']['v']
-    width = (arm_width + ease) / 2
+# ------  Armhole shapes ------
+def ArmholeSquare(incl, width, angle=None, **kwargs):
+    """Simple square armhole cut-out
+        Not recommended to use for sleeves, stitching in 3D might be hard
 
-    edges_front = pyp.EdgeSequence(pyp.Edge([0, 0], [incl, width]))
-    edges_back = pyp.EdgeSequence(pyp.Edge([0, 0], [incl, width]))
-    
-    return edges_front, edges_back
+        if angle is provided, it also calculated the shape of the sleeve interface to attach
 
-# TODO parameters are a bit stupid
-def ArmholeSquare(tag, body, design, shift, incl):
-    arm_width = body['arm_width']
-    ease = design['sleeve']['ease']['v'] 
-    # DRAFT incl = design['sleeve']['inclanation']['v']
-    width = (arm_width + ease) / 2
+        returns edge sequence and part to be preserved  inverted 
+    """
+    edges = pyp.esf.from_verts([0, 0], [incl, 0],  [incl, width])
 
-    edges_front = pyp.esf.from_verts([0, 0], [incl, 0],  [incl, width + shift])
-    edges_back = pyp.esf.from_verts([0, 0], [incl, 0],  [incl, width - shift])
-    
-    return edges_front, edges_back
+    sina, cosa = np.sin(angle), np.cos(angle)
+    l = edges[0].length()
+    sleeve_edges = pyp.esf.from_verts(
+        [incl + l*sina, - l*cosa], 
+        [incl, 0],  [incl, width])
+
+    return edges, sleeve_edges
 
 
-def ArmholeSquareSide(tag, body, design, shift, incl):
-    arm_width = body['arm_width']
-    ease = design['sleeve']['ease']['v'] 
-    # DRAFT incl = design['sleeve']['inclanation']['v']
-    width = (arm_width + ease) / 2
+def ArmholeSmooth(incl, width, angle=None, incl_coeff=0.2, w_coeff=0.2):
+    """Piece-wise smooth armhole shape"""
+    diff_incl = incl * (1 - incl_coeff)
+    edges = pyp.esf.from_verts([0, 0], [diff_incl, w_coeff * width],  [incl, width])
 
-    edges = pyp.esf.from_verts([0, 0], [incl, 0],  [incl, width + shift])
-    
-    return edges
+    sina, cosa = np.sin(angle), np.cos(angle)
+    l = edges[0].length()
+    sleeve_edges = pyp.esf.from_verts(
+        [diff_incl + l*sina, w_coeff * width - l*cosa], 
+        [diff_incl, w_coeff * width],  [incl, width])
+
+    return edges, sleeve_edges

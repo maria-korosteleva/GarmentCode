@@ -154,10 +154,9 @@ class FittedShirtHalf(pyp.Component):
         # Sleeves
         if design['bodice']['sleeve_shape']['v']:
             
-            incl = design['sleeve']['inclanation']['v']
             diff = self.ftorso.front_width - self.btorso.back_width
 
-            self.sleeve = sleeves.SleeveOpening(name, body, incl, depth_diff=diff)
+            self.sleeve = sleeves.SleeveOpening(name, body, design, depth_diff=diff)
 
             # DEBUG 
             # front_sl = sleeves.ArmholeSquareSide('', body, design, shift=0, incl=incl + diff)

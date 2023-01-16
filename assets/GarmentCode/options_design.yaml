@@ -31,6 +31,9 @@ design:
       range: [3, 25]
     
   sleeve:
+    armhole_shape: 
+      v: ArmholeSmooth
+      range: [ArmholeSquare, ArmholeSmooth]
     length: 
       v: 35
       range: [3, 100]
@@ -41,8 +44,9 @@ design:
       v: 3
       range: null
     inclanation: 
-      v: 5
+      v: 3
       range: null
+
 
   skirt: 
     length:
