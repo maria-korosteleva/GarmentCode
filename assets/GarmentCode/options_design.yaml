@@ -6,10 +6,41 @@
 # Final designs might not use all the parameters specified
 # TODO Connecting some parameters?
 design: 
+  meta: 
+    upper: 
+      v: Shirt
+      range: [FittedShirt, Shirt]
+    wb: 
+      v: True
+      range: [True, False]
+    bottom: 
+      v: Pants
+      range: [GodetSkirt, Pants, Skirt2, SkirtManyPanels]
+
+  waistband:
+    waist: 
+      v: 82
+      range: [82, 200]   # TODO from waist 
+    width: 
+      v: 5
+      range: [3, 15]
+
   bodice: 
     ease:
       v: 0
       range: null
+
+  shirt: 
+    ease:
+        v: 0
+        range: null
+    length: 
+      v: 30
+      range: [30, 150]
+    width:   # Around the body 
+      v: 96
+      range: [96, 150]    # TODO min is a bust size
+    # TODO FLare at the bottom
 
   collar:
     f_collar: 
@@ -25,18 +56,6 @@ design:
       v: 3
       range: [3, 25]
     
-  shirt: 
-    ease:
-        v: 0
-        range: null
-    length: 
-      v: 50
-      range: [30, 150]
-    width:   # Around the body 
-      v: 96
-      range: [96, 150]    # TODO min is a bust size
-    # TODO FLare at the bottom
-
   sleeve:
     sleeveless: 
         v: True

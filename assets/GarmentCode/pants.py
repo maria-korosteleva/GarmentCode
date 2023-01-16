@@ -96,7 +96,7 @@ class PantsHalf(pyp.Component):
             dart_position=body['bust_points'] / 2,
             ruffle=design['ruffle']['v'][0],    # TODO different ruffles for front and back
             crotch_extention=design['crotch_extention']['v']
-            ).translate_by([0, 0, 25])
+            ).translate_by([0, body['waist_level'], 25])
         self.back = PantPanel(
             f'pant_b_{tag}', 
             body['waist'] / 4, 
@@ -107,7 +107,7 @@ class PantsHalf(pyp.Component):
             dart_position=body['bum_points'] / 2,
             ruffle=design['ruffle']['v'][1],
             crotch_extention=design['crotch_extention']['v']
-            ).translate_by([0, 0, -20])
+            ).translate_by([0, body['waist_level'], -20])
 
         self.stitching_rules = pyp.Stitches(
             (self.front.interfaces['outside'], self.back.interfaces['outside']),
@@ -138,7 +138,12 @@ class Pants(pyp.Component):
             'top_f': pyp.Interface.from_multiple(
                 self.right.interfaces['top_f'], self.left.interfaces['top_f']),
             'top_b': pyp.Interface.from_multiple(
-                self.right.interfaces['top_b'], self.left.interfaces['top_b'])
+                self.right.interfaces['top_b'], self.left.interfaces['top_b']),
+            'top': pyp.Interface.from_multiple(   # around the body starting from front right
+                self.right.interfaces['top_f'],
+                self.left.interfaces['top_f'],
+                self.left.interfaces['top_b'],   # TODO FLIP for correct connection!
+                self.right.interfaces['top_b']),
         }
 
 class WBPants(pyp.Component):
@@ -153,6 +158,7 @@ class WBPants(pyp.Component):
                     self.pants.interfaces['top_f'].projecting_edges().length())
 
         self.wb = WB(wb_len, design['wb_pants']['width']['v'])
+        self.wb.translate_by([0, self.wb.width + 2, 0])
 
         self.stitching_rules = pyp.Stitches(
             (self.pants.interfaces['top_b'], self.wb.interfaces['bottom_b']),

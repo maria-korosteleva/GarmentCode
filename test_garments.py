@@ -2,8 +2,8 @@
 from datetime import datetime
 from pathlib import Path
 import yaml
-import site
 import sys
+import shutil 
 
 # DRAFT site.addsitedir('../external/')
 sys.path.insert(0, './external/')
@@ -15,12 +15,16 @@ from assets.GarmentCode.tee import *
 from assets.GarmentCode.godet import *
 from assets.GarmentCode.bodice import *
 from assets.GarmentCode.pants import *
+from assets.GarmentCode.meta_garment import *
 
 if __name__ == '__main__':
 
-    with open('./assets/GarmentCode/options_body.yaml', 'r') as f:
+    body_file = './assets/GarmentCode/options_body.yaml'
+    design_file = './assets/GarmentCode/options_design.yaml'
+    with open(body_file, 'r') as f:
         body = yaml.safe_load(f)['body']
-    with open('./assets/GarmentCode/options_design.yaml', 'r') as f:
+        body['waist_level'] = body['height'] - body['head_l'] - body['waist_line']
+    with open(design_file, 'r') as f:
         design = yaml.safe_load(f)['design']
     test_garments = [
         # SkirtWB(1),
@@ -31,23 +35,28 @@ if __name__ == '__main__':
         # Skirt2(),
         # SkirtManyPanels(body, n_panels=10),
         # SkirtManyPanelsWB(body, design)
-        TShirt(body, design),
+        # TShirt(body, design),
         # FittedShirt(body, design),
         # GodetSkirt(body, design),
         # Pants(body, design),
-        # WBPants(body, design)
+        # WBPants(body, design),
+        MetaGarment('Jumpsuit', body, design)
     ]
 
     # test_garments[0].translate_by([2, 0, 0])
 
     for piece in test_garments:
         pattern = piece()
-        
+
         # Save as json file
         sys_props = Properties('./system.json')
-        filename = pattern.serialize(
+        folder = pattern.serialize(
             Path(sys_props['output']), 
             tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
             to_subfolder=False)
 
-        print(f'Success! {piece.name} saved to {filename}')
+        shutil.copy(body_file, folder)
+        shutil.copy(design_file, folder)
+        
+
+        print(f'Success! {piece.name} saved to {folder}')

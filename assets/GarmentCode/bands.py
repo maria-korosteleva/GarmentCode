@@ -20,19 +20,23 @@ class WBPanel(pyp.Panel):
         }
 
         # Default translation
+        self.top_center_pivot()
         self.center_x()
 
 
 class WB(pyp.Component):
     """Simple 2 panel waistband"""
-    def __init__(self, waist, width) -> None:
+    def __init__(self, body, design) -> None:
         super().__init__(self.__class__.__name__)
 
+        self.waist = design['waistband']['waist']['v']
+        self.width = design['waistband']['width']['v']
+
         # TODO flexible fractions of the waist
-        self.front = WBPanel('wb_front', waist / 2, width)
-        self.front.translate_by([0, -2, 20])
-        self.back = WBPanel('wb_back', waist / 2, width)
-        self.back.translate_by([0, -2, -15])
+        self.front = WBPanel('wb_front', self.waist / 2, self.width)
+        self.front.translate_by([0, body['waist_level'], 20])  
+        self.back = WBPanel('wb_back', self.waist / 2, self.width)
+        self.back.translate_by([0, body['waist_level'], -15])  
 
         self.stitching_rules = pyp.Stitches(
             (self.front.interfaces['right'], self.back.interfaces['right']),

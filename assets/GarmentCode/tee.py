@@ -116,7 +116,7 @@ class TorsoHalf(pyp.Component):
         }
 
 
-class TShirt(pyp.Component):
+class Shirt(pyp.Component):
     """Panel for the front of upper garments with darts to properly fit it to the shape"""
 
     def __init__(self, body, design) -> None:
@@ -135,5 +135,5 @@ class TShirt(pyp.Component):
                 self.right.interfaces['f_bottom'],
                 self.left.interfaces['f_bottom'],
                 self.left.interfaces['b_bottom'], 
-                self.right.interfaces['b_bottom'],)
+                self.right.interfaces['b_bottom'])
         }
