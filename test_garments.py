@@ -31,8 +31,8 @@ if __name__ == '__main__':
         # Skirt2(),
         # SkirtManyPanels(body, n_panels=10),
         # SkirtManyPanelsWB(body, design)
-        # TShirt(body, design),
-        FittedShirt(body, design),
+        TShirt(body, design),
+        # FittedShirt(body, design),
         # GodetSkirt(body, design),
         # Pants(body, design),
         # WBPants(body, design)
@@ -42,10 +42,7 @@ if __name__ == '__main__':
 
     for piece in test_garments:
         pattern = piece()
-
-        # DEBUG 
-        # print(json.dumps(pattern, indent=2, sort_keys=True))
-
+        
         # Save as json file
         sys_props = Properties('./system.json')
         filename = pattern.serialize(

@@ -151,36 +151,33 @@ class BodiceHalf(pyp.Component):
         self.ftorso = BodiceFrontHalf(f'{name}_ftorso', body, design).translate_by([0, 0, 20])
         self.btorso = BodiceBackHalf(f'{name}_btorso', body, design).translate_by([0, 0, -20])
 
-        # Sleeves
-        if design['bodice']['sleeve_shape']['v']:
-            
-            diff = self.ftorso.front_width - self.btorso.back_width
+        # Sleeves    
+        diff = self.ftorso.front_width - self.btorso.back_width
+        self.sleeve = sleeves.Sleeve(name, body, design, depth_diff=diff)
 
-            self.sleeve = sleeves.Sleeve(name, body, design, depth_diff=diff)
+        _, f_sleeve_int = pyp.ops.cut_corner(
+            self.sleeve.interfaces['in_front_shape'].projecting_edges(), 
+            self.ftorso.interfaces['shoulder_corner'])
+        _, b_sleeve_int = pyp.ops.cut_corner(
+            self.sleeve.interfaces['in_back_shape'].projecting_edges(), 
+            self.btorso.interfaces['shoulder_corner'])
 
-            _, f_sleeve_int = pyp.ops.cut_corner(
-                self.sleeve.interfaces['in_front_shape'].projecting_edges(), 
-                self.ftorso.interfaces['shoulder_corner'])
-            _, b_sleeve_int = pyp.ops.cut_corner(
-                self.sleeve.interfaces['in_back_shape'].projecting_edges(), 
-                self.btorso.interfaces['shoulder_corner'])
-
-            if design['bodice']['sleeveless']['v']:  
-                # No sleeve component, only the cut remains
-                del self.sleeve
-            else:
-                self.stitching_rules.append((self.sleeve.interfaces['in_front'], f_sleeve_int))
-                self.stitching_rules.append((self.sleeve.interfaces['in_back'], b_sleeve_int))
+        if design['sleeve']['sleeveless']['v']:  
+            # No sleeve component, only the cut remains
+            del self.sleeve
+        else:
+            self.stitching_rules.append((self.sleeve.interfaces['in_front'], f_sleeve_int))
+            self.stitching_rules.append((self.sleeve.interfaces['in_back'], b_sleeve_int))
 
         # Collars
         # TODO collars with extra panels!
         # Front
-        collar_type = getattr(collars, design['bodice']['f_collar']['v'])
-        f_collar = collar_type("", design['bodice']['fc_depth']['v'], body['neck_w'])
+        collar_type = getattr(collars, design['collar']['f_collar']['v'])
+        f_collar = collar_type("", design['collar']['fc_depth']['v'], body['neck_w'])
         pyp.ops.cut_corner(f_collar, self.ftorso.interfaces['collar_corner'])
         # Back
-        collar_type = getattr(collars, design['bodice']['b_collar']['v'])
-        b_collar = collar_type("", design['bodice']['bc_depth']['v'], body['neck_w'])
+        collar_type = getattr(collars, design['collar']['b_collar']['v'])
+        b_collar = collar_type("", design['collar']['bc_depth']['v'], body['neck_w'])
         pyp.ops.cut_corner(b_collar, self.btorso.interfaces['collar_corner'])
 
         self.stitching_rules.append((self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides

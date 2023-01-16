@@ -10,13 +10,8 @@ design:
     ease:
       v: 0
       range: null
-    sleeve_shape:
-      v: SleeveSquareOpening
-      range: [SleeveSquare, SimpleSleeve, ArmholeSimple, ArmholeSquare, null]  # NOTE Null is only for degubbing purposes. Does not produce correct pattern
-    sleeveless: 
-      v: True
-      range: [True, False]
-    
+
+  collar:
     f_collar: 
       v: VNeckHalf
       range: [VNeckHalf]
@@ -30,7 +25,22 @@ design:
       v: 3
       range: [3, 25]
     
+  shirt: 
+    ease:
+        v: 0
+        range: null
+    length: 
+      v: 50
+      range: [30, 150]
+    width:   # Around the body 
+      v: 96
+      range: [96, 150]    # TODO min is a bust size
+    # TODO FLare at the bottom
+
   sleeve:
+    sleeveless: 
+        v: True
+        range: [True, False]
     armhole_shape: 
       v: ArmholeSmooth
       range: [ArmholeSquare, ArmholeSmooth]

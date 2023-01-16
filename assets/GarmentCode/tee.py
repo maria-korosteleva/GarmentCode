@@ -1,88 +1,139 @@
+""" Basic straight upper garment (T-shirt)
+    Note that the code is very similar to Bodice. 
+    The copy was creates for the sake of simplicity and (possible) future divergence of designs
+"""
+
 from copy import copy
+import numpy as np
 
 # Custom
 import pypattern as pyp
 
 # other assets
-from .sleeves import *
+from . import sleeves
+from . import collars
+
+class TorsoHalfPanel(pyp.Panel):
+    """Half of a simple non-fitted upper garment (e.g. T-Shirt)
+    
+        Fits to the bust size
+    """
+    def __init__(self, name, body, design, front=False) -> None:
+        """ Front = True, provides the adjustments necessary for the front panel
+        """
+        super().__init__(name)
+
+        design = design['shirt']
+        # account for ease in basic measurements
+        m_bust = design['width']['v'] + design['ease']['v']
+
+        # sizes 
+        body_width = (body['bust'] - body['back_width']) / 2 if front else body['back_width'] / 2
+        frac = body_width / body['bust'] 
+        self.width = frac * m_bust
+
+        shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
+        length = design['length']['v']
+
+        if front:
+            # length is adjusted due to shoulder inclanation
+            # for the correct sleeve fitting
+            fb_diff = (frac - (0.5 - frac)) * body['bust']
+            length = length - sh_tan * fb_diff
+
+        self.edges = pyp.esf.from_verts(
+            [0, 0], 
+            [-self.width, 0], 
+            [-self.width, length], 
+            [0, length + shoulder_incl], 
+            loop=True
+        )
+
+        # Interfaces
+        self.interfaces = {
+            'outside':  pyp.Interface(self, self.edges[1]),   
+            'inside': pyp.Interface(self, self.edges[-1]),
+            'shoulder': pyp.Interface(self, self.edges[-2]),
+            'bottom': pyp.Interface(self, self.edges[0]),
+            
+            # Reference to the corner for sleeve and collar projections
+            'shoulder_corner': pyp.Interface(self, [self.edges[-3], self.edges[-2]]),
+            'collar_corner': pyp.Interface(self, [self.edges[-2], self.edges[-1]])
+        }
+
+        # default placement
+        self.translate_by([0, body['height'] - body['head_l'] - length, 0])
 
 
-class TorsoPanel(pyp.Panel):
-    """Panel for the front/back of upper garments"""
+class TorsoHalf(pyp.Component):
+    """Definition of a simple T-Shirt"""
 
     def __init__(self, name, body, design) -> None:
         super().__init__(name)
 
-        neck_w = body['neck_w']
-        sholder_w = body['sholder_w']
-        
-        design = design['bodice']
-        length = design['length']['v']
-        c_depth = design['fc_depth']['v']
-        ease = design['ease']['v']
+        # Torso
+        self.ftorso = TorsoHalfPanel(f'{name}_ftorso', body, design, front=True).translate_by([0, 0, 20])
+        self.btorso = TorsoHalfPanel(f'{name}_btorso', body, design).translate_by([0, 0, -20])
 
-        width = sholder_w + ease
-        shoulder_top_l = (width - neck_w) / 2 
-        self.edges = pyp.esf.from_verts(
-            [0, 0], 
-            [0, length], 
-            [shoulder_top_l, length], 
-            [width / 2, length - c_depth], 
-            [shoulder_top_l + neck_w, length], 
-            [width, length], 
-            [width, 0], 
-            loop=True)
+        # Sleeves
+        diff = self.ftorso.width - self.btorso.width
 
-        # default placement
-        self.translate_by([-width / 2, 30 - length, 0])
+        self.sleeve = sleeves.Sleeve(name, body, design, depth_diff=diff)
+
+        _, f_sleeve_int = pyp.ops.cut_corner(
+            self.sleeve.interfaces['in_front_shape'].projecting_edges(), 
+            self.ftorso.interfaces['shoulder_corner'])
+        _, b_sleeve_int = pyp.ops.cut_corner(
+            self.sleeve.interfaces['in_back_shape'].projecting_edges(), 
+            self.btorso.interfaces['shoulder_corner'])
+
+        if design['sleeve']['sleeveless']['v']:  
+            # No sleeve component, only the cut remains
+            del self.sleeve
+        else:
+            self.stitching_rules.append((self.sleeve.interfaces['in_front'], f_sleeve_int))
+            self.stitching_rules.append((self.sleeve.interfaces['in_back'], b_sleeve_int))
+
+        # Collars
+        # Front
+        collar_type = getattr(collars, design['collar']['f_collar']['v'])
+        f_collar = collar_type("", design['collar']['fc_depth']['v'], body['neck_w'])
+        pyp.ops.cut_corner(f_collar, self.ftorso.interfaces['collar_corner'])
+        # Back
+        collar_type = getattr(collars, design['collar']['b_collar']['v'])
+        b_collar = collar_type("", design['collar']['bc_depth']['v'], body['neck_w'])
+        pyp.ops.cut_corner(b_collar, self.btorso.interfaces['collar_corner'])
+
+        self.stitching_rules.append((self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
+        self.stitching_rules.append((self.ftorso.interfaces['shoulder'], self.btorso.interfaces['shoulder']))  # tops
 
         self.interfaces = {
-            'outside_r': pyp.Interface(self, self.edges[0]),
-            'shoulder_r': pyp.Interface(self, self.edges[1]),
-            'shoulder_l': pyp.Interface(self, self.edges[4]),
-            'outside_l': pyp.Interface(self, self.edges[5]),
-            # Reference to the corners for sleeve and collar projections
-            'shoulder_corner_r': pyp.Interface(self, pyp.EdgeSequence(self.edges[0], self.edges[1])),
-            'shoulder_corner_l': pyp.Interface(self, pyp.EdgeSequence(self.edges[-3], self.edges[-2])),
+            'front_in': self.ftorso.interfaces['inside'],
+            'back_in': self.btorso.interfaces['inside'],
+
+            'f_bottom': self.ftorso.interfaces['bottom'],
+            'b_bottom': self.btorso.interfaces['bottom']
         }
 
 
-# TODO add collar variations
-# TODO define as a half
 class TShirt(pyp.Component):
-    """Definition of a simple T-Shirt"""
+    """Panel for the front of upper garments with darts to properly fit it to the shape"""
 
-    def __init__(self, body_opt, design_opt) -> None:
-        name_with_params = f"{self.__class__.__name__}_l{design_opt['bodice']['length']['v']}_s{body_opt['sholder_w']}_b{body_opt['bust_line']}"
+    def __init__(self, body, design) -> None:
+        name_with_params = f"{self.__class__.__name__}"
+        super().__init__(name_with_params)
 
-        super().__init__(name_with_params if design_opt['sleeve']['ruffle']['v'] == 1 else f'{name_with_params}_Ruffle_sl')
+        # TODO resolving names..
+        self.right = TorsoHalf(f'right', body, design)
+        self.left = TorsoHalf(f'left', body, design).mirror()
 
-        # sleeves
-        self.r_sleeve = SimpleSleeve('r', body_opt, design_opt)
-        self.l_sleeve = SimpleSleeve('l', body_opt, design_opt).mirror()
+        self.stitching_rules.append((self.right.interfaces['front_in'], self.left.interfaces['front_in']))
+        self.stitching_rules.append((self.right.interfaces['back_in'], self.left.interfaces['back_in']))
 
-        # Torso
-        self.ftorso = TorsoPanel('ftorso', body_opt, design_opt).translate_by([0, 0, 20])
-        self.btorso = TorsoPanel('btorso', body_opt, design_opt).translate_by([0, 0, -20])
-
-        # Cut the sleeve shapes to connect them nicely
-        _, fr_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[0].projecting_edges(), self.ftorso.interfaces['shoulder_corner_r'])
-        _, fl_sleeve_int = pyp.ops.cut_corner(self.l_sleeve.interfaces[0].projecting_edges(), self.ftorso.interfaces['shoulder_corner_l'])
-        _, br_sleeve_int = pyp.ops.cut_corner(self.r_sleeve.interfaces[1].projecting_edges(), self.btorso.interfaces['shoulder_corner_r'])
-        _, bl_sleeve_int = pyp.ops.cut_corner(self.l_sleeve.interfaces[1].projecting_edges(), self.btorso.interfaces['shoulder_corner_l'])
-
-        self.stitching_rules = pyp.Stitches(
-            # sides
-            (self.ftorso.interfaces['outside_r'], self.btorso.interfaces['outside_r']),
-            (self.ftorso.interfaces['outside_l'], self.btorso.interfaces['outside_l']),
-
-            # tops
-            (self.ftorso.interfaces['shoulder_r'], self.btorso.interfaces['shoulder_r']),
-            (self.ftorso.interfaces['shoulder_l'], self.btorso.interfaces['shoulder_l']),
-
-            # Sleeves are connected by new interfaces
-            (self.r_sleeve.interfaces[0], fr_sleeve_int),
-            (self.l_sleeve.interfaces[0], fl_sleeve_int),
-            (self.r_sleeve.interfaces[1], br_sleeve_int),
-            (self.l_sleeve.interfaces[1], bl_sleeve_int),
-        )
+        self.interfaces = {   # Bottom connection
+            'bottom': pyp.Interface.from_multiple(
+                self.right.interfaces['f_bottom'],
+                self.left.interfaces['f_bottom'],
+                self.left.interfaces['b_bottom'], 
+                self.right.interfaces['b_bottom'],)
+        }
