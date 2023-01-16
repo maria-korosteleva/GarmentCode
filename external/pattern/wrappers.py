@@ -198,7 +198,9 @@ class VisPattern(core.ParametrizedPattern):
     def _save_as_image_3D(self, png_filename):
         """Save the patterns with 3D positioning using matplotlib visualization"""
 
-        ax = plt.figure().add_subplot(projection='3d')
+        fig = plt.figure(figsize=(30 / 2.54, 30 / 2.54))
+        ax = fig.add_subplot(projection='3d')
+
         for panel in self.pattern['panels']:
             p = self.pattern['panels'][panel]
             rot = p['rotation']

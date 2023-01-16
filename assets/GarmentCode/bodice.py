@@ -164,10 +164,10 @@ class FittedShirtHalf(pyp.Component):
             # back_sl = sleeves.ArmholeSquareSide('', body, design, shift=0, incl=incl)
             
             _, f_sleeve_int = pyp.ops.cut_corner(
-                self.sleeve.interfaces['in_front'].projecting_edges(), 
+                self.sleeve.interfaces['in_front_shape'].projecting_edges(), 
                 self.ftorso.interfaces['shoulder_corner'])
             _, b_sleeve_int = pyp.ops.cut_corner(
-                self.sleeve.interfaces['in_back'].projecting_edges(), 
+                self.sleeve.interfaces['in_back_shape'].projecting_edges(), 
                 self.btorso.interfaces['shoulder_corner'])
 
             if design['bodice']['sleeveless']['v']:  

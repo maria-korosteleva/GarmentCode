@@ -4,7 +4,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 # DRAFT
-class SleevePanel(pyp.Panel):
+class SleevePanelOld(pyp.Panel):
     """Simple panel for a sleeve with optional ruffles on the sholder connection"""
 
     def __init__(self, name, body_opt, design_opt) -> None:
@@ -34,8 +34,8 @@ class SimpleSleeve(pyp.Component):
         super().__init__(f'{self.__class__.__name__}_{tag}')
 
         # sleeves
-        self.f_sleeve = SleevePanel(f'{tag}_f', body_opt, design_opt).translate_by([0, 0, 15])
-        self.b_sleeve = SleevePanel(f'{tag}_b', body_opt, design_opt).translate_by([0, 0, -15])
+        self.f_sleeve = SleevePanelOld(f'{tag}_f', body_opt, design_opt).translate_by([0, 0, 15])
+        self.b_sleeve = SleevePanelOld(f'{tag}_b', body_opt, design_opt).translate_by([0, 0, -15])
 
         self.stitching_rules = pyp.Stitches(
             (self.f_sleeve.interfaces[0], self.b_sleeve.interfaces[0]),
@@ -89,7 +89,7 @@ class SleeveOpeningPanelFront(pyp.Panel):
         self.translate_to([-body['sholder_w'] / 2 - low_depth, body['height'] - body['head_l'] - body['armscye_depth'] + 4, 0])
 
 
-class SleevePanelBack(pyp.Panel):
+class SleevePanel(pyp.Panel):
     def __init__(self, name, body, width, low_depth, top_depth) -> None:
         super().__init__(name)
 
@@ -105,45 +105,63 @@ class SleevePanelBack(pyp.Panel):
         delta_y = delta_l * sina * cosa
         delta_x = delta_l * cosa * cosa
 
+
         self.edges = pyp.esf.from_verts(
-            [0, 0], [low_depth, 0],  [low_depth, width], 
-            [low_depth - top_depth, width], 
-            [bottom_v[0] - delta_x, bottom_v[1] + delta_y],
-            [-length * sina, - length * cosa],
-            loop=True)
+            [0, 0], [length, 0], [length, low_depth],
+            [length + width * cosa, low_depth + width * sina],
+            [0, low_depth + width * sina],
+            loop=True
+        )
+        # align the angle
+        self.edges.rotate(angle)
+
+        # DRAFT self.edges = pyp.esf.from_verts(
+        #     [0, 0], [low_depth, 0],  [low_depth, width], 
+        #     [low_depth - top_depth, width], 
+        #     [bottom_v[0] - delta_x, bottom_v[1] + delta_y],
+        #     [-length * sina, - length * cosa],
+        #     loop=True)
 
         # Interfaces
         self.interfaces = {
-            'in': pyp.Interface(self, self.edges[:2]),
-            'shoulder': pyp.Interface(self, self.edges[2]),
+            'in': pyp.Interface(self, self.edges[1:3]),
+            'in_shape': pyp.Interface(self, pyp.esf.from_verts([0, 0], [low_depth, 0],  [low_depth, width])),
+            # DRAFT 'shoulder': pyp.Interface(self, self.edges[2]),
             'out': pyp.Interface(self, self.edges[-1]),
-            'top': pyp.Interface(self, self.edges[-3]),
-            'bottom': pyp.Interface(self, self.edges[-1])
+            'top': pyp.Interface(self, self.edges[-2]),
+            'bottom': pyp.Interface(self, self.edges[0])
         }
 
         # Default placement
-        self.translate_to([-body['sholder_w'] / 2 - low_depth, body['height'] - body['head_l'] - body['armscye_depth'] + 4, 0])
+        self.set_pivot(self.edges[0].end)
+        self.translate_to([- body['sholder_w'] / 2 - low_depth, body['height'] - body['head_l'] - body['armscye_depth']+ 4, 0])
 
-# DRAFT propably one instance of sleeve panel is enough? 
-class SleevePanelFront(pyp.Panel):
-    def __init__(self, name, body, width, low_depth, top_depth) -> None:
+
+class SleeveStripPanel(pyp.Panel):
+    def __init__(self, name, body, depth, length, angle) -> None:
         super().__init__(name)
 
+        # TODO Cuffs, ruffles start, fulles end, opening shape..
+
+        # Sleeve opening location
         self.edges = pyp.esf.from_verts(
-            [0, 0], [low_depth, 0],  [low_depth, width], 
-            [low_depth - top_depth, width], 
-            [low_depth - top_depth, 0.2 * width], 
-            loop=True)
+            [0, 0], [length, 0], [length, depth], [0, depth],
+            loop=True
+        )
+        # align the angle
+        self.edges.rotate(angle)
 
         # Interfaces
         self.interfaces = {
-            'in': pyp.Interface(self, self.edges[:2]),
-            'shoulder': pyp.Interface(self, self.edges[2]),
+            'in': pyp.Interface(self, self.edges[1:3]),
             'out': pyp.Interface(self, self.edges[-1]),
+            'top': pyp.Interface(self, self.edges[-2]),
+            'bottom': pyp.Interface(self, self.edges[0])
         }
 
         # Default placement
-        self.translate_to([-body['sholder_w'] / 2 - low_depth, body['height'] - body['head_l'] - body['armscye_depth'] + 4, 0])
+        self.set_pivot(self.edges[0].end)
+        self.translate_to([- body['sholder_w'] / 2 - depth, body['height'] - body['head_l'] - body['armscye_depth']+ 4, 0])
 
 
 class SleeveOpening(pyp.Component):
@@ -154,18 +172,20 @@ class SleeveOpening(pyp.Component):
         width = body['armscye_depth'] * 2
         
         # sleeves
-        self.f_sleeve = SleevePanelBack(f'{tag}_f', body, width/2, inclanation + depth_diff, (inclanation + depth_diff) / 2).translate_by([0, 0, 15])
-        self.b_sleeve = SleevePanelBack(f'{tag}_b', body, width/2, inclanation, (inclanation + depth_diff) / 2).translate_by([0, 0, -15])
+        self.f_sleeve = SleevePanel(f'{tag}_f', body, width/2, inclanation + depth_diff, (inclanation + depth_diff) / 2).translate_by([0, 0, 15])
+        self.b_sleeve = SleevePanel(f'{tag}_b', body, width/2, inclanation, (inclanation + depth_diff) / 2).translate_by([0, 0, -15])
 
         self.stitching_rules = pyp.Stitches(
-            (self.f_sleeve.interfaces['shoulder'], self.b_sleeve.interfaces['shoulder']),
+            # DRAFT (self.f_sleeve.interfaces['shoulder'], self.b_sleeve.interfaces['shoulder']),
             (self.f_sleeve.interfaces['top'], self.b_sleeve.interfaces['top']),
             (self.f_sleeve.interfaces['bottom'], self.b_sleeve.interfaces['bottom']),
         )
 
         self.interfaces = {
             'in_front': self.f_sleeve.interfaces['in'],
+            'in_front_shape': pyp.Interface(self, pyp.esf.from_verts([0, 0], [inclanation, 0],  [inclanation, width])),
             'in_back': self.b_sleeve.interfaces['in'],
+            'in_back_shape': self.b_sleeve.interfaces['in_shape'],
             'out': pyp.Interface.from_multiple(self.f_sleeve.interfaces['out'], self.b_sleeve.interfaces['out'])
         }
 
