@@ -163,6 +163,7 @@ class Panel(BaseComponent):
             # Rotations
             curr_euler = self.rotation.as_euler('XYZ')
             curr_euler[1] *= -1  
+            curr_euler[2] *= -1  
             self.rotate_to(R.from_euler('XYZ', curr_euler))  
 
             # Fix right/wrong side
