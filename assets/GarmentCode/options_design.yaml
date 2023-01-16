@@ -58,7 +58,7 @@ design:
     
   sleeve:
     sleeveless: 
-        v: True
+        v: False
         range: [True, False]
     armhole_shape: 
       v: ArmholeSmooth
@@ -78,7 +78,10 @@ design:
     opening_width:
       v: 30
       range: [20, 40]
-    shoulder_len:   # can create "Standing" shoulder
+    standing_shoulder: 
+      v: False
+      range: [True, False]
+    standing_shoulder_len:   # can create "Standing" shoulder
       v: 10
       range: [4, 10]
 

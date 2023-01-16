@@ -4,22 +4,27 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 class SleevePanel(pyp.Panel):
-    def __init__(self, name, body, design, width, low_depth, top_depth) -> None:
+    def __init__(self, name, body, design, opening_width, opening_depth, width_diff=0) -> None:
         super().__init__(name)
 
         # TODO Cuffs, ruffles start, fulles end, opening shape..
 
-        angle = np.deg2rad(50)
+        pose_angle = np.deg2rad(body['arm_pose_angle'])
+        shoulder_angle = np.deg2rad(body['shoulder_incl'])
+        standing = design['standing_shoulder']['v']
+
+        base_angle = pose_angle if standing else shoulder_angle
+
         length = design['length']['v']
         armhole = globals()[design['armhole_shape']['v']]
         
-        proj_shape, open_shape = armhole(low_depth, width, angle=angle, incl_coeff=0.2, w_coeff=0.1)
+        proj_shape, open_shape = armhole(
+            opening_depth, opening_width, angle=base_angle, incl_coeff=0.2, w_coeff=0.1)
 
-        open_shape.rotate(-angle)  
-        arm_width = design['opening_width']['v'] / 2   # DRAFT  abs(open_shape[0].start[1] - open_shape[-1].end[1])
+        open_shape.rotate(-base_angle)  
+        arm_width = (design['opening_width']['v'] + width_diff) / 2   # DRAFT  abs(open_shape[0].start[1] - open_shape[-1].end[1])
 
-        # Smoothing the top
-        # FIXME Which doesn't work that effificently..
+        # Main body of a sleeve
         self.edges = pyp.esf.from_verts(
             [0, 0], [0, -arm_width], [length, -arm_width]
         )
@@ -27,31 +32,29 @@ class SleevePanel(pyp.Panel):
         open_shape[0].start = self.edges[-1].end   # chain
         self.edges.append(open_shape)
 
-        # align the angle
-        self.edges.rotate(angle) 
+        # align the angle with the pose -- for draping
+        self.edges.rotate(pose_angle) 
 
-        # top smooting 
-        end = self.edges[-1].end
-        shoulder_angle = np.deg2rad(body['shoulder_incl'])
-        len = design['shoulder_len']['v']
-        self.edges.append(pyp.Edge(end, [end[0] - len * np.cos(shoulder_angle), end[1] - len * np.sin(shoulder_angle)]))
+        if standing:  # Add a "shelve" to create square shoulder appearance
+            end = self.edges[-1].end
+            len = design['standing_shoulder_len']['v']
+            self.edges.append(pyp.Edge(end, [end[0] - len * np.cos(shoulder_angle), end[1] - len * np.sin(shoulder_angle)]))
 
         # Fin
         self.edges.close_loop()
         
-
         # Interfaces
         self.interfaces = {
             'in': pyp.Interface(self, open_shape),
             'in_shape': pyp.Interface(self, proj_shape),
             'out': pyp.Interface(self, self.edges[0]),
-            'top': pyp.Interface(self, self.edges[-2:]),   
+            'top': pyp.Interface(self, self.edges[-2:] if standing else self.edges[-1]),   
             'bottom': pyp.Interface(self, self.edges[1])
         }
 
         # Default placement
-        self.set_pivot(self.edges[-2].start)
-        self.translate_to([- body['sholder_w'] / 2 - low_depth * 1.5, body['height'] - body['head_l'] + 4, 0])  #  - low_depth / 2
+        self.set_pivot(open_shape[-1].end)
+        self.translate_to([- body['sholder_w'] / 2 - opening_depth * 1.5, body['height'] - body['head_l'] + 7, 0])  #  - low_depth / 2
 
 
 class Sleeve(pyp.Component):
@@ -66,10 +69,12 @@ class Sleeve(pyp.Component):
         # sleeves
         self.f_sleeve = SleevePanel(
             f'{tag}_f', body, design, 
-            width/2, inclanation + depth_diff, (inclanation + depth_diff) / 2).translate_by([0, 0, 30])
+            width/2, inclanation + depth_diff, depth_diff).translate_by([0, 0, 30])
         self.b_sleeve = SleevePanel(
-            f'{tag}_b', body, design, 
-            width/2, inclanation, (inclanation + depth_diff) / 2).translate_by([0, 0, -25])
+            f'{tag}_b', body, design, width/2, inclanation, -depth_diff).translate_by([0, 0, -25])
+
+        # DEBUG
+        print('Top Len Diff ', self.f_sleeve.interfaces['top'].edges.length(), self.b_sleeve.interfaces['top'].edges.length())
 
         self.stitching_rules = pyp.Stitches(
             # DRAFT (self.f_sleeve.interfaces['shoulder'], self.b_sleeve.interfaces['shoulder']),
