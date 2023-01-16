@@ -186,14 +186,13 @@ class FittedShirtHalf(pyp.Component):
         self.stitching_rules.append((self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
         self.stitching_rules.append((self.ftorso.interfaces['shoulder'], self.btorso.interfaces['shoulder']))  # tops
 
-        self.interfaces = [
-            self.ftorso.interfaces['inside'],  
-            self.btorso.interfaces['inside'],
+        self.interfaces = {
+            'front_in': self.ftorso.interfaces['inside'],
+            'back_in': self.btorso.interfaces['inside'],
 
-            # bottom
-            self.ftorso.interfaces['bottom'],
-            self.btorso.interfaces['bottom'],
-        ]
+            'f_bottom': self.ftorso.interfaces['bottom'],
+            'b_bottom': self.btorso.interfaces['bottom']
+        }
 
 
 class FittedShirt(pyp.Component):
@@ -207,12 +206,13 @@ class FittedShirt(pyp.Component):
         self.right = FittedShirtHalf(f'right', body, design)
         self.left = FittedShirtHalf(f'left', body, design).mirror()
 
-        self.stitching_rules.append((self.right.interfaces[0], self.left.interfaces[0]))
-        self.stitching_rules.append((self.right.interfaces[1], self.left.interfaces[1]))
+        self.stitching_rules.append((self.right.interfaces['front_in'], self.left.interfaces['front_in']))
+        self.stitching_rules.append((self.right.interfaces['back_in'], self.left.interfaces['back_in']))
 
-        self.interfaces = [   # Bottom connection
-            self.right.interfaces[2],
-            self.right.interfaces[3],
-            self.left.interfaces[2],
-            self.left.interfaces[3],
-        ]
+        self.interfaces = {   # Bottom connection
+            'bottom': pyp.Interface.from_multiple(
+                self.right.interfaces['f_bottom'],
+                self.left.interfaces['f_bottom'],
+                self.left.interfaces['b_bottom'], 
+                self.right.interfaces['b_bottom'],)
+        }
