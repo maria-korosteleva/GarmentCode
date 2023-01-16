@@ -156,12 +156,8 @@ class FittedShirtHalf(pyp.Component):
             
             diff = self.ftorso.front_width - self.btorso.back_width
 
-            self.sleeve = sleeves.SleeveOpening(name, body, design, depth_diff=diff)
+            self.sleeve = sleeves.Sleeve(name, body, design, depth_diff=diff)
 
-            # DEBUG 
-            # front_sl = sleeves.ArmholeSquareSide('', body, design, shift=0, incl=incl + diff)
-            # back_sl = sleeves.ArmholeSquareSide('', body, design, shift=0, incl=incl)
-            
             _, f_sleeve_int = pyp.ops.cut_corner(
                 self.sleeve.interfaces['in_front_shape'].projecting_edges(), 
                 self.ftorso.interfaces['shoulder_corner'])
@@ -173,27 +169,8 @@ class FittedShirtHalf(pyp.Component):
                 # No sleeve component, only the cut remains
                 del self.sleeve
             else:
-                pass
-                # FIXME merging f&b into one interface results in 
-                # edge ordering ambiguity
                 self.stitching_rules.append((self.sleeve.interfaces['in_front'], f_sleeve_int))
                 self.stitching_rules.append((self.sleeve.interfaces['in_back'], b_sleeve_int))
-
-            # DRAFT
-            # sleeve_type = getattr(sleeves, design_opt['bodice']['sleeves']['v'])
-            # self.sleeve = sleeve_type(f'{name}_sl', body_opt, design_opt, shift=2)   #DRAFT 
-            # if isinstance(self.sleeve, pyp.Component):
-            #     # Order of edges updated after (autonorm)..
-            #     _, fr_sleeve_int = pyp.ops.cut_corner(self.sleeve.interfaces[0].projecting_edges(), self.ftorso.interfaces['shoulder_corner'])
-            #     _, br_sleeve_int = pyp.ops.cut_corner(self.sleeve.interfaces[1].projecting_edges(), self.btorso.interfaces['shoulder_corner'])
-
-            #     # Sleeves are connected by new interfaces
-            #     self.stitching_rules.append((self.sleeve.interfaces[0], fr_sleeve_int))
-            #     self.stitching_rules.append((self.sleeve.interfaces[1], br_sleeve_int))
-            # else:   # it's just an edge sequence to define sleeve shape
-            #     # Simply do the projection -- no new stitches needed
-            #     pyp.ops.cut_corner(self.sleeve[0], self.ftorso.interfaces['shoulder_corner'])
-            #     pyp.ops.cut_corner(self.sleeve[1], self.btorso.interfaces['shoulder_corner'])
 
         # Collars
         # TODO collars with extra panels!

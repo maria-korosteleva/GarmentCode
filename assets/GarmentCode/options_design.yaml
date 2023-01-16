@@ -14,7 +14,7 @@ design:
       v: SleeveSquareOpening
       range: [SleeveSquare, SimpleSleeve, ArmholeSimple, ArmholeSquare, null]  # NOTE Null is only for degubbing purposes. Does not produce correct pattern
     sleeveless: 
-      v: False
+      v: True
       range: [True, False]
     
     f_collar: 
