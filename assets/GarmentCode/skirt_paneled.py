@@ -114,10 +114,7 @@ class SkirtManyPanels(pyp.Component):
         self.front = ThinSkirtPanel('front', panel_w:=waist / n_panels,
                                     bottom_width=panel_w * flare_coeff,
                                     length=length )
-        self.front.translate_to(
-            [-waist / 4, 
-            body['height'] - body['head_l'] - body['waist_line'], 
-            0])
+        self.front.translate_to([-waist / 4, body['waist_level'], 0])
         # Align with a body
         self.front.rotate_by(R.from_euler('XYZ', [0, -90, 0], degrees=True))
         self.front.rotate_align([-waist / 4, 0, panel_w / 2])
@@ -142,7 +139,7 @@ class SkirtManyPanelsWB(pyp.Component):
 
         wb_width = 5
         self.skirt = SkirtManyPanels(body, design).translate_by([0, -wb_width, 0])
-        self.wb = WB(body['waist'], wb_width).translate_by([0, body['height'] - body['head_l'] - body['waist_line'], 0])
+        self.wb = WB(body, design).translate_by([0, wb_width, 0])
 
         self.stitching_rules.append(
             (self.skirt.interfaces['top'], self.wb.interfaces['bottom']))

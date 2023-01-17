@@ -34,13 +34,13 @@ if __name__ == '__main__':
         # WB(),
         # Skirt2(),
         # SkirtManyPanels(body, n_panels=10),
-        # SkirtManyPanelsWB(body, design)
+        SkirtManyPanelsWB(body, design),
         # Shirt(body, design),
         # FittedShirt(body, design),
         # GodetSkirt(body, design),
         # Pants(body, design),
         # WBPants(body, design),
-        MetaGarment('Jumpsuit', body, design)
+        # MetaGarment('Jumpsuit', body, design)
     ]
 
     # test_garments[0].translate_by([2, 0, 0])
