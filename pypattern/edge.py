@@ -194,6 +194,17 @@ class EdgeSequence():
             verts.pop(-1)
         return verts
 
+    def shortcut(self):
+        """Return 'shortcut' vector of the edge sequence
+        from the first vertex to the last
+        """
+        # TODO account for wrongly flipped edges..
+        return np.array([self[0].start, self[-1].end]) 
+
+    def shortcut_length(self):
+        s = self.shortcut()
+        return norm(s[1] - s[0])
+
     # ANCHOR Modifiers
     # All modifiers return self object to allow chaining
     # Wrappers around python's list
