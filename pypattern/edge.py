@@ -292,8 +292,9 @@ class EdgeSequence():
         end of the last edge in sequence
         """
 
-        # TODO With preservation of total length?
-        self.isChained()
+        # TODO Version With preservation of total length?
+        self.isChained()  # FIXME The seqeunce may be re-ordered or edges flipped
+                          # Find the vertices that do not have a pair in edges
         if self.isLoop():
             print(f'{self.__class__.__name__}::Warning::Extending looped edge sequences is not available')
             return self

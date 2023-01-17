@@ -26,6 +26,7 @@ class BodiceFrontHalf(pyp.Panel):
         self.front_width = front_frac * m_bust
         waist = front_frac * m_waist
         shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.front_width
+        bottom_d_width = (self.front_width - waist) * 2 / 3
 
         # side length is adjusted due to shoulder inclanation
         # for the correct sleeve fitting
@@ -34,11 +35,14 @@ class BodiceFrontHalf(pyp.Panel):
 
         self.edges = pyp.esf.from_verts(
             [0, 0], 
+            [-m_waist / 4 - bottom_d_width, 0],   # Extra point for correct connections at the bottom
             [-self.front_width, 0], 
             [-self.front_width, max_len], 
             [0, max_len + shoulder_incl], 
             loop=True
         )
+
+        front_bottom_part_edge = self.edges[1]
 
         # Side dart
         bust_line = body['waist_line'] - body['bust_line']
@@ -46,15 +50,13 @@ class BodiceFrontHalf(pyp.Panel):
         side_d_width = max_len - side_len
         s_edge, s_dart_edges, side_interface = pyp.ops.cut_into_edge(
             pyp.esf.dart_shape(side_d_width, side_d_depth), 
-            self.edges[1], 
+            self.edges[2], 
             offset=bust_line + side_d_width / 2, right=True)
-        self.edges.substitute(1, s_edge)
+        self.edges.substitute(2, s_edge)
         self.stitching_rules.append(
             (pyp.Interface(self, s_dart_edges[0]), pyp.Interface(self, s_dart_edges[1])))
 
         # Bottom dart
-        bottom_d_width = (self.front_width - waist) * 2 / 3
-
         b_edge, b_dart_edges, b_interface = pyp.ops.cut_into_edge(
             pyp.esf.dart_shape(bottom_d_width, 1. * bust_line), 
             self.edges[0], 
@@ -64,14 +66,15 @@ class BodiceFrontHalf(pyp.Panel):
             (pyp.Interface(self, b_dart_edges[0]), pyp.Interface(self, b_dart_edges[1])))
 
         # Take some fabric from side in the bottom 
-        b_edge[-1].end[0] = - (waist + bottom_d_width)
+        front_bottom_part_edge.end[0] = - (waist + bottom_d_width)
 
         # Interfaces
         self.interfaces = {
             'outside':  pyp.Interface(self, side_interface),   # side_interface,    # pyp.Interface(self, [side_interface]),  #, self.edges[-3]]),
             'inside': pyp.Interface(self, self.edges[-1]),
             'shoulder': pyp.Interface(self, self.edges[-2]),
-            'bottom': pyp.Interface(self, b_interface),
+            'bottom_front': pyp.Interface(self, b_interface),
+            'bottom_back': pyp.Interface(self, front_bottom_part_edge),
             
             # Reference to the corner for sleeve and collar projections
             'shoulder_corner': pyp.Interface(self, [self.edges[-3], self.edges[-2]]),
@@ -109,7 +112,7 @@ class BodiceBackHalf(pyp.Panel):
             [0, 0], 
             [-waist_width, 0],
             [-self.back_width, body['waist_line'] - body['bust_line']],  # from the bottom
-            [-self.back_width, length],   # DRAFT shoulder_width   # Take some fabric from the shoulders
+            [-self.back_width, length],   
             [0, length + shoulder_incl],   # Add some fabric for the neck (inclanation of shoulders)
             loop=True)
         
@@ -148,7 +151,7 @@ class BodiceHalf(pyp.Component):
         super().__init__(name)
 
         # Torso
-        self.ftorso = BodiceFrontHalf(f'{name}_ftorso', body, design).translate_by([0, 0, 20])
+        self.ftorso = BodiceFrontHalf(f'{name}_ftorso', body, design).translate_by([0, 0, 25])
         self.btorso = BodiceBackHalf(f'{name}_btorso', body, design).translate_by([0, 0, -20])
 
         # Sleeves    
@@ -187,8 +190,9 @@ class BodiceHalf(pyp.Component):
             'front_in': self.ftorso.interfaces['inside'],
             'back_in': self.btorso.interfaces['inside'],
 
-            'f_bottom': self.ftorso.interfaces['bottom'],
-            'b_bottom': self.btorso.interfaces['bottom']
+            'f_bottom': self.ftorso.interfaces['bottom_front'],
+            'b_bottom': pyp.Interface.from_multiple(
+                self.ftorso.interfaces['bottom_back'], self.btorso.interfaces['bottom'])
         }
 
 
@@ -206,10 +210,14 @@ class FittedShirt(pyp.Component):
         self.stitching_rules.append((self.right.interfaces['front_in'], self.left.interfaces['front_in']))
         self.stitching_rules.append((self.right.interfaces['back_in'], self.left.interfaces['back_in']))
 
+        # Adjust interface ordering for correct connectivity
+        self.right.interfaces['f_bottom'].reorder([0, 1], [1, 0])  # DRAFT
+        self.left.interfaces['b_bottom'].reorder([1, 2], [2, 1])  # DRAFT
+
         self.interfaces = {   # Bottom connection
             'bottom': pyp.Interface.from_multiple(
                 self.right.interfaces['f_bottom'],
                 self.left.interfaces['f_bottom'],
-                self.left.interfaces['b_bottom'], 
+                self.left.interfaces['b_bottom'],
                 self.right.interfaces['b_bottom'],)
         }

@@ -20,7 +20,10 @@ class Interface():
 
         self.edges = edges if isinstance(edges, EdgeSequence) else EdgeSequence(edges)
         self.panel = [panel for _ in range(len(self.edges))]  # matches every edge 
-        self.ruffle = [dict(coeff=ruffle, sec=(0, len(self.edges)))]
+
+        # Ruffles are applied to sections
+        # Since extending a chain of edges != extending each edge individually
+        self.ruffle = [dict(coeff=ruffle, sec=[0, len(self.edges)])]
 
     def projecting_edges(self) -> EdgeSequence:
         """Return edges shape that should be used when projecting interface onto another panel
@@ -44,6 +47,51 @@ class Interface():
     def __repr__(self) -> str:
         return self.__str__()
 
+    def reverse(self):
+        """Reverse the order of edges in the interface
+            (without updating the edge objects)
+
+            Reversal is useful for reordering interface edges for correct matching in the multi-stitches
+        """
+        self.edges.edges.reverse()   # TODO Condition on edge sequence reverse 
+        self.panel.reverse()
+
+        enum = len(self.edges)
+        for r in self.ruffle:
+            # Update ids
+            r['sec'][0] = enum - r['sec'][0]
+            r['sec'][1] = enum - r['sec'][1]
+            # Swap
+            r['sec'][0], r['sec'][1] = r['sec'][1], r['sec'][0]
+        
+        return self
+
+    def reorder(self, curr_edge_ids, projected_edge_ids):
+        """Change the order of edges from curr_edge_ids to projected_edge_ids in the interface
+        """
+        
+        for i, j in zip(curr_edge_ids, projected_edge_ids):
+            for r in self.ruffle:
+                if (i >= r['sec'][0] and i < r['sec'][1] 
+                        and (j < r['sec'][0] or j > r['sec'][1])):
+                    raise NotImplemented(
+                        f'{self.__class__.__name__}::Error::reordering between panel-related sub-segments is not supported')
+        
+        new_edges = EdgeSequence()
+        new_panel_list = []
+        for i in range(len(self.panel)):
+            id = i if i not in curr_edge_ids else projected_edge_ids[curr_edge_ids.index(i)]
+
+            # edges
+            new_edges.append(self.edges[id])
+
+            # panels
+            new_panel_list.append(self.panel[id])
+            
+        self.edges = new_edges
+        self.panel = new_panel_list
+
+
     @staticmethod
     def from_multiple(*ints):
         """Create interface from other interfaces: 
@@ -60,12 +108,11 @@ class Interface():
         new_int.panel = []
         new_int.ruffle = []
         
-        
         for elem in ints:
             shift = len(new_int.edges)
             new_int.ruffle += [copy(r) for r in elem.ruffle]
             for r in new_int.ruffle[-len(elem.ruffle):]:
-                r.update(sec=(r['sec'][0] + shift, r['sec'][1] + shift))
+                r.update(sec=[r['sec'][0] + shift, r['sec'][1] + shift])
 
             new_int.edges.append(elem.edges)
             new_int.panel += elem.panel 

@@ -101,6 +101,7 @@ class StitchingRule():
         self._match_to_fractions(self.int1, frac2, edges2, panels2)
         self._match_to_fractions(self.int2, frac1, edges1, panels1)
 
+
     def _match_to_fractions(self, inter:Interface, to_add, edges, panels, tol=1e-3):
         """Add the vertices at given location to the edge sequence in a given interface
 
@@ -143,6 +144,8 @@ class StitchingRule():
                 # Match the order 
                 # if base edge start->end or end->start order matches 
                 # the edge to_add better when connecting in 3D
+                # TODO Now that we have a manual ordering, 
+                # Automatic reordering may not be needed
                 adding_edge, adding_e_panel = edges[add_id], panels[add_id]
                 add_3d = adding_e_panel.point_to_3D(adding_edge.start)
 

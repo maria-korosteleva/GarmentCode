@@ -8,7 +8,7 @@
 design: 
   meta: 
     upper: 
-      v: Shirt
+      v: FittedShirt
       range: [FittedShirt, Shirt]
     wb: 
       v: True
@@ -22,7 +22,7 @@ design:
       v: 82
       range: [82, 200]   # TODO from waist 
     width: 
-      v: 5
+      v: 8
       range: [3, 15]
 
   bodice: 
@@ -32,10 +32,10 @@ design:
 
   shirt: 
     ease:
-        v: 0
-        range: null
+      v: 0
+      range: null
     length: 
-      v: 30
+      v: 40
       range: [30, 150]
     width:   # Around the body 
       v: 96
@@ -120,7 +120,7 @@ design:
     
   pants: 
     length: 
-      v: 70
+      v: 60
       range: [10, 40]   # TODO related with height and body proportions? 
     width: 
       v: 32
