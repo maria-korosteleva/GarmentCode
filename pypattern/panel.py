@@ -119,7 +119,6 @@ class Panel(BaseComponent):
 
         return self
 
-
     def center_x(self):
         """Adjust translation over x s.t. the center of the panel is aligned with the Y axis (center of the body)"""
 
@@ -274,3 +273,11 @@ class Panel(BaseComponent):
         # Current norm direction
         avg_norm = sum(norms) / len(norms)
         return avg_norm / np.linalg.norm(avg_norm)
+
+    def bbox3D(self):
+        """Evaluate 3D bounding box of the current panel"""
+
+        verts_2d = self.edges.verts()
+        verts_3d = np.asarray([self.point_to_3D(v) for v in verts_2d])
+
+        return verts_3d.min(axis=0), verts_3d.max(axis=0)

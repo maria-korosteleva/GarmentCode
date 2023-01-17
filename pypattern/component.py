@@ -1,4 +1,4 @@
-
+import numpy as np
 # Custom
 # TODO some elements of spec template should probably be optional?
 from pattern.core import BasicPattern
@@ -81,6 +81,20 @@ class Component(BaseComponent):
         return spattern   
 
     # Utilities
+    def bbox3D(self):
+        """Evaluate 3D bounding box of the current component"""
+        
+        subs = self._get_subcomponents()
+        bboxes = [s.bbox3D() for s in subs]
+
+        mins = np.vstack([b[0] for b in bboxes])
+        maxes = np.vstack([b[1] for b in bboxes])
+
+        return mins.min(axis=0), maxes.max(axis=0)
+
+
+
+
     def _get_subcomponents(self):
         """Unique set of subcomponents defined in the self.subs list or as attributes of the object"""
 

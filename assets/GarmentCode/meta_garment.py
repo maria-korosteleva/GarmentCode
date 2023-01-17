@@ -27,10 +27,17 @@ class MetaGarment(pyp.Component):
         Upper = globals()[upper_name]
         self.upper = Upper(body, design)
 
+        # TODO base component
+        level_y = self.upper.bbox3D()[0][1]
+
         # Belt (or not)
         if design['meta']['wb']['v']:
             self.wb = WB(body, design)
-            # TODO Place below the upper garment self.wb.translate_to()   
+            bbox_wb = self.wb.bbox3D()
+            
+            # Place below the upper garment self.wb.translate_to()   
+            self.wb.translate_by([0, level_y - bbox_wb[1][1] - self.wb.width / 2, 0])
+            level_y = self.wb.bbox3D()[0][1]
 
             # TODO Connection is crossing over for T-Shirt. Need to be fixed =(
             self.stitching_rules.append(
@@ -41,7 +48,10 @@ class MetaGarment(pyp.Component):
         Lower = globals()[lower_name]
         self.lower = Lower(body, design)
 
-        # TODO Place below the upper garment or self.wb
+        # Place below the upper garment or self.wb
+        l_level = self.lower.bbox3D()[1][1]
+        self.lower.translate_by([0, level_y - l_level, 0])
+
         # Connect with the garment above
         connect_to = self.wb if design['meta']['wb']['v'] else self.upper
 
