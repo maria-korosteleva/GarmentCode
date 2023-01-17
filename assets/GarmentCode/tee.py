@@ -13,33 +13,80 @@ import pypattern as pyp
 from . import sleeves
 from . import collars
 
-class TorsoHalfPanel(pyp.Panel):
+class TorsoFrontHalfPanel(pyp.Panel):
     """Half of a simple non-fitted upper garment (e.g. T-Shirt)
     
         Fits to the bust size
     """
-    def __init__(self, name, body, design, front=False) -> None:
+    def __init__(self, name, body, design) -> None:
         """ Front = True, provides the adjustments necessary for the front panel
         """
         super().__init__(name)
 
         design = design['shirt']
         # account for ease in basic measurements
-        m_bust = design['width']['v'] + design['ease']['v']
+        m_width = design['width']['v'] + design['ease']['v']
 
         # sizes 
-        body_width = (body['bust'] - body['back_width']) / 2 if front else body['back_width'] / 2
+        body_width = (body['bust'] - body['back_width']) / 2 
         frac = body_width / body['bust'] 
-        self.width = frac * m_bust
+        self.width = frac * m_width
 
         shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
         length = design['length']['v']
 
-        if front:
-            # length is adjusted due to shoulder inclanation
-            # for the correct sleeve fitting
-            fb_diff = (frac - (0.5 - frac)) * body['bust']
-            length = length - sh_tan * fb_diff
+        # length in the front panel is adjusted due to shoulder inclanation
+        # for the correct sleeve fitting
+        fb_diff = (frac - (0.5 - frac)) * body['bust']
+        length = length - sh_tan * fb_diff
+
+        self.edges = pyp.esf.from_verts(
+            [0, 0], 
+            [-m_width / 4, 0],   # Extra vertex to connect with other bottoms correctly
+            [-self.width, 0], 
+            [-self.width, length], 
+            [0, length + shoulder_incl], 
+            loop=True
+        )
+
+        # Interfaces
+        self.interfaces = {
+            'outside':  pyp.Interface(self, self.edges[2]),   
+            'inside': pyp.Interface(self, self.edges[-1]),
+            'shoulder': pyp.Interface(self, self.edges[-2]),
+            'bottom_front': pyp.Interface(self, self.edges[0]),
+            'bottom_back': pyp.Interface(self, self.edges[1]),
+            
+            # Reference to the corner for sleeve and collar projections
+            'shoulder_corner': pyp.Interface(self, [self.edges[-3], self.edges[-2]]),
+            'collar_corner': pyp.Interface(self, [self.edges[-2], self.edges[-1]])
+        }
+
+        # default placement
+        self.translate_by([0, body['height'] - body['head_l'] - length, 0])
+
+
+class TorsoBackHalfPanel(pyp.Panel):
+    """Half of a simple non-fitted upper garment (e.g. T-Shirt)
+    
+        Fits to the bust size
+    """
+    def __init__(self, name, body, design) -> None:
+        """ Front = True, provides the adjustments necessary for the front panel
+        """
+        super().__init__(name)
+
+        design = design['shirt']
+        # account for ease in basic measurements
+        m_width = design['width']['v'] + design['ease']['v']
+
+        # sizes 
+        body_width = body['back_width'] / 2
+        frac = body_width / body['bust'] 
+        self.width = frac * m_width
+
+        shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
+        length = design['length']['v']
 
         self.edges = pyp.esf.from_verts(
             [0, 0], 
@@ -72,8 +119,8 @@ class TorsoHalf(pyp.Component):
         super().__init__(name)
 
         # Torso
-        self.ftorso = TorsoHalfPanel(f'{name}_ftorso', body, design, front=True).translate_by([0, 0, 20])
-        self.btorso = TorsoHalfPanel(f'{name}_btorso', body, design).translate_by([0, 0, -20])
+        self.ftorso = TorsoFrontHalfPanel(f'{name}_ftorso', body, design).translate_by([0, 0, 25])
+        self.btorso = TorsoBackHalfPanel(f'{name}_btorso', body, design).translate_by([0, 0, -20])
 
         # Sleeves
         diff = self.ftorso.width - self.btorso.width
@@ -111,8 +158,9 @@ class TorsoHalf(pyp.Component):
             'front_in': self.ftorso.interfaces['inside'],
             'back_in': self.btorso.interfaces['inside'],
 
-            'f_bottom': self.ftorso.interfaces['bottom'],
-            'b_bottom': self.btorso.interfaces['bottom']
+            'f_bottom': self.ftorso.interfaces['bottom_front'],
+            'b_bottom': pyp.Interface.from_multiple(
+                self.ftorso.interfaces['bottom_back'], self.btorso.interfaces['bottom'])
         }
 
 
