@@ -50,7 +50,7 @@ class MetaGarment(pyp.Component):
 
         # Place below the upper garment or self.wb
         l_level = self.lower.bbox3D()[1][1]
-        self.lower.translate_by([0, level_y - l_level, 0])
+        self.lower.translate_by([0, level_y - l_level - 2, 0])
 
         # Connect with the garment above
         connect_to = self.wb if design['meta']['wb']['v'] else self.upper

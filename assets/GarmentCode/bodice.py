@@ -192,7 +192,7 @@ class BodiceHalf(pyp.Component):
 
             'f_bottom': self.ftorso.interfaces['bottom_front'],
             'b_bottom': pyp.Interface.from_multiple(
-                self.ftorso.interfaces['bottom_back'], self.btorso.interfaces['bottom'])
+                self.btorso.interfaces['bottom'], self.ftorso.interfaces['bottom_back'])
         }
 
 
@@ -211,8 +211,8 @@ class FittedShirt(pyp.Component):
         self.stitching_rules.append((self.right.interfaces['back_in'], self.left.interfaces['back_in']))
 
         # Adjust interface ordering for correct connectivity
-        self.right.interfaces['f_bottom'].reorder([0, 1], [1, 0])  # DRAFT
-        self.left.interfaces['b_bottom'].reorder([1, 2], [2, 1])  # DRAFT
+        self.right.interfaces['f_bottom'].reorder([0, 1], [1, 0])
+        self.left.interfaces['b_bottom'].reverse()
 
         self.interfaces = {   # Bottom connection
             'bottom': pyp.Interface.from_multiple(

@@ -11,10 +11,10 @@ design:
       v: FittedShirt
       range: [FittedShirt, Shirt]
     wb: 
-      v: True
+      v: False
       range: [True, False]
     bottom: 
-      v: Pants
+      v: SkirtManyPanels
       range: [GodetSkirt, Pants, Skirt2, SkirtManyPanels]
 
   waistband:
@@ -92,7 +92,7 @@ design:
 
   flare-skirt:
     length:
-      v: 70
+      v: 30
       range: [30, 120]
     n_panels:
       v: 12
@@ -120,7 +120,7 @@ design:
     
   pants: 
     length: 
-      v: 60
+      v: 10
       range: [10, 40]   # TODO related with height and body proportions? 
     width: 
       v: 32
@@ -129,7 +129,7 @@ design:
       v: 1
       range: [0.5, 1]
     ruffle:
-      v: [False, True]   # TODO Can be True only if connected to a waist band
+      v: [False, False]   # TODO Can be True only if connected to a waist band
       range: [True, False]
     crotch_extention:
       v: 4   # TODO depends on measurements?

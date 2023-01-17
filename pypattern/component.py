@@ -93,8 +93,6 @@ class Component(BaseComponent):
         return mins.min(axis=0), maxes.max(axis=0)
 
 
-
-
     def _get_subcomponents(self):
         """Unique set of subcomponents defined in the self.subs list or as attributes of the object"""
 

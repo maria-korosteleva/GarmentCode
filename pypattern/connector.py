@@ -50,6 +50,7 @@ class StitchingRule():
     def isTraversalMatching(self):
         """Check if the traversal direction of edge sequences matches or needs to be swapped"""
 
+        # TODO More roubust for circular sequences
         if len(self.int1.edges) > 1:
             # Make sure the direction is matching
             # 3D distance between corner vertices
@@ -84,19 +85,21 @@ class StitchingRule():
         # Remember the state of interfaces before projection (for later)
         edges1 = self.int1.edges.copy()
         panels1 = copy(self.int1.panel) 
-        frac1 = self.int1.projecting_edges().fractions()
-        if not self.isTraversalMatching():      # match the other edge orientation before passing on
-            frac1.reverse()
-            panels1.reverse()
-            edges1.edges.reverse()
+        frac1 = self.int1.projecting_edges(on_oriented=True).fractions()
+        # FIXME Not reliable
+        #  if not self.isTraversalMatching():      # match the other edge orientation before passing on
+        #     frac1.reverse()
+        #     panels1.reverse()
+        #     edges1.edges.reverse()
 
         edges2 = self.int2.edges.copy()
         panels2 = copy(self.int2.panel) 
-        frac2 = self.int2.projecting_edges().fractions()
-        if not self.isTraversalMatching():      # match the other edge orientation before passing on
-            frac2.reverse()
-            panels2.reverse()
-            edges2.edges.reverse()
+        frac2 = self.int2.projecting_edges(on_oriented=True).fractions()
+        # FIXME Not reliable
+        # if not self.isTraversalMatching():      # match the other edge orientation before passing on
+        #     frac2.reverse()
+        #     panels2.reverse()
+        #     edges2.edges.reverse()
 
         self._match_to_fractions(self.int1, frac2, edges2, panels2)
         self._match_to_fractions(self.int2, frac1, edges1, panels1)
@@ -141,21 +144,11 @@ class StitchingRule():
                 split_frac = new_v_loc / in_frac
                 base_edge, base_panel = inter.edges[in_id], inter.panel[in_id]
 
-                # Match the order 
-                # if base edge start->end or end->start order matches 
-                # the edge to_add better when connecting in 3D
-                # TODO Now that we have a manual ordering, 
-                # Automatic reordering may not be needed
-                adding_edge, adding_e_panel = edges[add_id], panels[add_id]
-                add_3d = adding_e_panel.point_to_3D(adding_edge.start)
-
-                # Is is closer to the start or to the end of base edge?
-                base_start_3d = base_panel.point_to_3D(base_edge.start)
-                base_end_3d = base_panel.point_to_3D(base_edge.end)
-                if swap:=(norm(add_3d - base_end_3d) < norm(add_3d - base_start_3d)):
+                # Check edge orientation
+                flip = inter.needsFlipping(in_id)
+                if flip: 
                     split_frac = 1 - split_frac
-                    print(f'{self.__class__.__name__}::INFO::Swapping projection'
-                          f' on edge {base_edge} from {base_panel.name}')
+                    print(f'{self.__class__.__name__}::INFO::{base_edge} from {base_panel.name} reoriented in interface')
 
                 # Split the base edge accrordingly
                 subdiv = EdgeSeqFactory.from_fractions(
@@ -163,10 +156,10 @@ class StitchingRule():
 
                 inter.panel[in_id].edges.substitute(base_edge, subdiv)  # Update the panel
                                                                         # Always follows the edge order in the panel
-                if swap:
-                    # match current segment of the edge from to_add to 
-                    # the end segment of the splitted base_edge
+                # Swap subdiv order for interface to s.w. the interface sequence remains oriented
+                if flip: 
                     subdiv.edges.reverse()
+
                 inter.edges.substitute(base_edge, subdiv)  # interface
                 inter.panel.insert(in_id, inter.panel[in_id])  # update panel correspondance
 
@@ -190,7 +183,10 @@ class StitchingRule():
             raise RuntimeError(f'{self.__class__.__name__}::Error::Stitch sides do not match!!')
 
         stitches = []
-        swap = not self.isTraversalMatching()  # traverse edge sequences correctly
+
+        # FIXME not reliable
+        # swap = not self.isTraversalMatching()  # traverse edge sequences correctly
+        swap = False
 
         for i, j in zip(range(len(self.int1.edges)), range(len(self.int2.edges) - 1, -1, -1) if swap else range(len(self.int2.edges))):
             stitches.append([

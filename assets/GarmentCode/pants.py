@@ -141,10 +141,14 @@ class Pants(pyp.Component):
                 self.right.interfaces['top_b'], self.left.interfaces['top_b']),
             'top': pyp.Interface.from_multiple(   # around the body starting from front right
                 self.right.interfaces['top_f'],
-                self.left.interfaces['top_f'],
-                self.left.interfaces['top_b'],   # TODO FLIP for correct connection!
-                self.right.interfaces['top_b']),
+                self.left.interfaces['top_f'].reverse(),
+                self.left.interfaces['top_b'],   #.reverse(),   # TODO FLIP for correct connection!
+                self.right.interfaces['top_b'].reverse()),
         }
+
+        # DEBUG
+        print(self.interfaces['top_f'].edges.length())
+        print(self.interfaces['top_b'].edges.length())
 
 class WBPants(pyp.Component):
     def __init__(self, body, design) -> None:

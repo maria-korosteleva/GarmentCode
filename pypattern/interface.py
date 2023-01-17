@@ -5,6 +5,7 @@ from numpy.linalg import norm
 from .edge import EdgeSequence
 from .generic_utils import close_enough
 
+# TODO as EdgeSequence wrapper??
 class Interface():
     """Description of an interface of a panel or component
         that can be used in stitches as a single unit
@@ -25,17 +26,78 @@ class Interface():
         # Since extending a chain of edges != extending each edge individually
         self.ruffle = [dict(coeff=ruffle, sec=[0, len(self.edges)])]
 
-    def projecting_edges(self) -> EdgeSequence:
+    def projecting_edges(self, on_oriented=False) -> EdgeSequence:
         """Return edges shape that should be used when projecting interface onto another panel
             NOTE: reflects current state of the edge object. Call this function again if egdes change (e.g. their direction)
         """
         # Per edge set ruffle application
-        projected = self.edges.copy()
+        projected = self.edges.copy() if not on_oriented else self.oriented_edges()
         for r in self.ruffle:
             if not close_enough(r['coeff'], 1, 1e-3):
                 projected[r['sec'][0]:r['sec'][1]].extend(1 / r['coeff'])
         
         return projected
+
+    def needsFlipping(self, i):
+        """ Check if particular edge should be re-oriented to follow the general direction of the interface
+        """
+        e = self.edges[i]
+        panel = self.panel[i]
+        s_3d, end_3d = panel.point_to_3D(e.start), panel.point_to_3D(e.end)
+
+        # Corener cases
+        if i == 0:
+            next, next_panel = self.edges[(i+1 % len(self.edges))], self.panel[(i+1)  % len(self.edges)]
+            next_3d = next_panel.point_to_3D(next.midpoint())
+
+            # check by start vertex
+            # NOTE this can misfire in particular 3D orentations
+            return norm(s_3d - next_3d) < norm(end_3d - next_3d)
+        if i == len(self.edges) - 1:
+            prev, prev_panel = self.edges[i-1], self.panel[i-1]
+            prev_3d = prev_panel.point_to_3D(prev.midpoint())
+
+            # check by start vertex
+            # NOTE this can misfire in particular 3D orentations
+            return norm(s_3d - prev_3d) > norm(end_3d - prev_3d)
+
+        # Mid case
+        prev, prev_panel = self.edges[i-1], self.panel[i-1]
+        next, next_panel = self.edges[(i+1 % len(self.edges))], self.panel[(i+1)  % len(self.edges)]
+
+        # Optimal order in 3D
+        prev_3d = prev_panel.point_to_3D(prev.midpoint())
+        next_3d = next_panel.point_to_3D(next.midpoint())
+
+        forward_order_dist = norm(s_3d - prev_3d) + norm(end_3d - next_3d)
+        flipped_order_dist = norm(s_3d - next_3d) + norm(end_3d - prev_3d)
+
+        return flipped_order_dist < forward_order_dist
+
+
+    def oriented_edges(self):
+        """ Orient the edges withing the interface sequence along the general direction of the interface
+
+            Creates a copy of the interface s.t. not to disturb the original edge objects
+        """
+        # TODO can we do the same for the edge sub-sequences?
+        #  -> midpoint of a sequence is less representative
+        #  -> more likely to have weird relative 3D orientations
+
+        # TODO Move this routine to the EdgeSeq class
+        # TODO Utilize distance from the end vertex to the next panel as well for stability
+        # start -> prev + end -> next or other way around  
+
+        oriented = self.edges.copy()
+
+        for i in range(len(self.edges)):
+            if self.needsFlipping(i):
+                oriented[i].reverse()
+                oriented[i].flipped = True
+            else:
+                oriented[i].flipped = False
+        return oriented
+
 
     def __len__(self):
         return len(self.edges)
@@ -68,15 +130,21 @@ class Interface():
 
     def reorder(self, curr_edge_ids, projected_edge_ids):
         """Change the order of edges from curr_edge_ids to projected_edge_ids in the interface
+
+            Note that the input should prescrive new ordering for all affected edges
+            e.g. if moving 0 -> 1, specify the new location for 1 as well
         """
         
+        # TODO Edge Sequence Function wrapper?
         for i, j in zip(curr_edge_ids, projected_edge_ids):
             for r in self.ruffle:
                 if (i >= r['sec'][0] and i < r['sec'][1] 
-                        and (j < r['sec'][0] or j > r['sec'][1])):
-                    raise NotImplemented(
+                        and (j < r['sec'][0] or j >= r['sec'][1])):
+                    raise NotImplementedError(
                         f'{self.__class__.__name__}::Error::reordering between panel-related sub-segments is not supported')
         
+
+        # TODO This is not reliable though!
         new_edges = EdgeSequence()
         new_panel_list = []
         for i in range(len(self.panel)):
@@ -121,7 +189,7 @@ class Interface():
 
     @staticmethod
     def _is_order_matching(panel_s, vert_s, panel_1, vert1, panel_2, vert2) -> bool:
-        """Check which of the vertices from panel_t is closer to the vert_s 
+        """Check which of the two vertices vert1 (panel_1) or vert2 (panel_2) is closer to the vert_s 
             from panel_s in 3D"""
         s_3d = panel_s.point_to_3D(vert_s)
         v1_3d = panel_1.point_to_3D(vert1)
