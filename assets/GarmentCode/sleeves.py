@@ -79,7 +79,7 @@ class Sleeve(pyp.Component):
         )
 
         self.interfaces = {
-            'in_front': self.f_sleeve.interfaces['in'],
+            'in_front': self.f_sleeve.interfaces['in'].reverse(),
             'in_front_shape': self.f_sleeve.interfaces['in_shape'],
             'in_back': self.b_sleeve.interfaces['in'],
             'in_back_shape': self.b_sleeve.interfaces['in_shape'],
