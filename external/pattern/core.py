@@ -93,7 +93,7 @@ class BasicPattern(object):
     def serialize(self, path, to_subfolder=True, tag=''):
         # log context
         if to_subfolder:
-            log_dir = os.path.join(path, self.name)
+            log_dir = os.path.join(path, self.name + '_' + tag)  # NOTE Added change
             try:
                 os.makedirs(log_dir)
             except OSError as e:

@@ -61,9 +61,11 @@ class SleevePanel(pyp.Panel):
         }
 
         # Default placement
-        self.set_pivot(open_shape[-1].end)
+        self.set_pivot(open_shape[0].end)
         self.translate_to(
-            [- body['sholder_w'] / 2 - connecting_depth * 2, body['height'] - body['head_l'] + 5, 0]) 
+            [- body['sholder_w'] / 2 - connecting_depth * 2, 
+            body['height'] - body['head_l'] - arm_width / 2, 
+            0]) 
 
 
 class Sleeve(pyp.Component):

@@ -144,11 +144,11 @@ class TorsoHalf(pyp.Component):
         # Collars
         # Front
         collar_type = getattr(collars, design['collar']['f_collar']['v'])
-        f_collar = collar_type("", design['collar']['fc_depth']['v'], design['collar']['width']['v'])
+        f_collar = collar_type(design['collar']['fc_depth']['v'], design['collar']['width']['v'])
         pyp.ops.cut_corner(f_collar, self.ftorso.interfaces['collar_corner'])
         # Back
         collar_type = getattr(collars, design['collar']['b_collar']['v'])
-        b_collar = collar_type("", design['collar']['bc_depth']['v'], design['collar']['width']['v'])
+        b_collar = collar_type(design['collar']['bc_depth']['v'], design['collar']['width']['v'])
         pyp.ops.cut_corner(b_collar, self.btorso.interfaces['collar_corner'])
 
         self.stitching_rules.append((self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
@@ -180,8 +180,9 @@ class Shirt(pyp.Component):
 
         self.interfaces = {   # Bottom connection
             'bottom': pyp.Interface.from_multiple(
-                self.right.interfaces['f_bottom'],
                 self.left.interfaces['f_bottom'],
-                self.left.interfaces['b_bottom'], 
-                self.right.interfaces['b_bottom'])
+                self.right.interfaces['f_bottom'],
+                self.right.interfaces['b_bottom'],
+                self.left.interfaces['b_bottom'].reverse(), 
+                )
         }

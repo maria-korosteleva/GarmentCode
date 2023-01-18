@@ -8,21 +8,21 @@
 design: 
   meta: 
     upper: 
-      v: FittedShirt
+      v: Shirt
       range: [FittedShirt, Shirt]
     wb: 
-      v: False
+      v: True
       range: [True, False]
     bottom: 
-      v: Pants
+      v: Skirt2
       range: [GodetSkirt, Pants, Skirt2, SkirtManyPanels]
 
   waistband:
     waist: 
-      v: 82
+      v: 83   # Underbust
       range: [82, 200]   # TODO from waist 
     width: 
-      v: 8
+      v: 3
       range: [3, 15]
 
   bodice: 
@@ -35,7 +35,7 @@ design:
       v: 0
       range: null
     length: 
-      v: 40
+      v: 27
       range: [30, 150]
     width:   # Around the body 
       v: 96
@@ -44,19 +44,19 @@ design:
 
   collar:
     f_collar: 
-      v: VNeckHalf
-      range: [VNeckHalf]
+      v: SquareNeckHalf
+      range: [VNeckHalf, SquareNeckHalf]
     b_collar: 
       v: VNeckHalf
-      range: [VNeckHalf]
+      range: [VNeckHalf, SquareNeckHalf]
     fc_depth:   # Front collar depth
-      v: 15
+      v: 17
       range: [3, 25]
     bc_depth:   # back collar depth
       v: 3
       range: [3, 25]
     width: 
-      v: 18
+      v: 25  # 18
       range: [18, 30]   # TODO min is a neck width
     
   sleeve:
@@ -119,16 +119,16 @@ design:
 
   skirt: 
     length:
-      v: 70
+      v: 100
       range: [30, 120]
     ruffle: 
-      v: 2
+      v: 1.5
       range: [1, 2]
     bottom_cut: 
       v: 0
       range: [0, 20]  # TODO Untill length
     flare: 
-      v: 20
+      v: 0
       range: [0, 20]
 
   flare-skirt:

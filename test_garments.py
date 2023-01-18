@@ -28,7 +28,7 @@ if __name__ == '__main__':
     with open(design_file, 'r') as f:
         design = yaml.safe_load(f)['design']
     test_garments = [
-        SkirtWB(body, design),
+        # SkirtWB(body, design),
         # WB(),
         # Skirt2(),
         # SkirtManyPanels(body, n_panels=10),
@@ -38,7 +38,7 @@ if __name__ == '__main__':
         # GodetSkirt(body, design),
         # Pants(body, design),
         # WBPants(body, design),
-        # MetaGarment('Jumpsuit', body, design),
+        MetaGarment('Dress_regency', body, design),
         # CuffBand('test', design['pants']),
         # CuffSkirt('test', design['pants']),
         # CuffBandSkirt('test', design['pants'])
@@ -54,7 +54,7 @@ if __name__ == '__main__':
         folder = pattern.serialize(
             Path(sys_props['output']), 
             tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
-            to_subfolder=False)
+            to_subfolder=True)
 
         shutil.copy(body_file, folder)
         shutil.copy(design_file, folder)
