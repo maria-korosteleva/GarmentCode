@@ -375,7 +375,7 @@ class EdgeSequence():
             if i > 0 and chained[i].end is chained[i-1].end:
                 chained[i].reverse()
             # Not connected to the previous one
-            elif (i < len(chained) 
+            elif (i + 1 < len(chained)
                     and (chained[i].start is chained[i+1].start or chained[i].start is chained[i+1].end)):
                 chained[i].reverse()
             # not connected to anything or connected properly -- leave as is

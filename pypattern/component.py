@@ -25,6 +25,7 @@ class Component(BaseComponent):
     
     def translate_to(self, new_translation):
         """Set panel translation to be exactly that vector"""
+        # FIXME does not preserve relative placement of subcomponents
         for subs in self._get_subcomponents():
             subs.translate_to(new_translation)
         return self

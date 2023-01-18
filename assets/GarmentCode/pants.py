@@ -2,7 +2,7 @@
 import pypattern as pyp
 
 # other assets
-from .bands import WB
+from . import bands
 
 
 # TODO different fit in thighs and  ankles
@@ -63,6 +63,7 @@ class PantPanel(pyp.Panel):
             'outside': pyp.Interface(self, pyp.EdgeSequence(self.edges[-1], self.edges[0])),
             'crotch': pyp.Interface(self, self.edges[2:4]),
             'inside': pyp.Interface(self, self.edges[4:6]),
+            'bottom': pyp.Interface(self, self.edges[-2])
         }
 
         # Add top dart 
@@ -96,7 +97,7 @@ class PantsHalf(pyp.Component):
             dart_position=body['bust_points'] / 2,
             ruffle=design['ruffle']['v'][0],    # TODO different ruffles for front and back
             crotch_extention=design['crotch_extention']['v']
-            ).translate_by([0, body['waist_level'], 25])
+            ).translate_by([0, body['waist_level'] - 5, 25])
         self.back = PantPanel(
             f'pant_b_{tag}', 
             body['waist'] / 4, 
@@ -107,12 +108,35 @@ class PantsHalf(pyp.Component):
             dart_position=body['bum_points'] / 2,
             ruffle=design['ruffle']['v'][1],
             crotch_extention=design['crotch_extention']['v']
-            ).translate_by([0, body['waist_level'], -20])
+            ).translate_by([0, body['waist_level'] - 5, -20])
 
         self.stitching_rules = pyp.Stitches(
             (self.front.interfaces['outside'], self.back.interfaces['outside']),
             (self.front.interfaces['inside'], self.back.interfaces['inside'])
         )
+
+        # add a cuff
+        if design['cuff']['type']['v']:
+            bbox = self.bbox3D()
+
+            cuff_class = getattr(bands, design['cuff']['type']['v'])
+            self.cuff = cuff_class(tag, design)
+            cbbox = self.cuff.bbox3D()
+
+            # Position
+            self.cuff.translate_by([
+                (bbox[1][0] - cbbox[1][0]),
+                bbox[0][1] - 3, 
+                0
+            ])
+
+            # Stitch
+            self.stitching_rules.append((
+                pyp.Interface.from_multiple(
+                    self.front.interfaces['bottom'], self.back.interfaces['bottom']),
+                self.cuff.interfaces['top'])
+            )
+
         
         self.interfaces = {
             'crotch_f': self.front.interfaces['crotch'],
@@ -146,26 +170,20 @@ class Pants(pyp.Component):
                 self.right.interfaces['top_b'].reverse()),
         }
 
-        # DEBUG
-        print(self.interfaces['top_f'].edges.length())
-        print(self.interfaces['top_b'].edges.length())
-
 class WBPants(pyp.Component):
     def __init__(self, body, design) -> None:
         super().__init__('WBPants')
 
-        
         self.pants = Pants(body, design)
 
         # pants top
         wb_len = (self.pants.interfaces['top_b'].projecting_edges().length() + 
                     self.pants.interfaces['top_f'].projecting_edges().length())
 
-        self.wb = WB(wb_len, design['wb_pants']['width']['v'])
+        self.wb = bands.WB(body, design)
         self.wb.translate_by([0, self.wb.width + 2, 0])
 
         self.stitching_rules = pyp.Stitches(
-            (self.pants.interfaces['top_b'], self.wb.interfaces['bottom_b']),
-            (self.pants.interfaces['top_f'], self.wb.interfaces['bottom_f']),
+            (self.pants.interfaces['top'], self.wb.interfaces['bottom']),
         )
 

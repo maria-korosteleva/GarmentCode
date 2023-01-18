@@ -29,7 +29,8 @@ class SleevePanel(pyp.Panel):
             open_shape.extend(design['connect_ruffle']['v'])
 
         open_shape.rotate(-base_angle)  
-        arm_width = (design['end_width']['v'] + width_diff) / 2   
+        # TODO end ruffle may need to extend in both direction instead
+        arm_width = (design['end_width']['v'] + width_diff) / 2  * design['end_ruffle']['v']
 
         # Main body of a sleeve
         self.edges = pyp.esf.from_verts(
@@ -55,14 +56,15 @@ class SleevePanel(pyp.Panel):
         self.interfaces = {
             'in': pyp.Interface(self, open_shape, ruffle=design['connect_ruffle']['v']),
             'in_shape': pyp.Interface(self, proj_shape),
-            'out': pyp.Interface(self, self.edges[0]),
+            'out': pyp.Interface(self, self.edges[0], ruffle=design['end_ruffle']['v']),
             'top': pyp.Interface(self, self.edges[-2:] if standing else self.edges[-1]),   
             'bottom': pyp.Interface(self, self.edges[1])
         }
 
         # Default placement
         self.set_pivot(open_shape[-1].end)
-        self.translate_to([- body['sholder_w'] / 2 - connecting_depth * 1.5, body['height'] - body['head_l'] + 7, 0])  #  - low_depth / 2
+        self.translate_to(
+            [- body['sholder_w'] / 2 - connecting_depth * 1.5, body['height'] - body['head_l'] + 7, 0]) 
 
 
 class Sleeve(pyp.Component):
@@ -89,7 +91,8 @@ class Sleeve(pyp.Component):
             'in_front_shape': self.f_sleeve.interfaces['in_shape'],
             'in_back': self.b_sleeve.interfaces['in'],
             'in_back_shape': self.b_sleeve.interfaces['in_shape'],
-            'out': pyp.Interface.from_multiple(self.f_sleeve.interfaces['out'], self.b_sleeve.interfaces['out'])
+            'out': pyp.Interface.from_multiple(
+                self.f_sleeve.interfaces['out'], self.b_sleeve.interfaces['out'])
         }
 
 

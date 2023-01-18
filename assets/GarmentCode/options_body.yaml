@@ -2,7 +2,7 @@
 # Measurments of the body
 body: 
   height: 165
-  head_l: 25    # nape of the neck to the top -- ok to use some average value
+  head_l: 18    # nape of the neck to the top -- ok to use some average value
 
   neck_w: 18
   sholder_w: 38
@@ -23,6 +23,6 @@ body:
   back_width:  40  # 38  #42  # 32 + 2 * between-size
 
   hips: 110   # TODO check the measurements though!
-  crotch_depth: 27  # 27
+  crotch_depth: 25   # 27
   bum_points: 18.5
   

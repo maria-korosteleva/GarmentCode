@@ -11,7 +11,7 @@ from .bands import WB
 class SkirtPanel(pyp.Panel):
     """One panel of a panel skirt with ruffles on the waist"""
 
-    def __init__(self, name, ruffles=1.5, waist_length=70, length=70, bottom_cut=20, flare=20) -> None:
+    def __init__(self, name, ruffles=1.5, waist_length=70, length=70, bottom_cut=0, flare=20) -> None:
         super().__init__(name)
 
         base_width = waist_length / 2

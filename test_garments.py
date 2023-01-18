@@ -16,6 +16,7 @@ from assets.GarmentCode.godet import *
 from assets.GarmentCode.bodice import *
 from assets.GarmentCode.pants import *
 from assets.GarmentCode.meta_garment import *
+from assets.GarmentCode.bands import *
 
 if __name__ == '__main__':
 
@@ -35,12 +36,15 @@ if __name__ == '__main__':
         # Skirt2(),
         # SkirtManyPanels(body, n_panels=10),
         # SkirtManyPanelsWB(body, design),
-        Shirt(body, design),
+        # Shirt(body, design),
         # FittedShirt(body, design),
         # GodetSkirt(body, design),
         # Pants(body, design),
-        # WBPants(body, design),
-        # MetaGarment('Jumpsuit', body, design)
+        WBPants(body, design),
+        # MetaGarment('Jumpsuit', body, design),
+        # CuffBand('test', design['pants']),
+        # CuffSkirt('test', design['pants']),
+        # CuffBandSkirt('test', design['pants'])
     ]
 
     # test_garments[0].translate_by([2, 0, 0])
@@ -57,6 +61,5 @@ if __name__ == '__main__':
 
         shutil.copy(body_file, folder)
         shutil.copy(design_file, folder)
-        
 
         print(f'Success! {piece.name} saved to {folder}')
