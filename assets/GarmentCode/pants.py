@@ -25,16 +25,16 @@ class PantPanel(pyp.Panel):
         # adjust for a rise
         adj_crotch_depth = rise * crotch_depth
         adj_waist = pant_width - rise * (pant_width - waist)
-        dart_depth = crotch_depth * 0.6    # TODO remove from parameters
+        dart_depth = crotch_depth * 0.6  
         dart_depth = max(dart_depth - (crotch_depth - adj_crotch_depth), 0)
 
         # eval pants shape
         hips = pant_width + crotch_extention
         default_width = pant_width - crotch_extention # / 2
         # Check for ruffle
-        if ruffle:  # TODO Try and debug
+        if ruffle: 
             ruffle_rate = default_width / adj_waist
-            adj_waist = default_width   # TODO Or default waist?  pant_width
+            adj_waist = default_width 
         else:
             ruffle_rate = 1
 
@@ -79,7 +79,6 @@ class PantPanel(pyp.Panel):
 
             self.interfaces['top'] = pyp.Interface(self, int_edges)   
         else: 
-            # TODO this one needs multi-panel stitch!]
             self.interfaces['top'] = pyp.Interface(self, self.edges[1], ruffle=ruffle_rate)   
 
 class PantsHalf(pyp.Component):
@@ -96,7 +95,7 @@ class PantsHalf(pyp.Component):
             design['length']['v'],
             rise=design['rise']['v'],
             dart_position=body['bust_points'] / 2,
-            ruffle=design['ruffle']['v'][0],    # TODO different ruffles for front and back
+            ruffle=design['ruffle']['v'][0],
             crotch_extention=design['crotch_extention']['v']
             ).translate_by([0, body['waist_level'] - 5, 25])
         self.back = PantPanel(
@@ -164,10 +163,11 @@ class Pants(pyp.Component):
                 self.right.interfaces['top_f'], self.left.interfaces['top_f']),
             'top_b': pyp.Interface.from_multiple(
                 self.right.interfaces['top_b'], self.left.interfaces['top_b']),
+            # Some are reversed for correct connection
             'top': pyp.Interface.from_multiple(   # around the body starting from front right
                 self.right.interfaces['top_f'],
                 self.left.interfaces['top_f'].reverse(),
-                self.left.interfaces['top_b'],   #.reverse(),   # TODO FLIP for correct connection!
+                self.left.interfaces['top_b'],   
                 self.right.interfaces['top_b'].reverse()),
         }
 
