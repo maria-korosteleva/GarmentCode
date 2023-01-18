@@ -61,11 +61,13 @@ class SleevePanel(pyp.Panel):
         }
 
         # Default placement
-        self.set_pivot(open_shape[0].end)
+        self.set_pivot(self.edges[1].end)
         self.translate_to(
-            [- body['sholder_w'] / 2 - connecting_depth * 2, 
-            body['height'] - body['head_l'] - arm_width / 2, 
+            [- body['sholder_w'] / 2 - connecting_depth, 
+            body['height'] - body['head_l'] - body['armscye_depth'],   # DRAFT * 0.9, 
             0]) 
+
+        print(self.point_to_3D([0, 0]))
 
 
 class Sleeve(pyp.Component):
@@ -78,9 +80,9 @@ class Sleeve(pyp.Component):
         
         # sleeves
         self.f_sleeve = SleevePanel(
-            f'{tag}_sl_f', body, design, inclanation + depth_diff, depth_diff).translate_by([0, 0, 30])
+            f'{tag}_sl_f', body, design, inclanation + depth_diff, depth_diff).translate_by([0, 0, 25])
         self.b_sleeve = SleevePanel(
-            f'{tag}_sl_b', body, design, inclanation, -depth_diff).translate_by([0, 0, -25])
+            f'{tag}_sl_b', body, design, inclanation, -depth_diff).translate_by([0, 0, -20])
 
         self.stitching_rules = pyp.Stitches(
             (self.f_sleeve.interfaces['top'], self.b_sleeve.interfaces['top']),
