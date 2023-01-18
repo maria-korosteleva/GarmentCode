@@ -53,7 +53,7 @@ if __name__ == '__main__':
         folder = pattern.serialize(
             Path(sys_props['output']), 
             tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
-            to_subfolder=False)
+            to_subfolder=True)
 
         shutil.copy(body_file, folder)
         shutil.copy(design_file, folder)

@@ -55,6 +55,9 @@ design:
     bc_depth:   # back collar depth
       v: 3
       range: [3, 25]
+    width: 
+      v: 28
+      range: [18, 30]   # TODO min is a neck width
     
   sleeve:
     sleeveless: 
@@ -95,7 +98,7 @@ design:
 
   flare-skirt:
     length:
-      v: 30
+      v: 70
       range: [30, 120]
     n_panels:
       v: 12
