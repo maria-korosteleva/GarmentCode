@@ -68,7 +68,7 @@ design:
       v: ArmholeSmooth
       range: [ArmholeSquare, ArmholeSmooth]
     smoothing_coeff:
-      v: 0.15
+      v: 0.25
       range: [0.1, 0.4]
     inclanation:   # How much intro the shoulder the sleeve will cut
       v: 3
@@ -85,27 +85,27 @@ design:
       range: [4, 10]
     # Overalls
     end_width:
-      v: 30
+      v: 35
       range: [20, 40]  
     length: 
-      v: 35
+      v: 12
       range: [3, 100]
     connect_ruffle:
-      v: 1
+      v: 1.5
       range: [1, 2]
     end_ruffle:  # TODO add
-      v: 1
+      v: 1.5
       range: [1, 2]
     # Cuff
     cuff: 
       type:
-        v: CuffBandSkirt
+        v: CuffBand
         range: [CuffBand, CuffSkirt, CuffBandSkirt, null]
       # b_width:  # NOTE taken from end_width # TODO naming convention with waistband
       #  v: 40
       #  range: [30, 40]  
       b_depth: 
-        v: 10
+        v: 3
         range: [3, 20]
       skirt_length: 
         v: 10

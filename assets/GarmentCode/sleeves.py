@@ -76,9 +76,9 @@ class Sleeve(pyp.Component):
         
         # sleeves
         self.f_sleeve = SleevePanel(
-            f'{tag}_f', body, design, inclanation + depth_diff, depth_diff).translate_by([0, 0, 30])
+            f'{tag}_sl_f', body, design, inclanation + depth_diff, depth_diff).translate_by([0, 0, 30])
         self.b_sleeve = SleevePanel(
-            f'{tag}_b', body, design, inclanation, -depth_diff).translate_by([0, 0, -25])
+            f'{tag}_sl_b', body, design, inclanation, -depth_diff).translate_by([0, 0, -25])
 
         self.stitching_rules = pyp.Stitches(
             (self.f_sleeve.interfaces['top'], self.b_sleeve.interfaces['top']),
@@ -114,7 +114,7 @@ class Sleeve(pyp.Component):
             # Stitch
             # modify interfaces to control connection
             front_int = self.f_sleeve.interfaces['out'].edges
-            frac = design['end_width']['v'] / 2 / front_int.length()
+            frac = design['end_ruffle']['v'] * design['end_width']['v'] / 2 / front_int.length()
             subdiv = pyp.esf.from_fractions(
                 front_int[0].start, front_int[0].end, [frac, (1 - frac)])
             self.f_sleeve.edges.substitute(front_int[0], subdiv)
