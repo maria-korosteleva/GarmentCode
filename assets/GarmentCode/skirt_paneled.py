@@ -11,12 +11,12 @@ from .bands import WB
 class SkirtPanel(pyp.Panel):
     """One panel of a panel skirt with ruffles on the waist"""
 
-    def __init__(self, name, ruffles=1.5, waist_length=70, length=70, bottom_cut=0, flare=20) -> None:
+    def __init__(self, name, waist_length=70, length=70, ruffles=1, bottom_cut=0, flare=0) -> None:
         super().__init__(name)
 
         base_width = waist_length / 2
         top_width = base_width * ruffles
-        low_width = base_width + 2*flare
+        low_width = top_width + 2*flare
         x_shift_top = (low_width - top_width) / 2  # to account for flare at the bottom
 
         # define edge loop
@@ -65,11 +65,27 @@ class ThinSkirtPanel(pyp.Panel):
 
 class Skirt2(pyp.Component):
     """Simple 2 panel skirt"""
-    def __init__(self, ruffle_rate=1, flare=20) -> None:
+    def __init__(self, body, design) -> None:
         super().__init__(self.__class__.__name__)
 
-        self.front = SkirtPanel('front', ruffle_rate, flare=flare).translate_by([0, 0, 20])
-        self.back = SkirtPanel('back', ruffle_rate, flare=flare).translate_by([0, 0, -15])
+        design = design['skirt']
+
+        self.front = SkirtPanel(
+            'front', 
+            waist_length=body['waist'], 
+            length=design['length']['v'],
+            ruffles=design['ruffle']['v'],   # Only if on waistband
+            flare=design['flare']['v'],
+            bottom_cut=design['bottom_cut']['v']
+        ).translate_to([0, body['waist_level'], 20])
+        self.back = SkirtPanel(
+            'back', 
+            waist_length=body['waist'], 
+            length=design['length']['v'],
+            ruffles=design['ruffle']['v'],   # Only if on waistband
+            flare=design['flare']['v'],
+            bottom_cut=design['bottom_cut']['v']
+        ).translate_to([0, body['waist_level'], -15])
 
         self.stitching_rules = pyp.Stitches(
             (self.front.interfaces['right'], self.back.interfaces['right']),
@@ -79,21 +95,24 @@ class Skirt2(pyp.Component):
         # Reusing interfaces of sub-panels as interfaces of this component
         self.interfaces = {
             'top_f': self.front.interfaces['top'],
-            'top_b': self.back.interfaces['top']
+            'top_b': self.back.interfaces['top'],
+            'top': pyp.Interface.from_multiple(
+                self.front.interfaces['top'], self.back.interfaces['top']
+            )
         }
 
 
 # With waistband
 class SkirtWB(pyp.Component):
-    def __init__(self, ruffle_rate=1.5, flare=20) -> None:
-        super().__init__(f'{self.__class__.__name__}_{ruffle_rate:.1f}')
+    def __init__(self, body, design) -> None:
+        super().__init__(f'{self.__class__.__name__}')
 
-        self.wb = WB(waist=70, width=10)
-        self.skirt = Skirt2(ruffle_rate=ruffle_rate, flare=flare)
+        self.wb = WB(body, design)
+        self.skirt = Skirt2(body, design)
+        self.skirt.place_below(self.wb)
 
         self.stitching_rules = pyp.Stitches(
-            (self.wb.interfaces['bottom_f'], self.skirt.interfaces['top_f']),
-            (self.wb.interfaces['bottom_b'], self.skirt.interfaces['top_b'])
+            (self.wb.interfaces['bottom'], self.skirt.interfaces['top'])
         )
 
 

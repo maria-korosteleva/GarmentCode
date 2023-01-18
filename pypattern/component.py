@@ -30,6 +30,15 @@ class Component(BaseComponent):
             subs.translate_to(new_translation)
         return self
 
+    def place_below(self, comp: BaseComponent, gap=2):
+        """Place below the provided component"""
+        other_bbox = comp.bbox3D()
+        curr_bbox = self.bbox3D()
+
+        self.translate_by([0, other_bbox[0][1] - curr_bbox[1][1] - gap, 0])
+
+        return self
+
     def rotate_by(self, delta_rotation):
         """Rotate component by a given rotation"""
         for subs in self._get_subcomponents():

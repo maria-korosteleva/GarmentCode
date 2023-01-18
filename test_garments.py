@@ -28,16 +28,13 @@ if __name__ == '__main__':
     with open(design_file, 'r') as f:
         design = yaml.safe_load(f)['design']
     test_garments = [
-        # SkirtWB(1),
-        # SkirtWB(1.5, 0),
-        # SkirtWB(2, 0),
-        # SkirtWB(2),
+        SkirtWB(body, design),
         # WB(),
         # Skirt2(),
         # SkirtManyPanels(body, n_panels=10),
         # SkirtManyPanelsWB(body, design),
         # Shirt(body, design),
-        FittedShirt(body, design),
+        # FittedShirt(body, design),
         # GodetSkirt(body, design),
         # Pants(body, design),
         # WBPants(body, design),

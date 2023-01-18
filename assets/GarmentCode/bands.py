@@ -134,7 +134,7 @@ class CuffBandSkirt(pyp.Component):
         self.skirt = CuffSkirt(tag, design)
 
         # Align
-        self.skirt.translate_by([0, self.cuff.bbox3D()[0][1] - 3, 0])
+        self.skirt.place_below(self.cuff)
 
         self.stitching_rules = pyp.Stitches(
             (self.cuff.interfaces['bottom'], self.skirt.interfaces['top']),

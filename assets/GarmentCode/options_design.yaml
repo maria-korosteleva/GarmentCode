@@ -121,6 +121,15 @@ design:
     length:
       v: 70
       range: [30, 120]
+    ruffle: 
+      v: 2
+      range: [1, 2]
+    bottom_cut: 
+      v: 0
+      range: [0, 20]  # TODO Untill length
+    flare: 
+      v: 20
+      range: [0, 20]
 
   flare-skirt:
     length:

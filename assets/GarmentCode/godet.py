@@ -23,8 +23,10 @@ class GodetSkirt(pyp.Component):
         ins_w = gdesign['insert_w']['v']
         ins_depth = gdesign['insert_depth']['v']
 
-        self.front = SkirtPanel('front', ruffles=1, waist_length=body['waist'], length=sk_length, bottom_cut=0, flare=0).center_x().translate_by([0, 0, 20])
-        self.back = SkirtPanel('back', ruffles=1, waist_length=body['waist'], length=sk_length, bottom_cut=0, flare=0).center_x().translate_by([0, 0, -15])
+        self.front = SkirtPanel(
+            'front', waist_length=body['waist'], length=sk_length).center_x().translate_by([0, 0, 20])
+        self.back = SkirtPanel(
+            'back', waist_length=body['waist'], length=sk_length).center_x().translate_by([0, 0, -15])
 
         # front and back of a skirt
         self.stitching_rules.append((self.front.interfaces['right'], self.back.interfaces['right']))
