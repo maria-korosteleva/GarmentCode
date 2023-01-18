@@ -10,8 +10,6 @@ class SleevePanel(pyp.Panel):
     def __init__(self, name, body, design, connecting_depth, width_diff=0) -> None:
         super().__init__(name)
 
-        # TODO Cuffs, ruffles start, fulles end, opening shape..
-
         pose_angle = np.deg2rad(body['arm_pose_angle'])
         shoulder_angle = np.deg2rad(body['shoulder_incl'])
         standing = design['standing_shoulder']['v']
@@ -92,8 +90,6 @@ class Sleeve(pyp.Component):
             'in_front_shape': self.f_sleeve.interfaces['in_shape'],
             'in_back': self.b_sleeve.interfaces['in'],
             'in_back_shape': self.b_sleeve.interfaces['in_shape'],
-            'out': pyp.Interface.from_multiple(
-                self.f_sleeve.interfaces['out'], self.b_sleeve.interfaces['out'])
         }
 
         # Cuff
@@ -110,14 +106,30 @@ class Sleeve(pyp.Component):
             pose_angle = np.deg2rad(body['arm_pose_angle'])
             self.cuff.rotate_by(R.from_euler('XYZ', [0, 0, -pose_angle]))
             self.cuff.translate_by([  # TODO relate this to the angle
-                bbox[0][0] + (cbbox[0][0] + cbbox[1][0]) / 2 + 5 * np.cos(pose_angle),
-                bbox[0][1] + 5 * np.sin(pose_angle), 
+                bbox[0][0] + (cbbox[0][0] + cbbox[1][0]) / 2 + 13 * np.cos(pose_angle),
+                bbox[0][1] + 8 * np.sin(pose_angle), 
                 0
             ])
 
             # Stitch
+            # modify interfaces to control connection
+            front_int = self.f_sleeve.interfaces['out'].edges
+            frac = design['end_width']['v'] / 2 / front_int.length()
+            subdiv = pyp.esf.from_fractions(
+                front_int[0].start, front_int[0].end, [frac, (1 - frac)])
+            self.f_sleeve.edges.substitute(front_int[0], subdiv)
+
+            new_front_int = pyp.Interface(self.f_sleeve, subdiv[0])
+            new_back_int = pyp.Interface.from_multiple( 
+                pyp.Interface(self.f_sleeve, subdiv[1]),
+                self.b_sleeve.interfaces['out']).reverse()
+
+            # stitch
+            self.stitching_rules.append(  
+                (self.cuff.interfaces['top_front'], new_front_int))
             self.stitching_rules.append(
-                (self.interfaces['out'], self.cuff.interfaces['top']))
+                (self.cuff.interfaces['top_back'], new_back_int),
+                )
 
 
 # ------  Armhole shapes ------

@@ -70,10 +70,10 @@ class CuffBand(pyp.Component):
         # TODO flexible fractions of the width
         self.front = BandPanel(
             f'{tag}_cuff_f', design['b_width']['v'] / 2, design['b_depth']['v'] / 2)
-        self.front.translate_by([0, 0, 10])  
+        self.front.translate_by([0, 0, 15])  
         self.back = BandPanel(
             f'{tag}_cuff_b', design['b_width']['v'] / 2, design['b_depth']['v'] / 2)
-        self.back.translate_by([0, 0, -10])  
+        self.back.translate_by([0, 0, -15])  
 
         self.stitching_rules = pyp.Stitches(
             (self.front.interfaces['right'], self.back.interfaces['right']),
@@ -83,6 +83,8 @@ class CuffBand(pyp.Component):
         self.interfaces = {
             'bottom': pyp.Interface.from_multiple(
                 self.front.interfaces['bottom'], self.back.interfaces['bottom']),
+            'top_front': self.front.interfaces['top'],
+            'top_back': self.back.interfaces['top'],
             'top': pyp.Interface.from_multiple(
                 self.front.interfaces['top'], self.back.interfaces['top']),
         }
@@ -101,12 +103,12 @@ class CuffSkirt(pyp.Component):
             f'{tag}_cuff_skirt_f', ruffles=design['skirt_ruffle']['v'], 
             waist_length=width, length=design['skirt_length']['v'], 
             flare=flare_diff)
-        self.front.translate_by([0, 0, 10])  
+        self.front.translate_by([0, 0, 15])  
         self.back = skirt_paneled.SkirtPanel(
             f'{tag}_cuff_skirt_b', ruffles=design['skirt_ruffle']['v'], 
             waist_length=width, length=design['skirt_length']['v'], 
             flare=flare_diff)
-        self.back.translate_by([0, 0, -10])  
+        self.back.translate_by([0, 0, -15])  
 
         self.stitching_rules = pyp.Stitches(
             (self.front.interfaces['right'], self.back.interfaces['right']),
@@ -116,6 +118,8 @@ class CuffSkirt(pyp.Component):
         self.interfaces = {
             'top': pyp.Interface.from_multiple(
                 self.front.interfaces['top'], self.back.interfaces['top']),
+            'top_front': self.front.interfaces['top'],
+            'top_back': self.back.interfaces['top']
         }
 
 # TODO 
@@ -137,5 +141,7 @@ class CuffBandSkirt(pyp.Component):
         )
 
         self.interfaces = {
-            'top': self.cuff.interfaces['top']
+            'top': self.cuff.interfaces['top'],
+            'top_front': self.cuff.interfaces['top_front'],
+            'top_back': self.cuff.interfaces['top_back'],
         }

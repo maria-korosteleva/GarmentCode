@@ -68,7 +68,7 @@ design:
       v: ArmholeSmooth
       range: [ArmholeSquare, ArmholeSmooth]
     smoothing_coeff:
-      v: 0.2
+      v: 0.15
       range: [0.1, 0.4]
     inclanation:   # How much intro the shoulder the sleeve will cut
       v: 3
