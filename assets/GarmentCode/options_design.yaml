@@ -14,7 +14,7 @@ design:
       v: False
       range: [True, False]
     bottom: 
-      v: SkirtManyPanels
+      v: Pants
       range: [GodetSkirt, Pants, Skirt2, SkirtManyPanels]
 
   waistband:
@@ -71,11 +71,11 @@ design:
       v: 0.2
       range: [0.1, 0.4]
     inclanation:   # How much intro the shoulder the sleeve will cut
-      v: 5
+      v: 3
       range: null
     connecting_width:
-      v: 30
-      range: [23, 40]   # TODO min armscye_depth . And no more then that for Bodice
+      v: 20
+      range: [20, 40]   # TODO min armscye_depth . And no more then that for Bodice
     # Shoulder shape
     standing_shoulder: 
       v: False

@@ -62,6 +62,8 @@ class Interface():
             return norm(s_3d - prev_3d) > norm(end_3d - prev_3d)
 
         # Mid case
+        # Utilize distance from the end vertex to the next panel 
+        # start -> prev + end -> next or other way around  
         prev, prev_panel = self.edges[i-1], self.panel[i-1]
         next, next_panel = self.edges[(i+1 % len(self.edges))], self.panel[(i+1)  % len(self.edges)]
 
@@ -80,13 +82,10 @@ class Interface():
 
             Creates a copy of the interface s.t. not to disturb the original edge objects
         """
-        # TODO can we do the same for the edge sub-sequences?
-        #  -> midpoint of a sequence is less representative
-        #  -> more likely to have weird relative 3D orientations
-
-        # TODO Move this routine to the EdgeSeq class
-        # TODO Utilize distance from the end vertex to the next panel as well for stability
-        # start -> prev + end -> next or other way around  
+        # NOTE we cannot we do the same for the edge sub-sequences:
+        #  - midpoint of a sequence is less representative
+        #  - more likely to have weird relative 3D orientations
+        # => heuristic won't work as well
 
         oriented = self.edges.copy()
 
@@ -143,16 +142,12 @@ class Interface():
                     raise NotImplementedError(
                         f'{self.__class__.__name__}::Error::reordering between panel-related sub-segments is not supported')
         
-
-        # TODO This is not reliable though!
         new_edges = EdgeSequence()
         new_panel_list = []
         for i in range(len(self.panel)):
             id = i if i not in curr_edge_ids else projected_edge_ids[curr_edge_ids.index(i)]
-
             # edges
             new_edges.append(self.edges[id])
-
             # panels
             new_panel_list.append(self.panel[id])
             
