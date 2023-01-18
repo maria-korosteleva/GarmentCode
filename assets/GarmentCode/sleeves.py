@@ -4,7 +4,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 class SleevePanel(pyp.Panel):
-    def __init__(self, name, body, design, opening_width, opening_depth, width_diff=0) -> None:
+    def __init__(self, name, body, design, connecting_depth, width_diff=0) -> None:
         super().__init__(name)
 
         # TODO Cuffs, ruffles start, fulles end, opening shape..
@@ -12,18 +12,19 @@ class SleevePanel(pyp.Panel):
         pose_angle = np.deg2rad(body['arm_pose_angle'])
         shoulder_angle = np.deg2rad(body['shoulder_incl'])
         standing = design['standing_shoulder']['v']
-
         base_angle = pose_angle if standing else shoulder_angle
 
         length = design['length']['v']
+        connecting_width = design['connecting_width']['v']
+        smoothing_coeff = design['smoothing_coeff']['v']
+
         armhole = globals()[design['armhole_shape']['v']]
-        
         proj_shape, open_shape = armhole(
-            opening_depth, opening_width, 
-            angle=base_angle, incl_coeff=0.2, w_coeff=0.1)
+            connecting_depth, connecting_width, 
+            angle=base_angle, incl_coeff=smoothing_coeff, w_coeff=smoothing_coeff)
 
         open_shape.rotate(-base_angle)  
-        arm_width = (design['opening_width']['v'] + width_diff) / 2   # DRAFT  abs(open_shape[0].start[1] - open_shape[-1].end[1])
+        arm_width = (design['end_width']['v'] + width_diff) / 2   # DRAFT  abs(open_shape[0].start[1] - open_shape[-1].end[1])
 
         # Main body of a sleeve
         self.edges = pyp.esf.from_verts(
@@ -55,7 +56,7 @@ class SleevePanel(pyp.Panel):
 
         # Default placement
         self.set_pivot(open_shape[-1].end)
-        self.translate_to([- body['sholder_w'] / 2 - opening_depth * 1.5, body['height'] - body['head_l'] + 7, 0])  #  - low_depth / 2
+        self.translate_to([- body['sholder_w'] / 2 - connecting_depth * 1.5, body['height'] - body['head_l'] + 7, 0])  #  - low_depth / 2
 
 
 class Sleeve(pyp.Component):
@@ -63,16 +64,14 @@ class Sleeve(pyp.Component):
     def __init__(self, tag, body, design, depth_diff) -> None:
         super().__init__(f'{self.__class__.__name__}_{tag}')
 
-        width = body['armscye_depth'] * 2   # TODO Parameter..
         design = design['sleeve']
         inclanation = design['inclanation']['v']
         
         # sleeves
         self.f_sleeve = SleevePanel(
-            f'{tag}_f', body, design, 
-            width/2, inclanation + depth_diff, depth_diff).translate_by([0, 0, 30])
+            f'{tag}_f', body, design, inclanation + depth_diff, depth_diff).translate_by([0, 0, 30])
         self.b_sleeve = SleevePanel(
-            f'{tag}_b', body, design, width/2, inclanation, -depth_diff).translate_by([0, 0, -25])
+            f'{tag}_b', body, design, inclanation, -depth_diff).translate_by([0, 0, -25])
 
         self.stitching_rules = pyp.Stitches(
             (self.f_sleeve.interfaces['top'], self.b_sleeve.interfaces['top']),

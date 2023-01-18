@@ -56,40 +56,44 @@ design:
       v: 3
       range: [3, 25]
     width: 
-      v: 28
+      v: 18
       range: [18, 30]   # TODO min is a neck width
     
   sleeve:
     sleeveless: 
-        v: False
-        range: [True, False]
+      v: False
+      range: [True, False]
+    # Armhole
     armhole_shape: 
       v: ArmholeSmooth
       range: [ArmholeSquare, ArmholeSmooth]
     smoothing_coeff:
       v: 0.2
       range: [0.1, 0.4]
-    length: 
-      v: 35
-      range: [3, 100]
-    ruffle:
-      v: 1
-      range: [1, 20]
     inclanation:   # How much intro the shoulder the sleeve will cut
-      v: 3
+      v: 5
       range: null
-    end_width:
-      v: 30
-      range: [20, 40]  
-    connecting_depth:
+    connecting_width:
       v: 30
       range: [23, 40]   # TODO min armscye_depth . And no more then that for Bodice
+    # Shoulder shape
     standing_shoulder: 
       v: False
       range: [True, False]
     standing_shoulder_len:   # can create "Standing" shoulder
       v: 10
       range: [4, 10]
+    # Overalls
+    end_width:
+      v: 30
+      range: [20, 40]  
+    length: 
+      v: 35
+      range: [3, 100]
+    ruffle:
+      v: 1
+      range: [1, 20]
+
 
   skirt: 
     length:
