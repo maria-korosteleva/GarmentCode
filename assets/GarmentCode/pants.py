@@ -56,7 +56,8 @@ class PantPanel(pyp.Panel):
         )
 
         # Default placement
-        self.translation = [-hips, -crotch_depth-10, 0]
+        self.top_center_pivot()
+        self.translation = [-hips / 2, 0, 0]
 
         # Out interfaces (easier to define before adding a dart)
         self.interfaces = {

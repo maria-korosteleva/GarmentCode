@@ -38,8 +38,8 @@ class SkirtPanel(pyp.Panel):
         self.edges.append(self.bottom)
 
         # default placement
+        self.top_center_pivot()
         self.center_x()  # Already know that this panel should be centered over Y
-        self.translation[1] = - length - 10
 
 
 class ThinSkirtPanel(pyp.Panel):
