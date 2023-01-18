@@ -19,7 +19,8 @@ class SleevePanel(pyp.Panel):
         armhole = globals()[design['armhole_shape']['v']]
         
         proj_shape, open_shape = armhole(
-            opening_depth, opening_width, angle=base_angle, incl_coeff=0.2, w_coeff=0.1)
+            opening_depth, opening_width, 
+            angle=base_angle, incl_coeff=0.2, w_coeff=0.1)
 
         open_shape.rotate(-base_angle)  
         arm_width = (design['opening_width']['v'] + width_diff) / 2   # DRAFT  abs(open_shape[0].start[1] - open_shape[-1].end[1])
@@ -62,7 +63,7 @@ class Sleeve(pyp.Component):
     def __init__(self, tag, body, design, depth_diff) -> None:
         super().__init__(f'{self.__class__.__name__}_{tag}')
 
-        width = body['armscye_depth'] * 2
+        width = body['armscye_depth'] * 2   # TODO Parameter..
         design = design['sleeve']
         inclanation = design['inclanation']['v']
         
@@ -73,11 +74,7 @@ class Sleeve(pyp.Component):
         self.b_sleeve = SleevePanel(
             f'{tag}_b', body, design, width/2, inclanation, -depth_diff).translate_by([0, 0, -25])
 
-        # DEBUG
-        print('Top Len Diff ', self.f_sleeve.interfaces['top'].edges.length(), self.b_sleeve.interfaces['top'].edges.length())
-
         self.stitching_rules = pyp.Stitches(
-            # DRAFT (self.f_sleeve.interfaces['shoulder'], self.b_sleeve.interfaces['shoulder']),
             (self.f_sleeve.interfaces['top'], self.b_sleeve.interfaces['top']),
             (self.f_sleeve.interfaces['bottom'], self.b_sleeve.interfaces['bottom']),
         )

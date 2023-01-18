@@ -58,26 +58,29 @@ design:
     
   sleeve:
     sleeveless: 
-        v: True
+        v: False
         range: [True, False]
     armhole_shape: 
       v: ArmholeSmooth
       range: [ArmholeSquare, ArmholeSmooth]
+    smoothing_coeff:
+      v: 0.2
+      range: [0.1, 0.4]
     length: 
       v: 35
       range: [3, 100]
     ruffle:
       v: 1
       range: [1, 20]
-    ease:
+    inclanation:   # How much intro the shoulder the sleeve will cut
       v: 3
       range: null
-    inclanation: 
-      v: 3
-      range: null
-    opening_width:
+    end_width:
       v: 30
-      range: [20, 40]
+      range: [20, 40]  
+    connecting_depth:
+      v: 30
+      range: [23, 40]   # TODO min armscye_depth . And no more then that for Bodice
     standing_shoulder: 
       v: False
       range: [True, False]
