@@ -91,11 +91,31 @@ design:
       v: 35
       range: [3, 100]
     connect_ruffle:
-      v: 1.3
+      v: 1
       range: [1, 2]
     end_ruffle:  # TODO add
       v: 1
       range: [1, 2]
+    # Cuff
+    cuff: 
+      type:
+        v: CuffBandSkirt
+        range: [CuffBand, CuffSkirt, CuffBandSkirt, null]
+      # b_width:  # NOTE taken from end_width # TODO naming convention with waistband
+      #  v: 40
+      #  range: [30, 40]  
+      b_depth: 
+        v: 10
+        range: [3, 20]
+      skirt_length: 
+        v: 10
+        range: [5, 20]
+      skirt_flare:
+        v: 1.5
+        range: [1, 2]
+      skirt_ruffle: 
+        v: 1.3
+        range: [1, 1.5]
 
   skirt: 
     length:

@@ -3,6 +3,7 @@ from scipy.spatial.transform import Rotation as R
 
 # Custom
 import pypattern as pyp
+from . import bands
 
 
 class SleevePanel(pyp.Panel):
@@ -64,7 +65,7 @@ class SleevePanel(pyp.Panel):
         # Default placement
         self.set_pivot(open_shape[-1].end)
         self.translate_to(
-            [- body['sholder_w'] / 2 - connecting_depth * 1.5, body['height'] - body['head_l'] + 7, 0]) 
+            [- body['sholder_w'] / 2 - connecting_depth * 2, body['height'] - body['head_l'] + 5, 0]) 
 
 
 class Sleeve(pyp.Component):
@@ -95,6 +96,28 @@ class Sleeve(pyp.Component):
                 self.f_sleeve.interfaces['out'], self.b_sleeve.interfaces['out'])
         }
 
+        # Cuff
+        if design['cuff']['type']['v']:
+            bbox = self.bbox3D()
+
+            # Class
+            design['cuff']['b_width'] = design['end_width']
+            cuff_class = getattr(bands, design['cuff']['type']['v'])
+            self.cuff = cuff_class(tag, design)
+            cbbox = self.cuff.bbox3D()
+
+            # Position
+            pose_angle = np.deg2rad(body['arm_pose_angle'])
+            self.cuff.rotate_by(R.from_euler('XYZ', [0, 0, -pose_angle]))
+            self.cuff.translate_by([  # TODO relate this to the angle
+                bbox[0][0] + (cbbox[0][0] + cbbox[1][0]) / 2 + 5 * np.cos(pose_angle),
+                bbox[0][1] + 5 * np.sin(pose_angle), 
+                0
+            ])
+
+            # Stitch
+            self.stitching_rules.append(
+                (self.interfaces['out'], self.cuff.interfaces['top']))
 
 
 # ------  Armhole shapes ------
