@@ -291,15 +291,19 @@ class EdgeSequence():
         """Extend or shrink the edges along the line from start of the first edge to the 
         end of the last edge in sequence
         """
-
         # TODO Version With preservation of total length?
-        self.isChained()  # FIXME The seqeunce may be re-ordered or edges flipped
-                          # Find the vertices that do not have a pair in edges
-        if self.isLoop():
-            print(f'{self.__class__.__name__}::Warning::Extending looped edge sequences is not available')
-            return self
+
+        # Need to take the target line from the chained order
+        if not self.isChained():  
+            chained_edges = self.chained_order()
+            chained_edges.isChained()
+            if chained_edges.isLoop():
+                print(f'{self.__class__.__name__}::Warning::Extending looped edge sequences is not available')
+                return self
+        else: 
+            chained_edges = self
         
-        target_line = np.array(self.edges[-1].end) - np.array(self.edges[0].start)
+        target_line = np.array(chained_edges[-1].end) - np.array(chained_edges[0].start)
         target_line = target_line / norm(target_line)
 
         # gather vertices
@@ -338,6 +342,7 @@ class EdgeSequence():
 
         return self
 
+    # ANCHOR New sequences & versions
     def copy(self):
         """Create a copy of a current edge sequence preserving the chaining property of edge sequences"""
         new_seq = deepcopy(self)
@@ -355,3 +360,24 @@ class EdgeSequence():
 
         return new_seq
 
+    def chained_order(self):
+        """ Attempt to restore a chain in the EdgeSequence
+            The chained edge sequence may loose it's property if the edges were reveresed externally. 
+            This routine created a copy of the currect sequence with aligned the order of edges,
+
+            It might be useful for various calculations
+        
+        """
+        chained = self.copy()
+        
+        for i in range(len(chained)):
+            # Assuming the previous one is already sorted
+            if i > 0 and chained[i].end is chained[i-1].end:
+                chained[i].reverse()
+            # Not connected to the previous one
+            elif (i < len(chained) 
+                    and (chained[i].start is chained[i+1].start or chained[i].start is chained[i+1].end)):
+                chained[i].reverse()
+            # not connected to anything or connected properly -- leave as is
+        
+        return chained

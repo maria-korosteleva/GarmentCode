@@ -1,7 +1,9 @@
-# Custom
-import pypattern as pyp
 import numpy as np
 from scipy.spatial.transform import Rotation as R
+
+# Custom
+import pypattern as pyp
+
 
 class SleevePanel(pyp.Panel):
     def __init__(self, name, body, design, connecting_depth, width_diff=0) -> None:
@@ -23,8 +25,11 @@ class SleevePanel(pyp.Panel):
             connecting_depth, connecting_width, 
             angle=base_angle, incl_coeff=smoothing_coeff, w_coeff=smoothing_coeff)
 
+        if not pyp.utils.close_enough(design['connect_ruffle']['v'], 1):
+            open_shape.extend(design['connect_ruffle']['v'])
+
         open_shape.rotate(-base_angle)  
-        arm_width = (design['end_width']['v'] + width_diff) / 2   # DRAFT  abs(open_shape[0].start[1] - open_shape[-1].end[1])
+        arm_width = (design['end_width']['v'] + width_diff) / 2   
 
         # Main body of a sleeve
         self.edges = pyp.esf.from_verts(
@@ -40,14 +45,15 @@ class SleevePanel(pyp.Panel):
         if standing:  # Add a "shelve" to create square shoulder appearance
             end = self.edges[-1].end
             len = design['standing_shoulder_len']['v']
-            self.edges.append(pyp.Edge(end, [end[0] - len * np.cos(shoulder_angle), end[1] - len * np.sin(shoulder_angle)]))
+            self.edges.append(pyp.Edge(
+                end, [end[0] - len * np.cos(shoulder_angle), end[1] - len * np.sin(shoulder_angle)]))
 
         # Fin
         self.edges.close_loop()
         
         # Interfaces
         self.interfaces = {
-            'in': pyp.Interface(self, open_shape),
+            'in': pyp.Interface(self, open_shape, ruffle=design['connect_ruffle']['v']),
             'in_shape': pyp.Interface(self, proj_shape),
             'out': pyp.Interface(self, self.edges[0]),
             'top': pyp.Interface(self, self.edges[-2:] if standing else self.edges[-1]),   
