@@ -12,11 +12,12 @@ class StitchingRule():
     """
     def __init__(self, int1:Interface, int2:Interface) -> None:
         """
-        NOTE: When connecting interfaces with different edge count on both sides, 
-            1) Note that the edge sequences change their structure.
+        NOTE: When connecting interfaces with multiple edge count on both sides, 
+            1) Note that the edge sequences may change their structure.
+                Involved interfaces and corresponding patterns will be updated automatically
                 Use of the same interfaces in other stitches (creating 3+way stitch edge) may fail. 
-            2) The interfaces are matched based on the original or reversed order in the interface 
-                EdgeSequences. The order can be controlled at the moment of interface creation
+            2) The interfaces' edges are matched based on the provided order in the interface. 
+            The order can be controlled at the moment of interface creation
         """
         # TODO Explicitely support 3+way stitches
         self.int1 = int1
@@ -47,28 +48,6 @@ class StitchingRule():
         )
 
 
-    def isTraversalMatching(self):
-        """Check if the traversal direction of edge sequences matches or needs to be swapped"""
-
-        # TODO More roubust for circular sequences
-        if len(self.int1.edges) > 1:
-            # Make sure the direction is matching
-            # 3D distance between corner vertices
-            start_1 = self.int1.panel[0].point_to_3D(self.int1.edges[0].midpoint())
-            start_2 = self.int2.panel[0].point_to_3D(self.int2.edges[0].midpoint())
-
-            end_1 = self.int1.panel[-1].point_to_3D(self.int1.edges[-1].midpoint())
-            end_2 = self.int2.panel[-1].point_to_3D(self.int2.edges[-1].midpoint())
-            
-            stitch_dist_straight = norm(start_2 - start_1) + norm(end_2 - end_1)
-            stitch_dist_reverse = norm(start_2 - end_1) + norm(end_2 - start_1)
-
-            if stitch_dist_reverse < stitch_dist_straight:
-                # We need to swap traversal direction
-                return False
-        return True
-
-
     def match_interfaces(self):
         """ Subdivide the interface edges on both sides s.t. they are matching 
             and can be safely connected
@@ -86,20 +65,10 @@ class StitchingRule():
         edges1 = self.int1.edges.copy()
         panels1 = copy(self.int1.panel) 
         frac1 = self.int1.projecting_edges(on_oriented=True).fractions()
-        # FIXME Not reliable
-        #  if not self.isTraversalMatching():      # match the other edge orientation before passing on
-        #     frac1.reverse()
-        #     panels1.reverse()
-        #     edges1.edges.reverse()
 
         edges2 = self.int2.edges.copy()
         panels2 = copy(self.int2.panel) 
         frac2 = self.int2.projecting_edges(on_oriented=True).fractions()
-        # FIXME Not reliable
-        # if not self.isTraversalMatching():      # match the other edge orientation before passing on
-        #     frac2.reverse()
-        #     panels2.reverse()
-        #     edges2.edges.reverse()
 
         self._match_to_fractions(self.int1, frac2, edges2, panels2)
         self._match_to_fractions(self.int2, frac1, edges1, panels1)
@@ -184,11 +153,7 @@ class StitchingRule():
 
         stitches = []
 
-        # FIXME not reliable
-        # swap = not self.isTraversalMatching()  # traverse edge sequences correctly
-        swap = False
-
-        for i, j in zip(range(len(self.int1.edges)), range(len(self.int2.edges) - 1, -1, -1) if swap else range(len(self.int2.edges))):
+        for i, j in zip(range(len(self.int1.edges)), range(len(self.int2.edges))):
             stitches.append([
                 {
                     'panel': self.int1.panel[i].name,  # corresponds to a name. 
