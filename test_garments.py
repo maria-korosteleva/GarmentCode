@@ -22,6 +22,7 @@ if __name__ == '__main__':
 
     body_file = './assets/GarmentCode/options_body.yaml'
     design_file = './assets/GarmentCode/options_design.yaml'
+    design_file = './assets/design_params/dress_50s.yaml'
     with open(body_file, 'r') as f:
         body = yaml.safe_load(f)['body']
         body['waist_level'] = body['height'] - body['head_l'] - body['waist_line']
@@ -38,7 +39,7 @@ if __name__ == '__main__':
         # GodetSkirt(body, design),
         # Pants(body, design),
         # WBPants(body, design),
-        MetaGarment('Dress_40s', body, design),
+        MetaGarment('Dress_50s', body, design),
         # CuffBand('test', design['pants']),
         # CuffSkirt('test', design['pants']),
         # CuffBandSkirt('test', design['pants'])

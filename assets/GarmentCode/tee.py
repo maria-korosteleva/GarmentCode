@@ -114,7 +114,7 @@ class TorsoBackHalfPanel(pyp.Panel):
 
 class TorsoHalf(pyp.Component):
     """Definition of a simple T-Shirt"""
-
+    # TODO this is really the same as bodice. Join the two together
     def __init__(self, name, body, design) -> None:
         super().__init__(name)
 
@@ -144,11 +144,16 @@ class TorsoHalf(pyp.Component):
         # Collars
         # Front
         collar_type = getattr(collars, design['collar']['f_collar']['v'])
-        f_collar = collar_type(design['collar']['fc_depth']['v'], design['collar']['width']['v'])
+        f_collar = collar_type(
+            design['collar']['fc_depth']['v'], 
+            design['collar']['width']['v'], 
+            design['collar']['fc_angle']['v'], 
+            )
         pyp.ops.cut_corner(f_collar, self.ftorso.interfaces['collar_corner'])
         # Back
         collar_type = getattr(collars, design['collar']['b_collar']['v'])
-        b_collar = collar_type(design['collar']['bc_depth']['v'], design['collar']['width']['v'])
+        b_collar = collar_type(
+            design['collar']['bc_depth']['v'], design['collar']['width']['v'], design['collar']['bc_angle']['v'])
         pyp.ops.cut_corner(b_collar, self.btorso.interfaces['collar_corner'])
 
         self.stitching_rules.append((self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
