@@ -50,19 +50,19 @@ design:
       v: VNeckHalf
       range: [VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf]
     fc_depth:   # Front collar depth
-      v: 17
+      v: 17  # 17
       range: [3, 25]
     bc_depth:   # back collar depth
-      v: 3
+      v: 1
       range: [3, 25]
     fc_angle: 
-      v: 80
+      v: 70
       range: [30, 180]
     bc_angle: 
       v: 90
       range: [30, 180]
     width: 
-      v: 18  # 18 is the neck width
+      v: 8  # 18 is the neck width
       range: [18, 30]   # TODO min is a neck width
     
   sleeve:
@@ -80,7 +80,7 @@ design:
       v: 3
       range: null
     connecting_width:
-      v: 20
+      v: 16  
       range: [20, 40]   # TODO min armscye_depth . And no more then that for Bodice
     # Shoulder shape
     standing_shoulder: 
@@ -94,7 +94,7 @@ design:
       v: 35
       range: [20, 40]  
     length: 
-      v: 4
+      v: 5
       range: [3, 100]
     connect_ruffle:
       v: 1
