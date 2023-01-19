@@ -44,7 +44,7 @@ class VisPattern(core.ParametrizedPattern):
         self.scaling_for_drawing = self._verts_to_px_scaling_factor()
         self.view_ids = view_ids  # whatever to render vertices & endes indices
 
-    def serialize(self, path, to_subfolder=True, tag='', with_3d=True):
+    def serialize(self, path, to_subfolder=True, tag='', with_3d=True, with_text=True):
 
         log_dir = super().serialize(path, to_subfolder, tag=tag)
         svg_file = os.path.join(log_dir, (self.name + tag + '_pattern.svg'))
@@ -52,7 +52,7 @@ class VisPattern(core.ParametrizedPattern):
         png_3d_file = os.path.join(log_dir, (self.name + tag + '_3d_pattern.png'))
 
         # save visualtisation
-        self._save_as_image(svg_file, png_file)
+        self._save_as_image(svg_file, png_file, with_text)
         if with_3d:
             self._save_as_image_3D(png_3d_file)
 
@@ -103,7 +103,7 @@ class VisPattern(core.ParametrizedPattern):
         flipped_point[1] *= -1
         return flipped_point
 
-    def _draw_a_panel(self, drawing, panel_name, offset=[0, 0]):
+    def _draw_a_panel(self, drawing, panel_name, offset=[0, 0], with_text=True):
         """
         Adds a requested panel to the svg drawing with given offset and scaling
         Assumes (!!) 
@@ -111,6 +111,10 @@ class VisPattern(core.ParametrizedPattern):
         Returns 
             the lower-right vertex coordinate for the convenice of future offsetting.
         """
+        stroke_color = 'rgb(51,51,51)'
+        fill_color = 'rgb(216,214,236)'
+        stroke_width = '0.75'
+
         panel = self.pattern['panels'][panel_name]
         vertices = np.asarray(panel['vertices'])
         vertices = self._verts_to_px_coords(vertices)
@@ -120,7 +124,8 @@ class VisPattern(core.ParametrizedPattern):
         # draw edges
         start = vertices[panel['edges'][0]['endpoints'][0]]
         path = drawing.path(['M', start[0], start[1]],
-                            stroke='black', fill='rgb(255,217,194)')
+                            stroke=stroke_color, stroke_width=stroke_width,
+                            fill=fill_color)
         for edge in panel['edges']:
             start = vertices[edge['endpoints'][0]]
             end = vertices[edge['endpoints'][1]]
@@ -135,12 +140,15 @@ class VisPattern(core.ParametrizedPattern):
         path.push('z')  # path finished
         drawing.add(path)
 
+        max_x = vertices[:, 0]
         # name the panel
-        panel_center = np.mean(vertices, axis=0)
-        text_insert = panel_center + np.array([-25, 3])
-        drawing.add(drawing.text(panel_name, insert=text_insert, 
-                    fill='rgb(9,33,173)', font_size='25'))
-        text_max_x = text_insert[0] + 10 * len(panel_name)
+        if with_text:
+            panel_center = np.mean(vertices, axis=0)
+            text_insert = panel_center + np.array([-25, 3])
+            drawing.add(drawing.text(panel_name, insert=text_insert, 
+                        fill='rgb(9,33,173)', font_size='25'))
+            text_max_x = text_insert[0] + 10 * len(panel_name)
+            max_x = np.max(max_x, text_max_x)
 
         panel_center = np.mean(vertices, axis=0)
         if self.view_ids:
@@ -163,9 +171,9 @@ class VisPattern(core.ParametrizedPattern):
                     drawing.text(idx, insert=middle + shift, 
                                  fill='rgb(50,179,101)', font_size='20'))
 
-        return max(np.max(vertices[:, 0]), text_max_x), np.max(vertices[:, 1])
+        return max(max_x), np.max(vertices[:, 1])
 
-    def _save_as_image(self, svg_filename, png_filename):
+    def _save_as_image(self, svg_filename, png_filename, with_text=True):
         """
             Saves current pattern in svg and png format for visualization
         """
@@ -182,7 +190,8 @@ class VisPattern(core.ParametrizedPattern):
             if panel is not None:
                 panel_offset_x, height = self._draw_a_panel(
                     dwg, panel,
-                    offset=[panel_offset_x + base_offset[0], base_offset[1]]
+                    offset=[panel_offset_x + base_offset[0], base_offset[1]], 
+                    with_text=with_text,
                 )
                 heights.append(height)
 
