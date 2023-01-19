@@ -38,11 +38,11 @@ if __name__ == '__main__':
         # GodetSkirt(body, design),
         # Pants(body, design),
         # WBPants(body, design),
-        # MetaGarment('Dress_regency', body, design),
+        MetaGarment('Dress_40s', body, design),
         # CuffBand('test', design['pants']),
         # CuffSkirt('test', design['pants']),
         # CuffBandSkirt('test', design['pants'])
-        PencilSkirt(body, design)
+        # PencilSkirt(body, design)
     ]
 
     # test_garments[0].translate_by([2, 0, 0])
@@ -55,7 +55,7 @@ if __name__ == '__main__':
         folder = pattern.serialize(
             Path(sys_props['output']), 
             tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
-            to_subfolder=False)
+            to_subfolder=True)
 
         shutil.copy(body_file, folder)
         shutil.copy(design_file, folder)

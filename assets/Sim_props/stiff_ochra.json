@@ -33,7 +33,7 @@
         "bend_damp": 0.1,
         "bend_damp_dropoff": 0.0,
         "bend_plasticity": 0.0,
-        "bend_resistance": 3.0,
+        "bend_resistance": 1.0,
         "bend_yield": 0.0,
         "compression_resistance": 100.0,
         "density": 0.015,
