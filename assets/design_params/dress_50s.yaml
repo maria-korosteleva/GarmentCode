@@ -14,12 +14,12 @@ design:
       v: False
       range: [True, False]
     bottom: 
-      v: PencilSkirt
+      v: SkirtManyPanels
       range: [GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt]
 
   waistband:
     waist: 
-      v: 83   # Underbust
+      v: 82   # waist   
       range: [82, 200]   # TODO from waist 
     width: 
       v: 3
@@ -44,13 +44,13 @@ design:
 
   collar:
     f_collar: 
-      v: VNeckHalf
+      v: TrapezoidNeckHalf
       range: [VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf]
     b_collar: 
       v: VNeckHalf
       range: [VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf]
     fc_depth:   # Front collar depth
-      v: 25
+      v: 17
       range: [3, 25]
     bc_depth:   # back collar depth
       v: 3
@@ -62,7 +62,7 @@ design:
       v: 90
       range: [30, 180]
     width: 
-      v: 18  # 18
+      v: 25  # 18
       range: [18, 30]   # TODO min is a neck width
     
   sleeve:
@@ -84,28 +84,28 @@ design:
       range: [20, 40]   # TODO min armscye_depth . And no more then that for Bodice
     # Shoulder shape
     standing_shoulder: 
-      v: True
+      v: False
       range: [True, False]
     standing_shoulder_len:   # can create "Standing" shoulder
-      v: 7
+      v: 10
       range: [4, 10]
     # Overalls
     end_width:
-      v: 22
+      v: 35
       range: [20, 40]  
     length: 
-      v: 40
+      v: 5
       range: [3, 100]
     connect_ruffle:
       v: 1
       range: [1, 2]
-    end_ruffle: 
+    end_ruffle:  # TODO add
       v: 1
       range: [1, 2]
     # Cuff
     cuff: 
       type:
-        v: null
+        v: CuffBand
         range: [CuffBand, CuffSkirt, CuffBandSkirt, null]
       # b_width:  # NOTE taken from end_width # TODO naming convention with waistband
       #  v: 40
@@ -167,8 +167,8 @@ design:
 
   pencil-skirt: 
     length:   # From hips
-      v: 70
-      range: [10, 80]   # TODO related with height and body proportions? 
+      v: 30
+      range: [10, 40]   # TODO related with height and body proportions? 
     rise:
       v: 1
       range: [0.5, 1]
@@ -176,10 +176,10 @@ design:
       v: 0.8
       range: [0.3, 1]   
     front_cut: 
-      v: 0
+      v: 20
       range: [0, 20]   # TODO Max = length
     back_cut: 
-      v: 0
+      v: 20
       range: [0, 20]   # TODO Max = length
     ruffle:
       v: [False, False]   # TODO Can be True only if connected to a waist band
