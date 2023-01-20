@@ -29,7 +29,7 @@ class SkirtPanel(pyp.Panel):
         # define interface
         self.interfaces = {
             'right': pyp.Interface(self, self.right[-1]),
-            'top': pyp.Interface(self, self.waist, ruffle=ruffles),
+            'top': pyp.Interface(self, self.waist, ruffle=ruffles).reverse(True),
             'left': pyp.Interface(self, self.left[0])
         }
         # Single sequence for correct assembly

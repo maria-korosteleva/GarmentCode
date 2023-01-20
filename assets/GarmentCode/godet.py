@@ -43,6 +43,10 @@ class GodetSkirt(pyp.Component):
             cuts_dist=gdesign['cuts_distance']['v'], 
             right=True)
 
+        self.interfaces = {
+            'top': pyp.Interface.from_multiple(self.front.interfaces['top'], self.back.interfaces['top'])
+        }
+
 
     def inserts(self, panel, z_transl, ins_w, ins_depth, sk_length, num_inserts=3, cuts_dist=0, right=True):
         """Create insert panels, add cuts to the skirt panel, and connect created insert panels with them"""

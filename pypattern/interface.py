@@ -22,6 +22,10 @@ class Interface():
         self.edges = edges if isinstance(edges, EdgeSequence) else EdgeSequence(edges)
         self.panel = [panel for _ in range(len(self.edges))]  # matches every edge 
 
+        # Allow to enfoce change the direction of edge 
+        # (used in many-to-many stitches correspondance determination)
+        self.edges_flipping = [False for _ in range(len(self.edges))]
+
         # Ruffles are applied to sections
         # Since extending a chain of edges != extending each edge individually
         self.ruffle = [dict(coeff=ruffle, sec=[0, len(self.edges)])]
@@ -41,6 +45,12 @@ class Interface():
     def needsFlipping(self, i):
         """ Check if particular edge should be re-oriented to follow the general direction of the interface
         """
+
+        if self.edges_flipping[i]:
+            return True
+        
+        # Otherwise, try to evaluate
+
         e = self.edges[i]
         panel = self.panel[i]
         s_3d, end_3d = panel.point_to_3D(e.start), panel.point_to_3D(e.end)
@@ -76,7 +86,6 @@ class Interface():
 
         return flipped_order_dist < forward_order_dist
 
-
     def oriented_edges(self):
         """ Orient the edges withing the interface sequence along the general direction of the interface
 
@@ -97,18 +106,17 @@ class Interface():
                 oriented[i].flipped = False
         return oriented
 
-
     def __len__(self):
         return len(self.edges)
     
     def __str__(self) -> str:
         # TODO More clear priting? Verbose level options?
-        return f'Interface: {[p.name for p in self.panel]}: {str(self.edges)}'
+        return f'Interface: {[p.name for p in self.panel]}: {str(self.oriented_edges())}'
     
     def __repr__(self) -> str:
         return self.__str__()
 
-    def reverse(self):
+    def reverse(self, with_edge_dir_reverse=False):
         """Reverse the order of edges in the interface
             (without updating the edge objects)
 
@@ -116,6 +124,9 @@ class Interface():
         """
         self.edges.edges.reverse()   # TODO Condition on edge sequence reverse 
         self.panel.reverse()
+        self.edges_flipping.reverse()
+        if with_edge_dir_reverse:
+            self.edges_flipping = [not e for e in self.edges_flipping]
 
         enum = len(self.edges)
         for r in self.ruffle:
@@ -144,15 +155,18 @@ class Interface():
         
         new_edges = EdgeSequence()
         new_panel_list = []
+        new_flipping_info = []
         for i in range(len(self.panel)):
             id = i if i not in curr_edge_ids else projected_edge_ids[curr_edge_ids.index(i)]
             # edges
             new_edges.append(self.edges[id])
+            new_flipping_info.append(self.edges_flipping[id])
             # panels
             new_panel_list.append(self.panel[id])
             
         self.edges = new_edges
         self.panel = new_panel_list
+        self.edges_flipping = new_flipping_info
 
 
     @staticmethod
@@ -168,6 +182,7 @@ class Interface():
         """
         new_int = copy(ints[0])  # shallow copy -- don't create unnecessary objects
         new_int.edges = EdgeSequence()
+        new_int.edges_flipping = []
         new_int.panel = []
         new_int.ruffle = []
         
@@ -179,6 +194,7 @@ class Interface():
 
             new_int.edges.append(elem.edges)
             new_int.panel += elem.panel 
+            new_int.edges_flipping += elem.edges_flipping 
             
         return new_int 
 

@@ -15,7 +15,7 @@ class BandPanel(pyp.Panel):
         # define interface
         self.interfaces = {
             'right': pyp.Interface(self, self.edges[0]),
-            'top': pyp.Interface(self, self.edges[1]),
+            'top': pyp.Interface(self, self.edges[1]).reverse(True),
             'left': pyp.Interface(self, self.edges[2]),
             'bottom': pyp.Interface(self, self.edges[3])
         }

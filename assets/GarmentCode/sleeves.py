@@ -126,7 +126,7 @@ class Sleeve(pyp.Component):
             new_front_int = pyp.Interface(self.f_sleeve, subdiv[0])
             new_back_int = pyp.Interface.from_multiple( 
                 pyp.Interface(self.f_sleeve, subdiv[1]),
-                self.b_sleeve.interfaces['out']).reverse()
+                self.b_sleeve.interfaces['out'])
 
             # stitch
             self.stitching_rules.append(  

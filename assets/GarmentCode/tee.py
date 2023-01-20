@@ -26,11 +26,14 @@ class TorsoFrontHalfPanel(pyp.Panel):
         design = design['shirt']
         # account for ease in basic measurements
         m_width = design['width']['v'] + design['ease']['v']
+        b_width = m_width + design['flare']['v'] * 4
 
         # sizes 
         body_width = (body['bust'] - body['back_width']) / 2 
         frac = body_width / body['bust'] 
         self.width = frac * m_width
+        b_width = frac * b_width
+        connecting_point =  b_width * (m_width / 4 / self.width)
 
         shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
         length = design['length']['v']
@@ -42,8 +45,8 @@ class TorsoFrontHalfPanel(pyp.Panel):
 
         self.edges = pyp.esf.from_verts(
             [0, 0], 
-            [-m_width / 4, 0],   # Extra vertex to connect with other bottoms correctly
-            [-self.width, 0], 
+            [-connecting_point, 0],   # Extra vertex to connect with front-back symmetric bottoms correctly
+            [-b_width, 0], 
             [-self.width, length], 
             [0, length + shoulder_incl], 
             loop=True
@@ -79,18 +82,23 @@ class TorsoBackHalfPanel(pyp.Panel):
         design = design['shirt']
         # account for ease in basic measurements
         m_width = design['width']['v'] + design['ease']['v']
+        b_width = m_width + design['flare']['v'] * 4
 
         # sizes 
         body_width = body['back_width'] / 2
         frac = body_width / body['bust'] 
         self.width = frac * m_width
+        b_width = frac * b_width
+
+        # DEBUG
+        print('Back flare', self.width, b_width)
 
         shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
         length = design['length']['v']
 
         self.edges = pyp.esf.from_verts(
             [0, 0], 
-            [-self.width, 0], 
+            [-b_width, 0], 
             [-self.width, length], 
             [0, length + shoulder_incl], 
             loop=True
@@ -165,7 +173,7 @@ class TorsoHalf(pyp.Component):
 
             'f_bottom': self.ftorso.interfaces['bottom_front'],
             'b_bottom': pyp.Interface.from_multiple(
-                self.ftorso.interfaces['bottom_back'], self.btorso.interfaces['bottom'])
+                self.btorso.interfaces['bottom'], self.ftorso.interfaces['bottom_back'])
         }
 
 
@@ -183,11 +191,11 @@ class Shirt(pyp.Component):
         self.stitching_rules.append((self.right.interfaces['front_in'], self.left.interfaces['front_in']))
         self.stitching_rules.append((self.right.interfaces['back_in'], self.left.interfaces['back_in']))
 
-        self.interfaces = {   # Bottom connection
+        self.interfaces = {   # Bottom connection right to left, front to back
             'bottom': pyp.Interface.from_multiple(
-                self.left.interfaces['f_bottom'],
                 self.right.interfaces['f_bottom'],
-                self.right.interfaces['b_bottom'],
+                self.left.interfaces['f_bottom'],
                 self.left.interfaces['b_bottom'].reverse(), 
+                self.right.interfaces['b_bottom'],
                 )
         }

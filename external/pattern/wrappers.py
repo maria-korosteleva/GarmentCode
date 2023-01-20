@@ -140,7 +140,7 @@ class VisPattern(core.ParametrizedPattern):
         path.push('z')  # path finished
         drawing.add(path)
 
-        max_x = vertices[:, 0]
+        max_x = np.max(vertices[:, 0])
         # name the panel
         if with_text:
             panel_center = np.mean(vertices, axis=0)
@@ -148,7 +148,7 @@ class VisPattern(core.ParametrizedPattern):
             drawing.add(drawing.text(panel_name, insert=text_insert, 
                         fill='rgb(9,33,173)', font_size='25'))
             text_max_x = text_insert[0] + 10 * len(panel_name)
-            max_x = np.max(max_x, text_max_x)
+            max_x = max(max_x, text_max_x)
 
         panel_center = np.mean(vertices, axis=0)
         if self.view_ids:
@@ -171,7 +171,7 @@ class VisPattern(core.ParametrizedPattern):
                     drawing.text(idx, insert=middle + shift, 
                                  fill='rgb(50,179,101)', font_size='20'))
 
-        return max(max_x), np.max(vertices[:, 1])
+        return max_x, np.max(vertices[:, 1])
 
     def _save_as_image(self, svg_filename, png_filename, with_text=True):
         """

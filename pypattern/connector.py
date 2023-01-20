@@ -129,8 +129,10 @@ class StitchingRule():
                 if flip: 
                     subdiv.edges.reverse()
 
-                inter.edges.substitute(base_edge, subdiv)  # interface
-                inter.panel.insert(in_id, inter.panel[in_id])  # update panel correspondance
+                # Update interface accordingly
+                inter.edges.substitute(base_edge, subdiv)  
+                inter.panel.insert(in_id, inter.panel[in_id]) 
+                inter.edges_flipping.insert(in_id, inter.edges_flipping[in_id]) 
 
                 # TODO what if these edges are used in other interfaces? Do they need to be updated as well?
                 # TODO Support the use in other Stitching rules -- multi-way stitches. Some recursion may work
