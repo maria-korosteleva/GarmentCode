@@ -5,7 +5,6 @@ import yaml
 import sys
 import shutil 
 
-# DRAFT site.addsitedir('../external/')
 sys.path.insert(0, './external/')
 
 # Custom

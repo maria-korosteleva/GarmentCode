@@ -90,9 +90,6 @@ class TorsoBackHalfPanel(pyp.Panel):
         self.width = frac * m_width
         b_width = frac * b_width
 
-        # DEBUG
-        print('Back flare', self.width, b_width)
-
         shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
         length = design['length']['v']
 

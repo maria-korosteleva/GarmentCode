@@ -64,10 +64,8 @@ class SleevePanel(pyp.Panel):
         self.set_pivot(self.edges[1].end)
         self.translate_to(
             [- body['sholder_w'] / 2 - connecting_depth, 
-            body['height'] - body['head_l'] - body['armscye_depth'],   # DRAFT * 0.9, 
+            body['height'] - body['head_l'] - body['armscye_depth'],
             0]) 
-
-        print(self.point_to_3D([0, 0]))
 
 
 class Sleeve(pyp.Component):

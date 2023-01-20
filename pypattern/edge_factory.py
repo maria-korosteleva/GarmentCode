@@ -178,10 +178,6 @@ class EdgeSeqFactory:
             dart_shape[-1].rotate(-angle_diff)
             dart_shape.reverse()  # original order
 
-        # DEBUG
-        print(f'Fin side length: {dart_shape[0].length() + dart_shape[-1].length()}')
-        print(f'Fin tri length: {long_side}')
-
         # prepare the interfaces to conveniently create stitches for a dart and non-dart edges
         dart_stitch = None if panel is None else (Interface(panel, dart_shape[1]), Interface(panel, dart_shape[2]))
         
@@ -250,9 +246,6 @@ class EdgeSeqFactory:
 
         dart_shape.insert(0, Edge(start, dart_shape[0].start))
         dart_shape.append(Edge(dart_shape[-1].end, end))
-
-        # DEBUG
-        print(f'Fin side length: {dart_shape[0].length() + dart_shape[-1].length()}')
 
         # prepare the interfaces to conveniently create stitches for a dart and non-dart edges
         dart_stitch = None if panel is None else (Interface(panel, dart_shape[1]), Interface(panel, dart_shape[2]))

@@ -23,13 +23,14 @@ def SquareNeckHalf(depth, width, *args):
 def TrapezoidNeckHalf(depth, width, angle=90):
     """Trapesoid neck design"""
 
-    # TODO special case when angle = 180 (sin = 0)
+    # Special case when angle = 180 (sin = 0)
+    if (pyp.utils.close_enough(angle, 180, tol=1) 
+            or pyp.utils.close_enough(angle, 0, tol=1)):
+        # degrades into VNeck
+        return VNeckHalf(depth, width)
+
     angle = np.deg2rad(angle)
 
     edges = pyp.esf.from_verts([0, 0], [-depth * np.cos(angle) / np.sin(angle), -depth], [width / 2, -depth])
 
-    # DEBUG
-    print('Collar! ', edges)
-    print(np.tan(angle), np.sin(angle), np.cos(angle))
-    
     return edges
