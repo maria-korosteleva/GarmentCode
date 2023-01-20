@@ -8,21 +8,21 @@
 design: 
   meta: 
     upper: 
-      v: FittedShirt
+      v: Shirt
       range: [FittedShirt, Shirt]
     wb: 
-      v: False
+      v: True
       range: [True, False]
     bottom: 
-      v: SkirtManyPanels
+      v: Skirt2
       range: [GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt]
 
   waistband:
     waist: 
-      v: 82   # waist   
+      v: 110   # Hips - for 20s dress
       range: [82, 200]   # TODO from waist 
     width: 
-      v: 3
+      v: 8
       range: [3, 15]
 
   bodice: 
@@ -35,41 +35,41 @@ design:
       v: 0
       range: null
     length: 
-      v: 27
+      v: 60
       range: [30, 150]
     width:   # Around the body 
-      v: 96
+      v: 100    # a bit more then hips measurement for 20s dress
       range: [96, 150]    # TODO min is a bust size
     flare:    # TODO backward compatibility
-      v: 0
+      v: 4
       range: [-20, 20]
 
   collar:
     f_collar: 
-      v: TrapezoidNeckHalf
+      v: SquareNeckHalf
       range: [VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf]
     b_collar: 
       v: VNeckHalf
       range: [VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf]
     fc_depth:   # Front collar depth
-      v: 17  # 17
+      v: 17
       range: [3, 25]
     bc_depth:   # back collar depth
-      v: 1
+      v: 3
       range: [3, 25]
     fc_angle: 
-      v: 70
+      v: 60
       range: [30, 180]
     bc_angle: 
       v: 90
       range: [30, 180]
     width: 
-      v: 8  # 18 is the neck width
+      v: 25  # 18
       range: [18, 30]   # TODO min is a neck width
     
   sleeve:
     sleeveless: 
-      v: False
+      v: True
       range: [True, False]
     # Armhole
     armhole_shape: 
@@ -82,7 +82,7 @@ design:
       v: 3
       range: null
     connecting_width:
-      v: 16  
+      v: 25
       range: [20, 40]   # TODO min armscye_depth . And no more then that for Bodice
     # Shoulder shape
     standing_shoulder: 
@@ -96,18 +96,18 @@ design:
       v: 35
       range: [20, 40]  
     length: 
-      v: 5
+      v: 12
       range: [3, 100]
     connect_ruffle:
-      v: 1
+      v: 1.5
       range: [1, 2]
     end_ruffle:  # TODO add
-      v: 1
+      v: 1.5
       range: [1, 2]
     # Cuff
     cuff: 
       type:
-        v: null
+        v: CuffBand
         range: [CuffBand, CuffSkirt, CuffBandSkirt, null]
       # b_width:  # NOTE taken from end_width # TODO naming convention with waistband
       #  v: 40
@@ -127,16 +127,16 @@ design:
 
   skirt: 
     length:
-      v: 100
+      v: 40
       range: [30, 120]
     ruffle: 
-      v: 1.5
+      v: 1.4
       range: [1, 2]
     bottom_cut: 
       v: 0
       range: [0, 20]  # TODO Untill length
     flare: 
-      v: 0
+      v: 20
       range: [0, 20]
 
   flare-skirt:

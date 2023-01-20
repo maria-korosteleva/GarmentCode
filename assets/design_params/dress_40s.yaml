@@ -40,7 +40,9 @@ design:
     width:   # Around the body 
       v: 96
       range: [96, 150]    # TODO min is a bust size
-    # TODO FLare at the bottom
+    flare:    # TODO backward compatibility
+      v: 0
+      range: [-20, 20]
 
   collar:
     f_collar: 

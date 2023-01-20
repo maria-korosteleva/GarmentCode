@@ -21,13 +21,21 @@ from assets.GarmentCode.bands import *
 if __name__ == '__main__':
 
     body_file = './assets/GarmentCode/options_body.yaml'
-    design_file = './assets/GarmentCode/options_design.yaml'
-    design_file = './assets/design_params/dress_50s.yaml'
     with open(body_file, 'r') as f:
         body = yaml.safe_load(f)['body']
         body['waist_level'] = body['height'] - body['head_l'] - body['waist_line']
-    with open(design_file, 'r') as f:
-        design = yaml.safe_load(f)['design']
+
+    design_files = {
+        # 'base': './assets/GarmentCode/options_design.yaml',
+        # 'Dress_20s': './assets/design_params/dress_20s.yaml',
+        'Dress_30s': './assets/design_params/dress_30s.yaml',
+        # 'Dress_regency': './assets/design_params/dress_regency.yaml'
+    }
+    designs = {}
+    for df in design_files:
+        with open(design_files[df], 'r') as f:
+            designs[df] = yaml.safe_load(f)['design']
+    
     test_garments = [
         # SkirtWB(body, design),
         # WB(),
@@ -39,12 +47,13 @@ if __name__ == '__main__':
         # GodetSkirt(body, design),
         # Pants(body, design),
         # WBPants(body, design),
-        MetaGarment('Dress_50s', body, design),
         # CuffBand('test', design['pants']),
         # CuffSkirt('test', design['pants']),
         # CuffBandSkirt('test', design['pants'])
         # PencilSkirt(body, design)
     ]
+    for df in designs:
+        test_garments.append(MetaGarment(df, body, designs[df]),)
 
     # test_garments[0].translate_by([2, 0, 0])
 
@@ -56,9 +65,10 @@ if __name__ == '__main__':
         folder = pattern.serialize(
             Path(sys_props['output']), 
             tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
-            to_subfolder=False)
+            to_subfolder=False, 
+            with_3d=False, with_text=False)
 
         shutil.copy(body_file, folder)
-        shutil.copy(design_file, folder)
+        shutil.copy(design_files[piece.name], folder)
 
         print(f'Success! {piece.name} saved to {folder}')

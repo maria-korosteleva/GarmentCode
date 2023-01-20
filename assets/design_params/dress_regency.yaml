@@ -40,29 +40,32 @@ design:
     width:   # Around the body 
       v: 96
       range: [96, 150]    # TODO min is a bust size
-    # TODO FLare at the bottom
+    flare:    # TODO backward compatibility
+      v: 0
+      range: [-20, 20]
+
 
   collar:
     f_collar: 
-      v: SquareNeckHalf
+      v: TrapezoidNeckHalf
       range: [VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf]
     b_collar: 
       v: VNeckHalf
       range: [VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf]
     fc_depth:   # Front collar depth
-      v: 17
+      v: 17  # 13
       range: [3, 25]
     bc_depth:   # back collar depth
       v: 3
       range: [3, 25]
     fc_angle: 
-      v: 60
+      v: 110
       range: [30, 180]
     bc_angle: 
       v: 90
       range: [30, 180]
     width: 
-      v: 25  # 18
+      v: 31  # 18
       range: [18, 30]   # TODO min is a neck width
     
   sleeve:
