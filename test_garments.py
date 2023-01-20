@@ -26,7 +26,7 @@ if __name__ == '__main__':
         body['waist_level'] = body['height'] - body['head_l'] - body['waist_line']
 
     design_files = {
-        # 'base': './assets/GarmentCode/options_design.yaml',
+        'base': './assets/GarmentCode/options_design.yaml',
         # 'Dress_20s': './assets/design_params/dress_20s.yaml',
         'Dress_30s': './assets/design_params/dress_30s.yaml',
         # 'Dress_regency': './assets/design_params/dress_regency.yaml'
@@ -44,7 +44,7 @@ if __name__ == '__main__':
         # SkirtManyPanelsWB(body, design),
         # Shirt(body, design),
         # FittedShirt(body, design),
-        # GodetSkirt(body, design),
+        GodetSkirt(body, designs['base']),
         # Pants(body, design),
         # WBPants(body, design),
         # CuffBand('test', design['pants']),
@@ -52,8 +52,8 @@ if __name__ == '__main__':
         # CuffBandSkirt('test', design['pants'])
         # PencilSkirt(body, design)
     ]
-    for df in designs:
-        test_garments.append(MetaGarment(df, body, designs[df]),)
+    # for df in designs:
+    #     test_garments.append(MetaGarment(df, body, designs[df]),)
 
     # test_garments[0].translate_by([2, 0, 0])
 
@@ -69,6 +69,9 @@ if __name__ == '__main__':
             with_3d=False, with_text=False)
 
         shutil.copy(body_file, folder)
-        shutil.copy(design_files[piece.name], folder)
+        if piece.name in design_files:
+            shutil.copy(design_files[piece.name], folder)
+        else:
+            shutil.copy(design_files['base'], folder)
 
         print(f'Success! {piece.name} saved to {folder}')

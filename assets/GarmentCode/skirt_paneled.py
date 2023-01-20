@@ -30,7 +30,8 @@ class SkirtPanel(pyp.Panel):
         self.interfaces = {
             'right': pyp.Interface(self, self.right[-1]),
             'top': pyp.Interface(self, self.waist, ruffle=ruffles).reverse(True),
-            'left': pyp.Interface(self, self.left[0])
+            'left': pyp.Interface(self, self.left[0]),
+            'bottom': pyp.Interface(self, self.bottom)
         }
         # Single sequence for correct assembly
         self.edges = self.right
@@ -158,7 +159,7 @@ class FittedSkirtHalf(pyp.Component):
             body['hips'] / 4, 
             body['hips_line'],
             design['length']['v'],
-            low_width=design['low_width']['v'] * body['hips'] / 4,
+            low_width=design['flare']['v'] * body['hips'] / 4,
             rise=design['rise']['v'],
             dart_position=body['bust_points'] / 2,
             dart_frac=1.3,  # Diff for front and back
@@ -171,7 +172,7 @@ class FittedSkirtHalf(pyp.Component):
             body['hips'] / 4,
             body['hips_line'],
             design['length']['v'],
-            low_width=design['low_width']['v'] * body['hips'] / 4,
+            low_width=design['flare']['v'] * body['hips'] / 4,
             rise=design['rise']['v'],
             dart_position=body['bum_points'] / 2,
             dart_frac=1.,   
@@ -188,6 +189,8 @@ class FittedSkirtHalf(pyp.Component):
             'inside_b': self.back.interfaces['inside'],
             'top_f': self.front.interfaces['top'],
             'top_b': self.back.interfaces['top'],
+            'bottom_f': self.front.interfaces['bottom'],
+            'bottom_b': self.back.interfaces['bottom']
         }
 
 class PencilSkirt(pyp.Component):
@@ -214,6 +217,11 @@ class PencilSkirt(pyp.Component):
                 self.left.interfaces['top_f'].reverse(),
                 self.left.interfaces['top_b'], 
                 self.right.interfaces['top_b'].reverse()),
+            'bottom': pyp.Interface.from_multiple(
+                self.right.interfaces['bottom_f'],
+                self.left.interfaces['bottom_b'],
+                self.left.interfaces['bottom_f'], 
+                self.right.interfaces['bottom_b'])
         }
 
 
@@ -254,6 +262,9 @@ class Skirt2(pyp.Component):
             'top_b': self.back.interfaces['top'],
             'top': pyp.Interface.from_multiple(
                 self.front.interfaces['top'], self.back.interfaces['top']
+            ),
+            'bottom': pyp.Interface.from_multiple(
+                self.front.interfaces['bottom'], self.back.interfaces['bottom']
             )
         }
 
@@ -270,6 +281,10 @@ class SkirtWB(pyp.Component):
         self.stitching_rules = pyp.Stitches(
             (self.wb.interfaces['bottom'], self.skirt.interfaces['top'])
         )
+        self.interfaces = {
+            'top': self.wb.interfaces['top'],
+            'bottom': self.skirt.interfaces['bottom']
+        }
 
 
 class SkirtManyPanels(pyp.Component):

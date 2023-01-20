@@ -139,17 +139,6 @@ design:
       v: 0
       range: [0, 20]
 
-  flare-skirt:
-    length:
-      v: 70
-      range: [30, 120]
-    n_panels:
-      v: 12
-      range: [4, 15]
-    suns:     # one "sun" is 360 skirt
-      v: 0.5
-      range: [0.5, 2]
-
   godet-skirt: 
     insert_w: 
       v: 20
@@ -187,7 +176,6 @@ design:
       v: [False, False]   # TODO Can be True only if connected to a waist band
       range: [True, False]
 
-  pants: 
     length: 
       v: 30
       range: [10, 40]   # TODO related with height and body proportions? 

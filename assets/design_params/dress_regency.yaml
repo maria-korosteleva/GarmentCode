@@ -44,7 +44,6 @@ design:
       v: 0
       range: [-20, 20]
 
-
   collar:
     f_collar: 
       v: TrapezoidNeckHalf
@@ -140,55 +139,6 @@ design:
       v: 0
       range: [0, 20]
 
-  flare-skirt:
-    length:
-      v: 70
-      range: [30, 120]
-    n_panels:
-      v: 12
-      range: [4, 15]
-    suns:     # one "sun" is 360 skirt
-      v: 0.5
-      range: [0.5, 2]
-
-  godet-skirt: 
-    insert_w: 
-      v: 20
-      range: [10, 50]  # TODO ranges don't work that well..
-    insert_depth:   # Cannot be longer then length
-      v: 40
-      range: [10, 50]  # TODO DEpends on the skirt length though
-    num_inserts:  # total
-      v: 4
-      range: [2, 4, 6, 8, 10]   # selective options
-    cuts_distance:
-      v: 10
-      range: [0, 10]  # TODO this param needs to depend on the num_inserts and skirt width
-    length:
-      v: 70
-      range: [30, 120]
-
-  pencil-skirt: 
-    length:   # From hips
-      v: 30
-      range: [10, 40]   # TODO related with height and body proportions? 
-    rise:
-      v: 1
-      range: [0.5, 1]
-    low_width:   # coefficient may depend on length
-      v: 0.8
-      range: [0.3, 1]   
-    front_cut: 
-      v: 20
-      range: [0, 20]   # TODO Max = length
-    back_cut: 
-      v: 20
-      range: [0, 20]   # TODO Max = length
-    ruffle:
-      v: [False, False]   # TODO Can be True only if connected to a waist band
-      range: [True, False]
-
-  pants: 
     length: 
       v: 30
       range: [10, 40]   # TODO related with height and body proportions? 

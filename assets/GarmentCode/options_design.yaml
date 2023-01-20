@@ -128,7 +128,7 @@ design:
 
   skirt: 
     length:
-      v: 100
+      v: 60
       range: [30, 120]
     ruffle: 
       v: 1.5
@@ -152,31 +152,31 @@ design:
       range: [0.5, 2]
 
   godet-skirt: 
+    base: 
+      v: PencilSkirt
+      range: [Skirt2, PencilSkirt, SkirtWB]
     insert_w: 
-      v: 20
+      v: 30
       range: [10, 50]  # TODO ranges don't work that well..
     insert_depth:   # Cannot be longer then length
       v: 40
       range: [10, 50]  # TODO DEpends on the skirt length though
     num_inserts:  # total
-      v: 4
-      range: [2, 4, 6, 8, 10]   # selective options
+      v: 4     # NOTE for pencil skirt base this should be divisible by 4
+      range: [4, 8, 12]   # selective options.
     cuts_distance:
-      v: 10
+      v: 0
       range: [0, 10]  # TODO this param needs to depend on the num_inserts and skirt width
-    length:
-      v: 70
-      range: [30, 120]
 
   pencil-skirt: 
     length:   # From hips
-      v: 70
+      v: 80
       range: [10, 80]   # TODO related with height and body proportions? 
     rise:
       v: 1
       range: [0.5, 1]
-    low_width:   # coefficient may depend on length
-      v: 0.8
+    flare:   # coefficient may depend on length
+      v: 0.6
       range: [0.3, 1]   
     front_cut: 
       v: 0

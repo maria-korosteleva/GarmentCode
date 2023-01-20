@@ -151,21 +151,21 @@ design:
       range: [0.5, 2]
 
   godet-skirt: 
+    base: 
+      v: PencilSkirt
+      range: [Skirt2, PencilSkirt, SkirtWB]
     insert_w: 
-      v: 20
+      v: 30
       range: [10, 50]  # TODO ranges don't work that well..
     insert_depth:   # Cannot be longer then length
       v: 40
       range: [10, 50]  # TODO DEpends on the skirt length though
     num_inserts:  # total
-      v: 4
-      range: [2, 4, 6, 8, 10]   # selective options
+      v: 4     # NOTE for pencil skirt base this should be divisible by 4
+      range: [4, 8, 12]   # selective options.
     cuts_distance:
-      v: 10
+      v: 0
       range: [0, 10]  # TODO this param needs to depend on the num_inserts and skirt width
-    length:
-      v: 70
-      range: [30, 120]
 
   pencil-skirt: 
     length:   # From hips
