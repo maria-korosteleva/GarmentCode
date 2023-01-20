@@ -20,15 +20,17 @@ from assets.GarmentCode.bands import *
 
 if __name__ == '__main__':
 
-    body_file = './assets/GarmentCode/options_body.yaml'
+    body_file = './assets/body_measurments/f_smpl_avg.yaml'
+    body_file = './assets/body_measurments/f_smpl_model.yaml'
     with open(body_file, 'r') as f:
         body = yaml.safe_load(f)['body']
         body['waist_level'] = body['height'] - body['head_l'] - body['waist_line']
 
     design_files = {
-        'base': './assets/GarmentCode/options_design.yaml',
+        # 'base': './assets/GarmentCode/options_design.yaml',
         # 'Dress_20s': './assets/design_params/dress_20s.yaml',
-        'Dress_30s': './assets/design_params/dress_30s.yaml',
+        # 'Dress_30s': './assets/design_params/dress_30s.yaml',
+        'Dress_50s': './assets/design_params/dress_50s.yaml',
         # 'Dress_regency': './assets/design_params/dress_regency.yaml'
     }
     designs = {}
@@ -44,7 +46,7 @@ if __name__ == '__main__':
         # SkirtManyPanelsWB(body, design),
         # Shirt(body, design),
         # FittedShirt(body, design),
-        GodetSkirt(body, designs['base']),
+        # GodetSkirt(body, designs['base']),
         # Pants(body, design),
         # WBPants(body, design),
         # CuffBand('test', design['pants']),
@@ -52,8 +54,8 @@ if __name__ == '__main__':
         # CuffBandSkirt('test', design['pants'])
         # PencilSkirt(body, design)
     ]
-    # for df in designs:
-    #     test_garments.append(MetaGarment(df, body, designs[df]),)
+    for df in designs:
+        test_garments.append(MetaGarment(df, body, designs[df]),)
 
     # test_garments[0].translate_by([2, 0, 0])
 
