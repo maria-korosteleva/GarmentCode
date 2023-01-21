@@ -20,7 +20,8 @@ from assets.GarmentCode.bands import *
 if __name__ == '__main__':
 
     body_file = './assets/body_measurments/f_smpl_avg.yaml'
-    body_file = './assets/body_measurments/f_smpl_model.yaml'
+    # body_file = './assets/body_measurments/f_smpl_model.yaml'
+    body_file = './assets/body_measurments/f_smpl_model_fluffy.yaml'
     with open(body_file, 'r') as f:
         body = yaml.safe_load(f)['body']
         body['waist_level'] = body['height'] - body['head_l'] - body['waist_line']
@@ -44,7 +45,7 @@ if __name__ == '__main__':
         # SkirtManyPanels(body, n_panels=10),
         # SkirtManyPanelsWB(body, design),
         # Shirt(body, design),
-        # FittedShirt(body, design),
+        # FittedShirt(body, designs['base']),
         # GodetSkirt(body, designs['base']),
         # Pants(body, design),
         # WBPants(body, design),
