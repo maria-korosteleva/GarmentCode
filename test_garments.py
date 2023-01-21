@@ -21,7 +21,8 @@ if __name__ == '__main__':
 
     body_file = './assets/body_measurments/f_smpl_avg.yaml'
     # body_file = './assets/body_measurments/f_smpl_model.yaml'
-    body_file = './assets/body_measurments/f_smpl_model_fluffy.yaml'
+    # body_file = './assets/body_measurments/f_smpl_model_fluffy.yaml'
+    body_file = './assets/body_measurments/m_smpl_avg.yaml'
     with open(body_file, 'r') as f:
         body = yaml.safe_load(f)['body']
         body['waist_level'] = body['height'] - body['head_l'] - body['waist_line']
@@ -30,7 +31,7 @@ if __name__ == '__main__':
         # 'base': './assets/GarmentCode/options_design.yaml',
         # 'Dress_20s': './assets/design_params/dress_20s.yaml',
         # 'Dress_30s': './assets/design_params/dress_30s.yaml',
-        'Dress_50s': './assets/design_params/dress_50s.yaml',
+       'Dress_50s': './assets/design_params/dress_50s.yaml',
         # 'Dress_regency': './assets/design_params/dress_regency.yaml'
     }
     designs = {}
