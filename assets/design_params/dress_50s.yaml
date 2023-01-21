@@ -135,39 +135,3 @@ design:
     suns:     # one "sun" is 360 skirt
       v: 0.5
       range: [0.5, 2]
-
-
-    length: 
-      v: 30
-      range: [10, 40]   # TODO related with height and body proportions? 
-    width: 
-      v: 35
-      range: [27.5, 40]   # TODO min is related with thigh width? 
-    rise:
-      v: 1
-      range: [0.5, 1]
-    ruffle:
-      v: [False, False]   # TODO Can be True only if connected to a waist band
-      range: [True, False]
-    crotch_extention:
-      v: 4   # TODO depends on measurements?
-      range: None
-    cuff: 
-      type:
-        v: CuffBandSkirt
-        range: [CuffBand, CuffSkirt, CuffBandSkirt, null]
-      b_width:   # TODO naming convention with waistband
-        v: 40
-        range: [30, 40]   # TODO related with body measurements
-      b_depth: 
-        v: 10
-        range: [3, 20]
-      skirt_length: 
-        v: 10
-        range: [5, 20]
-      skirt_flare:
-        v: 1.5
-        range: [1, 2]
-      skirt_ruffle: 
-        v: 1.3
-        range: [1, 1.5]

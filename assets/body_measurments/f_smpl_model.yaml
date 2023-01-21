@@ -14,14 +14,14 @@ body:
   arm_pose_angle: 40  # Degrees
 
   waist:  63  #
-  waist_line:  33    # Nape of the Neck to waist (on the back)
+  waist_line:  34 #  33    # Nape of the Neck to waist (on the back)
   waist_over_bust_line: 39   #43 -- measurement + addition for the shoulder
 
-  bust_line: 18  
+  bust_line: 20.5
   bust: 80 
   bust_points:  18 # 23
   underbust: 69
-  back_width:  40    # 38  #42  # 32 + 2 * between-size
+  back_width:  35    # 27 + 2 * between-size
 
   hips: 92   
   hips_line: 21.5    # From the waist
