@@ -9,13 +9,13 @@ design:
   meta: 
     upper: 
       v: FittedShirt
-      range: [FittedShirt, Shirt]
+      range: [FittedShirt, Shirt, null]
     wb: 
       v: False
       range: [True, False]
     bottom: 
-      v: GodetSkirt
-      range: [GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt]
+      v: GodetSkirt  # TEST
+      range: [GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, null]
 
   waistband:
     waist: 
@@ -52,7 +52,7 @@ design:
       v: VNeckHalf
       range: [VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf]
     fc_depth:   # Front collar depth
-      v: 2
+      v: 11
       range: [3, 25]
     bc_depth:   # back collar depth
       v: 3
@@ -64,7 +64,7 @@ design:
       v: 90
       range: [30, 180]
     width: 
-      v: 18  # 18
+      v: 13  # 18
       range: [18, 30]   # TODO min is a neck width
     
   sleeve:
@@ -82,11 +82,11 @@ design:
       v: 3
       range: null
     connecting_width:
-      v: 20
+      v: 16
       range: [20, 40]   # TODO min armscye_depth . And no more then that for Bodice
     # Shoulder shape
     standing_shoulder: 
-      v: True
+      v: False
       range: [True, False]
     standing_shoulder_len:   # can create "Standing" shoulder
       v: 7
@@ -96,7 +96,7 @@ design:
       v: 22
       range: [20, 40]  
     length: 
-      v: 25
+      v: 20
       range: [3, 100]
     connect_ruffle:
       v: 1
@@ -116,10 +116,10 @@ design:
         v: 3
         range: [3, 20]
       skirt_length: 
-        v: 15
+        v: 28
         range: [5, 20]
       skirt_flare:   #  1 = no flare
-        v: 1.2
+        v: 1.6
         range: [1, 2]
       skirt_ruffle:   # 1 = no ruffle
         v: 1
@@ -155,13 +155,13 @@ design:
       v: PencilSkirt
       range: [Skirt2, PencilSkirt, SkirtWB]
     insert_w: 
-      v: 30
+      v: 25
       range: [10, 50]  # TODO ranges don't work that well..
     insert_depth:   # Cannot be longer then length
       v: 40
       range: [10, 50]  # TODO DEpends on the skirt length though
     num_inserts:  # total
-      v: 4     # NOTE for pencil skirt base this should be divisible by 4
+      v: 8     # NOTE for pencil skirt base this should be divisible by 4
       range: [4, 8, 12]   # selective options.
     cuts_distance:
       v: 0
@@ -169,13 +169,13 @@ design:
 
   pencil-skirt: 
     length:   # From hips
-      v: 70
+      v: 90
       range: [10, 80]   # TODO related with height and body proportions? 
     rise:
       v: 1
       range: [0.5, 1]
-    low_width:   # coefficient may depend on length
-      v: 0.8
+    flare:   # coefficient may depend on length
+      v: 0.6
       range: [0.3, 1]   
     front_cut: 
       v: 0

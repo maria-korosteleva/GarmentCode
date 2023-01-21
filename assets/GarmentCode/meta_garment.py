@@ -24,30 +24,30 @@ class MetaGarment(pyp.Component):
 
         # Upper garment
         upper_name = design['meta']['upper']['v']
-        Upper = globals()[upper_name]
-        self.upper = Upper(body, design)
+        if upper_name: 
+            Upper = globals()[upper_name]
+            self.subs = [Upper(body, design)]
 
         # Belt (or not)
         if design['meta']['wb']['v']:
-            self.wb = WB(body, design)
+            self.subs.append(WB(body, design))
 
             # Place below the upper garment 
-            self.wb.place_below(self.upper)
+            if len(self.subs) > 1:
+                self.subs[-1].place_below(self.subs[-2])
 
-            # TODO Connection is crossing over for T-Shirt. Need to be fixed =(
-            self.stitching_rules.append(
-                (self.upper.interfaces['bottom'], self.wb.interfaces['top']))
+                self.stitching_rules.append(
+                    (self.subs[-2].interfaces['bottom'], self.subs[-1].interfaces['top']))
 
         # Lower garment
         lower_name = design['meta']['bottom']['v']
-        Lower = globals()[lower_name]
-        self.lower = Lower(body, design)
+        if lower_name:
+            Lower = globals()[lower_name]
+            self.subs.append(Lower(body, design))
 
-        # Connect with the garment above
-        connect_to = self.wb if design['meta']['wb']['v'] else self.upper
+            # Place below the upper garment or self.wb
+            if len(self.subs) > 1:
+                self.subs[-1].place_below(self.subs[-2])
 
-        # Place below the upper garment or self.wb
-        self.lower.place_below(connect_to)
-
-        self.stitching_rules.append(
-            (connect_to.interfaces['bottom'], self.lower.interfaces['top']))
+                self.stitching_rules.append(
+                    (self.subs[-2].interfaces['bottom'], self.subs[-1].interfaces['top']))
