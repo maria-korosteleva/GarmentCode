@@ -294,15 +294,15 @@ class SkirtManyPanels(pyp.Component):
         super().__init__(f'{self.__class__.__name__}_{design["flare-skirt"]["n_panels"]["v"]}')
 
         waist = body['waist']
-        waist_rad = waist / np.pi / 2
 
         design = design['flare-skirt']
         n_panels = design['n_panels']['v']
         length = design['length']['v']
-        flare_coeff = design['suns']['v'] * (1 + length / waist_rad)
+
+        flare_coeff_pi = 1 + design['suns']['v'] * length * 2 * np.pi / waist
 
         self.front = ThinSkirtPanel('front', panel_w:=waist / n_panels,
-                                    bottom_width=panel_w * flare_coeff,
+                                    bottom_width=panel_w * flare_coeff_pi,
                                     length=length )
         self.front.translate_to([-waist / 4, body['waist_level'], 0])
         # Align with a body
