@@ -1,6 +1,5 @@
-""" Basic straight upper garment (T-shirt)
+""" Panels for a straight upper garment (T-shirt)
     Note that the code is very similar to Bodice. 
-    The copy was creates for the sake of simplicity and (possible) future divergence of designs
 """
 
 from copy import copy
@@ -8,10 +7,6 @@ import numpy as np
 
 # Custom
 import pypattern as pyp
-
-# other assets
-from . import sleeves
-from . import collars
 
 class TorsoFrontHalfPanel(pyp.Panel):
     """Half of a simple non-fitted upper garment (e.g. T-Shirt)
@@ -116,83 +111,3 @@ class TorsoBackHalfPanel(pyp.Panel):
         # default placement
         self.translate_by([0, body['height'] - body['head_l'] - length, 0])
 
-
-class TorsoHalf(pyp.Component):
-    """Definition of a simple T-Shirt"""
-    # TODO this is really the same as bodice. Join the two together
-    def __init__(self, name, body, design) -> None:
-        super().__init__(name)
-
-        # Torso
-        self.ftorso = TorsoFrontHalfPanel(f'{name}_ftorso', body, design).translate_by([0, 0, 25])
-        self.btorso = TorsoBackHalfPanel(f'{name}_btorso', body, design).translate_by([0, 0, -20])
-
-        # Sleeves
-        diff = self.ftorso.width - self.btorso.width
-
-        self.sleeve = sleeves.Sleeve(name, body, design, depth_diff=diff)
-
-        _, f_sleeve_int = pyp.ops.cut_corner(
-            self.sleeve.interfaces['in_front_shape'].projecting_edges(), 
-            self.ftorso.interfaces['shoulder_corner'])
-        _, b_sleeve_int = pyp.ops.cut_corner(
-            self.sleeve.interfaces['in_back_shape'].projecting_edges(), 
-            self.btorso.interfaces['shoulder_corner'])
-
-        if design['sleeve']['sleeveless']['v']:  
-            # No sleeve component, only the cut remains
-            del self.sleeve
-        else:
-            self.stitching_rules.append((self.sleeve.interfaces['in_front'], f_sleeve_int))
-            self.stitching_rules.append((self.sleeve.interfaces['in_back'], b_sleeve_int))
-
-        # Collars
-        # Front
-        collar_type = getattr(collars, design['collar']['f_collar']['v'])
-        f_collar = collar_type(
-            design['collar']['fc_depth']['v'], 
-            design['collar']['width']['v'], 
-            design['collar']['fc_angle']['v'], 
-            )
-        pyp.ops.cut_corner(f_collar, self.ftorso.interfaces['collar_corner'])
-        # Back
-        collar_type = getattr(collars, design['collar']['b_collar']['v'])
-        b_collar = collar_type(
-            design['collar']['bc_depth']['v'], design['collar']['width']['v'], design['collar']['bc_angle']['v'])
-        pyp.ops.cut_corner(b_collar, self.btorso.interfaces['collar_corner'])
-
-        self.stitching_rules.append((self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
-        self.stitching_rules.append((self.ftorso.interfaces['shoulder'], self.btorso.interfaces['shoulder']))  # tops
-
-        self.interfaces = {
-            'front_in': self.ftorso.interfaces['inside'],
-            'back_in': self.btorso.interfaces['inside'],
-
-            'f_bottom': self.ftorso.interfaces['bottom_front'],
-            'b_bottom': pyp.Interface.from_multiple(
-                self.btorso.interfaces['bottom'], self.ftorso.interfaces['bottom_back'])
-        }
-
-
-class Shirt(pyp.Component):
-    """Panel for the front of upper garments with darts to properly fit it to the shape"""
-
-    def __init__(self, body, design) -> None:
-        name_with_params = f"{self.__class__.__name__}"
-        super().__init__(name_with_params)
-
-        # TODO resolving names..
-        self.right = TorsoHalf(f'right', body, design)
-        self.left = TorsoHalf(f'left', body, design).mirror()
-
-        self.stitching_rules.append((self.right.interfaces['front_in'], self.left.interfaces['front_in']))
-        self.stitching_rules.append((self.right.interfaces['back_in'], self.left.interfaces['back_in']))
-
-        self.interfaces = {   # Bottom connection right to left, front to back
-            'bottom': pyp.Interface.from_multiple(
-                self.right.interfaces['f_bottom'],
-                self.left.interfaces['f_bottom'],
-                self.left.interfaces['b_bottom'].reverse(), 
-                self.right.interfaces['b_bottom'],
-                )
-        }
