@@ -69,10 +69,10 @@ class CuffBand(pyp.Component):
 
         # TODO flexible fractions of the width
         self.front = BandPanel(
-            f'{tag}_cuff_f', design['b_width']['v'] / 2, design['b_depth']['v'] / 2)
+            f'{tag}_cuff_f', design['b_width']['v'] / 2, design['b_depth']['v'])
         self.front.translate_by([0, 0, 15])  
         self.back = BandPanel(
-            f'{tag}_cuff_b', design['b_width']['v'] / 2, design['b_depth']['v'] / 2)
+            f'{tag}_cuff_b', design['b_width']['v'] / 2, design['b_depth']['v'])
         self.back.translate_by([0, 0, -15])  
 
         self.stitching_rules = pyp.Stitches(
