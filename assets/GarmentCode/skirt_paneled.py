@@ -297,7 +297,9 @@ class SkirtManyPanels(pyp.Component):
 
         design = design['flare-skirt']
         n_panels = design['n_panels']['v']
-        length = design['length']['v']
+
+        # Length is dependent on height of a person
+        length = body['hips_line'] + design['length']['v'] * (body['waist_level'] - body['hips_line'])
 
         flare_coeff_pi = 1 + design['suns']['v'] * length * 2 * np.pi / waist
 
