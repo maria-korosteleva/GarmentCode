@@ -8,14 +8,14 @@
 design: 
   meta: 
     upper: 
-      v: FittedShirt
-      range: [FittedShirt, Shirt]
+      v: Shirt
+      range: [FittedShirt, Shirt, null]
     wb: 
       v: False
       range: [True, False]
     bottom: 
-      v: PencilSkirt
-      range: [GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt]
+      v: null
+      range: [GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, null]
 
   waistband:
     waist: 
@@ -35,7 +35,7 @@ design:
       v: 0
       range: null
     length: 
-      v: 27
+      v: 40
       range: [30, 150]
     width:   # Around the body 
       v: 96
@@ -142,8 +142,8 @@ design:
 
   flare-skirt:
     length:
-      v: 70
-      range: [30, 120]
+      v: 0.6
+      range: [0.1, 1]
     n_panels:
       v: 12
       range: [4, 15]
