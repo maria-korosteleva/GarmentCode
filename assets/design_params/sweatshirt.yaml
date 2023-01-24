@@ -18,9 +18,9 @@ design:
       range: [GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, null]
 
   waistband:
-    waist: 
-      v: 94   
-      range: [82, 200]   # TODO from waist 
+    waist:
+      v: 1.15 
+      range: [1., 2]   # 1 == waist length
     width: 
       v: 3
       range: [3, 15]
@@ -35,11 +35,11 @@ design:
       v: 0
       range: null
     length: 
-      v: 42
-      range: [30, 150]
+      v: 1.31
+      range: [0.5, 10]   # 1 == waistline
     width:   # Around the body 
-      v: 96
-      range: [96, 150]    # TODO min is a bust size
+      v: 1.
+      range: [1., 2]    # 1 == bust size
     flare:    # TODO backward compatibility
       v: 4
       range: [-20, 20]

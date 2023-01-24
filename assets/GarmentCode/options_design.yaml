@@ -8,19 +8,19 @@
 design: 
   meta: 
     upper: 
-      v: Shirt
+      v: null
       range: [FittedShirt, Shirt, null]
     wb: 
-      v: False
+      v: null
       range: [True, False]
     bottom: 
-      v: null
+      v: SkirtManyPanels
       range: [GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, null]
 
   waistband:
     waist: 
-      v: 83   # Underbust
-      range: [82, 200]   # TODO from waist 
+      v: 1. 
+      range: [1., 2]   # 1 == waist length
     width: 
       v: 3
       range: [3, 15]
@@ -35,11 +35,11 @@ design:
       v: 0
       range: null
     length: 
-      v: 40
-      range: [30, 150]
+      v: 1.
+      range: [0.5, 10]   # 1 == waistline
     width:   # Around the body 
-      v: 96
-      range: [96, 150]    # TODO min is a bust size
+      v: 1.
+      range: [1., 2]    # 1 == bust size
     flare:    # TODO backward compatibility
       v: 4
       range: [-20, 20]
@@ -137,18 +137,18 @@ design:
       v: 0
       range: [0, 20]  # TODO Untill length
     flare: 
-      v: 0
+      v: 20
       range: [0, 20]
 
   flare-skirt:
     length:
-      v: 0.6
+      v: 0.5
       range: [0.1, 1]
     n_panels:
-      v: 12
+      v: 7
       range: [4, 15]
     suns:     # one "sun" is 360 skirt
-      v: 0.5
+      v: 0.3
       range: [0.5, 2]
 
   godet-skirt: 
@@ -190,11 +190,11 @@ design:
 
   pants: 
     length: 
-      v: 30
-      range: [10, 40]   # TODO related with height and body proportions? 
+      v: 0.5
+      range: [0.2, 1]   # 0 == hip line, 1 == floor length
     width: 
-      v: 35
-      range: [27.5, 40]   # TODO min is related with thigh width? 
+      v: 1.
+      range: [1., 1.5]   # 1 = fits the hips
     rise:
       v: 1
       range: [0.5, 1]

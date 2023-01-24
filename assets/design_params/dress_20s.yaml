@@ -19,8 +19,8 @@ design:
 
   waistband:
     waist: 
-      v: 110   # Hips - for 20s dress
-      range: [82, 200]   # TODO from waist 
+      v: 1.34 
+      range: [1., 2]   # 1 == waist length
     width: 
       v: 8
       range: [3, 15]
@@ -35,11 +35,11 @@ design:
       v: 0
       range: null
     length: 
-      v: 60
-      range: [30, 150]
+      v: 1.875
+      range: [0.5, 10]   # 1 == waistline
     width:   # Around the body 
-      v: 100    # a bit more then hips measurement for 20s dress
-      range: [96, 150]    # TODO min is a bust size
+      v: 1.04
+      range: [1., 2]    # 1 == bust size
     flare:    # TODO backward compatibility
       v: 4
       range: [-20, 20]

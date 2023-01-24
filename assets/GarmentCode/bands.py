@@ -30,7 +30,7 @@ class WB(pyp.Component):
     def __init__(self, body, design) -> None:
         super().__init__(self.__class__.__name__)
 
-        self.waist = design['waistband']['waist']['v']
+        self.waist = design['waistband']['waist']['v'] * body['waist']
         self.width = design['waistband']['width']['v']
 
         # TODO flexible fractions of the waist

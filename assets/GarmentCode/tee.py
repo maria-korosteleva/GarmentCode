@@ -20,7 +20,7 @@ class TorsoFrontHalfPanel(pyp.Panel):
 
         design = design['shirt']
         # account for ease in basic measurements
-        m_width = design['width']['v'] + design['ease']['v']
+        m_width = design['width']['v'] * body['bust'] + design['ease']['v']
         b_width = m_width + design['flare']['v'] * 4
 
         # sizes 
@@ -31,7 +31,7 @@ class TorsoFrontHalfPanel(pyp.Panel):
         connecting_point =  b_width * (m_width / 4 / self.width)
 
         shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
-        length = design['length']['v']
+        length = design['length']['v'] * body['waist_line']
 
         # length in the front panel is adjusted due to shoulder inclanation
         # for the correct sleeve fitting
@@ -76,7 +76,7 @@ class TorsoBackHalfPanel(pyp.Panel):
 
         design = design['shirt']
         # account for ease in basic measurements
-        m_width = design['width']['v'] + design['ease']['v']
+        m_width = design['width']['v'] * body['bust'] + design['ease']['v']
         b_width = m_width + design['flare']['v'] * 4
 
         # sizes 
@@ -86,7 +86,7 @@ class TorsoBackHalfPanel(pyp.Panel):
         b_width = frac * b_width
 
         shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
-        length = design['length']['v']
+        length = design['length']['v'] * body['waist_line']
 
         self.edges = pyp.esf.from_verts(
             [0, 0], 
