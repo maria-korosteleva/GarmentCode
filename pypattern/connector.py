@@ -151,7 +151,7 @@ class StitchingRule():
         """Produce a stitch that connects two interfaces
         """
         if not self.isMatching():
-            raise RuntimeError(f'{self.__class__.__name__}::Error::Stitch sides do not match!!')
+            print(f'{self.__class__.__name__}::WARNING::Stitch sides do not match on assembly!!')
 
         stitches = []
 
