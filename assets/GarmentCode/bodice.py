@@ -241,6 +241,8 @@ class Shirt(pyp.Component):
         self.stitching_rules.append((self.right.interfaces['front_in'], self.left.interfaces['front_in']))
         self.stitching_rules.append((self.right.interfaces['back_in'], self.left.interfaces['back_in']))
 
+        self.left.interfaces['b_bottom'].reverse()
+
         self.interfaces = {   # Bottom connection
             'bottom': pyp.Interface.from_multiple(
                 self.right.interfaces['f_bottom'],
