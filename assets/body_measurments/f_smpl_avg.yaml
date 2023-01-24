@@ -23,7 +23,7 @@ body:
   back_width:  40  # 38  #42  # 32 + 2 * between-size
 
   hips: 110   # TODO check the measurements though!
-  hips_line: 18  #18   # From the waist
-  crotch_depth: 27   # 27
+  hips_line: 18    # From the waist
+  crotch_depth: 36   # 27
   bum_points: 18.5
   
