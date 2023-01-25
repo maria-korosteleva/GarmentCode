@@ -4,7 +4,6 @@
 # May specify sampling range per parameter for automatic 
 # design sampling
 # Final designs might not use all the parameters specified
-# TODO Connecting some parameters?
 design: 
   meta: 
     upper: 
@@ -64,8 +63,8 @@ design:
       v: 90
       range: [30, 180]
     width: 
-      v: 18  # 18
-      range: [18, 30]   # TODO min is a neck width
+      v: 18  
+      range: [18, 30]  
     
   sleeve:
     sleeveless: 
@@ -83,7 +82,7 @@ design:
       range: null
     connecting_width:
       v: 20
-      range: [20, 40]   # TODO min armscye_depth . And no more then that for Bodice
+      range: [20, 40]   
     # Shoulder shape
     standing_shoulder: 
       v: True
@@ -109,7 +108,7 @@ design:
       type:
         v: null
         range: [CuffBand, CuffSkirt, CuffBandSkirt, null]
-      # b_width:  # NOTE taken from end_width # TODO naming convention with waistband
+      # b_width:  # NOTE taken from end_width 
       #  v: 40
       #  range: [30, 40]  
       b_depth: 
@@ -134,7 +133,7 @@ design:
       range: [1, 2]
     bottom_cut: 
       v: 0
-      range: [0, 20]  # TODO Untill length
+      range: [0, 20]  
     flare: 
       v: 0
       range: [0, 20]
@@ -142,16 +141,16 @@ design:
   godet-skirt: 
     insert_w: 
       v: 20
-      range: [10, 50]  # TODO ranges don't work that well..
+      range: [10, 50]  
     insert_depth:   # Cannot be longer then length
       v: 40
-      range: [10, 50]  # TODO DEpends on the skirt length though
+      range: [10, 50] 
     num_inserts:  # total
       v: 4
       range: [2, 4, 6, 8, 10]   # selective options
     cuts_distance:
       v: 10
-      range: [0, 10]  # TODO this param needs to depend on the num_inserts and skirt width
+      range: [0, 10]  
     length:
       v: 70
       range: [30, 120]
@@ -159,7 +158,7 @@ design:
   pencil-skirt: 
     length:   # From hips
       v: 70
-      range: [10, 80]   # TODO related with height and body proportions? 
+      range: [10, 80]   
     rise:
       v: 1
       range: [0.5, 1]
@@ -168,10 +167,10 @@ design:
       range: [0.3, 1]   
     front_cut: 
       v: 0
-      range: [0, 20]   # TODO Max = length
+      range: [0, 20]   
     back_cut: 
       v: 0
-      range: [0, 20]   # TODO Max = length
+      range: [0, 20]   
     ruffle:
-      v: [False, False]   # TODO Can be True only if connected to a waist band
+      v: [False, False]   
       range: [True, False]

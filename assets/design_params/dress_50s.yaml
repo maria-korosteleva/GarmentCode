@@ -4,7 +4,6 @@
 # May specify sampling range per parameter for automatic 
 # design sampling
 # Final designs might not use all the parameters specified
-# TODO Connecting some parameters?
 design: 
   meta: 
     upper: 
@@ -40,7 +39,7 @@ design:
     width:   # Around the body 
       v: 1.
       range: [1., 2]    # 1 == bust size
-    flare:    # TODO backward compatibility
+    flare:   
       v: 0
       range: [-20, 20]
 
@@ -65,7 +64,7 @@ design:
       range: [30, 180]
     width: 
       v: 8  # 18 is the neck width
-      range: [18, 30]   # TODO min is a neck width
+      range: [18, 30]   
     
   sleeve:
     sleeveless: 
@@ -83,7 +82,7 @@ design:
       range: null
     connecting_width:
       v: 16  
-      range: [20, 40]   # TODO min armscye_depth . And no more then that for Bodice
+      range: [20, 40]   
     # Shoulder shape
     standing_shoulder: 
       v: False

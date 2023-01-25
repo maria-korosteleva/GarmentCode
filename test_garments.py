@@ -30,14 +30,14 @@ if __name__ == '__main__':
 
     design_files = {
         # 'base': './assets/GarmentCode/options_design.yaml',
-        # 'Dress_20s': './assets/design_params/dress_20s.yaml',
-        # 'Dress_30s': './assets/design_params/dress_30s.yaml',
-        # 'Dress_50s': './assets/design_params/dress_50s.yaml',
-        # 'Dress_regency': './assets/design_params/dress_regency.yaml'
+        'Dress_20s': './assets/design_params/dress_20s.yaml',
+        'Dress_30s': './assets/design_params/dress_30s.yaml',
+        'Dress_40s': './assets/design_params/dress_40s.yaml',
+        'Dress_50s': './assets/design_params/dress_50s.yaml',
+        'Dress_regency': './assets/design_params/dress_regency.yaml',
         # 'sweatshirt': './assets/design_params/sweatshirt.yaml',
         # 'pants': './assets/design_params/pants.yaml',
         'jumpsuit': './assets/design_params/jumpsuit.yaml',
-        # 'Dress_transfer': './assets/design_params/dress_transfer.yaml',
     }
     designs = {}
     for df in design_files:
@@ -45,20 +45,10 @@ if __name__ == '__main__':
             designs[df] = yaml.safe_load(f)['design']
     
     test_garments = [
-        # SkirtWB(body, design),
         # WB(),
-        # Skirt2(),
-        # SkirtManyPanels(body, n_panels=10),
-        # SkirtManyPanelsWB(body, design),
-        # Shirt(body, design),
-        # FittedShirt(body, designs['base']),
-        # GodetSkirt(body, designs['base']),
-        # Pants(body, design),
-        # WBPants(body, design),
         # CuffBand('test', design['pants']),
         # CuffSkirt('test', design['pants']),
         # CuffBandSkirt('test', design['pants'])
-        # PencilSkirt(body, design)
     ]
     for df in designs:
         test_garments.append(MetaGarment(df, body, designs[df]),)
@@ -74,7 +64,7 @@ if __name__ == '__main__':
             Path(sys_props['output']), 
             tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
             to_subfolder=False, 
-            with_3d=False, with_text=False)
+            with_3d=True, with_text=False)
 
         shutil.copy(body_file, folder)
         if piece.name in design_files:

@@ -4,7 +4,6 @@
 # May specify sampling range per parameter for automatic 
 # design sampling
 # Final designs might not use all the parameters specified
-# TODO Connecting some parameters?
 design: 
   meta: 
     upper: 
@@ -14,7 +13,7 @@ design:
       v: False
       range: [True, False]
     bottom: 
-      v: GodetSkirt  # TEST
+      v: GodetSkirt  
       range: [GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, null]
 
   waistband:
@@ -40,7 +39,7 @@ design:
     width:   # Around the body 
       v: 1.
       range: [1., 2]    # 1 == bust size
-    flare:    # TODO backward compatibility
+    flare:    
       v: 0
       range: [-20, 20]
 
@@ -64,8 +63,8 @@ design:
       v: 90
       range: [30, 180]
     width: 
-      v: 13  # 18
-      range: [18, 30]   # TODO min is a neck width
+      v: 13  
+      range: [18, 30]   
     
   sleeve:
     sleeveless: 
@@ -83,7 +82,7 @@ design:
       range: null
     connecting_width:
       v: 16
-      range: [20, 40]   # TODO min armscye_depth . And no more then that for Bodice
+      range: [20, 40]   
     # Shoulder shape
     standing_shoulder: 
       v: False
@@ -125,52 +124,27 @@ design:
         v: 1
         range: [1, 1.5]
 
-  skirt: 
-    length:
-      v: 100
-      range: [30, 120]
-    ruffle: 
-      v: 1.5
-      range: [1, 2]
-    bottom_cut: 
-      v: 0
-      range: [0, 20]  # TODO Untill length
-    flare: 
-      v: 0
-      range: [0, 20]
-
-  flare-skirt:
-    length:
-      v: 70
-      range: [30, 120]
-    n_panels:
-      v: 12
-      range: [4, 15]
-    suns:     # one "sun" is 360 skirt
-      v: 0.5
-      range: [0.5, 2]
-
   godet-skirt: 
     base: 
       v: PencilSkirt
       range: [Skirt2, PencilSkirt, SkirtWB]
     insert_w: 
       v: 25
-      range: [10, 50]  # TODO ranges don't work that well..
+      range: [10, 50]  
     insert_depth:   # Cannot be longer then length
       v: 40
-      range: [10, 50]  # TODO DEpends on the skirt length though
+      range: [10, 50]  
     num_inserts:  # total
       v: 8     # NOTE for pencil skirt base this should be divisible by 4
       range: [4, 8, 12]   # selective options.
     cuts_distance:
       v: 0
-      range: [0, 10]  # TODO this param needs to depend on the num_inserts and skirt width
+      range: [0, 10]  
 
   pencil-skirt: 
     length:   # From hips
       v: 90
-      range: [10, 80]   # TODO related with height and body proportions? 
+      range: [10, 80]   
     rise:
       v: 1
       range: [0.5, 1]
@@ -179,46 +153,10 @@ design:
       range: [0.3, 1]   
     front_cut: 
       v: 0
-      range: [0, 20]   # TODO Max = length
+      range: [0, 20]   
     back_cut: 
       v: 0
-      range: [0, 20]   # TODO Max = length
+      range: [0, 20]   
     ruffle:
-      v: [False, False]   # TODO Can be True only if connected to a waist band
+      v: [False, False]   
       range: [True, False]
-
-  pants: 
-    length: 
-      v: 30
-      range: [10, 40]   # TODO related with height and body proportions? 
-    width: 
-      v: 35
-      range: [27.5, 40]   # TODO min is related with thigh width? 
-    rise:
-      v: 1
-      range: [0.5, 1]
-    ruffle:
-      v: [False, False]   # TODO Can be True only if connected to a waist band
-      range: [True, False]
-    crotch_extention:
-      v: 4   # TODO depends on measurements?
-      range: None
-    cuff: 
-      type:
-        v: CuffBandSkirt
-        range: [CuffBand, CuffSkirt, CuffBandSkirt, null]
-      b_width:   # TODO naming convention with waistband
-        v: 40
-        range: [30, 40]   # TODO related with body measurements
-      b_depth: 
-        v: 10
-        range: [3, 20]
-      skirt_length: 
-        v: 10
-        range: [5, 20]
-      skirt_flare:
-        v: 1.5
-        range: [1, 2]
-      skirt_ruffle: 
-        v: 1.3
-        range: [1, 1.5]
