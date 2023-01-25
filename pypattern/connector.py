@@ -7,6 +7,8 @@ from .edge_factory import EdgeSeqFactory
 from .interface import Interface
 from .generic_utils import close_enough
 
+verbose=False
+
 class StitchingRule():
     """High-level stitching instructions connecting two component interfaces
     """
@@ -26,7 +28,7 @@ class StitchingRule():
         if not self.isMatching():
             self.match_interfaces()
 
-        if not close_enough(
+        if verbose and not close_enough(
                 len1:=int1.projecting_edges().length(), 
                 len2:=int2.projecting_edges().length(), 
                 tol=0.3):   # NOTE = 3 mm
@@ -117,7 +119,8 @@ class StitchingRule():
                 flip = inter.needsFlipping(in_id)
                 if flip: 
                     split_frac = 1 - split_frac
-                    print(f'{self.__class__.__name__}::INFO::{base_edge} from {base_panel.name} reoriented in interface')
+                    if verbose:
+                        print(f'{self.__class__.__name__}::INFO::{base_edge} from {base_panel.name} reoriented in interface')
 
                 # Split the base edge accrordingly
                 subdiv = EdgeSeqFactory.from_fractions(
@@ -150,7 +153,7 @@ class StitchingRule():
     def assembly(self):
         """Produce a stitch that connects two interfaces
         """
-        if not self.isMatching():
+        if verbose and not self.isMatching():
             print(f'{self.__class__.__name__}::WARNING::Stitch sides do not match on assembly!!')
 
         stitches = []
