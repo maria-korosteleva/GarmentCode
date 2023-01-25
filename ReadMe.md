@@ -1,52 +1,47 @@
 
-# Parametric Procedural Garments [Ongoing Project]
+# GarmentCode: Programming Parametric Sewing Patterns
 
-![Examples of Garments generated with our pipeline](img/data_samples.png)
+Implementation of GarmentCode architecture and garment programs.
 
+## Installation
 
+Install python with dependencies:
 
-Based on official implementation of [Generating Datasets of 3D Garments with Sewing Patterns](https://arxiv.org/abs/2109.05633).
+* Python 3.9
+* numpy
+* scipy
+* [svglib](https://pypi.org/project/svglib/)
+* [svgwrite](https://pypi.org/project/svgwrite/)
+* psutil
+* matplotlib
 
-## News!
+All python dependencies can be installed with `pip install` / `conda install`
 
-* Nov. 21, 2022: switched to using Maya 2022+. NOTE: Support for earlier versions is removed. Use the state before the last merge to use the generator with Maya below 2022
+=> The code is ready to run
 
-## Dataset
+NOTE: 
+* The dependency on [Pattern Generator](https://github.com/maria-korosteleva/Garment-Pattern-Generator)in included in the repo (`./external`), and will be loaded automatically by test script
+* The environemtal variables needed for correct lib loading are set up in the test script
 
+## How to run
 
-## Docs
-Provided in `./docs` folder
-
-* [Dependencies and Installation instructions](docs/Installation.md)
-* [Configuring dataset generation](docs/Setting_up_generator.md) - from sewing pattern template to physics simulation components.
-* [Running data generation](docs/Running_generation.md) - getting all the steps right & additional helpful operations.
-* [Sewing pattern template specification](docs/template_spec_with_comments.json) - spec example with comments to all the elements.
-
-## Citation
-
-If you are using our system in your research, consider citing our paper:
-
+From the root directory run
+```
+test_garments.py
 ```
 
-```
+It will create sewing patterns for histrical dresses used in a teaser of our paper fitted to the average SMPL body model (female).
 
-## Contributions
+The rusuts are saved to `./Logs` folder
 
-We welcome contributions of bug fixes, features, and new assets (templates, scenes, body models, simulation properties). Please, create a [Pool Request](https://github.com/maria-korosteleva/Garment-Pattern-Generator/pulls) if you wish to contribute.
+## Modifying the parameters
 
->☝ All the new code and assets will be shared here under the [MIT license](LICENSE). Please, ensure that you hold the rights to distribute your artifacts like that. The authors do not take the responsibility of licensing violations for artifacts contributed by users. Thank you for your understanding 😊
+`./assets/design_params/base.yaml` contains the full set of style parameters for creating samples of our garment configurator.
 
-### ToDo (future work)
-
-
-## Contact
-
-For bug reports, feature suggestion, and code-related questions, please [open an issue](https://github.com/maria-korosteleva/Garment-Pattern-Generator/issues). 
-
-For other inquires, contact the authors: 
-
-* Maria Korosteleva ([maria.korosteleva@inf.ethz.ch](mailto:maria.korosteleva@inf.ethz.ch)) (Main point of contact). 
+* Update some of parameter values ('v:' field under parameter name) withing a given range 
+* run `test_garments.py` 
+* `./Logs/base_<timestamp>` will contain the sewing patterns corresponding to given values
 
 
 ## Attribution
-We are using [SMPL](https://smpl.is.tue.mpg.de/) female average body model as base for [Body Model examples](data_generation/Bodies). [SMPL Body Model](https://smpl.is.tue.mpg.de/) is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+We are using samples from [SMPL](https://smpl.is.tue.mpg.de/) body model as base for [Body Model examples](assets/Bodies). 
