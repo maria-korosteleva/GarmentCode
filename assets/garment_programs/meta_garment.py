@@ -7,12 +7,12 @@
 # Custom
 import pypattern as pyp
 
-from assets.GarmentCode.skirt_paneled import *
-from assets.GarmentCode.tee import *
-from assets.GarmentCode.godet import *
-from assets.GarmentCode.bodice import *
-from assets.GarmentCode.pants import *
-from assets.GarmentCode.bands import *
+from assets.garment_programs.skirt_paneled import *
+from assets.garment_programs.tee import *
+from assets.garment_programs.godet import *
+from assets.garment_programs.bodice import *
+from assets.garment_programs.pants import *
+from assets.garment_programs.bands import *
 
 
 # TODO Check that all component follow the same interface conventions

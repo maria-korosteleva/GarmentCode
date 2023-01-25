@@ -6,16 +6,17 @@ import sys
 import shutil 
 
 sys.path.insert(0, './external/')
+sys.path.insert(1, './')
 
 # Custom
 from customconfig import Properties
-from assets.GarmentCode.skirt_paneled import *
-from assets.GarmentCode.tee import *
-from assets.GarmentCode.godet import *
-from assets.GarmentCode.bodice import *
-from assets.GarmentCode.pants import *
-from assets.GarmentCode.meta_garment import *
-from assets.GarmentCode.bands import *
+from assets.garment_programs.skirt_paneled import *
+from assets.garment_programs.tee import *
+from assets.garment_programs.godet import *
+from assets.garment_programs.bodice import *
+from assets.garment_programs.pants import *
+from assets.garment_programs.meta_garment import *
+from assets.garment_programs.bands import *
 
 if __name__ == '__main__':
 
@@ -29,7 +30,7 @@ if __name__ == '__main__':
         body['waist_level'] = body['height'] - body['head_l'] - body['waist_line']
 
     design_files = {
-        # 'base': './assets/GarmentCode/options_design.yaml',
+        'base': './assets/design_params/base.yaml',
         'Dress_20s': './assets/design_params/dress_20s.yaml',
         'Dress_30s': './assets/design_params/dress_30s.yaml',
         'Dress_40s': './assets/design_params/dress_40s.yaml',
@@ -53,12 +54,11 @@ if __name__ == '__main__':
     for df in designs:
         test_garments.append(MetaGarment(df, body, designs[df]),)
 
-    # test_garments[0].translate_by([2, 0, 0])
-
     for piece in test_garments:
         pattern = piece()
 
         # Save as json file
+        # TODO No need for system file
         sys_props = Properties('./system.json')
         folder = pattern.serialize(
             Path(sys_props['output']), 
