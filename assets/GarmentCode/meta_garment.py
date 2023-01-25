@@ -28,10 +28,6 @@ class MetaGarment(pyp.Component):
             Upper = globals()[upper_name]
             self.subs = [Upper(body, design)]
 
-            # DEBUG
-            print('TOP waistband: ', self.subs[-1].interfaces['bottom'].edges.length())
-
-
         # Belt (or not)
         if design['meta']['wb']['v']:
             self.subs.append(WB(body, design))
@@ -42,9 +38,6 @@ class MetaGarment(pyp.Component):
 
                 self.stitching_rules.append(
                     (self.subs[-2].interfaces['bottom'], self.subs[-1].interfaces['top']))
-
-            # DEBUG
-            print('WAIST waistband: ', self.subs[-1].interfaces['bottom'].edges.length())
 
         # Lower garment
         lower_name = design['meta']['bottom']['v']

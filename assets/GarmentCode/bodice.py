@@ -211,7 +211,10 @@ class FittedShirt(pyp.Component):
         super().__init__(name_with_params)
 
         self.right = BodiceHalf(f'right', body, design)
-        self.left = BodiceHalf(f'left', body, design).mirror()
+        if 'left' in design and design['left']['enable_asym']['v']:
+            self.left = BodiceHalf(f'left', body, design['left']).mirror()
+        else: 
+            self.left = BodiceHalf(f'left', body, design).mirror()
 
         self.stitching_rules.append((self.right.interfaces['front_in'], self.left.interfaces['front_in']))
         self.stitching_rules.append((self.right.interfaces['back_in'], self.left.interfaces['back_in']))
@@ -236,7 +239,10 @@ class Shirt(pyp.Component):
         super().__init__(name_with_params)
 
         self.right = BodiceHalf(f'right', body, design, fitted=False)
-        self.left = BodiceHalf(f'left', body, design, fitted=False).mirror()
+        if 'left' in design and design['left']['enable_asym']['v']:
+            self.left = BodiceHalf(f'left', body, design['left'], fitted=False).mirror()
+        else: 
+            self.left = BodiceHalf(f'left', body, design, fitted=False).mirror()
 
         self.stitching_rules.append((self.right.interfaces['front_in'], self.left.interfaces['front_in']))
         self.stitching_rules.append((self.right.interfaces['back_in'], self.left.interfaces['back_in']))
