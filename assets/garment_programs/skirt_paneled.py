@@ -53,7 +53,8 @@ class ThinSkirtPanel(pyp.Panel):
         # define edge loop
         self.flare = (bottom_width - top_width) / 2
         self.edges = pyp.esf.from_verts(
-            [0,0], [self.flare, length], [self.flare + top_width, length], [self.flare * 2 + top_width, 0], loop=True)
+            [0,0], [self.flare, length], [self.flare + top_width, length], [self.flare * 2 + top_width, 0], 
+            loop=True)
 
         # w.r.t. top left point
         self.set_pivot(self.edges[0].end)
@@ -293,12 +294,12 @@ class SkirtManyPanels(pyp.Component):
     def __init__(self, body, design) -> None:
         super().__init__(f'{self.__class__.__name__}_{design["flare-skirt"]["n_panels"]["v"]}')
 
-        waist = body['waist']
+        waist = body['waist']    # Fit to waist
 
         design = design['flare-skirt']
         n_panels = design['n_panels']['v']
 
-        # Length is dependent on height of a person
+        # Length is dependent on a height of a person
         length = body['hips_line'] + design['length']['v'] * (body['waist_level'] - body['hips_line'])
 
         flare_coeff_pi = 1 + design['suns']['v'] * length * 2 * np.pi / waist
@@ -320,6 +321,7 @@ class SkirtManyPanels(pyp.Component):
             
         self.stitching_rules.append((self.subs[-1].interfaces['left'], self.subs[0].interfaces['right']))
 
+        # Define the interface
         self.interfaces = {
             'top': pyp.Interface.from_multiple(*[sub.interfaces['top'] for sub in self.subs])
         }

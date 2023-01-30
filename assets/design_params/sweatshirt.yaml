@@ -49,7 +49,7 @@ design:
       v: VNeckHalf
       range: [VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf]
     b_collar: 
-      v: VNeckHalf
+      v: TrapezoidNeckHalf
       range: [VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf]
     fc_depth:   # Front collar depth
       v: 10
@@ -58,10 +58,10 @@ design:
       v: 3
       range: [3, 25]
     fc_angle: 
-      v: 60
+      v: 120
       range: [30, 180]
     bc_angle: 
-      v: 90
+      v: 110
       range: [30, 180]
     width: 
       v: 23 

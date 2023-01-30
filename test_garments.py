@@ -31,14 +31,14 @@ if __name__ == '__main__':
 
     design_files = {
         'base': './assets/design_params/base.yaml',
-        'Dress_20s': './assets/design_params/dress_20s.yaml',
-        'Dress_30s': './assets/design_params/dress_30s.yaml',
-        'Dress_40s': './assets/design_params/dress_40s.yaml',
-        'Dress_50s': './assets/design_params/dress_50s.yaml',
-        'Dress_regency': './assets/design_params/dress_regency.yaml',
+        # 'Dress_20s': './assets/design_params/dress_20s.yaml',
+        # 'Dress_30s': './assets/design_params/dress_30s.yaml',
+        # 'Dress_40s': './assets/design_params/dress_40s.yaml',
+        # 'Dress_50s': './assets/design_params/dress_50s.yaml',
+        # 'Dress_regency': './assets/design_params/dress_regency.yaml',
         # 'sweatshirt': './assets/design_params/sweatshirt.yaml',
-        # 'pants': './assets/design_params/pants.yaml',
-        'jumpsuit': './assets/design_params/jumpsuit.yaml',
+        # # 'pants': './assets/design_params/pants.yaml',
+        # 'jumpsuit': './assets/design_params/jumpsuit.yaml',
     }
     designs = {}
     for df in design_files:
