@@ -100,7 +100,7 @@ design:
     connect_ruffle:
       v: 1
       range: [1, 2]
-    end_ruffle:  # TODO add
+    end_ruffle:  
       v: 1
       range: [1, 2]
     # Cuff

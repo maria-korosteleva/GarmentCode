@@ -39,7 +39,7 @@ design:
     width:   # Around the body 
       v: 1.
       range: [1., 2]    # 1 == bust size
-    flare:    # TODO backward compatibility
+    flare:   
       v: 0
       range: [-20, 20]
 

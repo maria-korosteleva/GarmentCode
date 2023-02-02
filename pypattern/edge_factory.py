@@ -191,7 +191,7 @@ class EdgeSeqFactory:
         """Create a seqence of edges that represent a side with a dart with given parameters
         Parameters:
             * start and end -- vertices between which side with a dart is located
-            * target_len # TODO 
+            * target_len 
             * depth -- depth of a dart (distance between the opening and the farthest vertex)
             * dart_position -- position along the edge (from the start vertex)
             * right -- whether the dart is created on the right from the edge direction (otherwise created on the left). Default - Right (True)

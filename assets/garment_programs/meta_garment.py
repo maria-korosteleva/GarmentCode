@@ -15,9 +15,6 @@ from assets.garment_programs.pants import *
 from assets.garment_programs.bands import *
 
 
-# TODO Check that all component follow the same interface conventions
-# And this works for all
-# TODO Panel name uniqueness
 class MetaGarment(pyp.Component):
     def __init__(self, name, body, design) -> None:
         super().__init__(name)

@@ -6,8 +6,6 @@ import numpy as np
 # other assets
 from .bands import WB
 
-# TODO Skirt that fixes/hugs the hip area 
-# TODO More modifications are needed to create pencil skirt though
 # Panels
 class SkirtPanel(pyp.Panel):
     """One panel of a panel skirt with ruffles on the waist"""
@@ -110,7 +108,7 @@ class FittedSkirtPanelHalf(pyp.Panel):
             [0, adj_crotch_depth - hips_depth],
             [hw_shift, adj_crotch_depth], 
             [hips, adj_crotch_depth],
-            [hips, -length],  # TODO Add an opening possibility
+            [hips, -length], 
             [hips - low_width, -length],
             loop=True
         )

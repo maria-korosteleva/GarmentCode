@@ -1,25 +1,23 @@
 
 # Measurments of the body
 body: 
-  height: 178.1  # 165
+  height: 178.1  
   head_l: 25.6    # nape of the neck to the top -- ok to use some average value
-
-  # neck_w: 18  # NOT Used
 
   sholder_w: 38.2   
 
   armscye_depth: 14.5  # Nape of the Neck to armscye depth on the back
-  shoulder_incl: 10  # degrees  # TODO check
+  shoulder_incl: 10  # degrees 
 
   arm_pose_angle: 40  # Degrees
 
-  waist:  95.5  #
-  waist_line:  44.2  #     # Nape of the Neck to waist (on the back)
+  waist:  95.5  
+  waist_line:  44.2   # Nape of the Neck to waist (on the back)
   waist_over_bust_line: 47  
 
   bust_line: 21.4  
   bust: 103
-  bust_points:  17  # ??
+  bust_points:  17  
   underbust: 98
   back_width: 46    # 36 + 2 * between-size
 

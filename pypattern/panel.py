@@ -23,9 +23,10 @@ class Panel(BaseComponent):
     def __init__(self, name) -> None:
         super().__init__(name)
 
-        self.translation = np.zeros(3)  # TODO translation location? relative to what?
+        self.translation = np.zeros(3)
         self.rotation = R.from_euler('XYZ', [0, 0, 0])  # zero rotation
-        self.edges =  EdgeSequence()  # TODO Dummy square?
+        # NOTE: initiating with empty sequence allows .append() to it safely
+        self.edges =  EdgeSequence() 
 
     # ANCHOR - Operations -- update object in-place 
     def set_pivot(self, point_2d, replicate_placement=False):
@@ -41,7 +42,6 @@ class Panel(BaseComponent):
                                    # In case an actual vertex was used as a target point
 
         if replicate_placement:
-            # TODO  Check if I need to account for rotation
             self.translation = self.point_to_3D(point_2d)
 
         # UPD vertex locations relative to new pivot
@@ -167,9 +167,6 @@ class Panel(BaseComponent):
 
             # Fix right/wrong side
             self.autonorm()
-
-            # NOTE: Origin vertex is not updated -- and may now be on the right of the edge rather then on the left
-            # TODO Update origin vertex as well
         else:
             # TODO Any other axis
             raise NotImplementedError(f'{self.name}::Error::Mirrowing over arbitrary axis is not implemented')
@@ -178,8 +175,11 @@ class Panel(BaseComponent):
         
     # ANCHOR - Build the panel -- get serializable representation
     def assembly(self):
-        # TODO Logical VS qualoth assembly?
-
+        """Convert panel into serialazable representation
+        
+         # SIM Note that Qualoth simulator does not support internal loops in panels,
+            hence panel EdgeSequence is assumed to be a single loop of edges
+        """
         # always start from zero for consistency between panels
         self.set_pivot(self.edges[0].start, replicate_placement=True)
 
@@ -198,7 +198,6 @@ class Panel(BaseComponent):
                 vert_shift = len(panel.vertices) - 1  # first edge vertex = last vertex already in the loop
                 panel.vertices += vertices[1:] 
             else: 
-                # TODO Proper handling of multiple loops in the same pattern
                 vert_shift = len(panel.vertices)
                 panel.vertices += vertices
 
@@ -211,7 +210,6 @@ class Panel(BaseComponent):
             panel.edges.append(edge)
 
         # Check closing of the loop and upd vertex reference for the last edge
-        # TODO multiple loops in panel
         if panel.vertices[-1] == panel.vertices[0]:
             panel.vertices.pop()
             panel.edges[-1]['endpoints'][-1] = 0
@@ -230,7 +228,6 @@ class Panel(BaseComponent):
         """Location of the panel center. NOTE: does not account for the curvatures
         """
         # NOTE: assuming that edges are organized in a loop and share vertices
-        # TODO general case for multiple loops?
         # TODO Account for curvatures?
         center_2d = np.array([
             sum([edge.start[0] + edge.end[0] for edge in self.edges]), 

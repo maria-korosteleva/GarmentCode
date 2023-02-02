@@ -104,7 +104,7 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
     target_edges = EdgeSequence(target_edges.edges)  # keep the same edge references, 
                                                      # but not the same edge sequence reference
                                                      # In case it matches one of the interfaces (we don't want target edges to be overriden)
-    iter = panel.interfaces if isinstance(panel.interfaces, list) else panel.interfaces.values()   # TODO Uniform interfaces list
+    iter = panel.interfaces if isinstance(panel.interfaces, list) else panel.interfaces.values() 
     for intr in iter:
         # Substitute old edges with what's left from them after cutting
         if target_edges[0] in intr.edges:
@@ -131,7 +131,7 @@ def cut_into_edge(target_shape, base_edge, offset=0, right=True, tol=1e-4):
         * target_shape -- list of single edge or chained edges to be inserted in the edge. 
         * base_edge -- edge object, defining the border
         * right -- which direction the cut should be oriented w.r.t. the direction of base edge
-        * Offset -- position of the center of the target shape along the edge.   # TODO Update other uses of offser (godet skirt)
+        * Offset -- position of the center of the target shape along the edge.  
 
         Returns:
         * Newly created edges that accomodate the cut
@@ -163,7 +163,7 @@ def cut_into_edge(target_shape, base_edge, offset=0, right=True, tol=1e-4):
 
     # Check orientation 
     avg_vertex = np.asarray(new_edges.verts()).mean(0)
-    right_position = np.sign(np.cross(edge_vec[1] - edge_vec[0], avg_vertex - np.asarray(new_edges[0].start))) == -1  # TODO Correct?
+    right_position = np.sign(np.cross(edge_vec[1] - edge_vec[0], avg_vertex - np.asarray(new_edges[0].start))) == -1 
     if not right and right_position or right and not right_position:
         # flip shape to match the requested direction
         new_edges.reflect(new_edges[0].start, new_edges[-1].end)

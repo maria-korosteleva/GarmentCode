@@ -138,8 +138,7 @@ class StitchingRule():
                 inter.edges_flipping.insert(in_id, inter.edges_flipping[in_id]) 
 
                 # TODO what if these edges are used in other interfaces? Do they need to be updated as well?
-                # TODO Support the use in other Stitching rules -- multi-way stitches. Some recursion may work
-
+                
                 # next step
                 in_id += 1
                 add_id += 1

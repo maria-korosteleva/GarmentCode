@@ -45,7 +45,7 @@ class WB(pyp.Component):
         )
 
         self.interfaces = {
-            'bottom_f': self.front.interfaces['bottom'],   # TODO Remove these if the connected one does not work
+            'bottom_f': self.front.interfaces['bottom'],  
             'bottom_b': self.back.interfaces['bottom'],
 
             
@@ -122,7 +122,6 @@ class CuffSkirt(pyp.Component):
             'top_back': self.back.interfaces['top']
         }
 
-# TODO 
 class CuffBandSkirt(pyp.Component):
     """ Cuff class for sleeves or pants
         band-like piece of fabric with optional "skirt"

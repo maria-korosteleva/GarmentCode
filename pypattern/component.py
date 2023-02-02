@@ -1,6 +1,5 @@
 import numpy as np
 # Custom
-# TODO some elements of spec template should probably be optional?
 from pattern.core import BasicPattern
 from pattern.wrappers import VisPattern
 from .base import BaseComponent
@@ -73,12 +72,10 @@ class Component(BaseComponent):
         if not subs:
             return spattern
 
-        # TODO Name collision for panels?
         # Simple merge of sub-component representations
         for sub in subs:
             sub_raw = sub().pattern
 
-            # TODO use class for merges (or something)
             # simple merge of panels
             spattern.pattern['panels'] = {**spattern.pattern['panels'], **sub_raw['panels']}
 
@@ -87,7 +84,6 @@ class Component(BaseComponent):
 
         spattern.pattern['stitches'] += self.stitching_rules.assembly()
 
-        # TODO Normalize pattern (edge loops, etc.)?
         return spattern   
 
     # Utilities

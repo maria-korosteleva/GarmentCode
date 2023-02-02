@@ -24,7 +24,7 @@ if __name__ == '__main__':
     # body_file = './assets/body_measurments/f_smpl_model.yaml'
     # body_file = './assets/body_measurments/f_smpl_model_fluffy.yaml'
     # body_file = './assets/body_measurments/m_smpl_avg.yaml'
-    # body_file = './assets/body_measurments/sofia.yaml'  # TODO Remove
+    # body_file = './assets/body_measurments/sofia.yaml'  
     with open(body_file, 'r') as f:
         body = yaml.safe_load(f)['body']
         body['waist_level'] = body['height'] - body['head_l'] - body['waist_line']
@@ -58,7 +58,6 @@ if __name__ == '__main__':
         pattern = piece()
 
         # Save as json file
-        # TODO No need for system file
         sys_props = Properties('./system.json')
         folder = pattern.serialize(
             Path(sys_props['output']), 

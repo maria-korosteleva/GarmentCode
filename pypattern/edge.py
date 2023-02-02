@@ -16,13 +16,10 @@ class Edge():
         """ Simple edge inititalization.
         Parameters: 
             * start, end: from/to vertcies that the edge connectes, describing the _interface_ of an edge
-            * ruffle_rate: elongate the edge at assembly time by this rate. This parameter creates ruffles on stitches
 
             # TODO Add support for fold schemes to allow guided folds at the edge (e.g. pleats)
         """
         # TODO add curvatures
-        # TODO add parameters
-        # TODO add documentation
 
         self.start = start  # NOTE: careful with references to vertex objects
         self.end = end
@@ -50,11 +47,6 @@ class Edge():
             return False
             
         # TODO Curvature is the same
-        # TODO special features are matching 
-
-        # TODO Mapping geometric ids to vertices pairs??
-        # I need a method to get geometric ids \ for a given subsection of the edge
-        # Actually.. Edge interface definitions????
 
         return True
 
@@ -108,9 +100,10 @@ class Edge():
         
     # Assembly into serializable object
     def assembly(self):
-        """Returns the dict-based representation of edges"""
+        """Returns the dict-based representation of edges, 
+            compatible with core -> BasePattern JSON (dict) 
+        """
 
-        # TODO simply use the edge sequence? Without defining the vertices??
         return [self.start, self.end], {"endpoints": [0, 1]}
 
 
