@@ -130,11 +130,21 @@ class VisPattern(core.ParametrizedPattern):
             start = vertices[edge['endpoints'][0]]
             end = vertices[edge['endpoints'][1]]
             if ('curvature' in edge):
-                control_scale = self._flip_y(edge['curvature'])
-                control_point = self._control_to_abs_coord(
-                    start, end, control_scale)
-                path.push(
-                    ['Q', control_point[0], control_point[1], end[0], end[1]])
+                if isinstance(edge['curvature'], list):  # FIXME placeholder for old curves
+                    control_scale = self._flip_y(edge['curvature'])
+                    control_point = self._control_to_abs_coord(
+                        start, end, control_scale)
+                    path.push(
+                        ['Q', control_point[0], control_point[1], end[0], end[1]])
+                else:  # Assuming circle
+                    # TODO More control parameters used
+                    # https://www.w3.org/TR/SVG/paths.html#PathDataEllipticalArcCommands
+                    # rx ry x-axis-rotation large-arc-flag sweep-flag x y
+
+                    radius = edge['curvature']
+                    path.push(
+                        ['A', radius, radius, 0, 1, 1, end[0], end[1]])
+
             else:
                 path.push(['L', end[0], end[1]])
         path.push('z')  # path finished
@@ -196,6 +206,7 @@ class VisPattern(core.ParametrizedPattern):
                 heights.append(height)
 
         # final sizing & save
+        # FIXME some curves don't fit
         dwg['width'] = str(panel_offset_x + base_offset[0]) + 'px'  # using latest offset -- the most right
         dwg['height'] = str(max(heights) + base_offset[1]) + 'px'
         dwg.save(pretty=True)
@@ -210,6 +221,8 @@ class VisPattern(core.ParametrizedPattern):
         fig = plt.figure(figsize=(30 / 2.54, 30 / 2.54))
         ax = fig.add_subplot(projection='3d')
 
+
+        # TODO Support arcs / curves
         for panel in self.pattern['panels']:
             p = self.pattern['panels'][panel]
             rot = p['rotation']
