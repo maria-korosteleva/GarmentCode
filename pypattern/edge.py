@@ -114,10 +114,8 @@ class CircleEdge(Edge):
         super().__init__(start, end)
 
         # TODO Maya loading
-        # TODO orentation options: inner/outward angle
-            # TODO JSON file
-            # TODO SVG visualization
-        # TODO Specify by arc
+
+        # TODO Specify by arc (simplify interface?)
         # TODO Func parameters description https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#info-field-lists
 
         self.radius = radius
