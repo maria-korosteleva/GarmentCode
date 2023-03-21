@@ -110,17 +110,19 @@ class Edge():
 class CircleEdge(Edge):
     """Curvy edge as circular arc"""
 
-    def __init__(self, start=[0, 0], end=[0, 0], radius=0) -> None:
+    def __init__(self, start=[0, 0], end=[0, 0], radius=0, large_arc=False, right=True) -> None:
         super().__init__(start, end)
 
         # TODO Maya loading
-        # TODO orentation options: inner/outward angle, right/left w.r.t. edge
+        # TODO orentation options: inner/outward angle
             # TODO JSON file
             # TODO SVG visualization
         # TODO Specify by arc
         # TODO Func parameters description https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#info-field-lists
 
         self.radius = radius
+        self.right = right
+        self.large_arc = large_arc
 
         arc_len = norm(np.asarray(self.end) - np.asarray(self.start))
         self.arc = 2 * np.arcsin(arc_len / self.radius / 2)
@@ -132,8 +134,13 @@ class CircleEdge(Edge):
 
         return (
             [self.start, self.end], 
-            {"endpoints": [0, 1], "curvature": 
-                self.radius})
+            {
+                "endpoints": [0, 1], 
+                "curvature": {
+                    "type": 'circle',
+                    "params": [self.radius, self.large_arc, self.right]
+                }
+            })
 
 class EdgeSequence():
     """Represents a sequence of (possibly chained) edges (e.g. every next edge starts from the same vertex that the previous edge ends with

@@ -136,14 +136,22 @@ class VisPattern(core.ParametrizedPattern):
                         start, end, control_scale)
                     path.push(
                         ['Q', control_point[0], control_point[1], end[0], end[1]])
-                else:  # Assuming circle
-                    # TODO More control parameters used
-                    # https://www.w3.org/TR/SVG/paths.html#PathDataEllipticalArcCommands
-                    # rx ry x-axis-rotation large-arc-flag sweep-flag x y
+                elif edge['curvature']['type'] == 'circle':  # Assuming circle
+                    # https://svgwrite.readthedocs.io/en/latest/classes/path.html#svgwrite.path.Path.push_arc
 
-                    radius = edge['curvature']
-                    path.push(
-                        ['A', radius, radius, 0, 1, 1, end[0], end[1]])
+                    radius, large_arc, right = edge['curvature']['params']
+                    radius *= self.scaling_for_drawing
+
+                    path.push_arc(
+                        (end[0], end[1]), 0, radius,
+                        large_arc=large_arc, 
+                        angle_dir='-' if right else '+',
+                        absolute=True
+                    )
+
+                    # TODO Support full circle separately
+                else:
+                    raise NotImplementedError(f'{self.__class__.__name__}::Unknown curvature type {edge["curvature"]["type"]}')
 
             else:
                 path.push(['L', end[0], end[1]])
@@ -212,6 +220,7 @@ class VisPattern(core.ParametrizedPattern):
         dwg.save(pretty=True)
 
         # to png
+        # FIXME Win't save without specifying width and height
         svg_pattern = svglib.svg2rlg(svg_filename)
         renderPM.drawToFile(svg_pattern, png_filename, fmt='PNG')
 

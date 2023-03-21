@@ -23,16 +23,20 @@ class SkirtCircle(pyp.Panel):
         waist_rad = waist / (suns * 2 * np.pi)
         halfarc = suns * np.pi
 
-
         dist_w = 2 * waist_rad * np.sin(halfarc)
         dist_out = 2 * (waist_rad + length) * np.sin(halfarc)
 
         vert_len = length * np.cos(halfarc)
 
-
+        # top
         self.edges.append(pyp.CircleEdge(
-            [-dist_w/2, 0], [dist_w/2, 0], radius=waist_rad))
+            [-dist_w/2, 0], [dist_w/2, 0], 
+            radius=waist_rad, large_arc=halfarc > np.pi / 2,))
         self.edges.append(pyp.Edge(self.edges[-1].end, [dist_out / 2, -vert_len]))
+        
+        # Bottom
         self.edges.append(pyp.CircleEdge(
-            self.edges[-1].end, [- dist_out / 2, -vert_len], radius=waist_rad + length))
+            self.edges[-1].end, [- dist_out / 2, -vert_len], 
+            radius=waist_rad + length,
+            large_arc=halfarc > np.pi / 2, right=False))
         self.edges.close_loop()
