@@ -21,6 +21,7 @@ from assets.garment_programs.bands import *
 if __name__ == '__main__':
 
     body_file = './assets/body_measurments/f_smpl_avg.yaml'
+    body_file = './assets/body_measurments/ikea_toy.yaml'
     # body_file = './assets/body_measurments/f_smpl_model.yaml'
     # body_file = './assets/body_measurments/f_smpl_model_fluffy.yaml'
     # body_file = './assets/body_measurments/m_smpl_avg.yaml'
@@ -30,11 +31,11 @@ if __name__ == '__main__':
         body['waist_level'] = body['height'] - body['head_l'] - body['waist_line']
 
     design_files = {
-        'base': './assets/design_params/base.yaml',
+        # 'base': './assets/design_params/base.yaml',
         # 'Dress_20s': './assets/design_params/dress_20s.yaml',
         # 'Dress_30s': './assets/design_params/dress_30s.yaml',
         # 'Dress_40s': './assets/design_params/dress_40s.yaml',
-        # 'Dress_50s': './assets/design_params/dress_50s.yaml',
+        'Dress_50s': './assets/design_params/dress_50s.yaml',
         # 'Dress_regency': './assets/design_params/dress_regency.yaml',
         # 'sweatshirt': './assets/design_params/sweatshirt.yaml',
         # # 'pants': './assets/design_params/pants.yaml',
