@@ -115,8 +115,9 @@ class CircleEdge(Edge):
 
         # TODO Maya loading
 
-        # TODO Specify by arc (simplify interface?)
+        # TODO Specify by arc (length) (simplify interface?)
         # TODO Func parameters description https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#info-field-lists
+        # TODO check full circle
 
         self.radius = radius
         self.right = right
