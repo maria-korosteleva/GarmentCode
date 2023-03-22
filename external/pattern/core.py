@@ -392,6 +392,9 @@ class BasicPattern(object):
         edge = end - start
         edge_perp = np.array([-edge[1], edge[0]])
 
+        # DEBUG
+        print('Abs coords ', edge)
+
         control_start = start + control_scale[0] * edge
         control_point = control_start + control_scale[1] * edge_perp
 
@@ -488,7 +491,8 @@ class BasicPattern(object):
         for edge in panel['edges']:
             edge_ids = edge['endpoints']
             edge_coords = vertices[edge_ids]
-            if 'curvature' in edge:
+            if 'curvature' in edge and isinstance(edge['curvature'], list):
+                # FIXME Legacy curvature representation
                 curv_abs = self._control_to_abs_coord(edge_coords[0], edge_coords[1], edge['curvature'])
                 # view curvy edge as two segments
                 # NOTE this aproximation might lead to False positives in intersection tests

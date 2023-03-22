@@ -22,7 +22,7 @@ class KeyWrapper(Generic[T, V]):
         return len(self.it)
 
 def vector_angle(v1, v2):
-    """Find an angle between two vectors"""
+    """Find an angle between two 2D vectors"""
     v1, v2 = np.asarray(v1), np.asarray(v2)
     cos = np.dot(v1, v2) / (norm(v1) * norm(v2))
     angle = np.arccos(cos) 

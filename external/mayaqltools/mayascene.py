@@ -20,9 +20,11 @@ from mtoa.cmds.arnoldRender import arnoldRender
 import mtoa.core
 
 # My modules
+import pattern.core as core
 import pattern.wrappers as wrappers
 from mayaqltools import qualothwrapper as qw
 from mayaqltools import utils
+reload(core)
 reload(wrappers)
 reload(qw)
 reload(utils)
@@ -529,8 +531,17 @@ class MayaGarment(wrappers.VisPattern):
         # draw edges
         curve_names = []
         for edge in panel['edges']:
-            curve_points = self._edge_as_3d_tuple_list(edge, vertices)
-            curve = cmds.curve(p=curve_points, d=(len(curve_points) - 1))
+
+            if 'curvature' not in edge or isinstance(edge['curvature'], list):
+                # FIXME Legacy curvature representation
+                curve_points = self._edge_as_3d_tuple_list(edge, vertices)
+                curve = cmds.curve(p=curve_points, d=(len(curve_points) - 1))
+            else:  # TODO Condition on a circle
+
+                # DEBUG
+                print('DRAWING A CIRCLE')
+
+                curve = self._draw_circle_arc(edge, vertices)
             curve_names.append(curve)
             self.MayaObjects['panels'][panel_name]['edges'].append(curve)
         # Group  
@@ -680,10 +691,11 @@ class MayaGarment(wrappers.VisPattern):
     def _edge_as_3d_tuple_list(self, edge, vertices):
         """
             Represents given edge object as list of control points
-            suitable for draing in Maya
+            suitable for drawing in Maya
         """
         points = vertices[edge['endpoints'], :]
-        if 'curvature' in edge:
+        # FIXME Legacy curvature representation
+        if 'curvature' in edge and isinstance(edge['curvature'], list):  
             control_coords = self._control_to_abs_coord(
                 points[0], points[1], edge['curvature']
             )
@@ -695,6 +707,45 @@ class MayaGarment(wrappers.VisPattern):
         points = np.c_[points, np.zeros(len(points))]
 
         return list(map(tuple, points))
+
+    def _draw_circle_arc(self, edge, vertices, resolution=20):
+        """Draw a circle arc as specified by an edge"""
+
+        radius, large_arc, right = edge['curvature']['params']
+        edge_3d = np.array(self._edge_as_3d_tuple_list(edge, vertices))
+
+        angle = 2 * np.arcsin(np.linalg.norm(edge_3d[1] - edge_3d[0]) / radius / 2)
+        if large_arc:
+            angle = 2 * np.pi - angle
+        circle_name = cmds.circle(
+            radius=radius, sections=resolution, sweep=np.rad2deg(angle))
+
+        # Move the circle arc to a new position
+        circle_center = np.array([0, 0, 0])   # default arc placement in Maya 
+        top_point = np.array([0, radius, 0])
+        sec_point = np.array([- radius * np.sin(angle), radius * np.cos(angle), 0])
+
+        if not right:
+            top_point, sec_point = sec_point, top_point
+
+        # translation
+        new_arc_position = edge_3d[0]  
+        shift = (new_arc_position - top_point).tolist()
+
+        # Rotation
+        curr_dir = sec_point - top_point
+        target_dir = edge_3d[1] - edge_3d[0]
+        rot_angle = np.rad2deg(utils.vector_angle(curr_dir[:2], target_dir[:2])) 
+        if not right:
+            rot_angle = rot_angle - 360
+
+        cmds.move(shift[0], shift[1], shift[2], circle_name[0], relative=True)
+        cmds.rotate(
+            0, 0, rot_angle, 
+            circle_name[0], relative=True, 
+            pivot=new_arc_position.tolist())
+
+        return circle_name[0]
 
     def _applyEuler(self, vector, eulerRot):
         """Applies Euler angles (in degrees) to provided 3D vector"""
