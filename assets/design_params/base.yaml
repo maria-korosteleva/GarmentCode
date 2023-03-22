@@ -245,13 +245,13 @@ design:
 
   flare-skirt:
     length:
-      v: 0.5
+      v: 0.2
       range: [0.1, 1]
     n_panels:
       v: 7
       range: [4, 15]
     suns:     # one "sun" is 360 skirt
-      v: 0.2
+      v: 0.95
       range: [0.5, 2]
 
   godet-skirt: 

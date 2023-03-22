@@ -40,3 +40,11 @@ class SkirtCircle(pyp.Panel):
             radius=waist_rad + length,
             large_arc=halfarc > np.pi / 2, right=False))
         self.edges.close_loop()
+
+        # placement
+        self.rotation = R.from_euler('XYZ', [-np.deg2rad(90), 0, 0])
+        self.translate_to([0, body['waist_level'], -7])
+
+        # Stitches
+        self.stitching_rules.append(
+            (pyp.Interface(self, self.edges[1]), pyp.Interface(self, self.edges[3])))

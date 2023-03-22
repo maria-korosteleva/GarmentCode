@@ -113,11 +113,10 @@ class CircleEdge(Edge):
     def __init__(self, start=[0, 0], end=[0, 0], radius=0, large_arc=False, right=True) -> None:
         super().__init__(start, end)
 
-        # TODO Maya loading
-
         # TODO Specify by arc (length) (simplify interface?)
         # TODO Func parameters description https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#info-field-lists
         # TODO check full circle
+        # TODO Propagate to sub-functions and operators 
 
         self.radius = radius
         self.right = right
@@ -140,6 +139,9 @@ class CircleEdge(Edge):
                     "params": [self.radius, self.large_arc, self.right]
                 }
             })
+
+# TODO Curvy edges
+# TODO Remove old version??
 
 class EdgeSequence():
     """Represents a sequence of (possibly chained) edges (e.g. every next edge starts from the same vertex that the previous edge ends with
