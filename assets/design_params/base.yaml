@@ -83,18 +83,18 @@ design:
       v: 3
       range: null
     connecting_width:
-      v: 20
+      v: 30
       range: [20, 40]   # TODO min armscye_depth . And no more then that for Bodice
     # Shoulder shape
     standing_shoulder: 
-      v: True
+      v: False
       range: [True, False]
     standing_shoulder_len:   # can create "Standing" shoulder
       v: 7
       range: [4, 10]
     # Overalls
     end_width:
-      v: 22
+      v: 20
       range: [20, 40]  
     length: 
       v: 40
@@ -128,7 +128,7 @@ design:
 
   left:   # If this section is not defined, the garment will be symmetric by default
     enable_asym: 
-      v: True    # True == create asymmetric top
+      v: False    # True == create asymmetric top
       range: [True, False]
     bodice: 
       ease:

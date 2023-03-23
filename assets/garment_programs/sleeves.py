@@ -24,17 +24,22 @@ class SleevePanel(pyp.Panel):
             connecting_depth, connecting_width, 
             angle=base_angle, incl_coeff=smoothing_coeff, w_coeff=smoothing_coeff)
 
+        open_shape.reverse()  # TODO CHECK if needed
+
         if not pyp.utils.close_enough(design['connect_ruffle']['v'], 1):
             open_shape.extend(design['connect_ruffle']['v'])
 
         open_shape.rotate(-base_angle)  
+
         # TODO end ruffle may need to extend in both direction instead
-        arm_width = (design['end_width']['v'] + width_diff) / 2  * design['end_ruffle']['v']
+        # DEBUG arm_width = (design['end_width']['v'] + width_diff) / 2  * design['end_ruffle']['v']
+        arm_width = abs(open_shape[0].start[1] - open_shape[-1].end[1])
 
         # Main body of a sleeve
         self.edges = pyp.esf.from_verts(
-            [0, 0], [0, -arm_width], [length, -arm_width]
+            [0, 0], [0, arm_width], [length, arm_width]
         )
+        
         open_shape.snap_to(self.edges[-1].end)
         open_shape[0].start = self.edges[-1].end   # chain
         self.edges.append(open_shape)
@@ -42,6 +47,7 @@ class SleevePanel(pyp.Panel):
         # align the angle with the pose -- for draping
         self.edges.rotate(pose_angle) 
 
+        # FIXME Update standing sholder with a new formulation
         if standing:  # Add a "shelve" to create square shoulder appearance
             end = self.edges[-1].end
             len = design['standing_shoulder_len']['v']
@@ -50,14 +56,14 @@ class SleevePanel(pyp.Panel):
 
         # Fin
         self.edges.close_loop()
-        
+
         # Interfaces
         self.interfaces = {
             'in': pyp.Interface(self, open_shape, ruffle=design['connect_ruffle']['v']),
             'in_shape': pyp.Interface(self, proj_shape),
             'out': pyp.Interface(self, self.edges[0], ruffle=design['end_ruffle']['v']),
-            'top': pyp.Interface(self, self.edges[-2:] if standing else self.edges[-1]),   
-            'bottom': pyp.Interface(self, self.edges[1])
+            'top': pyp.Interface(self, self.edges[1:3] if standing else self.edges[1]),   
+            'bottom': pyp.Interface(self, self.edges[-1])
         }
 
         # Default placement
