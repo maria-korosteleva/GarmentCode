@@ -392,9 +392,6 @@ class BasicPattern(object):
         edge = end - start
         edge_perp = np.array([-edge[1], edge[0]])
 
-        # DEBUG
-        print('Abs coords ', edge)
-
         control_start = start + control_scale[0] * edge
         control_point = control_start + control_scale[1] * edge_perp
 
