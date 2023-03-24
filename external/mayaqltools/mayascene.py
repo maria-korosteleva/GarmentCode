@@ -532,15 +532,13 @@ class MayaGarment(wrappers.VisPattern):
         curve_names = []
         for edge in panel['edges']:
 
-            if 'curvature' not in edge or isinstance(edge['curvature'], list):
+            if ('curvature' not in edge 
+                    or isinstance(edge['curvature'], list) 
+                    or edge['curvature']['type'] is not 'circle'):
                 # FIXME Legacy curvature representation
                 curve_points = self._edge_as_3d_tuple_list(edge, vertices)
-                curve = cmds.curve(p=curve_points, d=(len(curve_points) - 1))
+                curve = cmds.curve(p=curve_points, d=min(len(curve_points) - 1, 3))
             else:  # TODO Condition on a circle
-
-                # DEBUG
-                print('DRAWING A CIRCLE')
-
                 curve = self._draw_circle_arc(edge, vertices)
             curve_names.append(curve)
             self.MayaObjects['panels'][panel_name]['edges'].append(curve)
@@ -695,14 +693,21 @@ class MayaGarment(wrappers.VisPattern):
         """
         points = vertices[edge['endpoints'], :]
         # FIXME Legacy curvature representation
-        if 'curvature' in edge and isinstance(edge['curvature'], list):  
-            control_coords = self._control_to_abs_coord(
-                points[0], points[1], edge['curvature']
-            )
-            # Rearrange
+        if 'curvature' in edge:
+            if isinstance(edge['curvature'], list):  
+                abs_points = self._control_to_abs_coord(
+                    points[0], points[1], edge['curvature']
+                )
+                abs_points = [abs_points]
+            else:
+                abs_points = []
+                for p in edge['curvature']['params']:
+                    abs_points.append(self._control_to_abs_coord(
+                        points[0], points[1], p))
             points = np.r_[
-                [points[0]], [control_coords], [points[1]]
+                [points[0]], abs_points, [points[1]]
             ]
+
         # to 3D
         points = np.c_[points, np.zeros(len(points))]
 
