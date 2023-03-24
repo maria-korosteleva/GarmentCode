@@ -131,6 +131,10 @@ class CircleEdge(Edge):
             compatible with core -> BasePattern JSON (dict) 
         """
 
+        # TODO Try the 3-point representation? Might be more compact + more continious
+        # How much human readible this one should be?
+        # Even one number (Y axis) could be enough 
+
         return (
             [self.start, self.end], 
             {
