@@ -119,12 +119,25 @@ class CircleEdge(Edge):
         # TODO Propagate to sub-functions and operators 
         # FIXME Autonorm is going crasy with the circular edges
 
+
+        # TODO If an egde changes, do we preserve the radius, the length OR curvature?
+        # Maybe preserving the overall shape (curvature) is more important?
+
+
         self.radius = radius
         self.right = right
         self.large_arc = large_arc
 
         arc_len = norm(np.asarray(self.end) - np.asarray(self.start))
         self.arc = 2 * np.arcsin(arc_len / self.radius / 2)
+        if self.large_arc:
+            self.arc = 2 * np.pi - self.arc
+
+    def length(self):
+        """Return current length of an edge.
+            Since vertices may change their locations externally, the length is dynamically evaluated
+        """
+        return self.radius * self.arc
 
     def assembly(self):
         """Returns the dict-based representation of edges, 
@@ -145,9 +158,7 @@ class CircleEdge(Edge):
                 }
             })
 
-# TODO Curvy edges
 # TODO Remove old version??
-
 class CurveEdge(Edge):
     """Curvy edge as Besier curve / B-spline"""
 
@@ -163,6 +174,9 @@ class CurveEdge(Edge):
         # TODO Func parameters description https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#info-field-lists
         # TODO Propagate to sub-functions and operators 
         # FIXME Flip edge routine -- correctly process the curvature
+        # FIXME Autonorm
+        # FIXME Self-intersections
+        # TODO Sleeves
 
         self.control_points = control_points
 
@@ -172,7 +186,7 @@ class CurveEdge(Edge):
         # Storing control points as relative since it preserves overall curve shape during
         # edge extention/contration
         if not relative:
-            # TODO Conversion
+            # TODO Conversion  
             pass
 
     def rel_to_abs_2d(self):
