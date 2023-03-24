@@ -8,7 +8,7 @@
 # Building blocks
 from .component import Component
 from .panel import Panel
-from .edge import Edge, EdgeSequence, CircleEdge
+from .edge import *
 from .connector import Stitches
 from .interface import Interface
 from .edge_factory import EdgeSeqFactory as esf

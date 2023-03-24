@@ -148,6 +148,63 @@ class CircleEdge(Edge):
 # TODO Curvy edges
 # TODO Remove old version??
 
+class CurveEdge(Edge):
+    """Curvy edge as Besier curve / B-spline"""
+
+    def __init__(self, start=[0, 0], end=[0, 0], control_points=[], relative=True) -> None:
+        """
+        
+        :arg bool relative: specify whether the control point coordinated are given 
+            relative to the edge length (True) or in 2D coordinate system of a panel (False)
+
+        """
+        super().__init__(start, end)
+
+        # TODO Func parameters description https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#info-field-lists
+        # TODO Propagate to sub-functions and operators 
+        # FIXME Flip edge routine -- correctly process the curvature
+
+        self.control_points = control_points
+
+        if len(self.control_points) > 2:
+            raise NotImplementedError(f'{self.__class__.__name__}::Error::Up to 2 control points (cubic Bezier) are supported')
+
+        # Storing control points as relative since it preserves overall curve shape during
+        # edge extention/contration
+        if not relative:
+            # TODO Conversion
+            pass
+
+    def rel_to_abs_2d(self):
+        """Convert control points coordinates from relative to absolute """
+        # TODO
+        pass
+
+    def abs_to_rel_2d(self):
+        """Convert control points coordinates from absolute to relative"""
+        # TODO
+        pass
+
+    def assembly(self):
+        """Returns the dict-based representation of edges, 
+            compatible with core -> BasePattern JSON (dict) 
+        """
+
+        # TODO Try the 3-point representation? Might be more compact + more continious
+        # How much human readible this one should be?
+        # Even one number (Y axis) could be enough 
+
+        return (
+            [self.start, self.end], 
+            {
+                "endpoints": [0, 1], 
+                "curvature": {   # TODO Remove this level? The the 'type' is always present? 
+                                 # Will break backwards compatibility though..
+                    "type": 'quadratic' if len(self.control_points) == 1 else 'cubic',
+                    "params": self.control_points
+                }
+            })
+
 class EdgeSequence():
     """Represents a sequence of (possibly chained) edges (e.g. every next edge starts from the same vertex that the previous edge ends with
         and allows building some typical edge sequences

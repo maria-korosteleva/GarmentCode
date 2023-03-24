@@ -130,13 +130,7 @@ class VisPattern(core.ParametrizedPattern):
             start = vertices[edge['endpoints'][0]]
             end = vertices[edge['endpoints'][1]]
             if ('curvature' in edge):
-                if isinstance(edge['curvature'], list):  # FIXME placeholder for old curves
-                    control_scale = self._flip_y(edge['curvature'])
-                    control_point = self._control_to_abs_coord(
-                        start, end, control_scale)
-                    path.push(
-                        ['Q', control_point[0], control_point[1], end[0], end[1]])
-                elif edge['curvature']['type'] == 'circle':  # Assuming circle
+                if edge['curvature']['type'] == 'circle':  # Assuming circle
                     # https://svgwrite.readthedocs.io/en/latest/classes/path.html#svgwrite.path.Path.push_arc
 
                     radius, large_arc, right = edge['curvature']['params']
@@ -150,6 +144,23 @@ class VisPattern(core.ParametrizedPattern):
                     )
 
                     # TODO Support full circle separately
+                elif edge['curvature']['type'] == 'cubic':
+                    command = ['C']
+                    for p in edge['curvature']['params']:
+                        control_scale = self._flip_y(p)
+                        control_point = self._control_to_abs_coord(
+                            start, end, control_scale)
+                        command.append(control_point[0])
+                        command.append(control_point[1])
+                    path.push(command + [end[0], end[1]])
+
+                elif edge['curvature']['type'] == 'quadratic' or isinstance(edge['curvature'], list):  # FIXME placeholder for old curves
+                    control_scale = self._flip_y(edge['curvature'] if isinstance(edge['curvature'], list) else edge['curvature']['params'][0])
+                    control_point = self._control_to_abs_coord(
+                        start, end, control_scale)
+                    path.push(
+                        ['Q', control_point[0], control_point[1], end[0], end[1]])
+
                 else:
                     raise NotImplementedError(f'{self.__class__.__name__}::Unknown curvature type {edge["curvature"]["type"]}')
 

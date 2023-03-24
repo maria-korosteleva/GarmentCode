@@ -34,3 +34,13 @@ def TrapezoidNeckHalf(depth, width, angle=90):
     edges = pyp.esf.from_verts([0, 0], [-depth * np.cos(angle) / np.sin(angle), -depth], [width / 2, -depth])
 
     return edges
+
+# Collar shapes withough extra panels
+def CurvyNeckHalf(depth, width, *args):
+    """Testing Curvy Collar design"""
+
+    edges = pyp.EdgeSequence(pyp.CurveEdge(
+        [0, 0], [width / 2,-depth], 
+        [[0.2, 0.3], [0.8, -0.3]]))
+    
+    return edges
