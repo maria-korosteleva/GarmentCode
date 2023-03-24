@@ -78,14 +78,14 @@ class Panel(BaseComponent):
     def translate_by(self, delta_vector):
         """Translate panel by a vector"""
         self.translation = self.translation + np.array(delta_vector)
-        self.autonorm()
+        # FIXME self.autonorm()
 
         return self
     
     def translate_to(self, new_translation):
         """Set panel translation to be exactly that vector"""
         self.translation = np.asarray(new_translation)
-        self.autonorm()
+        # FIXME self.autonorm()
 
         return self
     
@@ -94,7 +94,7 @@ class Panel(BaseComponent):
             * delta_rotation: scipy rotation object
         """
         self.rotation = delta_rotation * self.rotation
-        self.autonorm()
+        # FIXME self.autonorm()
 
         return self
 
@@ -105,7 +105,7 @@ class Panel(BaseComponent):
         if not isinstance(new_rot, R):
             raise ValueError(f'{self.__class__.__name__}::Error::Only accepting rotations in scipy format')
         self.rotation = new_rot
-        self.autonorm()
+        # FIXME self.autonorm()
 
         return self
 
@@ -166,7 +166,7 @@ class Panel(BaseComponent):
             self.rotate_to(R.from_euler('XYZ', curr_euler))  
 
             # Fix right/wrong side
-            self.autonorm()
+            # FIXME self.autonorm()
         else:
             # TODO Any other axis
             raise NotImplementedError(f'{self.name}::Error::Mirrowing over arbitrary axis is not implemented')

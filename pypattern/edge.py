@@ -117,6 +117,7 @@ class CircleEdge(Edge):
         # TODO Func parameters description https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#info-field-lists
         # TODO check full circle
         # TODO Propagate to sub-functions and operators 
+        # FIXME Autonorm is going crasy with the circular edges
 
         self.radius = radius
         self.right = right
