@@ -4,7 +4,7 @@ from numpy.linalg import norm
 import bezier   # https://github.com/dhermes/bezier # TODO Cite in the paper
 
 # Custom
-from .generic_utils import R2D
+from .generic_utils import R2D, close_enough
 
 class Edge():
     """Edge -- an individual segement of a panel border connecting two panel vertices, 
@@ -20,7 +20,6 @@ class Edge():
 
             # TODO Add support for fold schemes to allow guided folds at the edge (e.g. pleats)
         """
-        # TODO add curvatures
 
         self.start = start  # NOTE: careful with references to vertex objects
         self.end = end
@@ -39,19 +38,19 @@ class Edge():
         """Length of the edge ignoring the curvature"""
         return norm(np.asarray(self.end) - np.asarray(self.start))
 
-    def __eq__(self, __o: object) -> bool:
-        """Special implementation of comparison: same edges == edges are allowed to be connected
-            Edges are the same if their interface representation (no ruffles) is the same up to rigid transformation (rotation/translation)
+    def __eq__(self, __o: object, tol=1e-2) -> bool:
+        """Special implementation of comparison: same edges == edges can be connected by flat stitch
+            Edges are the same if their length is the same (if their flattened representation is the same)
                 => vertices do not have to be on the same locations
         """
+        # TODO Is this correct? Do we need to account for curvature similarities?
+
         if not isinstance(__o, Edge):
             return False
 
         # Base length is the same
-        if self.length() != __o.length():
+        if close_enough(self.length(), __o.length(), tol=tol):
             return False
-            
-        # TODO Curvature is the same
 
         return True
 
