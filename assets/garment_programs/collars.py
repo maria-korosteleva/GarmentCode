@@ -50,7 +50,7 @@ def CurvyNeckHalf(depth, width, *args):
 
     # DEBUG
     # Testing shrinking/extention
-    edges.extend(1.2)
+    edges.extend(0.8)
     print('Adjusted length: ', edges.length())
     
     return edges

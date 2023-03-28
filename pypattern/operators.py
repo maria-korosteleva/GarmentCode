@@ -5,6 +5,7 @@ import numpy as np
 from numpy.linalg import norm
 from scipy.spatial.transform import Rotation as R
 from scipy.optimize import minimize
+import bezier
 
 # Custom 
 from .edge import Edge, EdgeSequence
@@ -22,7 +23,7 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
             (next one starts from the end vertex of the one before)
             # NOTE: 'target_shape' might be scaled (along the main direction) to fit the corner size
         * Panel to modify
-        * target_edges -- the chained pairs of edges that form the corner to cut, s.t. the end vertex of eid1 is at the corner
+        * target_interface -- the chained pairs of edges that form the corner to cut, s.t. the end vertex of eid1 is at the corner
             # NOTE: Onto edges are expected to be straight lines for simplicity
 
         # NOTE There might be slight computational errors in the resulting shape, 
@@ -238,11 +239,52 @@ def distribute_horisontally(component, n_copies, stride=20, name_tag='panel'):
 def _dist(v1, v2):
     return norm(v2-v1)
 
+# DRAFT
+def intersect(vec1, vec2):
+    """Find an intersection point between two segments"""
+
+    # Finding intersection for a parametric representation
+    vec1 = vec1.transpose()
+    curve1 = bezier.Curve(np.asfortranarray(vec1), degree=1)
+    vec2 = vec2.transpose()
+    curve2 = bezier.Curve(np.asfortranarray(vec2), degree=1)
+
+    # DEBUG
+    print(vec1, vec2)
+
+    intersections = curve1.intersect(curve2)
+    # DEBUG
+    print('Intersection params: ', intersections)
+
+    s_vals = np.asfortranarray(intersections[0, :])
+    points = curve1.evaluate_multi(s_vals)
+
+    # DEBUG
+    print('Intersection points: ', points)
+
+    # if no points or multiple points...
+
+    return points.flatten()
 
 def _fit_translation(shift, shortcut, v1, v2, vc, d_v1, d_v2):
     """Evaluate how good a shortcut fits the corner with given global shift"""
     # Shortcut can be used as 2D vector, not a set of 2D points, e.g.
     shifted = shortcut + shift
+
+    # DRAFT
+    # TODO re-write to minimize the intersection distance for straight lines
+    # TODO Intersections with curved lines
+    # TODO Intersections with circle arcs
+    # NOTE: Has to intersect from the beginning! => # TODO initialize to touch with VC? 
+
+    # One side intersection
+
+    p1 = intersect(shifted, np.asarray([v1, vc]))
+    p2 = intersect(shifted, np.asarray([v2, vc]))
+
+    # DEBUG
+    print(p1, p2)
+    print('Dist Progression: ', _dist(shifted[0], p1), _dist(shifted[1], p2))
 
     return ((d_v1 - _dist(shifted[0], v1) - _dist(shifted[0], vc))**2
             + (d_v2 - _dist(shifted[1], v2) - _dist(shifted[1], vc))**2
