@@ -261,6 +261,11 @@ class Panel(BaseComponent):
         for e in self.edges:
             vert_0 = self.point_to_3D(e.start)
             vert_1 = self.point_to_3D(e.end)
+
+            # TODO Use subpoints for curvy edges (they can be very long)
+            # Maybe just the midpoint would give a general idea. 
+            # Otherwise, use "peak" points of a curvy edge
+
             # Pylance + NP error for unreachanble code -- see https://github.com/numpy/numpy/issues/22146
             # Works ok for numpy 1.23.4+
             norm = np.cross(vert_1 - vert_0, center_3d - vert_0)

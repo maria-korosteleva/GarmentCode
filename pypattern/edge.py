@@ -73,7 +73,6 @@ class Edge():
         """Flip the direction of the edge"""
         self.start, self.end = self.end, self.start
 
-        # TODO flip curvatures
         return self
     
     def reflect_features(self):
@@ -201,12 +200,7 @@ class CurveEdge(Edge):
     def length(self):
         """Length of Bazier curve edge"""
 
-        # Get the nodes correcly
-        cp = self.rel_to_abs_2d()
-        nodes = np.vstack((self.start, cp, self.end))
-        nodes = nodes.transpose()
-
-        curve = bezier.Curve(np.asfortranarray(nodes), degree=min(len(cp) + 1, 3))
+        curve = self._as_curve()
         
         return curve.length
 
@@ -218,26 +212,12 @@ class CurveEdge(Edge):
         str += [f'[{self.end[0]:.2f}, {self.end[1]:.2f}]']
 
         return 'Curve:' + ''.join(str)
+    
+    def midpoint(self):
+        """Center of the edge"""
+        curve = self._as_curve()
 
-    def rel_to_abs_2d(self):
-        """Convert control points coordinates from relative to absolute """
-        # TODO
-        start, end = np.array(self.start), np.array(self.end)
-        edge = end - start
-        edge_perp = np.array([-edge[1], edge[0]])
-
-        conv = []
-        for cp in self.control_points:
-            control_start = self.start + cp[0] * edge
-            conv_cp = control_start + cp[1] * edge_perp
-            conv.append(conv_cp)
-        
-        return np.asarray(conv)
-
-    def abs_to_rel_2d(self):
-        """Convert control points coordinates from absolute to relative"""
-        # TODO
-        pass
+        return curve.evaluate(0.5)
 
     # Actions
     def reverse(self):
@@ -271,16 +251,46 @@ class CurveEdge(Edge):
             p[1] = -p[1]
 
         return self
+    
+    # Special tools for curve representation
+    def _rel_to_abs_2d(self):
+        """Convert control points coordinates from relative to absolute """
+        # TODO
+        start, end = np.array(self.start), np.array(self.end)
+        edge = end - start
+        edge_perp = np.array([-edge[1], edge[0]])
+
+        conv = []
+        for cp in self.control_points:
+            control_start = self.start + cp[0] * edge
+            conv_cp = control_start + cp[1] * edge_perp
+            conv.append(conv_cp)
+        
+        return np.asarray(conv)
+
+    def _abs_to_rel_2d(self):
+        """Convert control points coordinates from absolute to relative"""
+        # TODO
+        pass
+
+    def _as_curve(self):
+        """As bezier curve object
+
+            Converting on the fly as exact vertex location might have been updated since
+            the creation of the edge
+        """
+        # Get the nodes correcly
+        cp = self._rel_to_abs_2d()
+        nodes = np.vstack((self.start, cp, self.end))
+        nodes = nodes.transpose()
+
+        return bezier.Curve(np.asfortranarray(nodes), degree=min(len(cp) + 1, 3))
 
     # Assembly into serializable object
     def assembly(self):
         """Returns the dict-based representation of edges, 
             compatible with core -> BasePattern JSON (dict) 
         """
-
-        # TODO Try the 3-point representation? Might be more compact + more continious
-        # How much human readible this one should be?
-        # Even one number (Y axis) could be enough 
 
         return (
             [self.start, self.end], 
@@ -292,6 +302,8 @@ class CurveEdge(Edge):
                     "params": self.control_points
                 }
             })
+
+    
 
 class EdgeSequence():
     """Represents a sequence of (possibly chained) edges (e.g. every next edge starts from the same vertex that the previous edge ends with
