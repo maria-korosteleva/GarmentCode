@@ -7,7 +7,7 @@ from .edge_factory import EdgeSeqFactory
 from .interface import Interface
 from .generic_utils import close_enough
 
-verbose=True
+verbose=False
 
 class StitchingRule():
     """High-level stitching instructions connecting two component interfaces

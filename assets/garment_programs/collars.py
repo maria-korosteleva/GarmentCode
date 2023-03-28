@@ -41,6 +41,11 @@ def CurvyNeckHalf(depth, width, *args):
 
     edges = pyp.EdgeSequence(pyp.CurveEdge(
         [0, 0], [width / 2,-depth], 
-        [[0.2, 0.3], [0.8, -0.3]]))
+        [[0.4, 0.3], [0.8, -0.5]]))
+    
+    # DEBUG
+    print(edges[0])
+    print(edges[0].length())
+    print(edges.length())
     
     return edges

@@ -238,7 +238,12 @@ class Shirt(pyp.Component):
         name_with_params = f"{self.__class__.__name__}"
         super().__init__(name_with_params)
 
+        # DEBUG
+        print('RIGHT!!')
         self.right = BodiceHalf(f'right', body, design, fitted=False)
+
+        # DEBUG
+        print('LEFT!!')
         if 'left' in design and design['left']['enable_asym']['v']:
             self.left = BodiceHalf(f'left', body, design['left'], fitted=False).mirror()
         else: 

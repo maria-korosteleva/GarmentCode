@@ -1,6 +1,7 @@
 from copy import deepcopy, copy
 import numpy as np
 from numpy.linalg import norm
+import bezier   # https://github.com/dhermes/bezier # TODO Cite in the paper
 
 # Custom
 from .generic_utils import R2D
@@ -32,6 +33,10 @@ class Edge():
         """Return current length of an edge.
             Since vertices may change their locations externally, the length is dynamically evaluated
         """
+        return self._straight_len()
+
+    def _straight_len(self):
+        """Length of the edge ignoring the curvature"""
         return norm(np.asarray(self.end) - np.asarray(self.start))
 
     def __eq__(self, __o: object) -> bool:
@@ -51,7 +56,7 @@ class Edge():
         return True
 
     def __str__(self) -> str:
-        return f'[{self.start[0]:.2f}, {self.start[1]:.2f}] -> [{self.end[0]:.2f}, {self.end[1]:.2f}]'  # TODO account for curvatures
+        return f'Straight:[{self.start[0]:.2f}, {self.start[1]:.2f}]->[{self.end[0]:.2f}, {self.end[1]:.2f}]'  # TODO account for curvatures
 
     def __repr__(self) -> str:
         """ 'Official string representation' -- for nice printing of lists of edges
@@ -72,6 +77,11 @@ class Edge():
         # TODO flip curvatures
         return self
     
+    def reflect_features(self):
+        """Reflect edge fetures from one side of the edge to the other"""
+        # Nothing to do for straight edge
+        return self
+
     def snap_to(self, new_start=[0, 0]):
         """Translate the edge vertices s.t. the start is at new_start
         """
@@ -189,16 +199,81 @@ class CurveEdge(Edge):
             # TODO Conversion  
             pass
 
+    def length(self):
+        """Length of Bazier curve edge"""
+
+        # Get the nodes correcly
+        cp = self.rel_to_abs_2d()
+        nodes = np.vstack((self.start, cp, self.end))
+        nodes = nodes.transpose()
+
+        curve = bezier.Curve(np.asfortranarray(nodes), degree=min(len(cp) + 1, 3))
+        
+        return curve.length
+
+    def __str__(self) -> str:
+
+        points = [self.start] + self.control_points
+
+        str = [f'[{p[0]:.2f}, {p[1]:.2f}]->' for p in points]
+        str += [f'[{self.end[0]:.2f}, {self.end[1]:.2f}]']
+
+        return 'Curve:' + ''.join(str)
+
     def rel_to_abs_2d(self):
         """Convert control points coordinates from relative to absolute """
         # TODO
-        pass
+        start, end = np.array(self.start), np.array(self.end)
+        edge = end - start
+        edge_perp = np.array([-edge[1], edge[0]])
+
+        conv = []
+        for cp in self.control_points:
+            control_start = self.start + cp[0] * edge
+            conv_cp = control_start + cp[1] * edge_perp
+            conv.append(conv_cp)
+        
+        return np.asarray(conv)
 
     def abs_to_rel_2d(self):
         """Convert control points coordinates from absolute to relative"""
         # TODO
         pass
 
+    # Actions
+    def reverse(self):
+        """Flip the direction of the edge, accounting for curvatures"""
+
+        # DEBUG
+        print('Before flip')
+        print(self)
+
+        self.start, self.end = self.end, self.start
+
+        # change order of control points
+        if len(self.control_points) == 2:
+            self.control_points[0], self.control_points[1] = self.control_points[1], self.control_points[0]
+
+        # Update coordinates
+        # TODO Check when working on autonorm
+        for p in self.control_points:
+            p[0], p[1] = 1 - p[0], -p[1]
+
+        # DEBUG
+        print('After flip')
+        print(self)
+
+        return self
+    
+    def reflect_features(self):
+        """Reflect edge fetures from one side of the edge to the other"""
+
+        for p in self.control_points:
+            p[1] = -p[1]
+
+        return self
+
+    # Assembly into serializable object
     def assembly(self):
         """Returns the dict-based representation of edges, 
             compatible with core -> BasePattern JSON (dict) 
@@ -444,6 +519,10 @@ class EdgeSequence():
         # translate -> reflect -> translate back
         for v in self.verts():
             v[:] = np.matmul(Ref, np.asarray(v) - v0) + v0
+
+        # Reflect edge features (curvatures, etc.)
+        for e in self.edges:
+            e.reflect_features()
 
         return self
 
