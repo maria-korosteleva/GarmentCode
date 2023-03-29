@@ -266,6 +266,7 @@ class EdgeSeqFactory:
 # Utils
 def _rel_to_abs_coords(start, end, vrel):
         """Convert coordinates specified relative to vector v2 - v1 to world coords"""
+        # TODO It's in the edges?
         start, end, vrel = np.asarray(start), np.asarray(end), np.asarray(vrel)
         vec = end - start
         vec = vec / norm(vec)

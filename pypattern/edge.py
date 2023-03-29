@@ -255,7 +255,6 @@ class CurveEdge(Edge):
     # Special tools for curve representation
     def _rel_to_abs_2d(self):
         """Convert control points coordinates from relative to absolute """
-        # TODO
         start, end = np.array(self.start), np.array(self.end)
         edge = end - start
         edge_perp = np.array([-edge[1], edge[0]])
@@ -270,8 +269,19 @@ class CurveEdge(Edge):
 
     def _abs_to_rel_2d(self):
         """Convert control points coordinates from absolute to relative"""
-        # TODO
-        pass
+        # TODO Debug
+
+        start, end = np.array(self.start), np.array(self.end)
+        edge = end - start
+        edge_perp = np.array([-edge[1], edge[0]])  
+
+        conv = []
+        for cp in self.control_points:
+            control_start = self.start + cp[0] * edge
+            conv_cp = control_start + cp[1] * edge_perp
+            conv.append(conv_cp)
+        
+        return np.asarray(conv)
 
     def _as_curve(self):
         """As bezier curve object
