@@ -385,6 +385,13 @@ class EdgeSequence():
             verts.pop(-1)
         return verts
 
+    def shortcut(self):
+        """Opening of an edge sequence as a vector
+        
+            # NOTE May not reflect true shortcut if the egdes were flipped but the order remained
+        """
+        return np.array([self[0].start, self[-1].end]) 
+
     # ANCHOR Modifiers
     # All modifiers return self object to allow chaining
     # Wrappers around python's list

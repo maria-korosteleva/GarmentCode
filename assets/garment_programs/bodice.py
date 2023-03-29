@@ -163,9 +163,11 @@ class BodiceHalf(pyp.Component):
         diff = self.ftorso.width - self.btorso.width
         self.sleeve = sleeves.Sleeve(name, body, design, depth_diff=diff)
 
+        print('FRONT SLEEVE')  # DEBUG
         _, f_sleeve_int = pyp.ops.cut_corner(
             self.sleeve.interfaces['in_front_shape'].projecting_edges(), 
             self.ftorso.interfaces['shoulder_corner'])
+        print('BACK SLEEVE')  # DEBUG
         _, b_sleeve_int = pyp.ops.cut_corner(
             self.sleeve.interfaces['in_back_shape'].projecting_edges(), 
             self.btorso.interfaces['shoulder_corner'])
@@ -180,11 +182,13 @@ class BodiceHalf(pyp.Component):
         # Collars
         # TODO collars with extra panels!
         # Front
+        print('FRONT COLLAR')  # DEBUG
         collar_type = getattr(collars, design['collar']['f_collar']['v'])
         f_collar = collar_type(
             design['collar']['fc_depth']['v'], design['collar']['width']['v'], design['collar']['fc_angle']['v'])
         pyp.ops.cut_corner(f_collar, self.ftorso.interfaces['collar_corner'])
         # Back
+        print('BACK COLLAR')  # DEBUG
         collar_type = getattr(collars, design['collar']['b_collar']['v'])
         b_collar = collar_type(
             design['collar']['bc_depth']['v'], design['collar']['width']['v'], design['collar']['bc_angle']['v'])

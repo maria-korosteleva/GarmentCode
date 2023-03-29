@@ -57,6 +57,7 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
 
     vc = np.array(target_edges[0].end)
     v1, v2 = np.array(target_edges[0].start), np.array(target_edges[1].end)
+
     swaped = False
     if v1[1] > v2[1]:
         v1, v2 = v2, v1  
@@ -68,28 +69,56 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
         corner_shape.reverse()
         corner_shape.snap_to([0,0])
 
-    shortcut = np.array([corner_shape[0].start, corner_shape[-1].end]) 
+    shortcut = corner_shape.shortcut()
+
+    # DEBUG
+    print(target_edges)
+    print('Alignment', shortcut[1] - shortcut[0], v2 - v1, v1 - v2)
 
     # find translation s.t. start of shortcut is on [v1,vc], and end of shortcut is on [v2,vc] -- as best as possible
     # Match the center of mass as init point
-    start = (v1 + vc + v2) / 3 - shortcut.mean(0)
+    # DRAFT start = (v1 + vc + v2) / 3 - shortcut.mean(0)
     # DRAFT start = (v1 + vc) / 2 - shortcut[0]
     # DRAFT start = vc - shortcut.mean(0)  # Guaranteed to have intersection with both segments
+    # DRAFT out = minimize(
+    #    _fit_translation, start, args=(shortcut, v1, v2, vc, _dist(v1, vc), _dist(v2, vc)))
+
+    # Curves  (can be defined outside)
+    vec1 = np.asarray([v1, vc])
+    vec1 = vec1.transpose()
+    curve1 = bezier.Curve(np.asfortranarray(vec1), degree=1)
+
+    vec2 = np.asarray([v2, vc])  # for both 1==vc
+    vec2 = vec2.transpose()
+    curve2 = bezier.Curve(np.asfortranarray(vec2), degree=1)
+    start = [0.5, 0.5]
     out = minimize(
-        _fit_translation, start, args=(shortcut, v1, v2, vc, _dist(v1, vc), _dist(v2, vc)))
+       _fit_location, start, 
+       args=(shortcut, v1, v2, vc, curve1, curve2),
+       bounds=[(0, 1), (0, 1)])
+    
+    # DEBUG
+    print(out)
+
     if not out.success:
         raise RuntimeError(f'Cut_corner::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
-    shift = out.x
 
     if not close_enough(out.fun):
         print(f'Cut_corner::Warning::projection on {target_interface} finished with fun={out.fun}')
         print(out) 
 
+    loc = out.x
+    point1 = curve1.evaluate(loc[0]).flatten()
+    point2 = curve2.evaluate(loc[1]).flatten()
+
     # re-align corner_shape with found shifts
-    corner_shape.snap_to([
-        corner_shape[0].start[0] + shift[0], 
-        corner_shape[0].start[1] + shift[1]
-        ])
+    corner_shape.snap_to(point1)   # TODO check if that's the origin
+
+    # DRAFT
+    # corner_shape.snap_to([
+    #     corner_shape[0].start[0] + shift[0], 
+    #     corner_shape[0].start[1] + shift[1]
+    #     ])
     
     # ----- UPD panel ----
     # Complete to the full corner -- connect with the initial vertices
@@ -147,7 +176,7 @@ def cut_into_edge(target_shape, base_edge, offset=0, right=True, tol=1e-4):
     new_edges = target_shape.copy().snap_to([0, 0])  # copy and normalize translation of vertices
 
     # Simplify to vectors
-    shortcut = np.array([new_edges[0].start, new_edges[-1].end])  # "Interface" of the shape to insert
+    shortcut = new_edges.shortcut()  # "Interface" of the shape to insert
     target_shape_w = norm(shortcut)
     edge_vec = np.array([base_edge.start, base_edge.end])  
     edge_len = norm(edge_vec[1] - edge_vec[0])
@@ -347,6 +376,36 @@ def _fit_translation(shift, shortcut, v1, v2, vc, d_v1, d_v2):
     # return ((d_v1 - _dist(shifted[0], v1) - _dist(shifted[0], vc))**2
     #         + (d_v2 - _dist(shifted[1], v2) - _dist(shifted[1], vc))**2
     #         )
+
+def _fit_location(l, shortcut, v1, v2, vc, curve1, curve2):
+    """Find the points on two curves s.t. vector between them is the same as shortcut"""
+
+    # Current points on curves
+    point1 = curve1.evaluate(l[0]).flatten()
+    point2 = curve2.evaluate(l[1]).flatten()
+
+    diff_curr = point2 - point1
+    diff_target = shortcut[1] - shortcut[0]  # TODO Input
+
+    # DEBUG
+    points = np.vstack((point1, point2))
+    points = points.transpose()
+    ax1 = curve1.plot(40)
+    _ = curve2.plot(40, ax=ax1)
+
+    lines = ax1.plot(  
+        points[0, :], points[1, :],
+        marker="o", linestyle="None", color="black")
+
+    plt.show()
+
+    # DEBUG   
+    print(diff_curr, diff_target)
+    print('Location Progression: ', (diff_curr[0] - diff_target[0])**2, (diff_curr[1] - diff_target[1])**2)
+
+    return ((diff_curr[0] - diff_target[0])**2 
+            + (diff_curr[1] - diff_target[1])**2)
+
 
 def _fit_scale(s, shortcut, v1, v2, vc, d_v1, d_v2):
     """Evaluate how good a shortcut fits the corner if the vertices are shifted 
