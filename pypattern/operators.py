@@ -6,6 +6,7 @@ from numpy.linalg import norm
 from scipy.spatial.transform import Rotation as R
 from scipy.optimize import minimize
 import bezier
+import matplotlib.pyplot as plt
 
 # Custom 
 from .edge import Edge, EdgeSequence
@@ -72,6 +73,8 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
     # find translation s.t. start of shortcut is on [v1,vc], and end of shortcut is on [v2,vc] -- as best as possible
     # Match the center of mass as init point
     start = (v1 + vc + v2) / 3 - shortcut.mean(0)
+    # DRAFT start = (v1 + vc) / 2 - shortcut[0]
+    # DRAFT start = vc - shortcut.mean(0)  # Guaranteed to have intersection with both segments
     out = minimize(
         _fit_translation, start, args=(shortcut, v1, v2, vc, _dist(v1, vc), _dist(v2, vc)))
     if not out.success:
@@ -240,7 +243,7 @@ def _dist(v1, v2):
     return norm(v2-v1)
 
 # DRAFT
-def intersect(vec1, vec2):
+def intersect(vec1, vec2, orig):
     """Find an intersection point between two segments"""
 
     # Finding intersection for a parametric representation
@@ -249,18 +252,31 @@ def intersect(vec1, vec2):
     vec2 = vec2.transpose()
     curve2 = bezier.Curve(np.asfortranarray(vec2), degree=1)
 
+    orig = orig.transpose()
+    curve_orig = bezier.Curve(np.asfortranarray(orig), degree=1)
+
     # DEBUG
-    print(vec1, vec2)
+    # print(vec1, vec2)
 
     intersections = curve1.intersect(curve2)
     # DEBUG
-    print('Intersection params: ', intersections)
+    #print('Intersection params: ', intersections)
 
     s_vals = np.asfortranarray(intersections[0, :])
     points = curve1.evaluate_multi(s_vals)
 
+    # DEBUG Visualization
+    # ax1 = curve_orig.plot(40)
+    # _ = curve2.plot(40, ax=ax1)
+
+    # lines = ax1.plot(
+    #     points[0, :], points[1, :],
+    #     marker="o", linestyle="None", color="black")
+
+    # plt.show()
+
     # DEBUG
-    print('Intersection points: ', points)
+    #print('Intersection points: ', points)
 
     # if no points or multiple points...
 
@@ -271,6 +287,18 @@ def _fit_translation(shift, shortcut, v1, v2, vc, d_v1, d_v2):
     # Shortcut can be used as 2D vector, not a set of 2D points, e.g.
     shifted = shortcut + shift
 
+    # DEBUG
+    # print('Values: ', shortcut.mean(0), shift, shifted.mean(0))
+
+    # Extend the shifted vector
+    extended = deepcopy(shifted)
+    midpoint = (extended[0] + extended[1]) / 2
+    extended[1] = midpoint + (extended[1] - midpoint) * 3
+    extended[0] = midpoint + (extended[0] - midpoint) * 3
+
+    # DEBUG
+    # print(norm(shifted[1] - shifted[0]), norm(extended[1] - extended[0]))
+
     # DRAFT
     # TODO re-write to minimize the intersection distance for straight lines
     # TODO Intersections with curved lines
@@ -279,17 +307,46 @@ def _fit_translation(shift, shortcut, v1, v2, vc, d_v1, d_v2):
 
     # One side intersection
 
-    p1 = intersect(shifted, np.asarray([v1, vc]))
-    p2 = intersect(shifted, np.asarray([v2, vc]))
+    p1 = intersect(extended, np.asarray([v1, vc]), shifted)
+    p2 = intersect(extended, np.asarray([v2, vc]), shifted)
+
+    mid_d1 = _dist(shifted[0], midpoint)
+    mid_d2 = _dist(shifted[1], midpoint)
+
+    mid1, mid2 = (v1 + vc) / 2, (v2 + vc) / 2
 
     # DEBUG
-    print(p1, p2)
-    print('Dist Progression: ', _dist(shifted[0], p1), _dist(shifted[1], p2))
+    # print(p1, p2)
+    # TODO to the intersect function
+    if len(p1):
+        # DRAFT p1_dist = _dist(shifted[0], p1)
+        p1_dist = _dist(midpoint, p1)
+    else: 
+        # DRAFT p1_dist = min(_dist(shifted[0], v1), _dist(shifted[0], vc))
+        # DRAFT p1_dist = min(_dist(midpoint, v1), _dist(midpoint, vc))
+        p1_dist = _dist(midpoint, mid1)
 
-    return ((d_v1 - _dist(shifted[0], v1) - _dist(shifted[0], vc))**2
-            + (d_v2 - _dist(shifted[1], v2) - _dist(shifted[1], vc))**2
-            )
+    if len(p2):
+        # DRAFT p2_dist = _dist(shifted[1], p2)
+        p2_dist = _dist(midpoint, p2)
+    else: 
+        # DRAFT p2_dist = min(_dist(shifted[1], v2), _dist(shifted[1], vc))
+        # DRAFT p2_dist = min(_dist(midpoint, v2), _dist(midpoint, vc))
+        p2_dist = _dist(midpoint, mid2)
 
+    # DEBUG print('Dist Progression: ', p1_dist, p2_dist)
+    print('Dist Progression: ', (mid_d1 - p1_dist)**2, (mid_d2 - p2_dist)**2)
+    
+    # if len(p1) and len(p2):
+    #     print('Dist Progression: ', _dist(shifted[0], p1), _dist(shifted[1], p2))
+    # else:
+    #     print('Empty intersection: ', p1, p2)
+
+    return (mid_d1 - p1_dist)**2 + (mid_d2 - p2_dist)**2
+    # DRAFT 
+    # return ((d_v1 - _dist(shifted[0], v1) - _dist(shifted[0], vc))**2
+    #         + (d_v2 - _dist(shifted[1], v2) - _dist(shifted[1], vc))**2
+    #         )
 
 def _fit_scale(s, shortcut, v1, v2, vc, d_v1, d_v2):
     """Evaluate how good a shortcut fits the corner if the vertices are shifted 
