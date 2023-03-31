@@ -96,11 +96,11 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
         swaped = True
         # NOW v1 is lower then v2
 
-
+    # ----- FIND OPTIMAL PLACE -----
     start = [0.5, 0.5]
     out = minimize(
-       _fit_location, start, 
-       args=(shortcut, curve1, curve2),
+       _fit_location_corner, start, 
+       args=(shortcut[1] - shortcut[0], curve1, curve2),
        bounds=[(0, 1), (0, 1)])
     
     # DEBUG
@@ -277,15 +277,13 @@ def distribute_horisontally(component, n_copies, stride=20, name_tag='panel'):
 def _dist(v1, v2):
     return norm(v2-v1)
 
-def _fit_location(l, shortcut, curve1, curve2):
+def _fit_location_corner(l, diff_target, curve1, curve2):
     """Find the points on two curves s.t. vector between them is the same as shortcut"""
 
     # Current points on curves
     point1 = curve1.evaluate(l[0]).flatten()
     point2 = curve2.evaluate(l[1]).flatten()
-
     diff_curr = point2 - point1
-    diff_target = shortcut[1] - shortcut[0]  # TODO Input
 
     # DEBUG
     # points = np.vstack((point1, point2))
@@ -303,6 +301,7 @@ def _fit_location(l, shortcut, curve1, curve2):
 
     return ((diff_curr[0] - diff_target[0])**2 
             + (diff_curr[1] - diff_target[1])**2)
+
 
 
 def _fit_scale(s, shortcut, v1, v2, vc, d_v1, d_v2):
