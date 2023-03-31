@@ -56,15 +56,6 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
         # Orginal edges have beed reversed in normalization or smth
         corner_shape.edges.reverse()  # UPD the order
 
-    vc = np.array(target_edges[0].end)
-    v1, v2 = np.array(target_edges[0].start), np.array(target_edges[1].end)
-
-    swaped = False
-    if v1[1] > v2[1]:
-        v1, v2 = v2, v1  
-        swaped = True
-        # NOW v1 is lower then v2
-
     if corner_shape[0].start[1] > corner_shape[-1].end[1]:
         # now corner shape is oriented the same way as vertices
         corner_shape.reverse()
@@ -73,17 +64,43 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
     shortcut = corner_shape.shortcut()
 
     # Curves  (can be defined outside)
-    vec1 = np.asarray([v1, vc])
-    vec1 = vec1.transpose()
-    curve1 = bezier.Curve(np.asfortranarray(vec1), degree=1)
 
-    vec2 = np.asarray([v2, vc])  # for both 1==vc
-    vec2 = vec2.transpose()
-    curve2 = bezier.Curve(np.asfortranarray(vec2), degree=1)
+    # DRAFT Version for straight edges
+    # vc = np.array(target_edges[0].end)
+    # v1, v2 = np.array(target_edges[0].start), np.array(target_edges[1].end)
+
+    # swaped = False
+    # if v1[1] > v2[1]:
+    #     v1, v2 = v2, v1  
+    #     swaped = True
+    #     # NOW v1 is lower then v2
+
+    # vec1 = np.asarray([v1, vc])
+    # vec1 = vec1.transpose()
+    # curve1 = bezier.Curve(np.asfortranarray(vec1), degree=1)
+
+    # vec2 = np.asarray([v2, vc])  # for both 1==vc
+    # vec2 = vec2.transpose()
+    # curve2 = bezier.Curve(np.asfortranarray(vec2), degree=1)
+
+    # TODO representation for sraight edges
+    # TODO For circle arcs
+    curve1 = target_edges[0].as_curve()
+    curve2 = target_edges[1].as_curve()
+
+    # align order with the a projecting shape, s.t. 
+    # curve2 is alawys the lower one
+    swaped = False
+    if target_edges[0].start[1] > target_edges[-1].end[1]:
+        curve1, curve2 = curve2, curve1
+        swaped = True
+        # NOW v1 is lower then v2
+
+
     start = [0.5, 0.5]
     out = minimize(
        _fit_location, start, 
-       args=(shortcut, v1, v2, vc, curve1, curve2),
+       args=(shortcut, curve1, curve2),
        bounds=[(0, 1), (0, 1)])
     
     # DEBUG
@@ -98,7 +115,6 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
 
     loc = out.x
     point1 = curve1.evaluate(loc[0]).flatten()
-
     # re-align corner_shape with found shifts
     corner_shape.snap_to(point1)   
     
@@ -107,9 +123,17 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
     if swaped:
         # The edges are aligned as v2 -> vc -> v1
         corner_shape.reverse()
+        loc[0], loc[1] = loc[1], loc[0]
 
-    corner_shape.insert(0, Edge(target_edges[0].start, corner_shape[0].start))
-    corner_shape.append(Edge(corner_shape[-1].end, target_edges[1].end))
+    # Insert a new shape
+    cut_edge1, _ = target_edges[0].subdivide([loc[0], 1-loc[0]])  # TODO order!
+    _,  cut_edge2 = target_edges[1].subdivide([loc[1], 1-loc[1]])  # TODO order!
+    
+    cut_edge1.end = corner_shape[0].start  # Connect with new insert
+    cut_edge2.start = corner_shape[-1].end
+
+    corner_shape.insert(0, cut_edge1)
+    corner_shape.append(cut_edge2)
 
     # Substitute edges in the panel definition
     panel.edges.pop(target_edges[0])
@@ -253,7 +277,7 @@ def distribute_horisontally(component, n_copies, stride=20, name_tag='panel'):
 def _dist(v1, v2):
     return norm(v2-v1)
 
-def _fit_location(l, shortcut, v1, v2, vc, curve1, curve2):
+def _fit_location(l, shortcut, curve1, curve2):
     """Find the points on two curves s.t. vector between them is the same as shortcut"""
 
     # Current points on curves

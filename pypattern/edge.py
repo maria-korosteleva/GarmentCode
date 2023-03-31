@@ -68,6 +68,12 @@ class Edge():
         """Center of the edge"""
         return (np.array(self.start) + np.array(self.end)) / 2
 
+    def as_curve(self):
+        """As Bezier curve object"""
+        vec = np.asarray([self.start, self.end])
+        vec = vec.transpose()
+        return bezier.Curve(np.asfortranarray(vec), degree=1)
+
     # Actions
     def reverse(self):
         """Flip the direction of the edge"""
@@ -106,6 +112,29 @@ class Edge():
 
         return self
         
+    def subdivide(self, fractions: list):
+        """Add intermediate vertices to an edge, 
+            splitting it's length according to fractions
+            while preserving the overall shape
+        """
+        frac = [abs(f) for f in fractions]
+        if not close_enough(fsum:=sum(frac), 1, 1e-4):
+            raise RuntimeError(f'Edge Subdivision::Error::fraction is incorrect. The sum {fsum} is not 1')
+
+        vec = np.asarray(self.end) - np.asarray(self.start)
+        verts = [self.start]
+        seq = EdgeSequence()
+        for i in range(len(frac) - 1):
+            verts.append(
+                [verts[-1][0] + frac[i]*vec[0],
+                verts[-1][1] + frac[i]*vec[1]]
+            )
+            seq.append(Edge(verts[-2], verts[-1]))
+        verts.append(self.end)
+        seq.append(Edge(verts[-2], verts[-1]))
+        
+        return seq
+
     # Assembly into serializable object
     def assembly(self):
         """Returns the dict-based representation of edges, 
@@ -194,13 +223,12 @@ class CurveEdge(Edge):
         # Storing control points as relative since it preserves overall curve shape during
         # edge extention/contration
         if not relative:
-            # TODO Conversion  
-            pass
+            self.control_points = self._abs_to_rel_2d().tolist()
 
     def length(self):
         """Length of Bazier curve edge"""
 
-        curve = self._as_curve()
+        curve = self.as_curve()
         
         return curve.length
 
@@ -215,17 +243,44 @@ class CurveEdge(Edge):
     
     def midpoint(self):
         """Center of the edge"""
-        curve = self._as_curve()
+        curve = self.as_curve()
 
         return curve.evaluate(0.5)
+
+    def subdivide(self, fractions: list):
+        """Add intermediate vertices to an edge, 
+            splitting it's length according to fractions
+            while preserving the overall shape
+        """
+        curve = self.as_curve()
+
+        # Sub-curves
+        shift = 0
+        subcurves = []
+        for fr in fractions:
+            subcurves.append(curve.specialize(shift, shift + fr))
+            shift += fr
+
+        # Convert to CurveEdge objects
+        subedges = EdgeSequence()
+
+        for curve in subcurves:
+            
+            nodes = curve.nodes.transpose()
+
+            subedges.append(CurveEdge(
+                nodes[0].tolist(), nodes[-1].tolist(), nodes[1:-1].tolist(), relative=False))
+
+        # Reference the first/last vertices correctly
+        subedges[0].start = self.start
+        subedges[-1].end = self.end
+
+        return subedges
+
 
     # Actions
     def reverse(self):
         """Flip the direction of the edge, accounting for curvatures"""
-
-        # DEBUG
-        print('Before flip')
-        print(self)
 
         self.start, self.end = self.end, self.start
 
@@ -234,13 +289,8 @@ class CurveEdge(Edge):
             self.control_points[0], self.control_points[1] = self.control_points[1], self.control_points[0]
 
         # Update coordinates
-        # TODO Check when working on autonorm
         for p in self.control_points:
             p[0], p[1] = 1 - p[0], -p[1]
-
-        # DEBUG
-        print('After flip')
-        print(self)
 
         return self
     
@@ -269,21 +319,32 @@ class CurveEdge(Edge):
 
     def _abs_to_rel_2d(self):
         """Convert control points coordinates from absolute to relative"""
-        # TODO Debug
-
         start, end = np.array(self.start), np.array(self.end)
         edge = end - start
-        edge_perp = np.array([-edge[1], edge[0]])  
+        edge_len = norm(edge)
 
         conv = []
         for cp in self.control_points:
-            control_start = self.start + cp[0] * edge
-            conv_cp = control_start + cp[1] * edge_perp
+            control_vec = cp - start
+
+            conv_cp = [None, None]
+            # X
+            # project control_vec on edge by dot product properties
+            control_projected_len = edge.dot(control_vec) / edge_len 
+            conv_cp[0] = control_projected_len / edge_len
+            # Y
+            control_projected = edge * conv_cp[0]
+            vert_comp = control_vec - control_projected  
+            conv_cp[1] = norm(vert_comp) / edge_len
+
+            # Distinguish left&right curvature
+            conv_cp[1] *= -np.sign(np.cross(control_vec, edge)) 
+
             conv.append(conv_cp)
         
         return np.asarray(conv)
 
-    def _as_curve(self):
+    def as_curve(self):
         """As bezier curve object
 
             Converting on the fly as exact vertex location might have been updated since

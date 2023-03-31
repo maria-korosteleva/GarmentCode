@@ -37,7 +37,7 @@ class EdgeSeqFactory:
             * frac -- list of legth fractions. Every entry is in (0, 1], 
                 all entries sums up to 1
         """
-        # TODO fractions of curvy edges?
+        # TODO Deprecated? 
         frac = [abs(f) for f in frac]
         if not close_enough(fsum:=sum(frac), 1, 1e-4):
             raise RuntimeError(f'EdgeSequence::Error::fraction is incorrect. The sum {fsum} is not 1')

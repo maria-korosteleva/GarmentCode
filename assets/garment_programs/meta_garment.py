@@ -14,6 +14,7 @@ from assets.garment_programs.godet import *
 from assets.garment_programs.bodice import *
 from assets.garment_programs.pants import *
 from assets.garment_programs.bands import *
+from assets.garment_programs.random_tests import *  # DEBUG 
 
 
 class MetaGarment(pyp.Component):
