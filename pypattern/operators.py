@@ -40,7 +40,6 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
     """
     # TODO specifying desired 2D rotation of target_shape?
     # TODO Support any number of edges in the target corner edges
-    # TODO Support curves in target
 
     # ---- Evaluate optimal projection of the target shape onto the corner
     corner_shape = target_shape.copy()
@@ -190,24 +189,68 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
     if offset < target_shape_w / 2 or offset > (edge_len - target_shape_w / 2):   
         raise ValueError(f'Operators-CutingIntoEdge::Error::offset value is not within the base_edge length')
 
+    # find starting vertex for insertion & place edges there
+    # DRAFT rel_offset = (offset - target_shape_w / 2) / edge_len   # relative to the length of the base edge
+    rel_offset = offset / edge_len   # relative to the length of the base edge
+
+
+    # ----- OPTIMIZATION --- 
+    curve = base_edge.as_curve()
+    start = [0]
+    out = minimize(
+       _fit_location_edge, start, 
+       args=(rel_offset, target_shape_w, curve),
+       bounds=[(0, 1)])
+    
+    # DEBUG
+    print(out)
+
+    if not out.success:
+        raise RuntimeError(f'Cut_corner::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
+
+    if not close_enough(out.fun):
+        print(f'Cut_corner::Warning::projection on {target_interface} finished with fun={out.fun}')
+        print(out) 
+
+    wshift = out.x[0]
+
+    # DRAFT ins_point = rel_offset * (edge_vec[1] - edge_vec[0]) + edge_vec[0] if rel_offset > tol else base_edge.start   
+
+    ins_point = curve.evaluate(rel_offset - wshift).flatten() if (rel_offset - wshift) > tol else base_edge.start
+    fin_point = curve.evaluate(rel_offset + wshift).flatten() if (rel_offset + wshift) < edge_len - tol else base_edge.end
+
+
+    # DEBUG
+    print('In the edge: ', base_edge.start, base_edge.end)
+    print('Dart placement: ', ins_point, fin_point)
+
     # Align the shape with an edge
     # find rotation to apply on target shape 
-    angle = vector_angle(edge_vec[1] - edge_vec[0], shortcut[1] - shortcut[0])
-    new_edges.rotate(angle)
+    insert_vector = np.asarray(fin_point) - np.asarray(ins_point)
+    angle = vector_angle(insert_vector, shortcut[1] - shortcut[0])
+    new_edges.rotate(angle) 
 
-    # find starting vertex for insertion & place edges there
-    rel_offset = (offset - target_shape_w / 2) / edge_len   # relative to the length of the base edge
-    ins_point = rel_offset * (edge_vec[1] - edge_vec[0]) + edge_vec[0] if rel_offset > tol else base_edge.start    
+    # DEBUG
+    print('Rotated: ', new_edges)
+
+    # place
     new_edges.snap_to(ins_point)
+    # DEBUG
+    print('Shifted: ', new_edges)
 
     # Check orientation 
     avg_vertex = np.asarray(new_edges.verts()).mean(0)
-    right_position = np.sign(np.cross(edge_vec[1] - edge_vec[0], avg_vertex - np.asarray(new_edges[0].start))) == -1 
+    right_position = np.sign(np.cross(insert_vector, avg_vertex - np.asarray(new_edges[0].start))) == -1 
     if not right and right_position or right and not right_position:
         # flip shape to match the requested direction
         new_edges.reflect(new_edges[0].start, new_edges[-1].end)
 
     # re-create edges and return 
+    # TODO switch to subdivision routine
+
+    # Normal case
+    # DERAFT subdiv = base_edge.subdivide([rel_offset - wshift, wshift*2, 1 - rel_offset - wshift])
+
     # NOTE: no need to create extra edges if the the shape is incerted right at the beggining or end of the edge
     base_edge_leftovers = EdgeSequence()
     start_id, end_id = 0, len(new_edges)
@@ -220,6 +263,8 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
         new_edges.append(Edge(new_edges[-1].end, base_edge.end))
         base_edge_leftovers.append(new_edges[-1])
         end_id = -1
+    
+    print('Merges side: ', new_edges)
 
     return new_edges, new_edges[start_id:end_id], base_edge_leftovers
 
@@ -303,6 +348,29 @@ def _fit_location_corner(l, diff_target, curve1, curve2):
             + (diff_curr[1] - diff_target[1])**2)
 
 
+def _fit_location_edge(l_shift, location, width_target, curve):
+    """Find the points on two curves s.t. vector between them is the same as shortcut"""
+
+    # Current points on curves
+    point1 = curve.evaluate(location + l_shift[0]).flatten()
+    point2 = curve.evaluate(location - l_shift[0]).flatten()
+    diff_curr = point2 - point1
+
+    # DEBUG
+    # points = np.vstack((point1, point2))
+    # points = points.transpose()
+    # ax1 = curve1.plot(40)
+    # _ = curve2.plot(40, ax=ax1)
+    # lines = ax1.plot(  
+    #     points[0, :], points[1, :],
+    #     marker="o", linestyle="None", color="black")
+    # plt.show()
+
+    # DEBUG   
+    print(diff_curr, width_target)
+    print('Location Progression: ', (_dist(point1, point2) - width_target)**2)
+
+    return (_dist(point1, point2) - width_target)**2
 
 def _fit_scale(s, shortcut, v1, v2, vc, d_v1, d_v2):
     """Evaluate how good a shortcut fits the corner if the vertices are shifted 

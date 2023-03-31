@@ -501,6 +501,8 @@ class EdgeSequence():
         """
         if isinstance(orig, Edge):
             orig = self.index(orig)
+        if orig < 0: 
+            orig = len(self) + orig  # TODO Modulo would be safer? 
         self.pop(orig)
         self.insert(orig, new)
         return self
