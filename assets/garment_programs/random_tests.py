@@ -45,7 +45,7 @@ class CurvyPanel(pyp.Panel):
         print('DART')  # DEBUG
         b_edge, b_dart_edges, b_interface = pyp.ops.cut_into_edge(
             pyp.esf.dart_shape(5, 15), self.edges[-1], 
-            offset=2 * size/3, right=False)
+            offset=size-2.5, right=True)
         
         # DEBUG
         print(self.edges)

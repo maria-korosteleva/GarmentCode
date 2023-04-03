@@ -205,11 +205,11 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
     # DEBUG
     print(out)
 
-    if not out.success:
-        raise RuntimeError(f'Cut_corner::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
+    # DRAFT if not out.success:
+    #     raise RuntimeError(f'Cut_corner::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
 
     if not close_enough(out.fun):
-        print(f'Cut_corner::Warning::projection on {target_interface} finished with fun={out.fun}')
+        print(f'Cut_corner::Warning::projection on {base_edge} finished with fun={out.fun}')
         print(out) 
 
     wshift = out.x[0]
@@ -218,7 +218,6 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
 
     ins_point = curve.evaluate(rel_offset - wshift).flatten() if (rel_offset - wshift) > tol else base_edge.start
     fin_point = curve.evaluate(rel_offset + wshift).flatten() if (rel_offset + wshift) < edge_len - tol else base_edge.end
-
 
     # DEBUG
     print('In the edge: ', base_edge.start, base_edge.end)
@@ -246,25 +245,26 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
         new_edges.reflect(new_edges[0].start, new_edges[-1].end)
 
     # re-create edges and return 
-    # TODO switch to subdivision routine
-
-    # Normal case
-    # DERAFT subdiv = base_edge.subdivide([rel_offset - wshift, wshift*2, 1 - rel_offset - wshift])
-
     # NOTE: no need to create extra edges if the the shape is incerted right at the beggining or end of the edge
     base_edge_leftovers = EdgeSequence()
     start_id, end_id = 0, len(new_edges)
+
     if offset > target_shape_w / 2 + tol:  
-        new_edges.insert(0, Edge(base_edge.start, new_edges[0].start))
+        # TODO more elegant subroutine
+        start_part = base_edge.subdivide([rel_offset - wshift, 1 - (rel_offset - wshift)])[0]
+        start_part.end = new_edges[0].start
+        new_edges.insert(0, start_part)
         base_edge_leftovers.append(new_edges[0])
         start_id = 1 
     
     if offset < (edge_len - target_shape_w / 2) - tol:
-        new_edges.append(Edge(new_edges[-1].end, base_edge.end))
+        end_part = base_edge.subdivide([rel_offset + wshift, 1 - (rel_offset + wshift)])[-1]
+        end_part.start = new_edges[-1].end
+        new_edges.append(end_part)
         base_edge_leftovers.append(new_edges[-1])
         end_id = -1
     
-    print('Merges side: ', new_edges)
+    print('Merges side: ', new_edges)  # DEBUG
 
     return new_edges, new_edges[start_id:end_id], base_edge_leftovers
 
@@ -357,14 +357,13 @@ def _fit_location_edge(l_shift, location, width_target, curve):
     diff_curr = point2 - point1
 
     # DEBUG
-    # points = np.vstack((point1, point2))
-    # points = points.transpose()
-    # ax1 = curve1.plot(40)
-    # _ = curve2.plot(40, ax=ax1)
-    # lines = ax1.plot(  
-    #     points[0, :], points[1, :],
-    #     marker="o", linestyle="None", color="black")
-    # plt.show()
+    points = np.vstack((point1, point2))
+    points = points.transpose()
+    ax1 = curve.plot(40)
+    lines = ax1.plot(  
+        points[0, :], points[1, :],
+        marker="o", linestyle="None", color="black")
+    plt.show()
 
     # DEBUG   
     print(diff_curr, width_target)
