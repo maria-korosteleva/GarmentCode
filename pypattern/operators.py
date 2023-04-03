@@ -202,47 +202,60 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
        args=(rel_offset, target_shape_w, curve),
        bounds=[(0, 1)])
     
+    # FIXME normal Bezier parametrization is not uniform, 
+    # so using the same "paramdistance" in both direction might not guarantee correct placement
+    
     # DEBUG
     print(out)
 
     # DRAFT if not out.success:
+    # TODO Global verbose flag
     #     raise RuntimeError(f'Cut_corner::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
 
     if not close_enough(out.fun):
         print(f'Cut_corner::Warning::projection on {base_edge} finished with fun={out.fun}')
         print(out) 
 
-    wshift = out.x[0]
-
-    # DRAFT ins_point = rel_offset * (edge_vec[1] - edge_vec[0]) + edge_vec[0] if rel_offset > tol else base_edge.start   
-
+    wshift = out.x[0]   
     ins_point = curve.evaluate(rel_offset - wshift).flatten() if (rel_offset - wshift) > tol else base_edge.start
     fin_point = curve.evaluate(rel_offset + wshift).flatten() if (rel_offset + wshift) < edge_len - tol else base_edge.end
+
 
     # DEBUG
     print('In the edge: ', base_edge.start, base_edge.end)
     print('Dart placement: ', ins_point, fin_point)
+    print('Placement len: ', _dist(ins_point, fin_point))
 
     # Align the shape with an edge
     # find rotation to apply on target shape 
     insert_vector = np.asarray(fin_point) - np.asarray(ins_point)
-    angle = vector_angle(insert_vector, shortcut[1] - shortcut[0])
+    angle = vector_angle(shortcut[1] - shortcut[0], insert_vector)
+
+    # DEBUG
+    print('Angle: ', angle)
+    print('Before vector: ', np.asarray(new_edges[-1].end) - np.asarray(new_edges[0].start))
+    print('Shortcut vector: ', shortcut[1] - shortcut[0])
+
     new_edges.rotate(angle) 
 
     # DEBUG
     print('Rotated: ', new_edges)
+    print('Ins vector: ', insert_vector)
+    print('Angle: ', angle)
+    print('Rotated vector: ', np.asarray(new_edges[-1].end) - np.asarray(new_edges[0].start))
 
     # place
     new_edges.snap_to(ins_point)
     # DEBUG
     print('Shifted: ', new_edges)
+    print('Final placement: ', new_edges[0].start, new_edges[-1].end)
 
     # Check orientation 
     avg_vertex = np.asarray(new_edges.verts()).mean(0)
     right_position = np.sign(np.cross(insert_vector, avg_vertex - np.asarray(new_edges[0].start))) == -1 
     if not right and right_position or right and not right_position:
         # flip shape to match the requested direction
-        new_edges.reflect(new_edges[0].start, new_edges[-1].end)
+        new_edges.reflect(new_edges[0].start, new_edges[-1].end)  
 
     # re-create edges and return 
     # NOTE: no need to create extra edges if the the shape is incerted right at the beggining or end of the edge
@@ -264,8 +277,6 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
         base_edge_leftovers.append(new_edges[-1])
         end_id = -1
     
-    print('Merges side: ', new_edges)  # DEBUG
-
     return new_edges, new_edges[start_id:end_id], base_edge_leftovers
 
 # ANCHOR ----- Panel operations ------
@@ -357,13 +368,13 @@ def _fit_location_edge(l_shift, location, width_target, curve):
     diff_curr = point2 - point1
 
     # DEBUG
-    points = np.vstack((point1, point2))
-    points = points.transpose()
-    ax1 = curve.plot(40)
-    lines = ax1.plot(  
-        points[0, :], points[1, :],
-        marker="o", linestyle="None", color="black")
-    plt.show()
+    # points = np.vstack((point1, point2))
+    # points = points.transpose()
+    # ax1 = curve.plot(40)
+    # lines = ax1.plot(  
+    #     points[0, :], points[1, :],
+    #     marker="o", linestyle="None", color="black")
+    # plt.show()
 
     # DEBUG   
     print(diff_curr, width_target)

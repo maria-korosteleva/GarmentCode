@@ -20,13 +20,15 @@ class CurvyPanel(pyp.Panel):
         # self.edges = pyp.esf.from_verts(
         #     [0, 0], [0, size], [size, size], [size, 0]
         # )
-        # self.edges.append(pyp.CurveEdge([0, 0], [0, size], [[0.2, 0.3], [0.4, -0.2]]))
-        self.edges.append(pyp.Edge([0, 0], [0, size]))
+        # TODO Creation shortcut
+        self.edges.append(pyp.CurveEdge([0, 0], [0, size], [[0.2, 0.3], [0.4, -0.2]]))
+        # self.edges.append(pyp.Edge([0, 0], [0, size]))
         self.edges.append(pyp.CurveEdge(self.edges[-1].end, [size, size], [[0.5, 0.3]]))
-        # self.edges.append(pyp.CurveEdge(self.edges[-1].end, [size, 0], [[0.2, 0.3], [0.4, -0.2]]))
-        self.edges.append(pyp.Edge(self.edges[-1].end, [size, 0]))
-        # self.edges.append(pyp.CurveEdge(self.edges[-1].end, self.edges[0].start, [[0.2, 0.3], [0.4, -0.2]]))
-        self.edges.append(pyp.Edge(self.edges[-1].end, self.edges[0].start))
+        self.edges.append(pyp.CurveEdge(self.edges[-1].end, [size, 0], [[0.2, 0.3], [0.4, -0.2]]))
+        # self.edges.append(pyp.Edge(self.edges[-1].end, [size, 0]))
+        self.edges.append(pyp.CurveEdge(self.edges[-1].end, self.edges[0].start, [[0.2, 0.3], [0.4, -0.2]]))
+        # STRAIGHT 
+        # self.edges.append(pyp.Edge(self.edges[-1].end, self.edges[0].start))
 
         # # DEBUG subdivision
 
@@ -45,7 +47,7 @@ class CurvyPanel(pyp.Panel):
         print('DART')  # DEBUG
         b_edge, b_dart_edges, b_interface = pyp.ops.cut_into_edge(
             pyp.esf.dart_shape(5, 15), self.edges[-1], 
-            offset=size-2.5, right=True)
+            offset=self.edges[-1].length() / 2, right=True)
         
         # DEBUG
         print(self.edges)
@@ -62,23 +64,23 @@ class CurvyProjection(pyp.Component):
 
         self.panel = CurvyPanel('panel') 
 
-        # print('SLEEVE')  # DEBUG
-        # self.sleeve = sleeves.Sleeve('curvy_projection', body, design, depth_diff=5)
-        # _, f_sleeve_int = pyp.ops.cut_corner(
-        #     self.sleeve.interfaces['in_front_shape'].projecting_edges(), 
-        #     self.panel.interfaces['left_corner'])
+        print('SLEEVE')  # DEBUG
+        self.sleeve = sleeves.Sleeve('curvy_projection', body, design, depth_diff=5)
+        _, f_sleeve_int = pyp.ops.cut_corner(
+            self.sleeve.interfaces['in_front_shape'].projecting_edges(), 
+            self.panel.interfaces['left_corner'])
         
-        # if design['sleeve']['sleeveless']['v']:    # TODO Part of sleeve class??
-        #     # No sleeve component, only the cut remains
-        #     del self.sleeve
+        if design['sleeve']['sleeveless']['v']:    # TODO Part of sleeve class??
+            # No sleeve component, only the cut remains
+            del self.sleeve
 
-        # print('COLLAR')  # DEBUG
-        # collar_type = getattr(collars, design['collar']['f_collar']['v'])
-        # f_collar = collar_type(
-        #     design['collar']['fc_depth']['v'], 
-        #     design['collar']['width']['v'], 
-        #     design['collar']['fc_angle']['v'])
-        # pyp.ops.cut_corner(f_collar, self.panel.interfaces['right_corner'])
+        print('COLLAR')  # DEBUG
+        collar_type = getattr(collars, design['collar']['f_collar']['v'])
+        f_collar = collar_type(
+            design['collar']['fc_depth']['v'], 
+            design['collar']['width']['v'], 
+            design['collar']['fc_angle']['v'])
+        pyp.ops.cut_corner(f_collar, self.panel.interfaces['right_corner'])
 
 
         

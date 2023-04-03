@@ -195,7 +195,8 @@ class CircleEdge(Edge):
                 }
             })
 
-# TODO Remove old version??
+
+# TODO Use  https://github.com/mathandy/svgpathtools  Instead
 class CurveEdge(Edge):
     """Curvy edge as Besier curve / B-spline"""
 
@@ -227,7 +228,6 @@ class CurveEdge(Edge):
 
     def length(self):
         """Length of Bazier curve edge"""
-
         curve = self.as_curve()
         
         return curve.length
@@ -253,6 +253,9 @@ class CurveEdge(Edge):
             while preserving the overall shape
         """
         curve = self.as_curve()
+
+        # FIXME the length does not seem to be very accurate in the library..
+        # like 0.5 does not split the curve into the similar-length segments
 
         # Sub-curves
         shift = 0

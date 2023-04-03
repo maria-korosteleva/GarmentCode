@@ -28,7 +28,11 @@ def vector_angle(v1, v2):
     angle = np.arccos(cos) 
     # Cross to indicate correct relative orienataion of v2 w.r.t. v1
     cross = np.cross(v1, v2)
-    if cross > 1e-5:
+
+    # DEBUG
+    print(f'Angle {angle}, Cross {cross}, Cross sign {np.sign(cross)}')
+
+    if abs(cross) > 1e-5:
         angle *= np.sign(cross)
     return angle
 
