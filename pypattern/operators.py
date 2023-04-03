@@ -13,6 +13,7 @@ from .edge import Edge, EdgeSequence
 from .interface import Interface
 from .generic_utils import vector_angle, close_enough
 from .base import BaseComponent
+from . import flags
 
 # ANCHOR ----- Edge Sequences Modifiers ----
 def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
@@ -105,10 +106,11 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
     # DEBUG
     print(out)
 
-    if not out.success:
-        raise RuntimeError(f'Cut_corner::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
+    if flags.VERBOSE and not out.success:
+        print(f'Cut_corner::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
+        print(out)
 
-    if not close_enough(out.fun):
+    if flags.VERBOSE and not close_enough(out.fun):
         print(f'Cut_corner::Warning::projection on {target_interface} finished with fun={out.fun}')
         print(out) 
 
@@ -208,11 +210,10 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
     # DEBUG
     print(out)
 
-    # DRAFT if not out.success:
-    # TODO Global verbose flag
-    #     raise RuntimeError(f'Cut_corner::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
+    if flags.VERBOSE and not out.success:
+        print(f'Cut_corner::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
 
-    if not close_enough(out.fun):
+    if flags.VERBOSE and not close_enough(out.fun):
         print(f'Cut_corner::Warning::projection on {base_edge} finished with fun={out.fun}')
         print(out) 
 

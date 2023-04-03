@@ -6,8 +6,9 @@ import numpy as np
 from .edge_factory import EdgeSeqFactory
 from .interface import Interface
 from .generic_utils import close_enough
+from . import flags
 
-verbose=False
+verbose=flags.VERBOSE
 
 class StitchingRule():
     """High-level stitching instructions connecting two component interfaces
