@@ -8,13 +8,13 @@
 design: 
   meta: 
     upper: 
-      v: CurvyProjection
+      v: null  # CurvyProjection
       range: [FittedShirt, Shirt, null]
     wb: 
       v: null
       range: [True, False]
     bottom: 
-      v: null
+      v: SkirtCircle
       range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, null]
 
   waistband:

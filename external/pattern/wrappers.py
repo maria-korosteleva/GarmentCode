@@ -9,6 +9,7 @@ import numpy as np
 
 import svgwrite
 from svglib import svglib
+import svgpathtools as svgpath
 from reportlab.graphics import renderPM
 
 import matplotlib.pyplot as plt
@@ -16,6 +17,13 @@ import matplotlib.pyplot as plt
 # my
 import customconfig
 from pattern import core
+
+def list_to_c(num):
+    """Convert 2D list or list of 2D lists into complex number/list of complex numbers"""
+    if isinstance(num[0], list) or isinstance(num[0], np.ndarray):
+        return [complex(n[0], n[1]) for n in num]
+    else: 
+        return complex(num[0], num[1])
 
 
 class VisPattern(core.ParametrizedPattern):
@@ -111,9 +119,11 @@ class VisPattern(core.ParametrizedPattern):
         Returns 
             the lower-right vertex coordinate for the convenice of future offsetting.
         """
-        stroke_color = 'rgb(51,51,51)'
-        fill_color = 'rgb(216,214,236)'
-        stroke_width = '0.75'
+        attributes = [{
+            'fill': 'rgb(216,214,236)',
+            'stroke': 'rgb(51,51,51)', 
+            'stroke-width': '0.75'
+        }]
 
         panel = self.pattern['panels'][panel_name]
         vertices = np.asarray(panel['vertices'])
@@ -123,9 +133,7 @@ class VisPattern(core.ParametrizedPattern):
 
         # draw edges
         start = vertices[panel['edges'][0]['endpoints'][0]]
-        path = drawing.path(['M', start[0], start[1]],
-                            stroke=stroke_color, stroke_width=stroke_width,
-                            fill=fill_color)
+        segs = []
         for edge in panel['edges']:
             start = vertices[edge['endpoints'][0]]
             end = vertices[edge['endpoints'][1]]
@@ -134,42 +142,41 @@ class VisPattern(core.ParametrizedPattern):
                     control_scale = self._flip_y(edge['curvature'] if isinstance(edge['curvature'], list) else edge['curvature']['params'][0])
                     control_point = self._control_to_abs_coord(
                         start, end, control_scale)
-                    path.push(
-                        ['Q', control_point[0], control_point[1], end[0], end[1]])
+                    segs.append(svgpath.QuadraticBezier(*list_to_c([start, control_point, end])))
                 elif edge['curvature']['type'] == 'circle':  # Assuming circle
                     # https://svgwrite.readthedocs.io/en/latest/classes/path.html#svgwrite.path.Path.push_arc
 
                     radius, large_arc, right = edge['curvature']['params']
                     radius *= self.scaling_for_drawing
 
-                    path.push_arc(
-                        (end[0], end[1]), 0, radius,
+                    segs.append(svgpath.Arc(
+                        list_to_c(start), radius + 1j*radius,
+                        rotation=0,
                         large_arc=large_arc, 
-                        angle_dir='-' if right else '+',
-                        absolute=True
-                    )
+                        sweep=not right,
+                        end=list_to_c(end)
+                    ))
 
                     # TODO Support full circle separately (?)
                 elif edge['curvature']['type'] == 'cubic':
-                    command = ['C']
+                    cps = []
                     for p in edge['curvature']['params']:
                         control_scale = self._flip_y(p)
                         control_point = self._control_to_abs_coord(
                             start, end, control_scale)
-                        command.append(control_point[0])
-                        command.append(control_point[1])
-                    path.push(command + [end[0], end[1]])
+                        cps.append(control_point)
+
+                    segs.append(svgpath.CubicBezier(*list_to_c([start, *cps, end])))
 
                 else:
                     raise NotImplementedError(f'{self.__class__.__name__}::Unknown curvature type {edge["curvature"]["type"]}')
 
             else:
-                path.push(['L', end[0], end[1]])
-        path.push('z')  # path finished
-        drawing.add(path)
-
+                segs.append(svgpath.Line(*list_to_c([start, end])))
+        
         max_x = np.max(vertices[:, 0])
         # name the panel
+        # TODO refactor
         if with_text:
             panel_center = np.mean(vertices, axis=0)
             text_insert = panel_center + np.array([-25, 3])
@@ -199,7 +206,7 @@ class VisPattern(core.ParametrizedPattern):
                     drawing.text(idx, insert=middle + shift, 
                                  fill='rgb(50,179,101)', font_size='20'))
 
-        return max_x, np.max(vertices[:, 1])
+        return svgpath.Path(*segs), attributes, max_x, np.max(vertices[:, 1])
 
     def _save_as_image(self, svg_filename, png_filename, with_text=True):
         """
@@ -208,29 +215,33 @@ class VisPattern(core.ParametrizedPattern):
         if self.scaling_for_drawing is None:  # re-evaluate if not ready
             self.scaling_for_drawing = self._verts_to_px_scaling_factor()
 
+        # TODO text placement
+
         dwg = svgwrite.Drawing(svg_filename, profile='full')
         base_offset = [60, 60]
         panel_offset_x = 0
         heights = [0]  # s.t. it has some value if pattern is empty -- no panels
 
         panel_order = self.panel_order()
+        paths = []
+        attributes = []
         for panel in panel_order:
             if panel is not None:
-                panel_offset_x, height = self._draw_a_panel(
+                path, attr, panel_offset_x, height = self._draw_a_panel(
                     dwg, panel,
                     offset=[panel_offset_x + base_offset[0], base_offset[1]], 
                     with_text=with_text,
                 )
                 heights.append(height)
+                paths.append(path)
+                attributes += attr
 
         # final sizing & save
-        # FIXME some curves don't fit
-        dwg['width'] = str(panel_offset_x + base_offset[0]) + 'px'  # using latest offset -- the most right
-        dwg['height'] = str(max(heights) + base_offset[1]) + 'px'
-        dwg.save(pretty=True)
+        # DEBUG -> this one visualizes immidiately
+        svgpath.disvg(paths, attributes=attributes, 
+                      filename=svg_filename)
 
         # to png
-        # FIXME Win't save without specifying width and height
         svg_pattern = svglib.svg2rlg(svg_filename)
         renderPM.drawToFile(svg_pattern, png_filename, fmt='PNG')
 

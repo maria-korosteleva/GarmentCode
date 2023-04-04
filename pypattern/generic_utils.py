@@ -63,3 +63,10 @@ def c_to_list(num):
 def c_to_np(num):
     """Convert complex number to a numpy array of 2 elements"""
     return np.asarray([num.real, num.imag])
+
+def list_to_c(num):
+    """Convert 2D list or list of 2D lists into complex number/list of complex numbers"""
+    if isinstance(num[0], list):
+        return [complex(n[0], n[1]) for n in num]
+    else: 
+        return complex(num[0], num[1])
