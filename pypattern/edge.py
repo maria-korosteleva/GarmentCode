@@ -253,16 +253,12 @@ class CurveEdge(Edge):
         t_mid = curve.ilength(curve.length()/2)
         return curve.point(t_mid)
 
-    def subdivide(self, fractions: list):
+    def subdivide_len(self, fractions: list):
         """Add intermediate vertices to an edge, 
             splitting it's length according to fractions
             while preserving the overall shape
         """
         curve = self.as_svg_curve()
-
-        # FIXME the length does not seem to be very accurate in the library..
-        # like 0.5 does not split the curve into the similar-length segments
-        # TODO debug
 
         # Sub-curves
         covered_fr = 0
@@ -274,7 +270,6 @@ class CurveEdge(Edge):
             next_t = curve.ilength(clen * covered_fr)
             subcurves.append(curve.cropped(prev_t, next_t))
             prev_t = next_t
-            
 
         # Convert to CurveEdge objects
         subedges = EdgeSequence()
@@ -284,6 +279,44 @@ class CurveEdge(Edge):
         # Reference the first/last vertices correctly
         subedges[0].start = self.start
         subedges[-1].end = self.end
+
+        # DEBUG
+        dots = [complex(v[0], v[1]) for v in subedges.verts()]
+        svgpath.disvg(svgpath.Path(curve, *subcurves), nodes=dots)
+        print("Subdivided vertices: ", subedges.verts())
+
+        return subedges
+    
+    def subdivide_param(self, fractions: list):
+        """Add intermediate vertices to an edge, 
+            splitting its curve parametrization according to fractions
+            while preserving the overall shape
+        """
+        curve = self.as_svg_curve()
+
+        # TODO merge two methods
+        # TODO straight edges
+
+        # Sub-curves
+        covered_fr = 0
+        subcurves = []
+        for fr in fractions:
+            subcurves.append(curve.cropped(covered_fr, covered_fr + fr))
+            covered_fr += fr
+
+        # Convert to CurveEdge objects
+        subedges = EdgeSequence()
+        for curve in subcurves:
+            subedges.append(CurveEdge.from_svg_curve(curve))
+
+        # Reference the first/last vertices correctly
+        subedges[0].start = self.start
+        subedges[-1].end = self.end
+
+        # DEBUG
+        dots = [complex(v[0], v[1]) for v in subedges.verts()]
+        svgpath.disvg(svgpath.Path(curve, *subcurves), nodes=dots)
+        print("Subdivided vertices: ", subedges.verts())
 
         return subedges
 

@@ -108,8 +108,8 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
         loc[0], loc[1] = loc[1], loc[0]
 
     # Insert a new shape
-    cut_edge1, _ = target_edges[0].subdivide([loc[0], 1-loc[0]])  # TODO order!
-    _,  cut_edge2 = target_edges[1].subdivide([loc[1], 1-loc[1]])  # TODO order!
+    cut_edge1, _ = target_edges[0].subdivide_param([loc[0], 1-loc[0]])
+    _,  cut_edge2 = target_edges[1].subdivide_param([loc[1], 1-loc[1]])
     
     cut_edge1.end = corner_shape[0].start  # Connect with new insert
     cut_edge2.start = corner_shape[-1].end
@@ -159,34 +159,32 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
         * Edges corresponding to the target shape
         * Edges that lie on the original base edge 
     """
-    # TODO Allow insertion into curved edges
+    # TODO offset in the final cut? vs offset of the middle of the target_shape?
+
     target_shape = EdgeSequence(target_shape)
     new_edges = target_shape.copy().snap_to([0, 0])  # copy and normalize translation of vertices
 
     # Simplify to vectors
     shortcut = new_edges.shortcut()  # "Interface" of the shape to insert
     target_shape_w = norm(shortcut)
-    edge_vec = np.array([base_edge.start, base_edge.end])  
     edge_len = base_edge.length()
 
     if offset < target_shape_w / 2 or offset > (edge_len - target_shape_w / 2):   
         raise ValueError(f'Operators-CutingIntoEdge::Error::offset value is not within the base_edge length')
 
     # find starting vertex for insertion & place edges there
+    curve = base_edge.as_svg_curve()
     # DRAFT rel_offset = (offset - target_shape_w / 2) / edge_len   # relative to the length of the base edge
-    rel_offset = offset / edge_len   # relative to the length of the base edge
+    # DRAFT rel_offset = offset / edge_len   # relative to the length of the base edge
+    rel_offset = curve.ilength(offset)
 
 
     # ----- OPTIMIZATION --- 
-    curve = base_edge.as_curve()
-    start = [0]
+    start = [0, 0]
     out = minimize(
        _fit_location_edge, start, 
        args=(rel_offset, target_shape_w, curve),
        bounds=[(0, 1)])
-    
-    # FIXME normal Bezier parametrization is not uniform, 
-    # so using the same "paramdistance" in both direction might not guarantee correct placement
     
     # DEBUG
     print(out)
@@ -198,9 +196,9 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
         print(f'Cut_corner::Warning::projection on {base_edge} finished with fun={out.fun}')
         print(out) 
 
-    wshift = out.x[0]   
-    ins_point = curve.evaluate(rel_offset - wshift).flatten() if (rel_offset - wshift) > tol else base_edge.start
-    fin_point = curve.evaluate(rel_offset + wshift).flatten() if (rel_offset + wshift) < edge_len - tol else base_edge.end
+    shift = out.x   
+    ins_point = c_to_np(curve.point(rel_offset - shift[1])) if (rel_offset - shift[1]) > tol else base_edge.start
+    fin_point = c_to_np(curve.point(rel_offset + shift[0])) if (rel_offset + shift[0]) < edge_len - tol else base_edge.end
 
 
     # DEBUG
@@ -246,14 +244,14 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
 
     if offset > target_shape_w / 2 + tol:  
         # TODO more elegant subroutine
-        start_part = base_edge.subdivide([rel_offset - wshift, 1 - (rel_offset - wshift)])[0]
+        start_part = base_edge.subdivide_param([rel_offset - shift[1], 1 - (rel_offset - shift[1])])[0]
         start_part.end = new_edges[0].start
         new_edges.insert(0, start_part)
         base_edge_leftovers.append(new_edges[0])
         start_id = 1 
     
     if offset < (edge_len - target_shape_w / 2) - tol:
-        end_part = base_edge.subdivide([rel_offset + wshift, 1 - (rel_offset + wshift)])[-1]
+        end_part = base_edge.subdivide_param([rel_offset + shift[0], 1 - (rel_offset + shift[0])])[-1]
         end_part.start = new_edges[-1].end
         new_edges.append(end_part)
         base_edge_leftovers.append(new_edges[-1])
@@ -341,12 +339,13 @@ def _fit_location_corner(l, diff_target, curve1, curve2):
             + (diff_curr[1] - diff_target[1])**2)
 
 
-def _fit_location_edge(l_shift, location, width_target, curve):
+def _fit_location_edge(shift, location, width_target, curve):
     """Find the points on two curves s.t. vector between them is the same as shortcut"""
 
     # Current points on curves
-    point1 = curve.evaluate(location + l_shift[0]).flatten()
-    point2 = curve.evaluate(location - l_shift[0]).flatten()
+    pointc = c_to_np(curve.point(location))   # TODO this is constant
+    point1 = c_to_np(curve.point(location + shift[0]))
+    point2 = c_to_np(curve.point(location - shift[1]))
     diff_curr = point2 - point1
 
     # DEBUG
@@ -362,7 +361,10 @@ def _fit_location_edge(l_shift, location, width_target, curve):
     print(diff_curr, width_target)
     print('Location Progression: ', (_dist(point1, point2) - width_target)**2)
 
-    return (_dist(point1, point2) - width_target)**2
+    # regularize points to be at the same distance from center
+    reg = (_dist(point1, pointc) - _dist(point2, pointc))**2
+
+    return (_dist(point1, point2) - width_target)**2 + reg
 
 def _fit_scale(s, shortcut, v1, v2, vc, d_v1, d_v2):
     """Evaluate how good a shortcut fits the corner if the vertices are shifted 
