@@ -174,9 +174,7 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
 
     # find starting vertex for insertion & place edges there
     curve = base_edge.as_curve()
-    # DRAFT rel_offset = (offset - target_shape_w / 2) / edge_len   # relative to the length of the base edge
-    # DRAFT rel_offset = offset / edge_len   # relative to the length of the base edge
-    rel_offset = curve.ilength(offset)
+    rel_offset = curve.ilength(offset)   # TODO methods of an Edge class? 
 
 
     # ----- OPTIMIZATION --- 
@@ -331,9 +329,8 @@ def _fit_location_corner(l, diff_target, curve1, curve2):
     #     marker="o", linestyle="None", color="black")
     # plt.show()
 
-    # DEBUG   
-    print(diff_curr, diff_target)
-    print('Location Progression: ', (diff_curr[0] - diff_target[0])**2, (diff_curr[1] - diff_target[1])**2)
+    if flags.VERBOSE:
+        print('Location Progression: ', (diff_curr[0] - diff_target[0])**2, (diff_curr[1] - diff_target[1])**2)
 
     return ((diff_curr[0] - diff_target[0])**2 
             + (diff_curr[1] - diff_target[1])**2)
@@ -357,9 +354,8 @@ def _fit_location_edge(shift, location, width_target, curve):
     #     marker="o", linestyle="None", color="black")
     # plt.show()
 
-    # DEBUG   
-    print(diff_curr, width_target)
-    print('Location Progression: ', (_dist(point1, point2) - width_target)**2)
+    if flags.VERBOSE:
+        print('Location Progression: ', (_dist(point1, point2) - width_target)**2)
 
     # regularize points to be at the same distance from center
     reg = (_dist(point1, pointc) - _dist(point2, pointc))**2
