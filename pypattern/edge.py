@@ -74,10 +74,13 @@ class Edge():
         return (np.array(self.start) + np.array(self.end)) / 2
 
     def as_curve(self):
-        """As Bezier curve object"""
-        vec = np.asarray([self.start, self.end])
-        vec = vec.transpose()
-        return bezier.Curve(np.asfortranarray(vec), degree=1)
+        """As svgpath curve object"""
+        # Get the nodes correcly
+        nodes = np.vstack((self.start, self.end))
+
+        params = nodes[:, 0] + 1j*nodes[:, 1]
+
+        return svgpath.Line(*params)
 
     # Actions
     def reverse(self):
@@ -117,7 +120,7 @@ class Edge():
 
         return self
         
-    def subdivide(self, fractions: list):
+    def subdivide_len(self, fractions: list):
         """Add intermediate vertices to an edge, 
             splitting it's length according to fractions
             while preserving the overall shape
@@ -139,6 +142,14 @@ class Edge():
         seq.append(Edge(verts[-2], verts[-1]))
         
         return seq
+    
+    def subdivide_param(self, fractions: list):
+        """Add intermediate vertices to an edge, 
+            splitting its curve parametrization according to fractions
+            while preserving the overall shape
+            NOTE: for line, it's the same as subdivision by length
+        """
+        return self.subdivide_len(fractions)
 
     # Assembly into serializable object
     def assembly(self):
@@ -201,7 +212,6 @@ class CircleEdge(Edge):
             })
 
 
-# TODO Use  https://github.com/mathandy/svgpathtools  Instead
 class CurveEdge(Edge):
     """Curvy edge as Besier curve / B-spline"""
 
@@ -215,9 +225,6 @@ class CurveEdge(Edge):
         super().__init__(start, end)
 
         # TODO Func parameters description https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#info-field-lists
-        # TODO Propagate to sub-functions and operators 
-        # FIXME Flip edge routine -- correctly process the curvature
-        # FIXME Autonorm
         # FIXME Self-intersections
         # TODO Sleeves
 
@@ -233,7 +240,7 @@ class CurveEdge(Edge):
 
     def length(self):
         """Length of Bezier curve edge"""
-        curve = self.as_svg_curve()
+        curve = self.as_curve()
         
         return curve.length()
 
@@ -248,17 +255,18 @@ class CurveEdge(Edge):
     
     def midpoint(self):
         """Center of the edge"""
-        curve = self.as_svg_curve()
+        curve = self.as_curve()
 
         t_mid = curve.ilength(curve.length()/2)
         return curve.point(t_mid)
 
+    # TODO merge two methods
     def subdivide_len(self, fractions: list):
         """Add intermediate vertices to an edge, 
             splitting it's length according to fractions
             while preserving the overall shape
         """
-        curve = self.as_svg_curve()
+        curve = self.as_curve()
 
         # Sub-curves
         covered_fr = 0
@@ -280,11 +288,6 @@ class CurveEdge(Edge):
         subedges[0].start = self.start
         subedges[-1].end = self.end
 
-        # DEBUG
-        dots = [complex(v[0], v[1]) for v in subedges.verts()]
-        svgpath.disvg(svgpath.Path(curve, *subcurves), nodes=dots)
-        print("Subdivided vertices: ", subedges.verts())
-
         return subedges
     
     def subdivide_param(self, fractions: list):
@@ -292,10 +295,7 @@ class CurveEdge(Edge):
             splitting its curve parametrization according to fractions
             while preserving the overall shape
         """
-        curve = self.as_svg_curve()
-
-        # TODO merge two methods
-        # TODO straight edges
+        curve = self.as_curve()
 
         # Sub-curves
         covered_fr = 0
@@ -308,15 +308,9 @@ class CurveEdge(Edge):
         subedges = EdgeSequence()
         for curve in subcurves:
             subedges.append(CurveEdge.from_svg_curve(curve))
-
         # Reference the first/last vertices correctly
         subedges[0].start = self.start
         subedges[-1].end = self.end
-
-        # DEBUG
-        dots = [complex(v[0], v[1]) for v in subedges.verts()]
-        svgpath.disvg(svgpath.Path(curve, *subcurves), nodes=dots)
-        print("Subdivided vertices: ", subedges.verts())
 
         return subedges
 
@@ -386,21 +380,8 @@ class CurveEdge(Edge):
             conv.append(conv_cp)
         
         return np.asarray(conv)
-
+ 
     def as_curve(self):
-        """As bezier curve object
-
-            Converting on the fly as exact vertex location might have been updated since
-            the creation of the edge
-        """
-        # Get the nodes correcly
-        cp = self._rel_to_abs_2d()
-        nodes = np.vstack((self.start, cp, self.end))
-        nodes = nodes.transpose()
-
-        return bezier.Curve(np.asfortranarray(nodes), degree=min(len(cp) + 1, 3))
-    
-    def as_svg_curve(self):
         """As svgpath curve object
 
             Converting on the fly as exact vertex location might have been updated since

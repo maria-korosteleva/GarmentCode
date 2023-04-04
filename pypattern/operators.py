@@ -66,8 +66,8 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
     # Curves  (can be defined outside)
     # TODO representation for sraight edges
     # TODO For circle arcs
-    curve1 = target_edges[0].as_svg_curve()
-    curve2 = target_edges[1].as_svg_curve()
+    curve1 = target_edges[0].as_curve()
+    curve2 = target_edges[1].as_curve()
 
     # align order with the a projecting shape, s.t. 
     # curve2 is alawys the lower one
@@ -173,7 +173,7 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
         raise ValueError(f'Operators-CutingIntoEdge::Error::offset value is not within the base_edge length')
 
     # find starting vertex for insertion & place edges there
-    curve = base_edge.as_svg_curve()
+    curve = base_edge.as_curve()
     # DRAFT rel_offset = (offset - target_shape_w / 2) / edge_len   # relative to the length of the base edge
     # DRAFT rel_offset = offset / edge_len   # relative to the length of the base edge
     rel_offset = curve.ilength(offset)

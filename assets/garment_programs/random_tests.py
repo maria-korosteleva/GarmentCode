@@ -21,8 +21,8 @@ class CurvyPanel(pyp.Panel):
         #     [0, 0], [0, size], [size, size], [size, 0]
         # )
         # TODO Creation shortcut
-        self.edges.append(pyp.CurveEdge([0, 0], [0, size], [[0.2, 0.3], [0.4, -0.2]]))
-        # self.edges.append(pyp.Edge([0, 0], [0, size]))
+        # self.edges.append(pyp.CurveEdge([0, 0], [0, size], [[0.2, 0.3], [0.4, -0.2]]))
+        self.edges.append(pyp.Edge([0, 0], [0, size]))
         self.edges.append(pyp.CurveEdge(self.edges[-1].end, [size, size], [[0.5, 0.3]]))
         self.edges.append(pyp.CurveEdge(self.edges[-1].end, [size, 0], [[0.2, 0.3], [0.4, -0.2]]))
         # self.edges.append(pyp.Edge(self.edges[-1].end, [size, 0]))
@@ -35,9 +35,6 @@ class CurvyPanel(pyp.Panel):
         # new_up_side = self.edges[1].subdivide([0.5697, 0.43028])
         # self.edges.substitute(1, new_up_side)
         # print(new_up_side[0].end)
-
-        # DEBUG
-        print(self.edges[-1].as_curve().nodes)
 
         self.interfaces = {
             'left_corner': pyp.Interface(self, self.edges[:2]),
