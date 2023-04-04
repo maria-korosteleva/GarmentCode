@@ -24,6 +24,10 @@ def list_to_c(num):
         return [complex(n[0], n[1]) for n in num]
     else: 
         return complex(num[0], num[1])
+    
+def c_to_np(num):
+    """Convert complex number to a numpy array of 2 elements"""
+    return np.asarray([num.real, num.imag])
 
 
 class VisPattern(core.ParametrizedPattern):
@@ -111,7 +115,7 @@ class VisPattern(core.ParametrizedPattern):
         flipped_point[1] *= -1
         return flipped_point
 
-    def _draw_a_panel(self, drawing, panel_name, offset=[0, 0], with_text=True):
+    def _draw_a_panel(self, panel_name, offset=[0, 0]):
         """
         Adds a requested panel to the svg drawing with given offset and scaling
         Assumes (!!) 
@@ -175,35 +179,35 @@ class VisPattern(core.ParametrizedPattern):
                 segs.append(svgpath.Line(*list_to_c([start, end])))
         
         max_x = np.max(vertices[:, 0])
-        # name the panel
-        # TODO refactor
-        text = []
+
+        return svgpath.Path(*segs), attributes, max_x
+
+    def _add_panel_annotations(
+            self, drawing, panel_name, path:svgpath.Path, offset=[0, 0], with_text=True, view_ids=True):
+        """ Adds a annotations for requested panel to the svg drawing with given offset and scaling
+        Assumes (!!) 
+            that edges are correctly oriented to form a closed loop
+        Returns 
+            the lower-right vertex coordinate for the convenice of future offsetting.
+        """
+        panel = self.pattern['panels'][panel_name]
+        vertices = np.asarray(panel['vertices'])
+        vertices = self._verts_to_px_coords(vertices)
+        # Shift vertices for visibility
+        vertices = vertices + offset
+
+        bbox = path.bbox()
+        panel_center = np.array([(bbox[0] + bbox[1]) / 2, (bbox[2] + bbox[3]) / 2])
+        
         if with_text:
-            panel_center = np.mean(vertices, axis=0)
-            start, end = np.min(vertices[:, 0]), np.max(np.min(vertices[:, 0]))
-            text_path = svgpath.Line(*list_to_c([[start, panel_center[1]], [end, panel_center[1]]]))
+            text_insert = panel_center   # + np.array([-len(panel_name) * 12 / 2, 3])
+            drawing.add(drawing.text(panel_name, insert=text_insert, 
+                        fill='rgb(31,31,31)', font_size='25', 
+                        text_anchor='middle', dominant_baseline='middle'))
 
-            text_path_attr = [{
-                'stroke': 'rgb(51,51,51)', 
-                'stroke-width': '0.75'
-            }]
-            text = [panel_name, svgpath.Path(text_path), text_path_attr]
-
-            # DEBUG
-            print('HERE!!')
-            print(text)
-
-            # DRAFT
-            # text_insert = panel_center + np.array([-25, 3])
-            # drawing.add(drawing.text(panel_name, insert=text_insert, 
-            #             fill='rgb(9,33,173)', font_size='25'))
-            # text_max_x = text_insert[0] + 10 * len(panel_name)
-
-            # max_x = max(max_x, text_max_x)
-
-        panel_center = np.mean(vertices, axis=0)
-        if self.view_ids:
+        if view_ids:
             # name vertices 
+            # TODO Use path informaiton for placing vertex ids => no need for offset
             for idx in range(vertices.shape[0]):
                 shift = vertices[idx] - panel_center
                 # last element moves pivot to digit center
@@ -212,17 +216,16 @@ class VisPattern(core.ParametrizedPattern):
                     drawing.text(str(idx), insert=vertices[idx] + shift, 
                                  fill='rgb(245,96,66)', font_size='25'))
             # name edges
-            for idx, edge in enumerate(panel['edges']):
-                middle = np.mean(
-                    vertices[[edge['endpoints'][0], edge['endpoints'][1]]], axis=0)
-                shift = middle - panel_center
-                shift = 5 * shift / np.linalg.norm(shift) + np.array([-5, 5])
+            for idx in range(len(path)):
+                seg = path[idx]
+                middle = c_to_np(seg.point(seg.ilength(seg.length() / 2)))
+                middle[1] -= 3  # slightly above the line
                 # name
                 drawing.add(
-                    drawing.text(idx, insert=middle + shift, 
-                                 fill='rgb(50,179,101)', font_size='20'))
+                    drawing.text(idx, insert=middle, 
+                                 fill='rgb(44,131,68)', font_size='20', 
+                                 text_anchor='middle'))
 
-        return svgpath.Path(*segs), attributes, text, max_x
 
     def _save_as_image(self, svg_filename, png_filename, with_text=True):
         """
@@ -231,36 +234,38 @@ class VisPattern(core.ParametrizedPattern):
         if self.scaling_for_drawing is None:  # re-evaluate if not ready
             self.scaling_for_drawing = self._verts_to_px_scaling_factor()
 
-        # TODO text placement (!) 
-
-        dwg = svgwrite.Drawing(svg_filename, profile='full')
         base_offset = [60, 60]
         panel_offset_x = 0
 
         panel_order = self.panel_order()
         paths = []
         attributes = []
-        text_tokens, text_paths = [], []
+        offsets = [0]
         for panel in panel_order:
             if panel is not None:
-                path, attr, text, panel_offset_x = self._draw_a_panel(
-                    dwg, panel,
+                path, attr, panel_offset_x = self._draw_a_panel(
+                    panel,
                     offset=[panel_offset_x + base_offset[0], base_offset[1]], 
-                    with_text=with_text,
                 )
                 paths.append(path)
                 attributes += attr
-                if text: 
-                    text_tokens.append(text[0])
-                    text_paths.append(text[1])
-                    paths.append(text[1])
-                    attributes += text[-1]
+                offsets.append(panel_offset_x)
 
-        # final sizing & save
-        # DEBUG -> this one visualizes immidiately
-        svgpath.disvg(paths, attributes=attributes, 
-                      text=text_tokens, text_path=text_paths, font_size=5 * self.scaling_for_drawing,
-                      filename=svg_filename)
+        # SVG convert
+        dwg = svgpath.wsvg(paths, attributes=attributes, 
+                     filename=svg_filename, 
+                     paths2Drawing=True)
+
+        # text annotations
+        if with_text or self.view_ids:
+            for i, panel in enumerate(panel_order):
+                if panel is not None:
+                    self._add_panel_annotations(
+                        dwg, panel, paths[i],
+                        [offsets[i] + base_offset[0], base_offset[1]], 
+                        with_text, self.view_ids)
+        
+        dwg.save(pretty=True)
 
         # to png
         svg_pattern = svglib.svg2rlg(svg_filename)
