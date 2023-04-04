@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 # Custom 
 from .edge import Edge, EdgeSequence
 from .interface import Interface
-from .generic_utils import vector_angle, close_enough
+from .generic_utils import vector_angle, close_enough, c_to_list, c_to_np
 from .base import BaseComponent
 from . import flags
 
@@ -64,29 +64,10 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
     shortcut = corner_shape.shortcut()
 
     # Curves  (can be defined outside)
-
-    # DRAFT Version for straight edges
-    # vc = np.array(target_edges[0].end)
-    # v1, v2 = np.array(target_edges[0].start), np.array(target_edges[1].end)
-
-    # swaped = False
-    # if v1[1] > v2[1]:
-    #     v1, v2 = v2, v1  
-    #     swaped = True
-    #     # NOW v1 is lower then v2
-
-    # vec1 = np.asarray([v1, vc])
-    # vec1 = vec1.transpose()
-    # curve1 = bezier.Curve(np.asfortranarray(vec1), degree=1)
-
-    # vec2 = np.asarray([v2, vc])  # for both 1==vc
-    # vec2 = vec2.transpose()
-    # curve2 = bezier.Curve(np.asfortranarray(vec2), degree=1)
-
     # TODO representation for sraight edges
     # TODO For circle arcs
-    curve1 = target_edges[0].as_curve()
-    curve2 = target_edges[1].as_curve()
+    curve1 = target_edges[0].as_svg_curve()
+    curve2 = target_edges[1].as_svg_curve()
 
     # align order with the a projecting shape, s.t. 
     # curve2 is alawys the lower one
@@ -94,7 +75,7 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
     if target_edges[0].start[1] > target_edges[-1].end[1]:
         curve1, curve2 = curve2, curve1
         swaped = True
-        # NOW v1 is lower then v2
+        # NOW curve1 is lower then curve2
 
     # ----- FIND OPTIMAL PLACE -----
     start = [0.5, 0.5]
@@ -115,7 +96,7 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
         print(out) 
 
     loc = out.x
-    point1 = curve1.evaluate(loc[0]).flatten()
+    point1 = c_to_list(curve1.point(loc[0]))
     # re-align corner_shape with found shifts
     corner_shape.snap_to(point1)   
     
@@ -338,8 +319,8 @@ def _fit_location_corner(l, diff_target, curve1, curve2):
     """Find the points on two curves s.t. vector between them is the same as shortcut"""
 
     # Current points on curves
-    point1 = curve1.evaluate(l[0]).flatten()
-    point2 = curve2.evaluate(l[1]).flatten()
+    point1 = c_to_np(curve1.point(l[0]))
+    point2 = c_to_np(curve2.point(l[1]))
     diff_curr = point2 - point1
 
     # DEBUG

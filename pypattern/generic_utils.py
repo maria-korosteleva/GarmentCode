@@ -59,3 +59,7 @@ def close_enough(f1, f2=0, tol=1e-4):
 def c_to_list(num):
     """Convert complex number to a list of 2 elements"""
     return [num.real, num.imag]
+
+def c_to_np(num):
+    """Convert complex number to a numpy array of 2 elements"""
+    return np.asarray([num.real, num.imag])
