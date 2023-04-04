@@ -14,7 +14,6 @@ Install python with dependencies:
 * [svgwrite](https://pypi.org/project/svgwrite/)
 * psutil
 * matplotlib
-* [bezier](https://bezier.readthedocs.io/en/stable/index.html)
 * [svgpathtools](https://github.com/mathandy/svgpathtools)
 
 #TODO one of the latter too will be used in the final version

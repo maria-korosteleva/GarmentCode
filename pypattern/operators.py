@@ -5,7 +5,6 @@ import numpy as np
 from numpy.linalg import norm
 from scipy.spatial.transform import Rotation as R
 from scipy.optimize import minimize
-import bezier
 import matplotlib.pyplot as plt
 
 # Custom 

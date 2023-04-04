@@ -1,7 +1,6 @@
 from copy import deepcopy, copy
 import numpy as np
 from numpy.linalg import norm
-import bezier   # https://github.com/dhermes/bezier # TODO Remove
 import svgpathtools as svgpath  # https://github.com/mathandy/svgpathtools
 
 # Custom

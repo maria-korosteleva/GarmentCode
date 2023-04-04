@@ -1,7 +1,0 @@
-<?xml version="1.0" ?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:xlink="http://www.w3.org/1999/xlink" baseProfile="full" height="109px" version="1.1" viewBox="-5.0 -5.529169632452529 50.0 9.067228153793947" width="600px">
-	<defs/>
-	<path d="M 40.0,0.0 C 32.0,-12.0 24.0,8.0 0.0,0.0" fill="rgb(216,214,236)" stroke="rgb(51,51,51)" stroke-width="0.75"/>
-	<circle cx="26.0" cy="-1.5" fill="red" r="1"/>
-	<circle cx="20.94358558283937" cy="0.3993181382018255" fill="green" r="1"/>
-</svg>
