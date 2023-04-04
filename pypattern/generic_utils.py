@@ -54,3 +54,8 @@ def vector_align_3D(v1, v2):
 def close_enough(f1, f2=0, tol=1e-4):
     """Compare two floats correctly """
     return abs(f1 - f2) < tol
+
+
+def c_to_list(num):
+    """Convert complex number to a list of 2 elements"""
+    return [num.real, num.imag]

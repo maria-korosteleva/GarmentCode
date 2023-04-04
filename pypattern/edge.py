@@ -1,10 +1,15 @@
 from copy import deepcopy, copy
 import numpy as np
 from numpy.linalg import norm
-import bezier   # https://github.com/dhermes/bezier # TODO Cite in the paper
+import bezier   # https://github.com/dhermes/bezier # TODO Remove
+import svgpathtools as svgpath  # https://github.com/mathandy/svgpathtools
 
 # Custom
-from .generic_utils import R2D, close_enough
+from .generic_utils import R2D, close_enough, c_to_list
+
+# TODO Unify classes? svgpath might allow to do that!
+# TODO At least inferit more subroutines
+
 
 class Edge():
     """Edge -- an individual segement of a panel border connecting two panel vertices, 
@@ -227,10 +232,10 @@ class CurveEdge(Edge):
             self.control_points = self._abs_to_rel_2d().tolist()
 
     def length(self):
-        """Length of Bazier curve edge"""
-        curve = self.as_curve()
+        """Length of Bezier curve edge"""
+        curve = self.as_svg_curve()
         
-        return curve.length
+        return curve.length()
 
     def __str__(self) -> str:
 
@@ -243,36 +248,38 @@ class CurveEdge(Edge):
     
     def midpoint(self):
         """Center of the edge"""
-        curve = self.as_curve()
+        curve = self.as_svg_curve()
 
-        return curve.evaluate(0.5)
+        t_mid = curve.ilength(curve.length()/2)
+        return curve.point(t_mid)
 
     def subdivide(self, fractions: list):
         """Add intermediate vertices to an edge, 
             splitting it's length according to fractions
             while preserving the overall shape
         """
-        curve = self.as_curve()
+        curve = self.as_svg_curve()
 
         # FIXME the length does not seem to be very accurate in the library..
         # like 0.5 does not split the curve into the similar-length segments
+        # TODO debug
 
         # Sub-curves
-        shift = 0
+        covered_fr = 0
+        prev_t = 0
+        clen = curve.length()
         subcurves = []
         for fr in fractions:
-            subcurves.append(curve.specialize(shift, shift + fr))
-            shift += fr
+            covered_fr += fr
+            next_t = curve.ilength(clen * covered_fr)
+            subcurves.append(curve.cropped(prev_t, next_t))
+            prev_t = next_t
+            
 
         # Convert to CurveEdge objects
         subedges = EdgeSequence()
-
         for curve in subcurves:
-            
-            nodes = curve.nodes.transpose()
-
-            subedges.append(CurveEdge(
-                nodes[0].tolist(), nodes[-1].tolist(), nodes[1:-1].tolist(), relative=False))
+            subedges.append(CurveEdge.from_svg_curve(curve))
 
         # Reference the first/last vertices correctly
         subedges[0].start = self.start
@@ -359,6 +366,34 @@ class CurveEdge(Edge):
         nodes = nodes.transpose()
 
         return bezier.Curve(np.asfortranarray(nodes), degree=min(len(cp) + 1, 3))
+    
+    def as_svg_curve(self):
+        """As svgpath curve object
+
+            Converting on the fly as exact vertex location might have been updated since
+            the creation of the edge
+        """
+        # Get the nodes correcly
+        cp = self._rel_to_abs_2d()
+        nodes = np.vstack((self.start, cp, self.end))
+
+        params = nodes[:, 0] + 1j*nodes[:, 1]
+
+        return svgpath.QuadraticBezier(*params) if len(cp) < 2 else svgpath.CubicBezier(*params)
+
+    @staticmethod
+    def from_svg_curve(seg):
+        """Create CurveEdge object from svgpath bezier objects"""
+
+        start, end = c_to_list(seg.start), c_to_list(seg.end)
+        if isinstance(seg, svgpath.QuadraticBezier):
+            cp = [c_to_list(seg.control)]
+        elif isinstance(seg, svgpath.CubicBezier):
+            cp = [c_to_list(seg.control1), c_to_list(seg.control2)]
+        else:
+            raise NotImplementedError(f'CurveEdge::Error::Incorrect curve type supplied {seg.type}')
+
+        return CurveEdge(start, end, cp, relative=False)
 
     # Assembly into serializable object
     def assembly(self):
