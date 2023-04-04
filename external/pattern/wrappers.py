@@ -177,13 +177,29 @@ class VisPattern(core.ParametrizedPattern):
         max_x = np.max(vertices[:, 0])
         # name the panel
         # TODO refactor
+        text = []
         if with_text:
             panel_center = np.mean(vertices, axis=0)
-            text_insert = panel_center + np.array([-25, 3])
-            drawing.add(drawing.text(panel_name, insert=text_insert, 
-                        fill='rgb(9,33,173)', font_size='25'))
-            text_max_x = text_insert[0] + 10 * len(panel_name)
-            max_x = max(max_x, text_max_x)
+            start, end = np.min(vertices[:, 0]), np.max(np.min(vertices[:, 0]))
+            text_path = svgpath.Line(*list_to_c([[start, panel_center[1]], [end, panel_center[1]]]))
+
+            text_path_attr = [{
+                'stroke': 'rgb(51,51,51)', 
+                'stroke-width': '0.75'
+            }]
+            text = [panel_name, svgpath.Path(text_path), text_path_attr]
+
+            # DEBUG
+            print('HERE!!')
+            print(text)
+
+            # DRAFT
+            # text_insert = panel_center + np.array([-25, 3])
+            # drawing.add(drawing.text(panel_name, insert=text_insert, 
+            #             fill='rgb(9,33,173)', font_size='25'))
+            # text_max_x = text_insert[0] + 10 * len(panel_name)
+
+            # max_x = max(max_x, text_max_x)
 
         panel_center = np.mean(vertices, axis=0)
         if self.view_ids:
@@ -206,7 +222,7 @@ class VisPattern(core.ParametrizedPattern):
                     drawing.text(idx, insert=middle + shift, 
                                  fill='rgb(50,179,101)', font_size='20'))
 
-        return svgpath.Path(*segs), attributes, max_x, np.max(vertices[:, 1])
+        return svgpath.Path(*segs), attributes, text, max_x
 
     def _save_as_image(self, svg_filename, png_filename, with_text=True):
         """
@@ -215,30 +231,35 @@ class VisPattern(core.ParametrizedPattern):
         if self.scaling_for_drawing is None:  # re-evaluate if not ready
             self.scaling_for_drawing = self._verts_to_px_scaling_factor()
 
-        # TODO text placement
+        # TODO text placement (!) 
 
         dwg = svgwrite.Drawing(svg_filename, profile='full')
         base_offset = [60, 60]
         panel_offset_x = 0
-        heights = [0]  # s.t. it has some value if pattern is empty -- no panels
 
         panel_order = self.panel_order()
         paths = []
         attributes = []
+        text_tokens, text_paths = [], []
         for panel in panel_order:
             if panel is not None:
-                path, attr, panel_offset_x, height = self._draw_a_panel(
+                path, attr, text, panel_offset_x = self._draw_a_panel(
                     dwg, panel,
                     offset=[panel_offset_x + base_offset[0], base_offset[1]], 
                     with_text=with_text,
                 )
-                heights.append(height)
                 paths.append(path)
                 attributes += attr
+                if text: 
+                    text_tokens.append(text[0])
+                    text_paths.append(text[1])
+                    paths.append(text[1])
+                    attributes += text[-1]
 
         # final sizing & save
         # DEBUG -> this one visualizes immidiately
         svgpath.disvg(paths, attributes=attributes, 
+                      text=text_tokens, text_path=text_paths, font_size=5 * self.scaling_for_drawing,
                       filename=svg_filename)
 
         # to png

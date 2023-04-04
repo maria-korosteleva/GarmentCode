@@ -65,7 +65,7 @@ if __name__ == '__main__':
             Path(sys_props['output']), 
             tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
             to_subfolder=False, 
-            with_3d=True, with_text=False)
+            with_3d=True, with_text=True)
 
         shutil.copy(body_file, folder)
         if piece.name in design_files:
