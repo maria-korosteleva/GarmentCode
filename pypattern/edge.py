@@ -171,25 +171,87 @@ class CircleEdge(Edge):
         # TODO Propagate to sub-functions and operators 
         # FIXME Autonorm is going crasy with the circular edges
 
-
         # TODO If an egde changes, do we preserve the radius, the length OR curvature?
         # Maybe preserving the overall shape (curvature) is more important?
+            # TODO the shape of flounce should be preserved -- try!
 
-
-        self.radius = radius
-        self.right = right
-        self.large_arc = large_arc
-
-        arc_len = norm(np.asarray(self.end) - np.asarray(self.start))
-        self.arc = 2 * np.arcsin(arc_len / self.radius / 2)
-        if self.large_arc:
-            self.arc = 2 * np.pi - self.arc
+        self.control_y = self._to_relative(radius, right, large_arc)
 
     def length(self):
         """Return current length of an edge.
             Since vertices may change their locations externally, the length is dynamically evaluated
         """
-        return self.radius * self.arc
+        return self._rel_radius() * self._straight_len() * self._arc_angle()
+
+    # Special tools for circle representation
+
+    def _to_relative(self, radius, right, large_arc):
+        """Convert to a relative 1-point representation
+        
+            return Y value for the location of 3d (control) point 
+            expressed relatively w.r.t. distance between start and end vertex of an edge
+            X value for control point is fixed at x=0.5 (edge center) to avoid ambiguity
+        """
+        # TODO Circle center location or placement on the egde of a circle? 
+        # NOTE: Storing the conter will require storing the large_arc flag too
+        
+        # Find circle center
+        str_dist = self._straight_len()
+        center_r = np.sqrt(radius**2 - str_dist**2 / 4)
+
+        # Find the absolute value of Y
+        control_y = radius + center_r if large_arc else radius - center_r
+
+        # Convert to relative
+        control_y = control_y / str_dist
+
+        # Flip sight according to "right" parameter
+        control_y *= 1 if right else -1  # TODO direction
+
+        return control_y
+    
+    # NOTE: The following values are calculated at runtime to allow 
+    # changes to control point after the edge definition
+    def _rel_radius(self, abs_radius=None):
+        """Eval relative radius (w.r.t. straight distance) from 3-point representation"""
+
+        if abs_radius: 
+            return abs_radius / self._straight_len()
+
+        # Using the formula for radius of circumscribed circle
+        # https://en.wikipedia.org/wiki/Circumscribed_circle#Other_properties
+
+        # triangle sides, assuming the begginning and end of an edge are at (0, 0) and (1, 0)
+        # accordingly
+        a = 1
+        b = norm([0.5, self.control_y])
+        c = norm([0.5 - 1, self.control_y])
+        p = (a + b + c) / 2  # semiperimeter
+
+        rad = a * b * c / np.sqrt(p * (p - a) * (p - b) * (p - c)) / 4
+
+        return rad
+
+    def _arc_angle(self):
+        """Eval arc angle from control point"""
+        rel_rad = self._rel_radius()
+        arc = 2 * np.arcsin(1 / rel_rad / 2)
+
+        if self._is_large_arc():
+            arc = 2 * np.pi - arc
+        
+        return arc
+    
+    def _is_large_arc(self):
+        """Indicate if the arc sweeps the large or small angle"""
+        return abs(self.control_y) > self._rel_radius()
+    
+    def as_radius_flag(self):
+        """Return circle representation as radius and arc flags"""
+
+        return (self._rel_radius() * self._straight_len(), 
+                self._is_large_arc(),
+                self.control_y > 0)   # left/right orientation  # TODO check direction
 
     def assembly(self):
         """Returns the dict-based representation of edges, 
@@ -200,13 +262,14 @@ class CircleEdge(Edge):
         # How much human readible this one should be?
         # Even one number (Y axis) could be enough 
 
+        rad, large_arc, right = self.as_radius_flag()
         return (
             [self.start, self.end], 
             {
                 "endpoints": [0, 1], 
                 "curvature": {
                     "type": 'circle',
-                    "params": [self.radius, self.large_arc, self.right]
+                    "params": [rad, int(large_arc), int(right)]
                 }
             })
 
@@ -225,7 +288,6 @@ class CurveEdge(Edge):
 
         # TODO Func parameters description https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#info-field-lists
         # FIXME Self-intersections
-        # TODO Sleeves
 
         self.control_points = control_points
 
