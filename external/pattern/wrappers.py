@@ -183,19 +183,13 @@ class VisPattern(core.ParametrizedPattern):
         return svgpath.Path(*segs), attributes, max_x
 
     def _add_panel_annotations(
-            self, drawing, panel_name, path:svgpath.Path, offset=[0, 0], with_text=True, view_ids=True):
+            self, drawing, panel_name, path:svgpath.Path, with_text=True, view_ids=True):
         """ Adds a annotations for requested panel to the svg drawing with given offset and scaling
         Assumes (!!) 
             that edges are correctly oriented to form a closed loop
         Returns 
             the lower-right vertex coordinate for the convenice of future offsetting.
         """
-        panel = self.pattern['panels'][panel_name]
-        vertices = np.asarray(panel['vertices'])
-        vertices = self._verts_to_px_coords(vertices)
-        # Shift vertices for visibility
-        vertices = vertices + offset
-
         bbox = path.bbox()
         panel_center = np.array([(bbox[0] + bbox[1]) / 2, (bbox[2] + bbox[3]) / 2])
         
@@ -207,13 +201,11 @@ class VisPattern(core.ParametrizedPattern):
 
         if view_ids:
             # name vertices 
-            # TODO Use path informaiton for placing vertex ids => no need for offset
-            for idx in range(vertices.shape[0]):
-                shift = vertices[idx] - panel_center
-                # last element moves pivot to digit center
-                shift = 5 * shift / np.linalg.norm(shift) + np.array([-5, 5])
+            for idx in range(len(path)):
+                seg = path[idx]
+                ver = c_to_np(seg.start)
                 drawing.add(
-                    drawing.text(str(idx), insert=vertices[idx] + shift, 
+                    drawing.text(str(idx), insert=ver, 
                                  fill='rgb(245,96,66)', font_size='25'))
             # name edges
             for idx in range(len(path)):
@@ -261,9 +253,7 @@ class VisPattern(core.ParametrizedPattern):
             for i, panel in enumerate(panel_order):
                 if panel is not None:
                     self._add_panel_annotations(
-                        dwg, panel, paths[i],
-                        [offsets[i] + base_offset[0], base_offset[1]], 
-                        with_text, self.view_ids)
+                        dwg, panel, paths[i], with_text, self.view_ids)
         
         dwg.save(pretty=True)
 
