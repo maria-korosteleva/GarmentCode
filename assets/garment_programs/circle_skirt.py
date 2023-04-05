@@ -6,7 +6,7 @@ import numpy as np
 # other assets
 from .bands import WB
 
-# TODO Edge factory??
+# TODO Edge factory?? Then scale, location specification is on the panel
 class CircleArcPanel(pyp.Panel):
     """One panel circle skirt"""
 
@@ -23,7 +23,15 @@ class CircleArcPanel(pyp.Panel):
         # top
         self.edges.append(pyp.CircleEdge(
             [-dist_w/2, 0], [dist_w/2, 0], 
-            radius=top_rad, large_arc=halfarc > np.pi / 2,))
+            radius=top_rad, large_arc=halfarc > np.pi / 2))
+        
+        #DEBUG Extention debug
+        print('Arc before: ', self.edges[-1]._arc_angle())
+        print('Rel radius before: ', self.edges[-1]._rel_radius())
+        self.edges[-1:].extend(1.5)
+        print('Arc after: ', self.edges[-1]._arc_angle())
+        print('Rel radius after: ', self.edges[-1]._rel_radius())
+
         self.edges.append(pyp.Edge(self.edges[-1].end, [dist_out / 2, -vert_len]))
         
         # Bottom
@@ -31,6 +39,14 @@ class CircleArcPanel(pyp.Panel):
             self.edges[-1].end, [- dist_out / 2, -vert_len], 
             radius=top_rad + length,
             large_arc=halfarc > np.pi / 2, right=False))
+        
+        #DEBUG Extention debug
+        print('Arc before: ', self.edges[-1]._arc_angle())
+        print('Rel radius before: ', self.edges[-1]._rel_radius())
+        self.edges[-1:].extend(-1.5)
+        print('Arc after: ', self.edges[-1]._arc_angle())
+        print('Rel radius after: ', self.edges[-1]._rel_radius())
+
         self.edges.close_loop()
 
         # Interfaces

@@ -171,10 +171,10 @@ class CircleEdge(Edge):
         # TODO Propagate to sub-functions and operators 
         # FIXME Autonorm is going crasy with the circular edges
 
-        # TODO If an egde changes, do we preserve the radius, the length OR curvature?
-        # Maybe preserving the overall shape (curvature) is more important?
-            # TODO the shape of flounce should be preserved -- try!
-
+        # NOTE: represening in relative control point coordinate
+        # Allows preservation of curvature (arc angle, relative raidus w.r.t. straight edge length)
+        # When distance between vertices shrinks / extends
+        # TODO allow an option to preseve length instead of curvature when shrinking / entending?
         self.control_y = self._to_relative(radius, right, large_arc)
 
     def length(self):
@@ -287,7 +287,7 @@ class CurveEdge(Edge):
         super().__init__(start, end)
 
         # TODO Func parameters description https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#info-field-lists
-        # FIXME Self-intersections
+        # FIXME Self-intersections tests
 
         self.control_points = control_points
 
@@ -676,6 +676,8 @@ class EdgeSequence():
         end of the last edge in sequence
         """
         # TODO Version With preservation of total length?
+
+        # FIXME extending by negative factor should be predictable (e.g. opposite direction of extention)
 
         # Need to take the target line from the chained order
         if not self.isChained():  
