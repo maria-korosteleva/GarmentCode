@@ -49,6 +49,9 @@ class CircleArcPanel(pyp.Panel):
 
         self.edges.close_loop()
 
+        # DEBUG
+        print(self.edges)
+
         # Interfaces
         self.interfaces = {
             'right': pyp.Interface(self, self.edges[1]),

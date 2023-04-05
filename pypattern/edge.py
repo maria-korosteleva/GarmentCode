@@ -183,6 +183,41 @@ class CircleEdge(Edge):
         """
         return self._rel_radius() * self._straight_len() * self._arc_angle()
 
+    def __str__(self) -> str:
+
+        points = [self.start, [0.5, self.control_y]]
+
+        str = [f'[{p[0]:.2f}, {p[1]:.2f}]->' for p in points]
+        str += [f'[{self.end[0]:.2f}, {self.end[1]:.2f}]']
+
+        # TODO Arc? Length? Radius? 
+
+        return 'Arc:' + ''.join(str)
+    
+    def midpoint(self):
+        """Center of the edge"""
+        str_len = self._straight_len()
+
+        return [0.5 * str_len, self.control_y * str_len]
+
+        # Actions
+    def reverse(self):
+        """Flip the direction of the edge, accounting for curvatures"""
+
+        self.start, self.end = self.end, self.start
+        self.control_y *= -1
+
+        return self
+    
+    def reflect_features(self):
+        """Reflect edge fetures from one side of the edge to the other"""
+
+        # TODO debug (should it go opposite direction)
+        self.control_y *= -1
+
+        return self
+    
+
     # Special tools for circle representation
 
     def _to_relative(self, radius, right, large_arc):
@@ -374,7 +409,6 @@ class CurveEdge(Edge):
         subedges[-1].end = self.end
 
         return subedges
-
 
     # Actions
     def reverse(self):
