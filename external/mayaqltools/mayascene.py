@@ -534,7 +534,7 @@ class MayaGarment(wrappers.VisPattern):
 
             if ('curvature' not in edge 
                     or isinstance(edge['curvature'], list) 
-                    or edge['curvature']['type'] is not 'circle'):
+                    or edge['curvature']['type'] != 'circle'):
                 # FIXME Legacy curvature representation
                 curve_points = self._edge_as_3d_tuple_list(edge, vertices)
                 curve = cmds.curve(p=curve_points, d=min(len(curve_points) - 1, 3))
@@ -699,15 +699,22 @@ class MayaGarment(wrappers.VisPattern):
                     points[0], points[1], edge['curvature']
                 )
                 abs_points = [abs_points]
-            else:
+                points = np.r_[
+                    [points[0]], abs_points, [points[1]]
+                ]
+
+            elif edge['curvature']['type'] == 'cubic' or edge['curvature']['type'] == 'quadratic':
                 abs_points = []
                 for p in edge['curvature']['params']:
                     abs_points.append(self._control_to_abs_coord(
                         points[0], points[1], p))
-            points = np.r_[
-                [points[0]], abs_points, [points[1]]
-            ]
-
+                    points = np.r_[
+                        [points[0]], abs_points, [points[1]]
+                    ]
+            else:
+                # FIXME nicer way to exclude this option
+                pass  # Ignore for circle arcs
+            
         # to 3D
         points = np.c_[points, np.zeros(len(points))]
 
@@ -715,6 +722,9 @@ class MayaGarment(wrappers.VisPattern):
 
     def _draw_circle_arc(self, edge, vertices, resolution=20):
         """Draw a circle arc as specified by an edge"""
+
+        # DEBUG
+        print('Drawing a circle')
 
         radius, large_arc, right = edge['curvature']['params']
         edge_3d = np.array(self._edge_as_3d_tuple_list(edge, vertices))
