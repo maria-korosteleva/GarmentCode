@@ -162,7 +162,7 @@ class Edge():
 class CircleEdge(Edge):
     """Curvy edge as circular arc"""
 
-    def __init__(self, start=[0, 0], end=[0, 0], radius=0, large_arc=False, right=True) -> None:
+    def __init__(self, start=[0, 0], end=[0, 0], radius=0, large_arc=False, right=True, cy=None) -> None:
         super().__init__(start, end)
 
         # TODO Specify by arc (length) (simplify interface?)
@@ -175,7 +175,10 @@ class CircleEdge(Edge):
         # Allows preservation of curvature (arc angle, relative raidus w.r.t. straight edge length)
         # When distance between vertices shrinks / extends
         # TODO allow an option to preseve length instead of curvature when shrinking / entending?
-        self.control_y = self._to_relative(radius, right, large_arc)
+        if cy:
+            self.control_y = cy
+        else:  # TODO make a factory instead
+            self.control_y = self._to_relative(radius, right, large_arc)
 
     def length(self):
         """Return current length of an edge.
@@ -200,7 +203,7 @@ class CircleEdge(Edge):
 
         return [0.5 * str_len, self.control_y * str_len]
 
-        # Actions
+    # Actions
     def reverse(self):
         """Flip the direction of the edge, accounting for curvatures"""
 
@@ -216,10 +219,8 @@ class CircleEdge(Edge):
         self.control_y *= -1
 
         return self
-    
 
     # Special tools for circle representation
-
     def _to_relative(self, radius, right, large_arc):
         """Convert to a relative 1-point representation
         
@@ -241,7 +242,7 @@ class CircleEdge(Edge):
         control_y = control_y / str_dist
 
         # Flip sight according to "right" parameter
-        control_y *= 1 if right else -1  # TODO direction
+        control_y *= 1 if right else -1 
 
         return control_y
     
@@ -288,6 +289,31 @@ class CircleEdge(Edge):
                 self._is_large_arc(),
                 self.control_y > 0)   # left/right orientation  # TODO check direction
 
+    # Factories
+    @staticmethod
+    def from_points_arc(start, end, arc_angle, right=True):
+        """Construct circle arc from two fixed points and an angle
+        
+            arc_angle: radians
+        """
+        radius = 1 / 2 / np.cos(arc_angle / 2)
+        h = 1 / 2 / np.tan(arc_angle / 2)
+        control_y = radius - h  # relative control point
+        control_y *= 1 if right else -1
+
+        # TODO special case when alpha is close to pi
+        # DEBUG if alpha is bigger then pi
+
+        return CircleEdge(start, end, cy=control_y)
+
+
+    def from_points_radius(self, radius, large_arc=False, right=True):
+        """Construct circle arc from two fixed points and an (absolute) radius
+        """
+        raise NotImplementedError()
+
+
+    # Finally
     def assembly(self):
         """Returns the dict-based representation of edges, 
             compatible with core -> BasePattern JSON (dict) 

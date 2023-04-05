@@ -8,13 +8,13 @@
 design: 
   meta: 
     upper: 
-      v: null  # CurvyProjection
+      v: Shirt  # CurvyProjection
       range: [FittedShirt, Shirt, null]
     wb: 
       v: null
       range: [True, False]
     bottom: 
-      v: SkirtCircle
+      v: null
       range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, null]
 
   waistband:
@@ -47,11 +47,11 @@ design:
 
   collar:
     f_collar: 
-      v: CurvyNeckHalf
-      range: [CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf]
+      v: CircleNeckHalf
+      range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf]
     b_collar: 
       v: CurvyNeckHalf
-      range: [CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf]
+      range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf]
     fc_depth:   # Front collar depth
       v: 25
       range: [3, 25]

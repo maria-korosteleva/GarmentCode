@@ -54,3 +54,26 @@ def CurvyNeckHalf(depth, width, *args):
     print('Adjusted length: ', edges.length())
     
     return edges
+
+
+def CircleNeckHalf(depth, width, *args):
+    """Testing Curvy Collar design"""
+
+    # TODO it probably should be smarter -- to have flat tangent at the bottom at all times
+
+    # 1/4 of a circle
+    edges = pyp.EdgeSequence(pyp.CircleEdge.from_points_arc(
+        [0, 0], [width / 2,-depth], arc_angle=np.pi / 2
+    ))
+    
+    # DEBUG
+    print(edges[0])
+    print(edges[0].length())
+    print(edges.length())
+
+    # DEBUG
+    # Testing shrinking/extention
+    # edges.extend(0.8)
+    # print('Adjusted length: ', edges.length())
+    
+    return edges
