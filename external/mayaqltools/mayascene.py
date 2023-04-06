@@ -514,7 +514,7 @@ class MayaGarment(wrappers.VisPattern):
     # ------ ~Private -------
     def _load_panel(self, panel_name, pattern_group=None):
         """
-            Loads curves contituting given panel to Maya. 
+            Loads curves constituting given panel to Maya. 
             Goups them per panel
         """
         panel = self.pattern['panels'][panel_name]
@@ -708,9 +708,9 @@ class MayaGarment(wrappers.VisPattern):
                 for p in edge['curvature']['params']:
                     abs_points.append(self._control_to_abs_coord(
                         points[0], points[1], p))
-                    points = np.r_[
-                        [points[0]], abs_points, [points[1]]
-                    ]
+                points = np.r_[
+                    [points[0]], abs_points, [points[1]]
+                ]
             else:
                 # FIXME nicer way to exclude this option
                 pass  # Ignore for circle arcs
