@@ -6,6 +6,7 @@ from numpy.linalg import norm
 from scipy.spatial.transform import Rotation as R
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
+import svgpathtools as svgpath
 
 # Custom 
 from .edge import Edge, EdgeSequence

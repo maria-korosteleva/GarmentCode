@@ -4,7 +4,7 @@ from numpy.linalg import norm
 import svgpathtools as svgpath  # https://github.com/mathandy/svgpathtools
 
 # Custom
-from .generic_utils import R2D, close_enough, c_to_list
+from .generic_utils import R2D, close_enough, c_to_list, list_to_c
 
 # TODO Unify classes? svgpath might allow to do that!
 # TODO At least inferit more subroutines
@@ -177,7 +177,7 @@ class CircleEdge(Edge):
         # TODO allow an option to preseve length instead of curvature when shrinking / entending?
         if cy:
             self.control_y = cy
-        else:  # TODO make a factory instead
+        else:  # TODO make a factory instead  <- !!!!!!
             self.control_y = self._to_relative(radius, right, large_arc)
 
     def length(self):
@@ -220,7 +220,50 @@ class CircleEdge(Edge):
 
         return self
 
+    def subdivide_len(self, fractions: list):
+        """Add intermediate vertices to an edge, 
+            splitting it's length according to fractions
+            while preserving the overall shape
+        """
+        # NOTE: subdivide_param() is the same as subdivide_len()
+        # So parent implementation is ok
+        # TODO Implementation is very similar to CurveEdge param-based subdivision
+        frac = [abs(f) for f in fractions]
+        if not close_enough(fsum:=sum(frac), 1, 1e-4):
+            raise RuntimeError(f'Edge Subdivision::Error::fraction is incorrect. The sum {fsum} is not 1')
+
+        curve = self.as_curve()
+        # Sub-curves
+        covered_fr = 0
+        subcurves = []
+        for fr in fractions:
+            subcurves.append(curve.cropped(covered_fr, covered_fr + fr))
+            covered_fr += fr
+
+        # Convert to CircleEdge objects
+        subedges = EdgeSequence()
+        for curve in subcurves:
+            subedges.append(CircleEdge.from_svg_curve(curve))
+        # Reference the first/last vertices correctly
+        subedges[0].start = self.start
+        subedges[-1].end = self.end
+
+        return subedges
+
     # Special tools for circle representation
+    def as_curve(self):
+        """Represent as svgpath Arc"""
+
+        radius, la, sweep = self.as_radius_flag()
+
+        return svgpath.Arc(
+            list_to_c(self.start),
+            list_to_c([radius, radius]), 0, la, sweep,
+            list_to_c(self.end)
+        )
+
+    # TODO remove
+    # TODO transfer the desription
     def _to_relative(self, radius, right, large_arc):
         """Convert to a relative 1-point representation
         
@@ -306,12 +349,36 @@ class CircleEdge(Edge):
 
         return CircleEdge(start, end, cy=control_y)
 
-
-    def from_points_radius(self, radius, large_arc=False, right=True):
-        """Construct circle arc from two fixed points and an (absolute) radius
+    @staticmethod
+    def from_points_radius(start, end, radius, large_arc=False, right=True):
+        """Construct circle arc relative representation
+            from two fixed points and an (absolute) radius
         """
-        raise NotImplementedError()
+        # Find circle center
+        str_dist = norm(np.asarray(end) - np.asarray(start))
+        center_r = np.sqrt(radius**2 - str_dist**2 / 4)
 
+        # Find the absolute value of Y
+        control_y = radius + center_r if large_arc else radius - center_r
+
+        # Convert to relative
+        control_y = control_y / str_dist
+
+        # Flip sight according to "right" parameter
+        control_y *= 1 if right else -1 
+
+        return CircleEdge(start, end, cy=control_y)
+
+    @staticmethod
+    def from_svg_curve(seg:svgpath.Arc):
+        """Create object from svgpath arc"""
+        start, end = c_to_list(seg.start), c_to_list(seg.end)
+        # NOTE: assuming circular arc (same radius in both directoins)
+        radius = seg.radius.real
+
+        return CircleEdge.from_points_radius(
+            start, end, radius, seg.large_arc, seg.sweep
+        )
 
     # Finally
     def assembly(self):

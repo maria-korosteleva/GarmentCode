@@ -23,10 +23,12 @@ class CurvyPanel(pyp.Panel):
         # TODO Creation shortcut
         # self.edges.append(pyp.CurveEdge([0, 0], [0, size], [[0.2, 0.3], [0.4, -0.2]]))
         self.edges.append(pyp.Edge([0, 0], [0, size]))
-        self.edges.append(pyp.CurveEdge(self.edges[-1].end, [size, size], [[0.5, 0.3]]))
+        # self.edges.append(pyp.CurveEdge(self.edges[-1].end, [size, size], [[0.5, 0.3]]))
+        self.edges.append(pyp.CircleEdge(self.edges[-1].end, [size, size], cy=0.2))
         self.edges.append(pyp.CurveEdge(self.edges[-1].end, [size, 0], [[0.2, 0.3], [0.4, -0.2]]))
         # self.edges.append(pyp.Edge(self.edges[-1].end, [size, 0]))
-        self.edges.append(pyp.CurveEdge(self.edges[-1].end, self.edges[0].start, [[0.2, 0.3], [0.4, -0.2]]))
+        # self.edges.append(pyp.CurveEdge(self.edges[-1].end, self.edges[0].start, [[0.2, 0.3], [0.4, -0.2]]))
+        self.edges.append(pyp.CircleEdge(self.edges[-1].end, self.edges[0].start, cy=-0.3))
         # STRAIGHT 
         # self.edges.append(pyp.Edge(self.edges[-1].end, self.edges[0].start))
 
@@ -44,7 +46,7 @@ class CurvyPanel(pyp.Panel):
         print('DART')  # DEBUG
         b_edge, b_dart_edges, b_interface = pyp.ops.cut_into_edge(
             pyp.esf.dart_shape(5, 15), self.edges[-1], 
-            offset=self.edges[-1].length() / 2, right=True)
+            offset=self.edges[-1].length() / 3, right=True)
         
         # DEBUG
         print(self.edges)

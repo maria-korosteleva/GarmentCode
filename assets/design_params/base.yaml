@@ -8,7 +8,7 @@
 design: 
   meta: 
     upper: 
-      v: Shirt  # CurvyProjection
+      v: CurvyProjection
       range: [FittedShirt, Shirt, null]
     wb: 
       v: null
