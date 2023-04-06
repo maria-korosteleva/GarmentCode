@@ -47,16 +47,17 @@ class VisPattern(core.ParametrizedPattern):
 
     # ------------ Interface -------------
 
-    def __init__(self, pattern_file=None, view_ids=True):
+    def __init__(self, pattern_file=None):
         super().__init__(pattern_file)
 
         # tnx to this all patterns produced from the same template will have the same 
         # visualization scale
         # and that's why I need a class object fot 
         self.scaling_for_drawing = self._verts_to_px_scaling_factor()
-        self.view_ids = view_ids  # whatever to render vertices & endes indices
 
-    def serialize(self, path, to_subfolder=True, tag='', with_3d=True, with_text=True):
+    def serialize(
+            self, path, to_subfolder=True, tag='', 
+            with_3d=True, with_text=True, view_ids=True):
 
         log_dir = super().serialize(path, to_subfolder, tag=tag)
         svg_file = os.path.join(log_dir, (self.name + tag + '_pattern.svg'))
@@ -64,7 +65,7 @@ class VisPattern(core.ParametrizedPattern):
         png_3d_file = os.path.join(log_dir, (self.name + tag + '_3d_pattern.png'))
 
         # save visualtisation
-        self._save_as_image(svg_file, png_file, with_text)
+        self._save_as_image(svg_file, png_file, with_text, view_ids)
         if with_3d:
             self._save_as_image_3D(png_3d_file)
 
@@ -218,10 +219,14 @@ class VisPattern(core.ParametrizedPattern):
                                  fill='rgb(44,131,68)', font_size='20', 
                                  text_anchor='middle'))
 
-
-    def _save_as_image(self, svg_filename, png_filename, with_text=True):
+    def _save_as_image(
+            self, svg_filename, png_filename, with_text=True, view_ids=True):
         """
             Saves current pattern in svg and png format for visualization
+
+            * with_text: include panel names
+            * view_ids: include ids of vertices and edges in the output image
+
         """
         if self.scaling_for_drawing is None:  # re-evaluate if not ready
             self.scaling_for_drawing = self._verts_to_px_scaling_factor()
@@ -249,11 +254,11 @@ class VisPattern(core.ParametrizedPattern):
                      paths2Drawing=True)
 
         # text annotations
-        if with_text or self.view_ids:
+        if with_text or view_ids:
             for i, panel in enumerate(panel_order):
                 if panel is not None:
                     self._add_panel_annotations(
-                        dwg, panel, paths[i], with_text, self.view_ids)
+                        dwg, panel, paths[i], with_text, view_ids)
         
         dwg.save(pretty=True)
 

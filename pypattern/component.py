@@ -65,7 +65,7 @@ class Component(BaseComponent):
         
         Returns: simulator friendly description of component sewing pattern
         """
-        spattern = VisPattern(view_ids=True)
+        spattern = VisPattern()
         spattern.name = self.name
 
         subs = self._get_subcomponents()
