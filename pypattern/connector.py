@@ -95,15 +95,7 @@ class StitchingRule():
         covered_init, covered_added = 0, 0
         total_len = inter.projecting_edges().length()
 
-        # DEBUG
-        print('Start matching ', to_add)
-        print(inter)
-
         while in_id < len(inter.edges) and add_id < len(to_add):
-
-            # DEBUG
-            print('Matching: ', covered_init, covered_added, add_id, in_id)
-
             # projected edges since they represent the stitch sizes
             next_init = covered_init + inter.projecting_edges()[in_id].length() / total_len
             next_added = covered_added + to_add[add_id]

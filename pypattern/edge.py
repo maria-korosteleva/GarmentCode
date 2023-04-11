@@ -46,8 +46,9 @@ class Edge():
         """Special implementation of comparison: same edges == edges can be connected by flat stitch
             Edges are the same if their length is the same (if their flattened representation is the same)
                 => vertices do not have to be on the same locations
+
+            NOTE: The edges may not have the same curvature and still be considered equal ("connectible")
         """
-        # TODO Is this correct? Do we need to account for curvature similarities?
 
         if not isinstance(__o, Edge):
             return False
@@ -59,7 +60,7 @@ class Edge():
         return True
 
     def __str__(self) -> str:
-        return f'Straight:[{self.start[0]:.2f}, {self.start[1]:.2f}]->[{self.end[0]:.2f}, {self.end[1]:.2f}]'  # TODO account for curvatures
+        return f'Straight:[{self.start[0]:.2f}, {self.start[1]:.2f}]->[{self.end[0]:.2f}, {self.end[1]:.2f}]'
 
     def __repr__(self) -> str:
         """ 'Official string representation' -- for nice printing of lists of edges
@@ -162,23 +163,25 @@ class Edge():
 class CircleEdge(Edge):
     """Curvy edge as circular arc"""
 
-    def __init__(self, start=[0, 0], end=[0, 0], radius=0, large_arc=False, right=True, cy=None) -> None:
+    def __init__(self, start=[0, 0], end=[0, 0], cy=None) -> None:
+        """
+        
+            # DRAFT
+            return Y value for the location of 3d (control) point 
+            expressed relatively w.r.t. distance between start and end vertex of an edge
+            X value for control point is fixed at x=0.5 (edge center) to avoid ambiguity
+        """
         super().__init__(start, end)
 
-        # TODO Specify by arc (length) (simplify interface?)
         # TODO Func parameters description https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#info-field-lists
         # TODO check full circle
-        # TODO Propagate to sub-functions and operators 
         # FIXME Autonorm is going crasy with the circular edges
 
         # NOTE: represening in relative control point coordinate
         # Allows preservation of curvature (arc angle, relative raidus w.r.t. straight edge length)
         # When distance between vertices shrinks / extends
-        # TODO allow an option to preseve length instead of curvature when shrinking / entending?
-        if cy:
-            self.control_y = cy
-        else:  # TODO make a factory instead  <- !!!!!!
-            self.control_y = self._to_relative(radius, right, large_arc)
+        
+        self.control_y = cy
 
     def length(self):
         """Return current length of an edge.
@@ -192,8 +195,6 @@ class CircleEdge(Edge):
 
         str = [f'[{p[0]:.2f}, {p[1]:.2f}]->' for p in points]
         str += [f'[{self.end[0]:.2f}, {self.end[1]:.2f}]']
-
-        # TODO Arc? Length? Radius? 
 
         return 'Arc:' + ''.join(str)
     
@@ -215,7 +216,6 @@ class CircleEdge(Edge):
     def reflect_features(self):
         """Reflect edge fetures from one side of the edge to the other"""
 
-        # TODO debug (should it go opposite direction)
         self.control_y *= -1
 
         return self
@@ -261,34 +261,7 @@ class CircleEdge(Edge):
             list_to_c([radius, radius]), 0, la, sweep,
             list_to_c(self.end)
         )
-
-    # TODO remove
-    # TODO transfer the desription
-    def _to_relative(self, radius, right, large_arc):
-        """Convert to a relative 1-point representation
-        
-            return Y value for the location of 3d (control) point 
-            expressed relatively w.r.t. distance between start and end vertex of an edge
-            X value for control point is fixed at x=0.5 (edge center) to avoid ambiguity
-        """
-        # TODO Circle center location or placement on the egde of a circle? 
-        # NOTE: Storing the conter will require storing the large_arc flag too
-        
-        # Find circle center
-        str_dist = self._straight_len()
-        center_r = np.sqrt(radius**2 - str_dist**2 / 4)
-
-        # Find the absolute value of Y
-        control_y = radius + center_r if large_arc else radius - center_r
-
-        # Convert to relative
-        control_y = control_y / str_dist
-
-        # Flip sight according to "right" parameter
-        control_y *= 1 if right else -1 
-
-        return control_y
-    
+  
     # NOTE: The following values are calculated at runtime to allow 
     # changes to control point after the edge definition
     def _rel_radius(self, abs_radius=None):
@@ -330,7 +303,7 @@ class CircleEdge(Edge):
 
         return (self._rel_radius() * self._straight_len(), 
                 self._is_large_arc(),
-                self.control_y > 0)   # left/right orientation  # TODO check direction
+                self.control_y > 0)   # left/right orientation 
 
     # Factories
     @staticmethod
@@ -399,7 +372,7 @@ class CircleEdge(Edge):
 
         # https://stackoverflow.com/a/28910804
         # Using complex numbers to calculate the center & radius
-        x, y, z = list_to_c([start, point_on_arc, end])   # TODO input points
+        x, y, z = list_to_c([start, point_on_arc, end]) 
         w = z - x
         w /= y - x
         c = (x - y)*(w - abs(w)**2)/2j/w.imag - x
@@ -414,7 +387,7 @@ class CircleEdge(Edge):
 
         return CircleEdge.from_points_radius(
             start, end, radius=rad, 
-            large_arc=mid_dist > rad, right=angle > 0)   # TODO Orientation
+            large_arc=mid_dist > rad, right=angle > 0) 
 
 
 
@@ -841,6 +814,8 @@ class EdgeSequence():
         end of the last edge in sequence
         """
         # TODO Version With preservation of total length?
+        # TODO Base extention factor on change in total length of edges rather
+        # than on the shortcut length
 
         # FIXME extending by negative factor should be predictable (e.g. opposite direction of extention)
 
