@@ -64,8 +64,6 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
     shortcut = corner_shape.shortcut()
 
     # Curves  (can be defined outside)
-    # TODO representation for sraight edges
-    # TODO For circle arcs
     curve1 = target_edges[0].as_curve()
     curve2 = target_edges[1].as_curve()
 
@@ -84,9 +82,6 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
        args=(shortcut[1] - shortcut[0], curve1, curve2),
        bounds=[(0, 1), (0, 1)])
     
-    # DEBUG
-    print(out)
-
     if flags.VERBOSE and not out.success:
         print(f'Cut_corner::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
         print(out)
@@ -176,16 +171,12 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
     curve = base_edge.as_curve()
     rel_offset = curve.ilength(offset)   # TODO methods of an Edge class? 
 
-
     # ----- OPTIMIZATION --- 
     start = [0, 0]
     out = minimize(
        _fit_location_edge, start, 
        args=(rel_offset, target_shape_w, curve),
        bounds=[(0, 1)])
-    
-    # DEBUG
-    print(out)
 
     if flags.VERBOSE and not out.success:
         print(f'Cut_corner::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
@@ -198,35 +189,14 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
     ins_point = c_to_np(curve.point(rel_offset - shift[1])) if (rel_offset - shift[1]) > tol else base_edge.start
     fin_point = c_to_np(curve.point(rel_offset + shift[0])) if (rel_offset + shift[0]) < edge_len - tol else base_edge.end
 
-
-    # DEBUG
-    print('In the edge: ', base_edge.start, base_edge.end)
-    print('Dart placement: ', ins_point, fin_point)
-    print('Placement len: ', _dist(ins_point, fin_point))
-
     # Align the shape with an edge
     # find rotation to apply on target shape 
     insert_vector = np.asarray(fin_point) - np.asarray(ins_point)
     angle = vector_angle(shortcut[1] - shortcut[0], insert_vector)
-
-    # DEBUG
-    print('Angle: ', angle)
-    print('Before vector: ', np.asarray(new_edges[-1].end) - np.asarray(new_edges[0].start))
-    print('Shortcut vector: ', shortcut[1] - shortcut[0])
-
     new_edges.rotate(angle) 
-
-    # DEBUG
-    print('Rotated: ', new_edges)
-    print('Ins vector: ', insert_vector)
-    print('Angle: ', angle)
-    print('Rotated vector: ', np.asarray(new_edges[-1].end) - np.asarray(new_edges[0].start))
 
     # place
     new_edges.snap_to(ins_point)
-    # DEBUG
-    print('Shifted: ', new_edges)
-    print('Final placement: ', new_edges[0].start, new_edges[-1].end)
 
     # Check orientation 
     avg_vertex = np.asarray(new_edges.verts()).mean(0)
