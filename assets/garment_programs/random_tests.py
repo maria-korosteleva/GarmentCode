@@ -43,18 +43,18 @@ class CurvyPanel(pyp.Panel):
             'right_corner': pyp.Interface(self, self.edges[1:3])
         }
 
-        print('DART')  # DEBUG
-        b_edge, b_dart_edges, b_interface = pyp.ops.cut_into_edge(
-            pyp.esf.dart_shape(5, 15), self.edges[-1], 
-            offset=self.edges[-1].length() / 3, right=True)
+        # print('DART')  # DEBUG
+        # b_edge, b_dart_edges, b_interface = pyp.ops.cut_into_edge(
+        #     pyp.esf.dart_shape(5, 15), self.edges[-1], 
+        #     offset=self.edges[-1].length() / 3, right=True)
         
-        # DEBUG
-        print(self.edges)
+        # # DEBUG
+        # print(self.edges)
 
-        self.edges.substitute(-1, b_edge)
+        # self.edges.substitute(-1, b_edge)
 
-        # DEBUG
-        print(self.edges)
+        # # DEBUG
+        # print(self.edges)
 
 
 class CurvyProjection(pyp.Component):
@@ -63,22 +63,22 @@ class CurvyProjection(pyp.Component):
 
         self.panel = CurvyPanel('panel') 
 
-        print('SLEEVE')  # DEBUG
-        self.sleeve = sleeves.Sleeve('curvy_projection', body, design, depth_diff=5)
-        _, f_sleeve_int = pyp.ops.cut_corner(
-            self.sleeve.interfaces['in_front_shape'].projecting_edges(), 
-            self.panel.interfaces['left_corner'])
+        # print('SLEEVE')  # DEBUG
+        # self.sleeve = sleeves.Sleeve('curvy_projection', body, design, depth_diff=5)
+        # _, f_sleeve_int = pyp.ops.cut_corner(
+        #     self.sleeve.interfaces['in_front_shape'].projecting_edges(), 
+        #     self.panel.interfaces['left_corner'])
         
-        if design['sleeve']['sleeveless']['v']:    # TODO Part of sleeve class??
-            # No sleeve component, only the cut remains
-            del self.sleeve
+        # if design['sleeve']['sleeveless']['v']:    # TODO Part of sleeve class??
+        #     # No sleeve component, only the cut remains
+        #     del self.sleeve
 
         print('COLLAR')  # DEBUG
         collar_type = getattr(collars, design['collar']['f_collar']['v'])
         f_collar = collar_type(
             design['collar']['fc_depth']['v'], 
             design['collar']['width']['v'], 
-            design['collar']['fc_angle']['v'])
+            angle=design['collar']['fc_angle']['v'])
         pyp.ops.cut_corner(f_collar, self.panel.interfaces['right_corner'])
 
 

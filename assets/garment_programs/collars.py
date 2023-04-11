@@ -5,7 +5,7 @@ import pypattern as pyp
 
 
 # Collar shapes withough extra panels
-def VNeckHalf(depth, width, *args):
+def VNeckHalf(depth, width, **kwargs):
     """Simple VNeck design"""
 
     edges = pyp.EdgeSequence(pyp.Edge([0, 0], [width / 2,-depth]))
@@ -13,14 +13,14 @@ def VNeckHalf(depth, width, *args):
     return edges
 
 
-def SquareNeckHalf(depth, width, *args):
+def SquareNeckHalf(depth, width, **kwargs):
     """Square design"""
 
     edges = pyp.esf.from_verts([0, 0], [0, -depth], [width / 2, -depth])
     
     return edges
 
-def TrapezoidNeckHalf(depth, width, angle=90):
+def TrapezoidNeckHalf(depth, width, angle=90, **kwargs):
     """Trapesoid neck design"""
 
     # Special case when angle = 180 (sin = 0)
@@ -35,45 +35,34 @@ def TrapezoidNeckHalf(depth, width, angle=90):
 
     return edges
 
+
 # Collar shapes withough extra panels
-def CurvyNeckHalf(depth, width, *args):
+def CurvyNeckHalf(depth, width, **kwargs):
     """Testing Curvy Collar design"""
 
     edges = pyp.EdgeSequence(pyp.CurveEdge(
         [0, 0], [width / 2,-depth], 
         [[0.4, 0.3], [0.8, -0.5]]))
     
-    # DEBUG
-    print(edges[0])
-    print(edges[0].length())
-    print(edges.length())
-
-    # DEBUG
-    # Testing shrinking/extention
-    edges.extend(0.8)
-    print('Adjusted length: ', edges.length())
-    
     return edges
 
 
-def CircleNeckHalf(depth, width, *args):
-    """Testing Curvy Collar design"""
-
-    # TODO it probably should be smarter -- to have flat tangent at the bottom at all times
-
+def CircleArcNeckHalf(depth, width, angle=90, **kwargs):
+    """Collar with a side represented by a circle arc"""
     # 1/4 of a circle
-    edges = pyp.EdgeSequence(pyp.CircleEdge.from_points_arc(
-        [0, 0], [width / 2,-depth], arc_angle=np.pi / 2
+    edges = pyp.EdgeSequence(pyp.CircleEdge.from_points_angle(
+        [0, 0], [width / 2,-depth], arc_angle=np.deg2rad(angle),
+        right=True
     ))
-    
-    # DEBUG
-    print(edges[0])
-    print(edges[0].length())
-    print(edges.length())
 
-    # DEBUG
-    # Testing shrinking/extention
-    # edges.extend(0.8)
-    # print('Adjusted length: ', edges.length())
-    
     return edges
+
+def CircleNeckHalf(depth, width, **kwargs):
+    """Collar that forms a perfect circle arc when halfs are stitched"""
+
+    # Take a full desired arc and half it!
+    circle = pyp.CircleEdge.from_three_points([0, 0], [width, 0], [width / 2, -depth])
+
+    subdiv = circle.subdivide_len([0.5, 0.5])
+
+    return pyp.EdgeSequence(subdiv[0])

@@ -4,7 +4,7 @@ from numpy.linalg import norm
 import svgpathtools as svgpath  # https://github.com/mathandy/svgpathtools
 
 # Custom
-from .generic_utils import R2D, close_enough, c_to_list, list_to_c
+from .generic_utils import vector_angle, R2D, close_enough, c_to_list, list_to_c
 
 # TODO Unify classes? svgpath might allow to do that!
 # TODO At least inferit more subroutines
@@ -334,18 +334,25 @@ class CircleEdge(Edge):
 
     # Factories
     @staticmethod
-    def from_points_arc(start, end, arc_angle, right=True):
+    def from_points_angle(start, end, arc_angle, right=True):
         """Construct circle arc from two fixed points and an angle
         
-            arc_angle: radians
+            arc_angle: 
+            
+            NOTE: Might fail on angles close to 2pi
         """
-        radius = 1 / 2 / np.cos(arc_angle / 2)
-        h = 1 / 2 / np.tan(arc_angle / 2)
-        control_y = radius - h  # relative control point
-        control_y *= 1 if right else -1
+        # Big or small arc
+        if arc_angle > np.pi:
+            arc_angle = 2*np.pi - arc_angle
+            to_sum = True
+        else: 
+            to_sum = False
 
-        # TODO special case when alpha is close to pi
-        # DEBUG if alpha is bigger then pi
+        radius = 1 / np.sin(arc_angle / 2) / 2
+        h = 1 / np.tan(arc_angle / 2) / 2
+
+        control_y = radius + h if to_sum else radius - h  # relative control point
+        control_y *= 1 if right else -1
 
         return CircleEdge(start, end, cy=control_y)
 
@@ -379,6 +386,37 @@ class CircleEdge(Edge):
         return CircleEdge.from_points_radius(
             start, end, radius, seg.large_arc, seg.sweep
         )
+
+    @staticmethod
+    def from_three_points(start, end, point_on_arc):
+        """Create a circle arc from 3 points (start, end and any point on an arc)
+        
+            NOTE: Control point specified in the same coord system as start and end
+            NOTE: points should not be on the same line
+        """
+
+        nstart, nend, npoint_on_arc = np.asarray(start), np.asarray(end), np.asarray(point_on_arc)
+
+        # https://stackoverflow.com/a/28910804
+        # Using complex numbers to calculate the center & radius
+        x, y, z = list_to_c([start, point_on_arc, end])   # TODO input points
+        w = z - x
+        w /= y - x
+        c = (x - y)*(w - abs(w)**2)/2j/w.imag - x
+        # NOTE center = [c.real, c.imag]
+        rad = abs(c + x)
+
+        # Large/small arc
+        mid_dist = norm(npoint_on_arc - ((nstart + nend) / 2))
+
+        # Orientation
+        angle = vector_angle(npoint_on_arc - nstart, nend - nstart)  # +/-
+
+        return CircleEdge.from_points_radius(
+            start, end, radius=rad, 
+            large_arc=mid_dist > rad, right=angle > 0)   # TODO Orientation
+
+
 
     # Finally
     def assembly(self):

@@ -14,7 +14,7 @@ design:
       v: null
       range: [True, False]
     bottom: 
-      v: SkirtCircle
+      v: null
       range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, null]
 
   waistband:
@@ -47,19 +47,19 @@ design:
 
   collar:
     f_collar: 
-      v: CircleNeckHalf
-      range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf]
+      v: CircleArcNeckHalf
+      range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf]
     b_collar: 
-      v: CurvyNeckHalf
-      range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf]
+      v: CircleNeckHalf
+      range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf]
     fc_depth:   # Front collar depth
-      v: 20
+      v: 18
       range: [3, 25]
     bc_depth:   # back collar depth
-      v: 3
+      v: 4
       range: [3, 25]
-    fc_angle: 
-      v: 60
+    fc_angle:    # Used in Trapesoid and CircleArc collars (differently)
+      v: 90
       range: [30, 180]
     bc_angle: 
       v: 90
