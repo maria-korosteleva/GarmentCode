@@ -24,13 +24,6 @@ class CircleArcPanel(pyp.Panel):
         self.edges.append(pyp.CircleEdge(
             [-dist_w/2, 0], [dist_w/2, 0], 
             radius=top_rad, large_arc=halfarc > np.pi / 2))
-        
-        #DEBUG Extention debug
-        print('Arc before: ', self.edges[-1]._arc_angle())
-        print('Rel radius before: ', self.edges[-1]._rel_radius())
-        self.edges[-1:].extend(1.5)
-        print('Arc after: ', self.edges[-1]._arc_angle())
-        print('Rel radius after: ', self.edges[-1]._rel_radius())
 
         self.edges.append(pyp.Edge(self.edges[-1].end, [dist_out / 2, -vert_len]))
         
@@ -39,21 +32,13 @@ class CircleArcPanel(pyp.Panel):
             self.edges[-1].end, [- dist_out / 2, -vert_len], 
             radius=top_rad + length,
             large_arc=halfarc > np.pi / 2, right=False))
-        
-        #DEBUG Extention debug
-        print('Arc before: ', self.edges[-1]._arc_angle())
-        print('Rel radius before: ', self.edges[-1]._rel_radius())
-        self.edges[-1:].extend(-1.5)
-        print('Arc after: ', self.edges[-1]._arc_angle())
-        print('Rel radius after: ', self.edges[-1]._rel_radius())
 
         self.edges.close_loop()
 
-        # DEBUG
-        print(self.edges)
-
         # Interfaces
         self.interfaces = {
+            'top': pyp.Interface(self, self.edges[0]),
+            'bottom': pyp.Interface(self, self.edges[2]),
             'right': pyp.Interface(self, self.edges[1]),
             'left': pyp.Interface(self, self.edges[3])
         }
@@ -89,5 +74,9 @@ class SkirtCircle(pyp.Component):
             (self.front.interfaces['left'], self.back.interfaces['left'])
         )
 
-        # TODO top/bottom interfaces
+        # Interfaces
+        self.interfaces = {
+            'top': pyp.Interface.from_multiple(self.front.interfaces['top'], self.back.interfaces['top']),
+            'bottom': pyp.Interface.from_multiple(self.front.interfaces['bottom'], self.back.interfaces['bottom'])
+        }
         

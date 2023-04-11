@@ -171,6 +171,7 @@ def vector_angle(v1, v2):
     """Find an angle between two 2D vectors"""
     v1, v2 = np.asarray(v1), np.asarray(v2)
     cos = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+    cos = max(min(cos, 1), -1)  # NOTE: getting rid of numbers like 1.000002 that appear due to numerical instability
     angle = np.arccos(cos) 
     # Cross to indicate correct relative orienataion of v2 w.r.t. v1
     cross = np.cross(v1, v2)

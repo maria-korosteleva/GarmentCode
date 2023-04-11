@@ -42,6 +42,8 @@ def vector_align_3D(v1, v2):
 
     v1, v2 = np.asarray(v1), np.asarray(v2)
     cos = np.dot(v1, v2) / (norm(v1) * norm(v2))
+    cos = max(min(cos, 1), -1)  # NOTE: getting rid of numbers like 1.000002 that appear due to numerical instability
+
     angle = np.arccos(cos) 
 
     # Cross to get the axis of rotation

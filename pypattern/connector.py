@@ -95,7 +95,15 @@ class StitchingRule():
         covered_init, covered_added = 0, 0
         total_len = inter.projecting_edges().length()
 
+        # DEBUG
+        print('Start matching ', to_add)
+        print(inter)
+
         while in_id < len(inter.edges) and add_id < len(to_add):
+
+            # DEBUG
+            print('Matching: ', covered_init, covered_added, add_id, in_id)
+
             # projected edges since they represent the stitch sizes
             next_init = covered_init + inter.projecting_edges()[in_id].length() / total_len
             next_added = covered_added + to_add[add_id]
@@ -124,8 +132,7 @@ class StitchingRule():
                         print(f'{self.__class__.__name__}::INFO::{base_edge} from {base_panel.name} reoriented in interface')
 
                 # Split the base edge accrordingly
-                subdiv = EdgeSeqFactory.from_fractions(
-                    base_edge.start, base_edge.end, [split_frac, 1 - split_frac])
+                subdiv = base_edge.subdivide_len([split_frac, 1 - split_frac])
 
                 inter.panel[in_id].edges.substitute(base_edge, subdiv)  # Update the panel
                                                                         # Always follows the edge order in the panel

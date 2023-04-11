@@ -38,6 +38,7 @@ class EdgeSeqFactory:
                 all entries sums up to 1
         """
         # TODO Deprecated? 
+        # FIXME From fractions should be straight in the names??
         frac = [abs(f) for f in frac]
         if not close_enough(fsum:=sum(frac), 1, 1e-4):
             raise RuntimeError(f'EdgeSequence::Error::fraction is incorrect. The sum {fsum} is not 1')
