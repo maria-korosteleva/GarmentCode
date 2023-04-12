@@ -1,13 +1,19 @@
 import PySimpleGUI as sg
 import os.path
 
+# Custom
+from callbacks import State
+
+
 # NOTE: PySimpleGUI reference: https://github.com/PySimpleGUI/PySimpleGUI/blob/master/docs/call%20reference.md
 
 # TODO Instructions
 # TODO allow changing window size? https://stackoverflow.com/questions/66379808/how-do-i-respond-to-window-resize-in-pysimplegui
 # https://stackoverflow.com/questions/63686020/pysimplegui-how-to-achieve-elements-frames-columns-to-align-to-the-right-and-r
+# TODO Visual appearance
+# TODO Icons
 
-save_path = os.path.abspath("./")
+state = State()
 
 def def_layout(canvas_size=(500, 500)):
 
@@ -15,14 +21,28 @@ def def_layout(canvas_size=(500, 500)):
 
     params_column = [
         [
-            sg.Text("Image Folder"),
-            sg.In(size=(25, 1), enable_events=True, key="-FOLDER-"),
-            sg.FolderBrowse(),
+            sg.Text('Body Mesurements: '),
         ],
         [
-            sg.Listbox(
-                values=[], enable_events=True, size=(40, 20), key="-FILE LIST-"
-            )
+            sg.In(
+                default_text=state.body_file,
+                size=(25, 1), 
+                enable_events=True, 
+                key='-BODY-'
+            ),
+            sg.FileBrowse(),
+        ],
+        [
+            sg.Text('Design parameters: '),
+        ],
+        [
+            sg.In(
+                default_text=state.design_file,
+                size=(25, 1), 
+                enable_events=True, 
+                key='-DESIGN-'
+            ),
+            sg.FileBrowse(),
         ],
     ]
 
@@ -36,14 +56,14 @@ def def_layout(canvas_size=(500, 500)):
             key='-CANVAS-')
         ],      
         [
-            sg.Text("Output Folder:"),
+            sg.Text('Output Folder:'),
             sg.In(
-                default_text=save_path, 
+                default_text=state.save_path, 
                 expand_x=True, 
                 enable_events=True, 
-                key="-FOLDER-OUT-", ),
+                key='-FOLDER-OUT-', ),
             sg.FolderBrowse(size=6),
-            sg.Button('Save', size=6)
+            sg.Button('Save', size=6, key='-SAVE-')
         ]   
     ]
 
@@ -59,59 +79,59 @@ def def_layout(canvas_size=(500, 500)):
 
 
 def init_canvas_background(window):
-    """Add base background images to output canvas"""
+    '''Add base background images to output canvas'''
     # https://stackoverflow.com/a/71816897
 
     window['-CANVAS-'].draw_image(filename='gui/background.png', location=(0, 0))
     window['-CANVAS-'].draw_image(filename='gui/sihl.png', location=(30, 30))
 
+def upd_pattern_visual(window):
+
+    # TODO Proper placement -- align with a body outline
+    
+    print('New Drawing!!', state.png_path)
+    if not state.ui_id:
+        window['-CANVAS-'].delete_figure(state.ui_id)
+    state.ui_id = window['-CANVAS-'].draw_image(filename=state.png_path, location=(100, 30))
 
 
 def event_loop(window):
     while True:
         event, values = window.read()
-        if event == "Exit" or event == sg.WIN_CLOSED:
+        if event == 'Exit' or event == sg.WIN_CLOSED:
             break
 
+        # TODO Parameter update: change corresponding field
+        # TODO Any parameter updated: Update MetaGarment and re-load visualization
+
+
+        # TODO process errors for wrong files chosen
         # Folder name was filled in, make a list of files in the folder
-        if event == "-FOLDER-":
-            folder = values["-FOLDER-"]
-            try:
-                # Get list of files in folder
-                file_list = os.listdir(folder)
-            except:
-                file_list = []
+        if event == '-BODY-':
+            file = values['-BODY-']
+            state.new_body_file(file)
+            upd_pattern_visual(window)
+        elif event == '-DESIGN-':  # A file was chosen from the listbox
+            file = values['-DESIGN-']
+            state.new_design_file(file)
+            upd_pattern_visual(window)
+        elif event == '-SAVE-':
+            state.save()
+        elif event == '-FOLDER-OUT-':
+            state.save_path = values['-FOLDER-OUT-']
 
-            fnames = [
-                f
-                for f in file_list
-                if os.path.isfile(os.path.join(folder, f))
-                and f.lower().endswith((".png", ".gif"))
-            ]
-            window["-FILE LIST-"].update(fnames)
-        elif event == "-FILE LIST-":  # A file was chosen from the listbox
-            try:
-                filename = os.path.join(
-                    values["-FOLDER-"], values["-FILE LIST-"][0]
-                )
-                window["-TOUT-"].update(filename)
-                window["-IMAGE-"].update(filename=filename)
-            except:
-                pass
-        elif event == "-FOLDER-OUT-":
-            save_path = values["-FOLDER-OUT-"]
-
-            print('PatternConfigurator::INFO::New output path: ', save_path)
+            print('PatternConfigurator::INFO::New output path: ', state.save_path)
             
 
     window.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
     # Last option needed to finalize GUI initialization and allow modifications
-    window = sg.Window("Image Viewer", def_layout((842, 596)), finalize=True)
+    window = sg.Window('Sewing Pattern Configurator', def_layout((842, 596)), finalize=True)
 
     init_canvas_background(window)
+    upd_pattern_visual(window)
 
     event_loop(window)

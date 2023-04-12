@@ -14,7 +14,7 @@ design:
       v: null
       range: [True, False]
     bottom: 
-      v: SkirtCircle
+      v: null
       range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, null]
 
   waistband:

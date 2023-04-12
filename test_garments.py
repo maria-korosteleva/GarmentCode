@@ -54,7 +54,7 @@ if __name__ == '__main__':
         # CuffBandSkirt('test', design['pants'])
     ]
     for df in designs:
-        test_garments.append(MetaGarment(df, body, designs[df]),)
+        test_garments.append(MetaGarment(df, body, designs[df]))
 
     for piece in test_garments:
         pattern = piece()
