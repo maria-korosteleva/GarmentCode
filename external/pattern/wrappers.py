@@ -103,16 +103,19 @@ class VisPattern(core.ParametrizedPattern):
 
         return scaling_to_px
 
-    def _verts_to_px_coords(self, vertices):
-        """Convert given to px coordinate frame & units"""
+    def _verts_to_px_coords(self, vertices, translation_2d):
+        """Convert given vertices and panel (2D) translation to px coordinate frame & units"""
         # Flip Y coordinate (in SVG Y looks down)
         vertices[:, 1] *= -1
+        translation_2d[1] *= -1
         # Put upper left corner of the bounding box at zero
         offset = np.min(vertices, axis=0)
         vertices = vertices - offset
+        translation_2d = translation_2d + offset
         # Update units scaling
         vertices *= self.scaling_for_drawing
-        return vertices
+        translation_2d *= self.scaling_for_drawing
+        return vertices, translation_2d
 
     def _flip_y(self, point):
         """
@@ -138,9 +141,9 @@ class VisPattern(core.ParametrizedPattern):
 
         panel = self.pattern['panels'][panel_name]
         vertices = np.asarray(panel['vertices'])
-        vertices = self._verts_to_px_coords(vertices)
-        # Shift vertices for visibility
-        vertices = vertices + offset
+        vertices, translation = self._verts_to_px_coords(
+            vertices, 
+            np.array(panel['translation'][:2]))   # Only XY
 
         # draw edges
         start = vertices[panel['edges'][0]['endpoints'][0]]
@@ -185,9 +188,21 @@ class VisPattern(core.ParametrizedPattern):
             else:
                 segs.append(svgpath.Line(*list_to_c([start, end])))
         
+        # Placement and rotation according to the 3D location
+        # But flatterened on 2D
+        path = svgpath.Path(*segs)
+
+        path = path.translated(list_to_c(translation))
+
+        # TODO apply rotation
+        rotation = panel['rotation']   # XYZ
+
+
+        # TODO Collisions of non-2D panels when drawn together? 
+
         max_x = np.max(vertices[:, 0])
 
-        return svgpath.Path(*segs), attributes, max_x
+        return path, attributes, max_x, panel['translation'][-1] > 0
 
     def _add_panel_annotations(
             self, drawing, panel_name, path:svgpath.Path, with_text=True, view_ids=True):
@@ -240,21 +255,32 @@ class VisPattern(core.ParametrizedPattern):
         base_offset = [60, 60]
         panel_offset_x = 0
 
+        # Get svg representation per panel
         panel_order = self.panel_order()
-        paths = []
+        paths_front, paths_back = [], []
         attributes = []
         offsets = [0]
         for panel in panel_order:
             if panel is not None:
-                path, attr, panel_offset_x = self._draw_a_panel(
+                path, attr, panel_offset_x, front = self._draw_a_panel(
                     panel,
-                    offset=[panel_offset_x + base_offset[0], base_offset[1]], 
+                    offset=[panel_offset_x + base_offset[0], base_offset[1]],   # TODO Remove
                 )
-                paths.append(path)
+                if front:
+                    paths_front.append(path)   # TODO Separate front and back and shift!
+                else:
+                    paths_back.append(path)
                 attributes += attr
                 offsets.append(panel_offset_x)
 
+        # Shift back panels
+        front_max_x = max([path.bbox()[1] for path in paths_front]) 
+        back_min_x = min([path.bbox()[0] for path in paths_back]) 
+        shift_x = front_max_x - back_min_x + 10   # A little spacing
+        paths_back = [path.translated(shift_x+0j) for path in paths_back]
+        
         # SVG convert
+        paths = paths_front + paths_back
         dwg = svgpath.wsvg(paths, attributes=attributes, 
                      filename=svg_filename, 
                      paths2Drawing=True)
