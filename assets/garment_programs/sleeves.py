@@ -67,7 +67,7 @@ class SleevePanel(pyp.Panel):
         }
 
         # Default placement
-        self.set_pivot(self.edges[1].end)
+        self.set_pivot(self.edges[-1].start)
         self.translate_to(
             [- body['sholder_w'] / 2 - connecting_depth, 
             body['height'] - body['head_l'] - body['armscye_depth'],
@@ -107,13 +107,17 @@ class Sleeve(pyp.Component):
             # Class
             design['cuff']['b_width'] = design['end_width']
             cuff_class = getattr(bands, design['cuff']['type']['v'])
-            self.cuff = cuff_class(tag, design)
+            self.cuff = cuff_class(f'sl_{tag}', design)
             cbbox = self.cuff.bbox3D()
 
             # Position
             # TODO positioning is still not very robust
             pose_angle = np.deg2rad(body['arm_pose_angle'])
             self.cuff.rotate_by(R.from_euler('XYZ', [0, 0, -pose_angle]))
+
+            # Translation
+            # TODO Align by stitch
+            # TODO Rotate component as a block
             self.cuff.translate_by([
                 bbox[0][0] + (cbbox[0][0] + cbbox[1][0]) / 2 + 13 * np.cos(pose_angle),
                 bbox[0][1] + 8 * np.sin(pose_angle), 

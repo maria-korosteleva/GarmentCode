@@ -6,6 +6,7 @@ import random
 import string
 import os
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 # Correct dependencies on Win
 # https://stackoverflow.com/questions/46265677/get-cairosvg-working-in-windows
@@ -191,12 +192,14 @@ class VisPattern(core.ParametrizedPattern):
         # Placement and rotation according to the 3D location
         # But flatterened on 2D
         path = svgpath.Path(*segs)
+        
+        # Z-fist rotation to only reflect rotation visible in XY plane
+        # NOTE: Heuristic, might be bug-prone
+        rotation = R.from_euler('XYZ', panel['rotation'], degrees=True)   # XYZ
+        rotation = rotation.as_euler('ZYX', degrees=True)
+        path = path.rotated(degs=-rotation[0], origin=list_to_c(vertices[0]))
 
-        path = path.translated(list_to_c(translation))
-
-        # TODO apply rotation
-        rotation = panel['rotation']   # XYZ
-
+        path = path.translated(list_to_c(translation))  # NOTE: rot/transl order is important!
 
         # TODO Collisions of non-2D panels when drawn together? 
 

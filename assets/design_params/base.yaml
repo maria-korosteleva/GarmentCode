@@ -44,7 +44,6 @@ design:
       v: 4
       range: [-20, 20]
 
-
   collar:
     f_collar: 
       v: CircleArcNeckHalf
@@ -70,7 +69,7 @@ design:
     
   sleeve:
     sleeveless: 
-      v: True
+      v: False
       range: [True, False]
     # Armhole
     armhole_shape: 
@@ -108,7 +107,7 @@ design:
     # Cuff
     cuff: 
       type:
-        v: null
+        v: CuffBandSkirt
         range: [CuffBand, CuffSkirt, CuffBandSkirt, null]
       # b_width:  # NOTE taken from end_width # TODO naming convention with waistband
       #  v: 40
