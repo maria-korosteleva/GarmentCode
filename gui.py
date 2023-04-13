@@ -1,5 +1,4 @@
 import PySimpleGUI as sg
-import os.path
 
 # Custom
 from gui.callbacks import State
@@ -90,11 +89,9 @@ def upd_pattern_visual(window):
 
     # TODO Proper placement -- align with a body outline
     
-    print('New Drawing!!', state.png_path)  # DEBUG
-    # FIXME Deleting does not work
-    if not state.ui_id:
+    print('New Pattern!!', state.png_path)  # DEBUG
+    if state.ui_id is not None:
         window['-CANVAS-'].delete_figure(state.ui_id)
-        print('Deleted ', state.ui_id)   # DEBUG
     state.ui_id = window['-CANVAS-'].draw_image(filename=state.png_path, location=(100, 30))
 
 

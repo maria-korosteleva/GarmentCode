@@ -17,8 +17,7 @@ class State():
         self.png_path = None
         self.ui_id = None
         # create tmp path
-        path = Path(self.tmp_path)
-        path.mkdir(parents=True, exist_ok=True)
+        Path(self.tmp_path).mkdir(parents=True, exist_ok=True)
 
         self.body_file = None
         self.design_file = None
@@ -59,6 +58,8 @@ class State():
     def _view_serialize(self):
         """Save a sewing pattern svg/png representation to tmp folder be used for display"""
 
+        # Clear up the folder from previous version -- it's not needed any more
+        self._clear_tmp()
         pattern = self.sew_pattern()
         # Save as json file
         folder = pattern.serialize(
@@ -72,6 +73,11 @@ class State():
             if 'pattern.png' in filename and '3d' not in filename:
                 self.png_path = os.path.join(root, filename)
                 break
+
+    def _clear_tmp(self):
+        """Clear tmp folder"""
+        shutil.rmtree(self.tmp_path)
+        Path(self.tmp_path).mkdir(parents=True, exist_ok=True)
 
     # Current state
     def save(self):
