@@ -104,9 +104,7 @@ def event_loop(window):
         # TODO Parameter update: change corresponding field
         # TODO Any parameter updated: Update MetaGarment and re-load visualization
 
-
         # TODO process errors for wrong files chosen
-        # Folder name was filled in, make a list of files in the folder
         if event == '-BODY-':
             file = values['-BODY-']
             state.new_body_file(file)
