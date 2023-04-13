@@ -1,4 +1,5 @@
 import PySimpleGUI as sg
+import numpy as np
 
 # Custom
 from gui.callbacks import State
@@ -13,7 +14,11 @@ from gui.callbacks import State
 # Native demo https://github.com/PySimpleGUI/PySimpleGUI/blob/master/DemoPrograms/Demo_Simple_Material_Feel.py
 # TODO Icons
 
-state = State()
+pattern_state = State()
+canvas_margins = [20, 20]
+body_img_id = None
+back_img_id = None
+window = None
 
 def def_layout(canvas_size=(500, 500)):
 
@@ -25,7 +30,7 @@ def def_layout(canvas_size=(500, 500)):
         ],
         [
             sg.In(
-                default_text=state.body_file,
+                default_text=pattern_state.body_file,
                 size=(25, 1), 
                 enable_events=True, 
                 key='-BODY-'
@@ -37,7 +42,7 @@ def def_layout(canvas_size=(500, 500)):
         ],
         [
             sg.In(
-                default_text=state.design_file,
+                default_text=pattern_state.design_file,
                 size=(25, 1), 
                 enable_events=True, 
                 key='-DESIGN-'
@@ -58,7 +63,7 @@ def def_layout(canvas_size=(500, 500)):
         [
             sg.Text('Output Folder:'),
             sg.In(
-                default_text=state.save_path, 
+                default_text=pattern_state.save_path, 
                 expand_x=True, 
                 enable_events=True, 
                 key='-FOLDER-OUT-', ),
@@ -82,17 +87,34 @@ def init_canvas_background(window):
     '''Add base background images to output canvas'''
     # https://stackoverflow.com/a/71816897
 
-    window['-CANVAS-'].draw_image(filename='assets/img/background.png', location=(0, 0))
-    window['-CANVAS-'].draw_image(filename='assets/img/body_sihl.png', location=(30, 30))
+    back_img_id = window['-CANVAS-'].draw_image(filename='assets/img/background.png', location=(0, 0))
+    body_img_id = window['-CANVAS-'].draw_image(filename='assets/img/body_sihl.png', location=canvas_margins)
 
 def upd_pattern_visual(window):
 
-    # TODO Proper placement -- align with a body outline
-    
-    print('New Pattern!!', state.png_path)  # DEBUG
-    if state.ui_id is not None:
-        window['-CANVAS-'].delete_figure(state.ui_id)
-    state.ui_id = window['-CANVAS-'].draw_image(filename=state.png_path, location=(100, 30))
+    print('New Pattern!!', pattern_state.png_path)  # DEBUG
+    if pattern_state.ui_id is not None:
+        window['-CANVAS-'].delete_figure(pattern_state.ui_id)
+
+    # Image body center with the body center of a body silhouette
+    # FIXME Still a little too low?
+    png_body = pattern_state.body_bottom
+    real_b_bottom = np.asarray([429/2 + canvas_margins[0], 530 + canvas_margins[1]])   # Not the very bottom  # TODO relative to resolution
+    location = real_b_bottom - png_body
+
+    # TODO Also if too far (e.g. after sleeve removal)
+    # TODO Change canvas size to fit a pattern? -> 
+    # TODO Bigger background image
+    # TODO Higher quality
+    # FIXME Body Not deleted =(
+    if location[0] < 0: 
+        canvas_margins[0] -= location[0]
+        window['-CANVAS-'].delete_figure(back_img_id)
+        window['-CANVAS-'].delete_figure(body_img_id)
+        init_canvas_background(window)
+        location[0] = 0
+
+    pattern_state.ui_id = window['-CANVAS-'].draw_image(filename=pattern_state.png_path, location=location.tolist())
 
 
 def event_loop(window):
@@ -107,18 +129,18 @@ def event_loop(window):
         # TODO process errors for wrong files chosen
         if event == '-BODY-':
             file = values['-BODY-']
-            state.new_body_file(file)
+            pattern_state.new_body_file(file)
             upd_pattern_visual(window)
         elif event == '-DESIGN-':  # A file was chosen from the listbox
             file = values['-DESIGN-']
-            state.new_design_file(file)
+            pattern_state.new_design_file(file)
             upd_pattern_visual(window)
         elif event == '-SAVE-':
-            state.save()
+            pattern_state.save()
         elif event == '-FOLDER-OUT-':
-            state.save_path = values['-FOLDER-OUT-']
+            pattern_state.save_path = values['-FOLDER-OUT-']
 
-            print('PatternConfigurator::INFO::New output path: ', state.save_path)
+            print('PatternConfigurator::INFO::New output path: ', pattern_state.save_path)
 
 
 if __name__ == '__main__':
@@ -131,5 +153,5 @@ if __name__ == '__main__':
 
     event_loop(window)
 
-    state.clear_tmp(root=True)
+    pattern_state.clear_tmp(root=True)
     window.close()

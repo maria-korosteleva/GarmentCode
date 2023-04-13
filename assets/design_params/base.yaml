@@ -11,7 +11,7 @@ design:
       v: FittedShirt
       range: [FittedShirt, Shirt, CurvyProjection, null]
     wb: 
-      v: null
+      v: False
       range: [True, False]
     bottom: 
       v: Pants
@@ -96,7 +96,7 @@ design:
       v: 20
       range: [20, 40]  
     length: 
-      v: 40
+      v: 100
       range: [3, 100]
     connect_ruffle:
       v: 1
@@ -267,7 +267,7 @@ design:
       v: 4     # NOTE for pencil skirt base this should be divisible by 4
       range: [4, 8, 12]   # selective options.
     cuts_distance:
-      v: 0
+      v: 5
       range: [0, 10]  # TODO this param needs to depend on the num_inserts and skirt width
 
   pencil-skirt: 

@@ -5,6 +5,7 @@ from datetime import datetime
 import yaml
 import sys
 import shutil 
+import numpy as np
 
 
 # Custom 
@@ -13,11 +14,13 @@ from assets.garment_programs.meta_garment import MetaGarment
 class State():
     def __init__(self) -> None:
         self.save_path = os.path.abspath('./')   # TODO Use Path()
-        self.tmp_path = os.path.abspath('./tmp')
         self.png_path = None
-        self.ui_id = None
+        self.tmp_path = os.path.abspath('./tmp')
         # create tmp path
         Path(self.tmp_path).mkdir(parents=True, exist_ok=True)
+
+        self.ui_id = None   # ID of current object in the interface
+        self.body_bottom = None   # Location of body center in the current png representation of a garment
 
         self.body_file = None
         self.design_file = None
@@ -67,6 +70,9 @@ class State():
             tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
             to_subfolder=True, 
             with_3d=False, with_text=False, view_ids=False)
+        
+        self.body_bottom = np.asarray(pattern.body_bottom_shift)
+
         # get PNG file!
         root, _, files = next(os.walk(folder))
         for filename in files:
