@@ -4,13 +4,14 @@ import os.path
 # Custom
 from callbacks import State
 
-
 # NOTE: PySimpleGUI reference: https://github.com/PySimpleGUI/PySimpleGUI/blob/master/docs/call%20reference.md
 
 # TODO Instructions
 # TODO allow changing window size? https://stackoverflow.com/questions/66379808/how-do-i-respond-to-window-resize-in-pysimplegui
 # https://stackoverflow.com/questions/63686020/pysimplegui-how-to-achieve-elements-frames-columns-to-align-to-the-right-and-r
 # TODO Visual appearance
+# https://github.com/PySimpleGUI/PySimpleGUI/issues/3412 for nice buttons & stuff
+# Native demo https://github.com/PySimpleGUI/PySimpleGUI/blob/master/DemoPrograms/Demo_Simple_Material_Feel.py
 # TODO Icons
 
 state = State()
