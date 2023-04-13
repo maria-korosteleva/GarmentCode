@@ -7,10 +7,16 @@ import string
 import os
 import numpy as np
 
-import svgwrite
-from svglib import svglib
+# Correct dependencies on Win
+# https://stackoverflow.com/questions/46265677/get-cairosvg-working-in-windows
+# NOTE: I took the dlls from Inkscape
+# NOTE: paths are relative to the running location, not to the current file
+if 'Windows' in os.environ.get('OS',''):
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    os.environ['path'] += f';{os.path.abspath(dir_path + "/cairo_dlls/")}'
+
+import cairosvg
 import svgpathtools as svgpath
-from reportlab.graphics import renderPM
 
 import matplotlib.pyplot as plt
 
@@ -263,9 +269,8 @@ class VisPattern(core.ParametrizedPattern):
         dwg.save(pretty=True)
 
         # to png
-        svg_pattern = svglib.svg2rlg(svg_filename)
-        renderPM.drawToFile(svg_pattern, png_filename, fmt='PNG')
-
+        cairosvg.svg2png(url=svg_filename, write_to=png_filename, scale=5)
+        
     def _save_as_image_3D(self, png_filename):
         """Save the patterns with 3D positioning using matplotlib visualization"""
 
