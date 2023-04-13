@@ -2,7 +2,7 @@ import PySimpleGUI as sg
 import os.path
 
 # Custom
-from callbacks import State
+from gui.callbacks import State
 
 # NOTE: PySimpleGUI reference: https://github.com/PySimpleGUI/PySimpleGUI/blob/master/docs/call%20reference.md
 
@@ -83,16 +83,18 @@ def init_canvas_background(window):
     '''Add base background images to output canvas'''
     # https://stackoverflow.com/a/71816897
 
-    window['-CANVAS-'].draw_image(filename='gui/background.png', location=(0, 0))
-    window['-CANVAS-'].draw_image(filename='gui/sihl.png', location=(30, 30))
+    window['-CANVAS-'].draw_image(filename='assets/img/background.png', location=(0, 0))
+    window['-CANVAS-'].draw_image(filename='assets/img/body_sihl.png', location=(30, 30))
 
 def upd_pattern_visual(window):
 
     # TODO Proper placement -- align with a body outline
     
-    print('New Drawing!!', state.png_path)
+    print('New Drawing!!', state.png_path)  # DEBUG
+    # FIXME Deleting does not work
     if not state.ui_id:
         window['-CANVAS-'].delete_figure(state.ui_id)
+        print('Deleted ', state.ui_id)   # DEBUG
     state.ui_id = window['-CANVAS-'].draw_image(filename=state.png_path, location=(100, 30))
 
 

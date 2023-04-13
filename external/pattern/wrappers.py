@@ -269,7 +269,7 @@ class VisPattern(core.ParametrizedPattern):
         dwg.save(pretty=True)
 
         # to png
-        cairosvg.svg2png(url=svg_filename, write_to=png_filename, scale=5)
+        cairosvg.svg2png(url=svg_filename, write_to=png_filename, scale=1)
         
     def _save_as_image_3D(self, png_filename):
         """Save the patterns with 3D positioning using matplotlib visualization"""
