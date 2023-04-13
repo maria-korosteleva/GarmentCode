@@ -59,7 +59,7 @@ class State():
         """Save a sewing pattern svg/png representation to tmp folder be used for display"""
 
         # Clear up the folder from previous version -- it's not needed any more
-        self._clear_tmp()
+        self.clear_tmp()
         pattern = self.sew_pattern()
         # Save as json file
         folder = pattern.serialize(
@@ -74,10 +74,11 @@ class State():
                 self.png_path = os.path.join(root, filename)
                 break
 
-    def _clear_tmp(self):
+    def clear_tmp(self, root=False):
         """Clear tmp folder"""
         shutil.rmtree(self.tmp_path)
-        Path(self.tmp_path).mkdir(parents=True, exist_ok=True)
+        if not root:
+            Path(self.tmp_path).mkdir(parents=True, exist_ok=True)
 
     # Current state
     def save(self):

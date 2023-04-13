@@ -119,9 +119,6 @@ def event_loop(window):
             state.save_path = values['-FOLDER-OUT-']
 
             print('PatternConfigurator::INFO::New output path: ', state.save_path)
-            
-
-    window.close()
 
 
 if __name__ == '__main__':
@@ -133,3 +130,6 @@ if __name__ == '__main__':
     upd_pattern_visual(window)
 
     event_loop(window)
+
+    state.clear_tmp(root=True)
+    window.close()
