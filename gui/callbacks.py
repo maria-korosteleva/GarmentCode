@@ -35,11 +35,12 @@ class GUIState():
         self.canvas_margins = copy(self.default_canvas_margins)
         self.body_img_id = None
         self.back_img_id = None
+        self.def_canvas_size = (842, 596)
 
         # Last option needed to finalize GUI initialization and allow modifications
         self.window = sg.Window(
             'Sewing Pattern Configurator', 
-            self.def_layout((842, 596)), 
+            self.def_layout(self.def_canvas_size), 
             finalize=True)
         self.init_canvas_background()
         self.upd_pattern_visual()
@@ -125,6 +126,19 @@ class GUIState():
         self.body_img_id = self.window['-CANVAS-'].draw_image(
             filename='assets/img/body_sihl.png', location=self.canvas_margins)
 
+    def upd_canvas_size(self, new):
+
+        # https://github.com/PySimpleGUI/PySimpleGUI/issues/2842#issuecomment-890049683
+        upd_canvas_size = (
+            max(new[0], self.def_canvas_size[0]),
+            max(new[1], self.def_canvas_size[1])
+        )
+        # UPD canvas
+        self.window['-CANVAS-'].erase()
+        self.window['-CANVAS-'].set_size(upd_canvas_size)
+        self.window['-CANVAS-'].change_coordinates(
+            (0, upd_canvas_size[1]), (upd_canvas_size[0], 0))
+
     def upd_pattern_visual(self):
 
         print('New Pattern!!', self.pattern_state.png_path)  # DEBUG
@@ -133,7 +147,6 @@ class GUIState():
             self.pattern_state.ui_id = None
 
         # Image body center with the body center of a body silhouette
-        # FIXME Still a little too low?
         png_body = self.pattern_state.body_bottom
         real_b_bottom = np.asarray([
             429/2 + self.default_canvas_margins[0], 
@@ -141,19 +154,24 @@ class GUIState():
         ])   # Not the very bottom  # TODO avoid hardcoding the size..
         location = real_b_bottom - png_body
 
-        # TODO Change canvas size to fit a pattern? -> 
         # TODO Bigger background image
         # TODO Higher quality
-        # Adjust the body location to fit the pattern
+        # Adjust the body location (margins) to fit the pattern
         if location[0] < 0: 
             self.canvas_margins[0] = self.default_canvas_margins[0] - location[0]
             self.canvas_margins[1] = self.default_canvas_margins[1]
             location[0] = 0
         else: 
             self.canvas_margins[:] = self.default_canvas_margins
-        self.init_canvas_background()
+        
+        # Change canvas size to fit a pattern? -> 
+        self.upd_canvas_size((
+            location[0] + self.pattern_state.png_size[0] + self.default_canvas_margins[0],
+            location[1] + self.pattern_state.png_size[1] + self.default_canvas_margins[1]
+        ))
 
-        # draw the pattern
+        # draw everything
+        self.init_canvas_background()
         self.pattern_state.ui_id = self.window['-CANVAS-'].draw_image(
             filename=self.pattern_state.png_path, location=location.tolist())
 
@@ -244,6 +262,7 @@ class GUIPattern():
             with_3d=False, with_text=False, view_ids=False)
         
         self.body_bottom = np.asarray(pattern.body_bottom_shift)
+        self.png_size = pattern.png_size
 
         # get PNG file!
         root, _, files = next(os.walk(folder))

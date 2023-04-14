@@ -284,6 +284,7 @@ class VisPattern(core.ParametrizedPattern):
 
         # "floor" level for a pattern
         self.body_bottom_shift = -viewbox[0], -viewbox[1]
+        self.png_size = dims
 
         # Save
         attributes = attributes_f + attributes_b
