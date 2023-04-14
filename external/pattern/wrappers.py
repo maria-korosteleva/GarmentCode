@@ -243,12 +243,15 @@ class VisPattern(core.ParametrizedPattern):
                                  text_anchor='middle'))
 
     def _save_as_image(
-            self, svg_filename, png_filename, with_text=True, view_ids=True):
+            self, svg_filename, png_filename, 
+            with_text=True, view_ids=True, 
+            margin=2):  
         """
             Saves current pattern in svg and png format for visualization
 
             * with_text: include panel names
             * view_ids: include ids of vertices and edges in the output image
+            * margin: small amount of free space around the svg drawing (to correctly display the line width)
 
         """
         if self.scaling_for_drawing is None:  # re-evaluate if not ready
@@ -277,14 +280,18 @@ class VisPattern(core.ParametrizedPattern):
         # SVG convert
         paths = paths_front + paths_back
         arrdims = np.array([path.bbox() for path in paths])
-
         dims = np.max(arrdims[:, 1]) - np.min(arrdims[:, 0]), np.max(arrdims[:, 3]) - np.min(arrdims[:, 2])
 
-        viewbox = np.min(arrdims[:, 0]), np.min(arrdims[:, 2]), dims[0], dims[1]
+        viewbox = (
+            np.min(arrdims[:, 0]) - margin, 
+            np.min(arrdims[:, 2]) - margin, 
+            dims[0] + 2 * margin, 
+            dims[1] + 2 * margin
+        )
 
         # "floor" level for a pattern
         self.body_bottom_shift = -viewbox[0], -viewbox[1]
-        self.png_size = dims
+        self.png_size = viewbox[2:]
 
         # Save
         attributes = attributes_f + attributes_b
