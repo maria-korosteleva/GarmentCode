@@ -22,6 +22,32 @@ import PySimpleGUI as sg
 # Custom 
 from assets.garment_programs.meta_garment import MetaGarment
 
+# Graphical elements
+
+def FolderBrowse(init_folder=None):
+    """Custom version of sg.FolderBrowse() button to allow apearance customization"""
+    # https://github.com/PySimpleGUI/PySimpleGUI/issues/5290#issuecomment-1073137090
+    return sg.Button(
+        button_text='Browse',
+        target=(sg.ThisRow, -1),
+        button_type=sg.BUTTON_TYPE_BROWSE_FOLDER,
+        initial_folder=init_folder
+    )
+
+def FileBrowse(init_folder=None):
+    """Custom version of sg.FileBrowse() button to allow apearance customization"""
+    # https://github.com/PySimpleGUI/PySimpleGUI/issues/5290#issuecomment-1073137090
+    return sg.Button(
+        button_text='Browse',
+        target=(sg.ThisRow, -1),
+        button_type=sg.BUTTON_TYPE_BROWSE_FILE,
+        border_width=0,
+        initial_folder=init_folder
+    )
+
+
+# State of GUI
+
 class GUIState():
     """State of GUI-related objects"""
     def __init__(self) -> None:
@@ -38,10 +64,14 @@ class GUIState():
         self.def_canvas_size = (842, 596)
 
         # Last option needed to finalize GUI initialization and allow modifications
+        self.theme()
         self.window = sg.Window(
             'Sewing Pattern Configurator', 
             self.def_layout(self.def_canvas_size), 
             finalize=True)
+        
+        self.prettify_sliders()
+
         self.init_canvas_background()
         self.upd_pattern_visual()
 
@@ -50,6 +80,7 @@ class GUIState():
         self.pattern_state.clear_tmp(root=True)
         self.window.close()
 
+    # Layout initialization / updates
     def def_layout(self, canvas_size=(500, 500)):
 
         # First the window layout in 2 columns
@@ -65,7 +96,7 @@ class GUIState():
                     enable_events=True, 
                     key='-BODY-'
                 ),
-                sg.FileBrowse(),
+                FileBrowse(os.path.dirname(self.pattern_state.body_file)),
             ],
             [
                 sg.Text('Design parameters: '),
@@ -77,8 +108,53 @@ class GUIState():
                     enable_events=True, 
                     key='-DESIGN-'
                 ),
-                sg.FileBrowse(),
+                FileBrowse(os.path.dirname(self.pattern_state.design_file)),
             ],
+            [
+                sg.Slider(
+                    [0, 10], 
+                    default_value=5, 
+                    orientation='horizontal',
+                    relief=sg.RELIEF_RAISED
+                )
+            ],
+            [
+                sg.Slider(
+                    [0, 10], 
+                    default_value=5, 
+                    orientation='horizontal',
+                    relief=sg.RELIEF_SUNKEN
+                )],
+            [
+                sg.Slider(
+                    [0, 10], 
+                    default_value=5, 
+                    orientation='horizontal',
+                    relief=sg.RELIEF_FLAT
+                )],
+            [
+                sg.Slider(
+                    [0, 10], 
+                    default_value=5, 
+                    orientation='horizontal',
+                    relief=sg.RELIEF_RIDGE 
+                )],
+            [
+                sg.Slider(
+                    [0, 10], 
+                    default_value=5, 
+                    orientation='horizontal',
+                    relief=sg.RELIEF_GROOVE  
+                )],
+            [
+                sg.Slider(
+                    [0, 10], 
+                    default_value=5, 
+                    orientation='horizontal',
+                    relief=sg.RELIEF_SOLID
+                )
+
+            ]
         ]
 
         # For now will only show the name of the file that was chosen
@@ -97,8 +173,8 @@ class GUIState():
                     expand_x=True, 
                     enable_events=True, 
                     key='-FOLDER-OUT-', ),
-                sg.FolderBrowse(size=6),
-                sg.Button('Save', size=6, key='-SAVE-')
+                FolderBrowse(self.pattern_state.save_path),
+                sg.Button('Save', size=6, key='-SAVE-', border_width=0)
             ]   
         ]
 
@@ -175,6 +251,49 @@ class GUIState():
         self.pattern_state.ui_id = self.window['-CANVAS-'].draw_image(
             filename=self.pattern_state.png_path, location=location.tolist())
 
+    # Pretty stuff
+    def theme(self):
+        """Define and apply custom theme"""
+        # https://stackoverflow.com/a/74625488
+
+        gui_theme = {
+            "BACKGROUND": '#DAE0E6', 
+            "TEXT": sg.COLOR_SYSTEM_DEFAULT, 
+            "INPUT": sg.COLOR_SYSTEM_DEFAULT,
+            "TEXT_INPUT": sg.COLOR_SYSTEM_DEFAULT, 
+            "SCROLL": sg.COLOR_SYSTEM_DEFAULT,
+            "BUTTON": sg.OFFICIAL_PYSIMPLEGUI_BUTTON_COLOR, 
+            "PROGRESS": sg.COLOR_SYSTEM_DEFAULT, 
+            "BORDER": 0.5,
+            "SLIDER_DEPTH": 0.5, 
+            "PROGRESS_DEPTH": 0
+        }
+
+        sg.theme_add_new('SewPatternsTheme', gui_theme)
+        sg.theme('SewPatternsTheme')
+
+    def prettify_sliders(self):
+        """ Make slider knowbs flat and small
+            A bit of hack accessing lower level library (Tkinter) to reach the needed setting
+        """
+        # https://github.com/PySimpleGUI/PySimpleGUI/issues/10#issuecomment-997426666
+        # https://www.tutorialspoint.com/python/tk_scale.htm
+        # https://tkdocs.com/pyref/scale.html
+        window = self.window
+        slider_keys = self.get_keys_by_instance(sg.Slider)
+        for key in slider_keys:
+            window[key].Widget.config(sliderlength=10)
+            window[key].Widget.config(sliderrelief=sg.RELIEF_FLAT)
+            # window[key].Widget.config(background='#000000') # slider button
+            # window[key].Widget.config(troughcolor='#FFFFFF')  
+
+    # Utils
+    def get_keys_by_instance(self, instance_type):
+        # https://github.com/PySimpleGUI/PySimpleGUI/issues/10#issuecomment-997426666
+        return [key for key, value in self.window.key_dict.items() if isinstance(value, instance_type)]
+
+
+    # Main loop
     def event_loop(self):
         while True:
             event, values = self.window.read()
@@ -199,6 +318,7 @@ class GUIState():
                 self.pattern_state.save_path = values['-FOLDER-OUT-']
 
                 print('PatternConfigurator::INFO::New output path: ', self.pattern_state.save_path)
+
 
 
 class GUIPattern():
