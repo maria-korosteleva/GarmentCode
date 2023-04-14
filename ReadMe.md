@@ -5,18 +5,18 @@ Implementation of GarmentCode architecture and garment programs.
 
 ## Installation
 
-Install python with dependencies:
+### Install python with dependencies:
 
 * Python 3.9
 * numpy
 * scipy
-* [svglib](https://pypi.org/project/svglib/)
 * [svgwrite](https://pypi.org/project/svgwrite/)
 * psutil
 * matplotlib
 * [svgpathtools](https://github.com/mathandy/svgpathtools)
-
-#TODO one of the latter too will be used in the final version
+* [cairoSVG](https://cairosvg.org/)
+    NOTE: this lib has some quirks on Windows, which we relove with including needed dlls in `./patttern/cairo_dlls` and adding the ditrectory to PATH in runtime
+* [PySimpleGUI](https://github.com/PySimpleGUI/PySimpleGUI) to run GUI script
 
 All python dependencies can be installed with `pip install` / `conda install`
 
@@ -26,16 +26,35 @@ NOTE:
 * The dependency on [Pattern Generator](https://github.com/maria-korosteleva/Garment-Pattern-Generator)in included in the repo (`./external`), and will be loaded automatically by test script
 * The environemtal variables needed for correct lib loading are set up in the test script
 
-## How to run
+### Configuration of local paths
+
+Same as here: https://github.com/maria-korosteleva/Garment-Pattern-Generator/blob/master/docs/Installation.md#local-paths-setup
+
+NOTE: ATM only the 'output' path is actually used, so setting only that one is enough
+
+
+## How to run (command line)
 
 From the root directory run
 ```
-test_garments.py
+python test_garments.py
 ```
 
-It will create sewing patterns for histrical dresses used in a teaser of our paper fitted to the average SMPL body model (female).
+It will create sewing pattern for the current state of `assets/design_params/base.yaml` for average SMPL body, and put it to the logs folder. Modify the parameters inside the script as needed.
 
-The rusuts are saved to `./Logs` folder
+## How to run (GUI)
+
+WARNING: Currently in active development, quality not guaranteed 😅
+
+From the root directory run
+```
+python gui.py
+```
+
+It can load body and design parameter files and display the corresponding sewing pattern right away.
+Design files should be compatible with `MetaGarment` object (all examples provided in `assets\design_params` are compatible).
+
+SOON: displaying garment parameters for direct manipulation
 
 ## Modifying the parameters
 
