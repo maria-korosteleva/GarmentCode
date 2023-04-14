@@ -8,7 +8,7 @@
 design: 
   meta: 
     upper: 
-      v: False
+      v: FittedShirt
       range: [FittedShirt, Shirt, CurvyProjection, null]
     wb: 
       v: False
@@ -69,7 +69,7 @@ design:
     
   sleeve:
     sleeveless: 
-      v: False
+      v: True
       range: [True, False]
     # Armhole
     armhole_shape: 

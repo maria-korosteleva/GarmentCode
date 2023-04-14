@@ -10,6 +10,7 @@
 # TODO Icons
 
 import os.path
+from copy import copy
 from pathlib import Path
 from datetime import datetime
 import yaml
@@ -31,7 +32,7 @@ class GUIState():
 
         # Pattern display
         self.default_canvas_margins = [20, 20]
-        self.canvas_margins = self.default_canvas_margins
+        self.canvas_margins = copy(self.default_canvas_margins)
         self.body_img_id = None
         self.back_img_id = None
 
@@ -43,12 +44,10 @@ class GUIState():
         self.init_canvas_background()
         self.upd_pattern_visual()
 
-
     def __del__(self):
         """Clenup"""
         self.pattern_state.clear_tmp(root=True)
         self.window.close()
-
 
     def def_layout(self, canvas_size=(500, 500)):
 
@@ -116,6 +115,11 @@ class GUIState():
         '''Add base background images to output canvas'''
         # https://stackoverflow.com/a/71816897
 
+        if self.back_img_id is not None:
+            self.window['-CANVAS-'].delete_figure(self.back_img_id)
+        if self.body_img_id is not None:
+            self.window['-CANVAS-'].delete_figure(self.body_img_id)
+
         self.back_img_id = self.window['-CANVAS-'].draw_image(
             filename='assets/img/background.png', location=(0, 0))
         self.body_img_id = self.window['-CANVAS-'].draw_image(
@@ -126,24 +130,30 @@ class GUIState():
         print('New Pattern!!', self.pattern_state.png_path)  # DEBUG
         if self.pattern_state.ui_id is not None:
             self.window['-CANVAS-'].delete_figure(self.pattern_state.ui_id)
+            self.pattern_state.ui_id = None
 
         # Image body center with the body center of a body silhouette
         # FIXME Still a little too low?
         png_body = self.pattern_state.body_bottom
-        real_b_bottom = np.asarray([429/2 + self.canvas_margins[0], 530 + self.canvas_margins[1]])   # Not the very bottom  # TODO relative to resolution
+        real_b_bottom = np.asarray([
+            429/2 + self.default_canvas_margins[0], 
+            530 + self.default_canvas_margins[1]
+        ])   # Not the very bottom  # TODO avoid hardcoding the size..
         location = real_b_bottom - png_body
 
-        # TODO Also if too far (e.g. after sleeve removal)
         # TODO Change canvas size to fit a pattern? -> 
         # TODO Bigger background image
         # TODO Higher quality
+        # Adjust the body location to fit the pattern
         if location[0] < 0: 
-            self.canvas_margins[0] -= location[0]
-            self.window['-CANVAS-'].delete_figure(self.back_img_id)
-            self.window['-CANVAS-'].delete_figure(self.body_img_id)
-            self.init_canvas_background()
+            self.canvas_margins[0] = self.default_canvas_margins[0] - location[0]
+            self.canvas_margins[1] = self.default_canvas_margins[1]
             location[0] = 0
+        else: 
+            self.canvas_margins[:] = self.default_canvas_margins
+        self.init_canvas_background()
 
+        # draw the pattern
         self.pattern_state.ui_id = self.window['-CANVAS-'].draw_image(
             filename=self.pattern_state.png_path, location=location.tolist())
 
