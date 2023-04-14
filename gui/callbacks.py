@@ -195,12 +195,12 @@ class GUIState():
         # https://stackoverflow.com/a/74625488
 
         gui_theme = {
-            "BACKGROUND": '#DAE0E6', 
+            "BACKGROUND": sg.COLOR_SYSTEM_DEFAULT,  #'#FFF9E7', 
             "TEXT": sg.COLOR_SYSTEM_DEFAULT, 
             "INPUT": sg.COLOR_SYSTEM_DEFAULT,
             "TEXT_INPUT": sg.COLOR_SYSTEM_DEFAULT, 
             "SCROLL": sg.COLOR_SYSTEM_DEFAULT,
-            "BUTTON": sg.OFFICIAL_PYSIMPLEGUI_BUTTON_COLOR, 
+            "BUTTON":  ('#505050', '#CECECE'),  # sg.COLOR_SYSTEM_DEFAULT, # ('#A714FF', '#F6E7FF'),  # sg.OFFICIAL_PYSIMPLEGUI_BUTTON_COLOR, 
             "PROGRESS": sg.COLOR_SYSTEM_DEFAULT, 
             "BORDER": 0,
             "SLIDER_DEPTH": 0.5, 
