@@ -22,30 +22,6 @@ import PySimpleGUI as sg
 # Custom 
 from assets.garment_programs.meta_garment import MetaGarment
 
-# Graphical elements
-
-def FolderBrowse(init_folder=None):
-    """Custom version of sg.FolderBrowse() button to allow apearance customization"""
-    # https://github.com/PySimpleGUI/PySimpleGUI/issues/5290#issuecomment-1073137090
-    return sg.Button(
-        button_text='Browse',
-        target=(sg.ThisRow, -1),
-        button_type=sg.BUTTON_TYPE_BROWSE_FOLDER,
-        initial_folder=init_folder
-    )
-
-def FileBrowse(init_folder=None):
-    """Custom version of sg.FileBrowse() button to allow apearance customization"""
-    # https://github.com/PySimpleGUI/PySimpleGUI/issues/5290#issuecomment-1073137090
-    return sg.Button(
-        button_text='Browse',
-        target=(sg.ThisRow, -1),
-        button_type=sg.BUTTON_TYPE_BROWSE_FILE,
-        border_width=0,
-        initial_folder=init_folder
-    )
-
-
 # State of GUI
 
 class GUIState():
@@ -96,7 +72,7 @@ class GUIState():
                     enable_events=True, 
                     key='-BODY-'
                 ),
-                FileBrowse(os.path.dirname(self.pattern_state.body_file)),
+                sg.FileBrowse(initial_folder=os.path.dirname(self.pattern_state.body_file))
             ],
             [
                 sg.Text('Design parameters: '),
@@ -108,23 +84,8 @@ class GUIState():
                     enable_events=True, 
                     key='-DESIGN-'
                 ),
-                FileBrowse(os.path.dirname(self.pattern_state.design_file)),
+                sg.FileBrowse(initial_folder=os.path.dirname(self.pattern_state.design_file))
             ],
-            [
-                sg.Slider(
-                    [0, 10], 
-                    default_value=5, 
-                    orientation='horizontal',
-                    relief=sg.RELIEF_RAISED
-                )
-            ],
-            [
-                sg.Slider(
-                    [0, 10], 
-                    default_value=5, 
-                    orientation='horizontal',
-                    relief=sg.RELIEF_SUNKEN
-                )],
             [
                 sg.Slider(
                     [0, 10], 
@@ -132,29 +93,6 @@ class GUIState():
                     orientation='horizontal',
                     relief=sg.RELIEF_FLAT
                 )],
-            [
-                sg.Slider(
-                    [0, 10], 
-                    default_value=5, 
-                    orientation='horizontal',
-                    relief=sg.RELIEF_RIDGE 
-                )],
-            [
-                sg.Slider(
-                    [0, 10], 
-                    default_value=5, 
-                    orientation='horizontal',
-                    relief=sg.RELIEF_GROOVE  
-                )],
-            [
-                sg.Slider(
-                    [0, 10], 
-                    default_value=5, 
-                    orientation='horizontal',
-                    relief=sg.RELIEF_SOLID
-                )
-
-            ]
         ]
 
         # For now will only show the name of the file that was chosen
@@ -173,8 +111,8 @@ class GUIState():
                     expand_x=True, 
                     enable_events=True, 
                     key='-FOLDER-OUT-', ),
-                FolderBrowse(self.pattern_state.save_path),
-                sg.Button('Save', size=6, key='-SAVE-', border_width=0)
+                sg.FolderBrowse(initial_folder=self.pattern_state.save_path),
+                sg.Button('Save', size=6, key='-SAVE-')
             ]   
         ]
 
@@ -264,7 +202,7 @@ class GUIState():
             "SCROLL": sg.COLOR_SYSTEM_DEFAULT,
             "BUTTON": sg.OFFICIAL_PYSIMPLEGUI_BUTTON_COLOR, 
             "PROGRESS": sg.COLOR_SYSTEM_DEFAULT, 
-            "BORDER": 0.5,
+            "BORDER": 0,
             "SLIDER_DEPTH": 0.5, 
             "PROGRESS_DEPTH": 0
         }
