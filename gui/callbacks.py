@@ -416,14 +416,17 @@ class GUIState():
                 # Updated body parameter:
                 event_split = event.split('-')
                 param = event_split[2]
+                field_key = '-' + '-'.join(event_split[1:-1])
                 # TODO remove leading '-' in events
-                new_value = values['-' + '-'.join(event_split[1:-1])]
+                new_value = values[field_key]
 
-                # TODO check numerical
-                self.pattern_state.body_params[param] = float(new_value)
-
-                self.pattern_state.reload_garment()
-                self.upd_pattern_visual()
+                try:
+                    self.pattern_state.body_params[param] = float(new_value)
+                except: # check numerical
+                    sg.popup('Only numerical values are supported (int, float)')
+                else:
+                    self.pattern_state.reload_garment()
+                    self.upd_pattern_visual()
 
 
             elif event == '-DESIGN-':  # A file was chosen from the listbox
