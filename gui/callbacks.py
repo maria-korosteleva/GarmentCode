@@ -52,7 +52,8 @@ class GUIPattern():
         self.body_file = path
         with open(path, 'r') as f:
             body = yaml.safe_load(f)['body']
-            # TODO The following should not be here
+            # TODO The following should not be here. 
+            # TODO Needs to be updated when interface updates
             body['waist_level'] = body['height'] - body['head_l'] - body['waist_line']
         self.body_params = body
         self.reload_garment()
@@ -268,6 +269,8 @@ class GUIState():
             ]
         ]
 
+        # TODO Update button?
+
         return layout
 
     def init_canvas_background(self):
@@ -313,7 +316,6 @@ class GUIState():
         location = real_b_bottom - png_body
 
         # TODO Bigger background image
-        # TODO Higher quality
         # Adjust the body location (margins) to fit the pattern
         if location[0] < 0: 
             self.canvas_margins[0] = self.default_canvas_margins[0] - location[0]
