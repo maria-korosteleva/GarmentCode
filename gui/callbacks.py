@@ -112,8 +112,19 @@ class GUIPattern():
             to_subfolder=True, 
             with_3d=True, with_text=False, view_ids=False)
 
-        shutil.copy(self.body_file, folder)  # TODO Better name!
-        shutil.copy(self.design_file, folder)
+        with open(Path(folder) / 'body_measurements.yaml', 'w') as f:
+            yaml.dump(
+                {'body': self.body_params}, 
+                f,
+                default_flow_style=False
+            )
+
+        with open(Path(folder) / 'design_params.yaml', 'w') as f:
+            yaml.dump(
+                {'design': self.design_params}, 
+                f,
+                default_flow_style=False
+            )
 
         print(f'Success! {self.sew_pattern.name} saved to {folder}')
 
@@ -140,9 +151,12 @@ class GUIState():
             self.def_layout(self.pattern_state, self.def_canvas_size), 
             finalize=True)
         
+        # Modifiers after window finalization
+        self.input_text_on_enter()
         self.prettify_sliders()
-
         self.init_canvas_background()
+
+        # Draw initial pattern
         self.upd_pattern_visual()
 
     def __del__(self):
@@ -232,8 +246,8 @@ class GUIState():
             param_input_col.append([
                 sg.Input(
                     str(body[param]), 
-                    enable_events=True, 
-                    key=f'-body-{param}', 
+                    enable_events=False,  # Events enabled outside: only on Enter 
+                    key=f'-BODY-{param}', 
                     size=7) 
                 ])
             
@@ -245,8 +259,8 @@ class GUIState():
                 sg.In(
                     default_text=self.pattern_state.body_file,
                     size=(25, 1), 
-                    enable_events=True, 
-                    key='-BODY-'
+                    enable_events=True,  
+                    key='-BODYFILE-'
                 ),
                 sg.FileBrowse(initial_folder=os.path.dirname(self.pattern_state.body_file))
             ],
@@ -257,8 +271,6 @@ class GUIState():
         ]
 
         return layout
-            
-
 
     def init_canvas_background(self):
         '''Add base background images to output canvas'''
@@ -323,6 +335,16 @@ class GUIState():
         self.pattern_state.ui_id = self.window['-CANVAS-'].draw_image(
             filename=self.pattern_state.png_path, location=location.tolist())
 
+    # Modifiers after window finalization
+    def input_text_on_enter(self):
+        """Modify input text elements to only send events when Enter is pressed"""
+        # https://stackoverflow.com/a/68528658
+
+        # All body updates
+        fields = self.get_keys_by_instance_tag(sg.Input, '-BODY-')
+        for key in fields:
+            self.window[key].bind('<Return>', '-ENTER')
+
     # Pretty stuff
     def theme(self):
         """Define and apply custom theme"""
@@ -348,6 +370,7 @@ class GUIState():
     def prettify_sliders(self):
         """ Make slider knowbs flat and small
             A bit of hack accessing lower level library (Tkinter) to reach the needed setting
+            NOTE: It needs to be executed after window finalization
         """
         # https://github.com/PySimpleGUI/PySimpleGUI/issues/10#issuecomment-997426666
         # https://www.tutorialspoint.com/python/tk_scale.htm
@@ -365,6 +388,10 @@ class GUIState():
         # https://github.com/PySimpleGUI/PySimpleGUI/issues/10#issuecomment-997426666
         return [key for key, value in self.window.key_dict.items() if isinstance(value, instance_type)]
 
+    def get_keys_by_instance_tag(self, instance_type, tag):
+        # https://github.com/PySimpleGUI/PySimpleGUI/issues/10#issuecomment-997426666
+        return [key for key, value in self.window.key_dict.items() if isinstance(value, instance_type) and tag in key]
+
     # Main loop
     def event_loop(self):
         while True:
@@ -373,23 +400,38 @@ class GUIState():
                 break
 
             # TODO Parameter update: change corresponding field
-            # TODO Any parameter updated: Update MetaGarment and re-load visualization
-
-            # TODO Body Process events
-
             # TODO process errors for wrong files chosen
-            if event == '-BODY-':
-                file = values['-BODY-']
+            if event == '-BODYFILE-':
+                file = values['-BODYFILE-']
                 self.pattern_state.new_body_file(file)
 
-                # TODO Update values in the bottoms
+                # Update values in the fields acconding to loaded file
+                fields = self.get_keys_by_instance_tag(sg.Input, '-BODY-')
+                for elem in fields:
+                    param = elem.split('-')[2]
+                    self.window[elem].update(self.pattern_state.body_params[param])
 
                 self.upd_pattern_visual()
+            elif '-BODY-' in event and '-ENTER' in event:
+                # Updated body parameter:
+                event_split = event.split('-')
+                param = event_split[2]
+                # TODO remove leading '-' in events
+                new_value = values['-' + '-'.join(event_split[1:-1])]
+
+                # TODO check numerical
+                self.pattern_state.body_params[param] = float(new_value)
+
+                self.pattern_state.reload_garment()
+                self.upd_pattern_visual()
+
+
             elif event == '-DESIGN-':  # A file was chosen from the listbox
                 file = values['-DESIGN-']
                 self.pattern_state.new_design_file(file)
                 self.upd_pattern_visual()
             elif event == '-SAVE-':
+                # TODO Save current body/design values, not the files
                 self.pattern_state.save()
             elif event == '-FOLDER-OUT-':
                 self.pattern_state.save_path = values['-FOLDER-OUT-']
