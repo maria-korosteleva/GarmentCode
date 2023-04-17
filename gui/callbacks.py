@@ -180,7 +180,7 @@ class GUIState():
                     default_text=self.pattern_state.design_file,
                     size=(25, 1), 
                     enable_events=True, 
-                    key='-DESIGN-'
+                    key='DESIGNFILE'
                 ),
                 sg.FileBrowse(initial_folder=os.path.dirname(self.pattern_state.design_file))
             ],
@@ -200,7 +200,7 @@ class GUIState():
                 graph_bottom_left=(0, canvas_size[1]), 
                 graph_top_right=(canvas_size[0], 0), 
                 background_color='white', 
-                key='-CANVAS-')
+                key='CANVAS')
             ],      
             [
                 sg.Text('Output Folder:'),
@@ -208,9 +208,9 @@ class GUIState():
                     default_text=self.pattern_state.save_path, 
                     expand_x=True, 
                     enable_events=True, 
-                    key='-FOLDER-OUT-', ),
+                    key='FOLDER-OUT', ),
                 sg.FolderBrowse(initial_folder=self.pattern_state.save_path),
-                sg.Button('Save', size=6, key='-SAVE-')
+                sg.Button('Save', size=6, key='SAVE')
             ]   
         ]
 
@@ -225,7 +225,6 @@ class GUIState():
                     ]], 
                     expand_y=True, 
                     tab_border_width=0, border_width=0),
-                # DRAFT sg.Column(params_column),
                 sg.Column(viewer_column),
             ]
         ]
@@ -238,7 +237,6 @@ class GUIState():
         param_input_col = []
 
         body = guipattern.body_params
-        # TODO non-numric inputs =(
         for param in body:
             param_name_col.append([
                 sg.Text(param + ':', justification='right', expand_x=True), 
@@ -247,7 +245,7 @@ class GUIState():
                 sg.Input(
                     str(body[param]), 
                     enable_events=False,  # Events enabled outside: only on Enter 
-                    key=f'-BODY-{param}', 
+                    key=f'BODY-{param}', 
                     size=7) 
                 ])
             
@@ -260,7 +258,7 @@ class GUIState():
                     default_text=self.pattern_state.body_file,
                     size=(25, 1), 
                     enable_events=True,  
-                    key='-BODYFILE-'
+                    key='BODYFILE'
                 ),
                 sg.FileBrowse(initial_folder=os.path.dirname(self.pattern_state.body_file))
             ],
@@ -277,13 +275,13 @@ class GUIState():
         # https://stackoverflow.com/a/71816897
 
         if self.back_img_id is not None:
-            self.window['-CANVAS-'].delete_figure(self.back_img_id)
+            self.window['CANVAS'].delete_figure(self.back_img_id)
         if self.body_img_id is not None:
-            self.window['-CANVAS-'].delete_figure(self.body_img_id)
+            self.window['CANVAS'].delete_figure(self.body_img_id)
 
-        self.back_img_id = self.window['-CANVAS-'].draw_image(
+        self.back_img_id = self.window['CANVAS'].draw_image(
             filename='assets/img/background_small.png', location=(0, 0))
-        self.body_img_id = self.window['-CANVAS-'].draw_image(
+        self.body_img_id = self.window['CANVAS'].draw_image(
             filename='assets/img/body_sihl.png', location=self.canvas_margins)
 
     def upd_canvas_size(self, new):
@@ -294,16 +292,16 @@ class GUIState():
             max(new[1], self.def_canvas_size[1])
         )
         # UPD canvas
-        self.window['-CANVAS-'].erase()
-        self.window['-CANVAS-'].set_size(upd_canvas_size)
-        self.window['-CANVAS-'].change_coordinates(
+        self.window['CANVAS'].erase()
+        self.window['CANVAS'].set_size(upd_canvas_size)
+        self.window['CANVAS'].change_coordinates(
             (0, upd_canvas_size[1]), (upd_canvas_size[0], 0))
 
     def upd_pattern_visual(self):
 
         print('New Pattern!!', self.pattern_state.png_path)  # DEBUG
         if self.pattern_state.ui_id is not None:
-            self.window['-CANVAS-'].delete_figure(self.pattern_state.ui_id)
+            self.window['CANVAS'].delete_figure(self.pattern_state.ui_id)
             self.pattern_state.ui_id = None
 
         # Image body center with the body center of a body silhouette
@@ -332,7 +330,7 @@ class GUIState():
 
         # draw everything
         self.init_canvas_background()
-        self.pattern_state.ui_id = self.window['-CANVAS-'].draw_image(
+        self.pattern_state.ui_id = self.window['CANVAS'].draw_image(
             filename=self.pattern_state.png_path, location=location.tolist())
 
     # Modifiers after window finalization
@@ -341,7 +339,7 @@ class GUIState():
         # https://stackoverflow.com/a/68528658
 
         # All body updates
-        fields = self.get_keys_by_instance_tag(sg.Input, '-BODY-')
+        fields = self.get_keys_by_instance_tag(sg.Input, 'BODY-')
         for key in fields:
             self.window[key].bind('<Return>', '-ENTER')
 
@@ -401,24 +399,21 @@ class GUIState():
 
             # TODO Parameter update: change corresponding field
             # TODO process errors for wrong files chosen
-            if event == '-BODYFILE-':
-                file = values['-BODYFILE-']
+            if event == 'BODYFILE':
+                file = values['BODYFILE']
                 self.pattern_state.new_body_file(file)
 
                 # Update values in the fields acconding to loaded file
-                fields = self.get_keys_by_instance_tag(sg.Input, '-BODY-')
+                fields = self.get_keys_by_instance_tag(sg.Input, 'BODY-')
                 for elem in fields:
-                    param = elem.split('-')[2]
+                    param = elem.split('-')[1]
                     self.window[elem].update(self.pattern_state.body_params[param])
 
                 self.upd_pattern_visual()
-            elif '-BODY-' in event and '-ENTER' in event:
+            elif 'BODY-' in event and '-ENTER' in event:
                 # Updated body parameter:
-                event_split = event.split('-')
-                param = event_split[2]
-                field_key = '-' + '-'.join(event_split[1:-1])
-                # TODO remove leading '-' in events
-                new_value = values[field_key]
+                param = event.split('-')[1]
+                new_value = values[event.removesuffix('-ENTER')]
 
                 try:
                     self.pattern_state.body_params[param] = float(new_value)
@@ -428,16 +423,14 @@ class GUIState():
                     self.pattern_state.reload_garment()
                     self.upd_pattern_visual()
 
-
-            elif event == '-DESIGN-':  # A file was chosen from the listbox
-                file = values['-DESIGN-']
+            elif event == 'DESIGNFILE':  # A file was chosen from the listbox
+                file = values['DESIGNFILE']
                 self.pattern_state.new_design_file(file)
                 self.upd_pattern_visual()
-            elif event == '-SAVE-':
-                # TODO Save current body/design values, not the files
+            elif event == 'SAVE':
                 self.pattern_state.save()
-            elif event == '-FOLDER-OUT-':
-                self.pattern_state.save_path = values['-FOLDER-OUT-']
+            elif event == 'FOLDER-OUT':
+                self.pattern_state.save_path = values['FOLDER-OUT']
 
                 print('PatternConfigurator::INFO::New output path: ', self.pattern_state.save_path)
 
