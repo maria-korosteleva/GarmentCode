@@ -4,10 +4,9 @@
 
 # TODO allow changing window size? https://stackoverflow.com/questions/66379808/how-do-i-respond-to-window-resize-in-pysimplegui
 # https://stackoverflow.com/questions/63686020/pysimplegui-how-to-achieve-elements-frames-columns-to-align-to-the-right-and-r
-# TODO Visual appearance
-# https://github.com/PySimpleGUI/PySimpleGUI/issues/3412 for nice buttons & stuff
-# Native demo https://github.com/PySimpleGUI/PySimpleGUI/blob/master/DemoPrograms/Demo_Simple_Material_Feel.py
+# TODO Scale of the visuals (note: large background image causes hanging)
 # TODO Icons
+# TODO Colorscheme
 
 import os.path
 from copy import copy
@@ -61,7 +60,7 @@ class GUIState():
 
         # First the window layout in 2 columns
 
-        params_column = [
+        body_layout = [
             [
                 sg.Text('Body Mesurements: '),
             ],
@@ -74,6 +73,9 @@ class GUIState():
                 ),
                 sg.FileBrowse(initial_folder=os.path.dirname(self.pattern_state.body_file))
             ],
+        ]
+
+        design_layout = [
             [
                 sg.Text('Design parameters: '),
             ],
@@ -92,7 +94,7 @@ class GUIState():
                     default_value=5, 
                     orientation='horizontal',
                     relief=sg.RELIEF_FLAT
-                )],
+            )],
         ]
 
         # For now will only show the name of the file that was chosen
@@ -120,7 +122,14 @@ class GUIState():
         # ----- Full layout -----
         layout = [
             [
-                sg.Column(params_column),
+                sg.TabGroup(
+                    [[
+                        sg.Tab('Design', design_layout), 
+                        sg.Tab('Body', body_layout)
+                    ]], 
+                    expand_y=True, 
+                    tab_border_width=0, border_width=0),
+                # DRAFT sg.Column(params_column),
                 sg.Column(viewer_column),
             ]
         ]
@@ -136,7 +145,7 @@ class GUIState():
             self.window['-CANVAS-'].delete_figure(self.body_img_id)
 
         self.back_img_id = self.window['-CANVAS-'].draw_image(
-            filename='assets/img/background.png', location=(0, 0))
+            filename='assets/img/background_small.png', location=(0, 0))
         self.body_img_id = self.window['-CANVAS-'].draw_image(
             filename='assets/img/body_sihl.png', location=self.canvas_margins)
 
@@ -192,6 +201,7 @@ class GUIState():
     # Pretty stuff
     def theme(self):
         """Define and apply custom theme"""
+        # Native demo https://github.com/PySimpleGUI/PySimpleGUI/blob/master/DemoPrograms/Demo_Simple_Material_Feel.py
         # https://stackoverflow.com/a/74625488
 
         gui_theme = {
