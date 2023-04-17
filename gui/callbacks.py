@@ -22,6 +22,101 @@ import PySimpleGUI as sg
 from assets.garment_programs.meta_garment import MetaGarment
 
 # State of GUI
+class GUIPattern():
+    def __init__(self) -> None:
+        self.save_path = os.path.abspath('./')   # TODO Use Path()
+        self.png_path = None
+        self.tmp_path = os.path.abspath('./tmp')
+        # create tmp path
+        Path(self.tmp_path).mkdir(parents=True, exist_ok=True)
+
+        self.ui_id = None   # ID of current object in the interface
+        self.body_bottom = None   # Location of body center in the current png representation of a garment
+
+        self.body_file = None
+        self.design_file = None
+        self.new_body_file(
+            os.path.abspath('./assets/body_measurments/f_smpl_avg.yaml')
+        )
+        self.new_design_file(
+            os.path.abspath('./assets/design_params/base.yaml')
+        )
+
+    # Info
+    def isReady(self):
+        """Check if the State is correct to load and save garments"""
+        return self.body_file is not None and self.design_file is not None
+
+    # Updates
+    def new_body_file(self, path):
+        self.body_file = path
+        with open(path, 'r') as f:
+            body = yaml.safe_load(f)['body']
+            # TODO The following should not be here
+            body['waist_level'] = body['height'] - body['head_l'] - body['waist_line']
+        self.body_params = body
+        self.reload_garment()
+
+    def new_design_file(self, path):
+        self.design_file = path
+        with open(path, 'r') as f:
+            des = yaml.safe_load(f)['design']
+        self.design_params = des
+        self.reload_garment()
+
+    def reload_garment(self):
+        """Reload sewing pattern with current body and design parameters"""
+        if self.isReady():
+            self.sew_pattern = MetaGarment('Configured_design', self.body_params, self.design_params)
+            self._view_serialize()
+
+    def _view_serialize(self):
+        """Save a sewing pattern svg/png representation to tmp folder be used for display"""
+
+        # Clear up the folder from previous version -- it's not needed any more
+        self.clear_tmp()
+        pattern = self.sew_pattern()
+        # Save as json file
+        folder = pattern.serialize(
+            self.tmp_path, 
+            tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
+            to_subfolder=True, 
+            with_3d=False, with_text=False, view_ids=False)
+        
+        self.body_bottom = np.asarray(pattern.body_bottom_shift)
+        self.png_size = pattern.png_size
+
+        # get PNG file!
+        root, _, files = next(os.walk(folder))
+        for filename in files:
+            if 'pattern.png' in filename and '3d' not in filename:
+                self.png_path = os.path.join(root, filename)
+                break
+
+    def clear_tmp(self, root=False):
+        """Clear tmp folder"""
+        shutil.rmtree(self.tmp_path)
+        if not root:
+            Path(self.tmp_path).mkdir(parents=True, exist_ok=True)
+
+    # Current state
+    def save(self):
+        """Save current garment design to self.save_path """
+
+        pattern = self.sew_pattern()
+
+        # Save as json file
+        folder = pattern.serialize(
+            self.save_path, 
+            tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
+            to_subfolder=True, 
+            with_3d=True, with_text=False, view_ids=False)
+
+        shutil.copy(self.body_file, folder)  # TODO Better name!
+        shutil.copy(self.design_file, folder)
+
+        print(f'Success! {self.sew_pattern.name} saved to {folder}')
+
 
 class GUIState():
     """State of GUI-related objects"""
@@ -42,7 +137,7 @@ class GUIState():
         self.theme()
         self.window = sg.Window(
             'Sewing Pattern Configurator', 
-            self.def_layout(self.def_canvas_size), 
+            self.def_layout(self.pattern_state, self.def_canvas_size), 
             finalize=True)
         
         self.prettify_sliders()
@@ -56,24 +151,11 @@ class GUIState():
         self.window.close()
 
     # Layout initialization / updates
-    def def_layout(self, canvas_size=(500, 500)):
+    def def_layout(self, pattern, canvas_size=(500, 500)):
 
         # First the window layout in 2 columns
 
-        body_layout = [
-            [
-                sg.Text('Body Mesurements: '),
-            ],
-            [
-                sg.In(
-                    default_text=self.pattern_state.body_file,
-                    size=(25, 1), 
-                    enable_events=True, 
-                    key='-BODY-'
-                ),
-                sg.FileBrowse(initial_folder=os.path.dirname(self.pattern_state.body_file))
-            ],
-        ]
+        body_layout = self.def_body_layout(pattern)
 
         design_layout = [
             [
@@ -134,6 +216,49 @@ class GUIState():
             ]
         ]
         return layout
+
+    def def_body_layout(self, guipattern:GUIPattern):
+        """Add fields to control body measurements"""
+
+        param_name_col = []
+        param_input_col = []
+
+        body = guipattern.body_params
+        # TODO non-numric inputs =(
+        for param in body:
+            param_name_col.append([
+                sg.Text(param + ':', justification='right', expand_x=True), 
+                ])
+            param_input_col.append([
+                sg.Input(
+                    str(body[param]), 
+                    enable_events=True, 
+                    key=f'-body-{param}', 
+                    size=7) 
+                ])
+            
+        layout = [
+            [
+                sg.Text('Body Mesurements: '),
+            ],
+            [
+                sg.In(
+                    default_text=self.pattern_state.body_file,
+                    size=(25, 1), 
+                    enable_events=True, 
+                    key='-BODY-'
+                ),
+                sg.FileBrowse(initial_folder=os.path.dirname(self.pattern_state.body_file))
+            ],
+            [
+                sg.Column(param_name_col), 
+                sg.Column(param_input_col)
+            ]
+        ]
+
+        return layout
+            
+
 
     def init_canvas_background(self):
         '''Add base background images to output canvas'''
@@ -240,7 +365,6 @@ class GUIState():
         # https://github.com/PySimpleGUI/PySimpleGUI/issues/10#issuecomment-997426666
         return [key for key, value in self.window.key_dict.items() if isinstance(value, instance_type)]
 
-
     # Main loop
     def event_loop(self):
         while True:
@@ -251,10 +375,15 @@ class GUIState():
             # TODO Parameter update: change corresponding field
             # TODO Any parameter updated: Update MetaGarment and re-load visualization
 
+            # TODO Body Process events
+
             # TODO process errors for wrong files chosen
             if event == '-BODY-':
                 file = values['-BODY-']
                 self.pattern_state.new_body_file(file)
+
+                # TODO Update values in the bottoms
+
                 self.upd_pattern_visual()
             elif event == '-DESIGN-':  # A file was chosen from the listbox
                 file = values['-DESIGN-']
@@ -268,97 +397,3 @@ class GUIState():
                 print('PatternConfigurator::INFO::New output path: ', self.pattern_state.save_path)
 
 
-
-class GUIPattern():
-    def __init__(self) -> None:
-        self.save_path = os.path.abspath('./')   # TODO Use Path()
-        self.png_path = None
-        self.tmp_path = os.path.abspath('./tmp')
-        # create tmp path
-        Path(self.tmp_path).mkdir(parents=True, exist_ok=True)
-
-        self.ui_id = None   # ID of current object in the interface
-        self.body_bottom = None   # Location of body center in the current png representation of a garment
-
-        self.body_file = None
-        self.design_file = None
-        self.new_body_file(
-            os.path.abspath('./assets/body_measurments/f_smpl_avg.yaml')
-        )
-        self.new_design_file(
-            os.path.abspath('./assets/design_params/base.yaml')
-        )
-
-    # Info
-    def isReady(self):
-        """Check if the State is correct to load and save garments"""
-        return self.body_file is not None and self.design_file is not None
-
-    # Updates
-    def new_body_file(self, path):
-        self.body_file = path
-        with open(path, 'r') as f:
-            body = yaml.safe_load(f)['body']
-            body['waist_level'] = body['height'] - body['head_l'] - body['waist_line']
-        self.body_params = body
-        self.reload_garment()
-
-    def new_design_file(self, path):
-        self.design_file = path
-        with open(path, 'r') as f:
-            des = yaml.safe_load(f)['design']
-        self.design_params = des
-        self.reload_garment()
-
-    def reload_garment(self):
-        """Reload sewing pattern with current body and design parameters"""
-        if self.isReady():
-            self.sew_pattern = MetaGarment('Configured_design', self.body_params, self.design_params)
-            self._view_serialize()
-
-    def _view_serialize(self):
-        """Save a sewing pattern svg/png representation to tmp folder be used for display"""
-
-        # Clear up the folder from previous version -- it's not needed any more
-        self.clear_tmp()
-        pattern = self.sew_pattern()
-        # Save as json file
-        folder = pattern.serialize(
-            self.tmp_path, 
-            tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
-            to_subfolder=True, 
-            with_3d=False, with_text=False, view_ids=False)
-        
-        self.body_bottom = np.asarray(pattern.body_bottom_shift)
-        self.png_size = pattern.png_size
-
-        # get PNG file!
-        root, _, files = next(os.walk(folder))
-        for filename in files:
-            if 'pattern.png' in filename and '3d' not in filename:
-                self.png_path = os.path.join(root, filename)
-                break
-
-    def clear_tmp(self, root=False):
-        """Clear tmp folder"""
-        shutil.rmtree(self.tmp_path)
-        if not root:
-            Path(self.tmp_path).mkdir(parents=True, exist_ok=True)
-
-    # Current state
-    def save(self):
-        """Save current garment design to self.save_path """
-
-        pattern = self.sew_pattern()
-
-        # Save as json file
-        folder = pattern.serialize(
-            self.save_path, 
-            tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
-            to_subfolder=True, 
-            with_3d=True, with_text=False, view_ids=False)
-
-        shutil.copy(self.body_file, folder)  # TODO Better name!
-        shutil.copy(self.design_file, folder)
-
-        print(f'Success! {self.sew_pattern.name} saved to {folder}')
