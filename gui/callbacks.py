@@ -204,6 +204,28 @@ class GUIState():
         self.pattern_state.clear_tmp(root=True)
         self.window.close()
 
+    # Pretty stuff
+    def theme(self):
+        """Define and apply custom theme"""
+        # Native demo https://github.com/PySimpleGUI/PySimpleGUI/blob/master/DemoPrograms/Demo_Simple_Material_Feel.py
+        # https://stackoverflow.com/a/74625488
+
+        gui_theme = {
+            "BACKGROUND": sg.COLOR_SYSTEM_DEFAULT,  #'#FFF9E7', 
+            "TEXT": sg.COLOR_SYSTEM_DEFAULT, 
+            "INPUT": sg.COLOR_SYSTEM_DEFAULT,
+            "TEXT_INPUT": sg.COLOR_SYSTEM_DEFAULT, 
+            "SCROLL": sg.COLOR_SYSTEM_DEFAULT,
+            "BUTTON":  ('#505050', '#CECECE'),  # sg.COLOR_SYSTEM_DEFAULT, # ('#A714FF', '#F6E7FF'),  # sg.OFFICIAL_PYSIMPLEGUI_BUTTON_COLOR, 
+            "PROGRESS": sg.COLOR_SYSTEM_DEFAULT, 
+            "BORDER": 0,
+            "SLIDER_DEPTH": 0.5, 
+            "PROGRESS_DEPTH": 0
+        }
+
+        sg.theme_add_new('SewPatternsTheme', gui_theme)
+        sg.theme('SewPatternsTheme')
+
     # Layout initialization / updates
     def def_layout(self, pattern, canvas_size=(500, 500)):
 
@@ -314,6 +336,7 @@ class GUIState():
 
         # TODO Background of collapsible blocks
         # TODO Unused/non-relevant fields
+        # TODO reload values from file
 
         text_size = max([len(param) for param in design_params])
 
@@ -346,10 +369,10 @@ class GUIState():
                 elif p_type == 'int' or p_type == 'float':
                     in_field = sg.Slider( 
                         design_params[param]['range'], 
-                        default_value=design_params[param]['v'],   # current 'v' 
+                        default_value=design_params[param]['v'],  
                         orientation='horizontal',
                         relief=sg.RELIEF_FLAT, 
-                        resolution=1 if p_type == 'int' else 0.05,  # TODO parameter?
+                        resolution=1 if p_type == 'int' else 0.05,  # TODO as parameter?
                         key=f'{pre_key}-{param}', 
                         enable_events=True
                     )
@@ -387,7 +410,6 @@ class GUIState():
         
         return fields
 
-
     def init_canvas_background(self):
         '''Add base background images to output canvas'''
         # https://stackoverflow.com/a/71816897
@@ -402,6 +424,7 @@ class GUIState():
         self.body_img_id = self.window['CANVAS'].draw_image(
             filename='assets/img/body_sihl.png', location=self.canvas_margins)
 
+    # Updates
     def upd_canvas_size(self, new):
 
         # https://github.com/PySimpleGUI/PySimpleGUI/issues/2842#issuecomment-890049683
@@ -450,6 +473,29 @@ class GUIState():
         self.pattern_state.ui_id = self.window['CANVAS'].draw_image(
             filename=self.pattern_state.png_path, location=location.tolist())
 
+    def upd_fields_body(self):
+        """Update current values of the fields 
+            if they were loaded from a file
+        """
+        fields = self.get_keys_by_instance_tag(sg.Input, 'BODY-')
+        for elem in fields:
+            param = elem.split('-')[1]
+            self.window[elem].update(self.pattern_state.body_params[param])
+
+    
+    def upd_fields_design(self, design_params, pre_key='DESIGN'):
+        """Update current values of the fields 
+            if they were loaded from a file
+        """
+        for param in design_params:
+            if 'v' in design_params[param]:
+                self.window[f'{pre_key}-{param}'].update(design_params[param]['v'])
+            else:
+                self.upd_fields_design(
+                    design_params[param], 
+                    f'{pre_key}-{param}'
+                )
+
     # Modifiers after window finalization
     def input_text_on_enter(self, tag):
         """Modify input text elements to only send events when Enter is pressed"""
@@ -459,28 +505,6 @@ class GUIState():
         fields = self.get_keys_by_instance_tag(sg.Input, tag)
         for key in fields:
             self.window[key].bind('<Return>', '-ENTER')
-
-    # Pretty stuff
-    def theme(self):
-        """Define and apply custom theme"""
-        # Native demo https://github.com/PySimpleGUI/PySimpleGUI/blob/master/DemoPrograms/Demo_Simple_Material_Feel.py
-        # https://stackoverflow.com/a/74625488
-
-        gui_theme = {
-            "BACKGROUND": sg.COLOR_SYSTEM_DEFAULT,  #'#FFF9E7', 
-            "TEXT": sg.COLOR_SYSTEM_DEFAULT, 
-            "INPUT": sg.COLOR_SYSTEM_DEFAULT,
-            "TEXT_INPUT": sg.COLOR_SYSTEM_DEFAULT, 
-            "SCROLL": sg.COLOR_SYSTEM_DEFAULT,
-            "BUTTON":  ('#505050', '#CECECE'),  # sg.COLOR_SYSTEM_DEFAULT, # ('#A714FF', '#F6E7FF'),  # sg.OFFICIAL_PYSIMPLEGUI_BUTTON_COLOR, 
-            "PROGRESS": sg.COLOR_SYSTEM_DEFAULT, 
-            "BORDER": 0,
-            "SLIDER_DEPTH": 0.5, 
-            "PROGRESS_DEPTH": 0
-        }
-
-        sg.theme_add_new('SewPatternsTheme', gui_theme)
-        sg.theme('SewPatternsTheme')
 
     def prettify_sliders(self):
         """ Make slider knowbs flat and small
@@ -529,13 +553,9 @@ class GUIState():
                 file = values['BODYFILE']
                 self.pattern_state.new_body_file(file)
 
-                # Update values in the fields acconding to loaded file
-                fields = self.get_keys_by_instance_tag(sg.Input, 'BODY-')
-                for elem in fields:
-                    param = elem.split('-')[1]
-                    self.window[elem].update(self.pattern_state.body_params[param])
-
+                self.upd_fields_body()
                 self.upd_pattern_visual()
+
             elif event.startswith('BODY-') and '-ENTER' in event:
                 # Updated body parameter:
                 param = event.split('-')[1]
@@ -578,9 +598,13 @@ class GUIState():
             elif event == 'DESIGNFILE':  # A file was chosen from the listbox
                 file = values['DESIGNFILE']
                 self.pattern_state.new_design_file(file)
+
+                self.upd_fields_design(self.pattern_state.design_params)
                 self.upd_pattern_visual()
+
             elif event == 'SAVE':
                 self.pattern_state.save()
+
             elif event == 'FOLDER-OUT':
                 self.pattern_state.save_path = values['FOLDER-OUT']
 
