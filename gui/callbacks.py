@@ -43,6 +43,7 @@ def Collapsible(layout, key, title='', arrows=(sg.SYMBOL_DOWN, sg.SYMBOL_RIGHT),
 
 # Utils
 # TODO Probably don't belong here
+# https://stackoverflow.com/a/37704379
 def nested_get(dic, keys):    
     for key in keys:
         dic = dic[key]
@@ -269,6 +270,7 @@ class GUIState():
     def def_body_layout(self, guipattern:GUIPattern):
         """Add fields to control body measurements"""
 
+        # TODO with current settings column separation is not really needed
         param_name_col = []
         param_input_col = []
 
@@ -320,23 +322,54 @@ class GUIState():
         fields = []
         for param in design_params:
             if 'v' in design_params[param]:
+
+                p_type = design_params[param]['type']
+
+                # TODO Display of initially NULL values? 
+
+                if 'select' in p_type:
+                    values = design_params[param]['range']
+                    if 'null' in p_type:
+                        values.append(None)
+                    in_field = sg.Combo(
+                        values=design_params[param]['range'], 
+                        default_value=design_params[param]['v'],
+                        enable_events=True,
+                        key=f'{pre_key}-{param}',
+                    )
+                elif p_type == 'bool':
+                    # TODO styling
+                    in_field = sg.Checkbox(
+                        '', 
+                        default=design_params[param]['v'], 
+                        key=f'{pre_key}-{param}',
+                        enable_events=True, 
+                        expand_x=True)
+                elif p_type == 'int' or p_type == 'float':
+                    in_field = sg.Slider( 
+                        design_params[param]['range'], 
+                        default_value=design_params[param]['v'],   # current 'v' 
+                        orientation='horizontal',
+                        relief=sg.RELIEF_FLAT, 
+                        resolution=1 if p_type == 'int' else 0.05,  # TODO parameter?
+                        key=f'{pre_key}-{param}', 
+                        enable_events=True
+                    )
+                else:
+                    print(f'WARNING::Unknown parameter type: {p_type}')
+                    in_field = sg.Input(
+                        str(design_params[param]['v']), 
+                        enable_events=False,  # Events enabled outside: only on Enter 
+                        key=f'{pre_key}-{param}', 
+                        size=7) 
+
                 fields.append(
                     [
                         sg.Text(param + ':', justification='right', expand_x=True), 
-                        sg.Input(
-                            str(design_params[param]['v']), 
-                            enable_events=False,  # Events enabled outside: only on Enter 
-                            key=f'{pre_key}-{param}', 
-                            size=7) 
+                        in_field
                     ])
                 
-                # DRAFT [
-                #     sg.Slider(
-                #     [0, 10], 
-                #     default_value=5, 
-                #     orientation='horizontal',
-                #     relief=sg.RELIEF_FLAT
-                # )],
+                
             else:  # subsets of params
                 fields.append(
                     [ 
@@ -501,7 +534,7 @@ class GUIState():
                     self.window[elem].update(self.pattern_state.body_params[param])
 
                 self.upd_pattern_visual()
-            elif 'BODY-' in event and '-ENTER' in event:
+            elif event.startswith('BODY-') and '-ENTER' in event:
                 # Updated body parameter:
                 param = event.split('-')[1]
                 new_value = values[event.removesuffix('-ENTER')]
@@ -514,18 +547,21 @@ class GUIState():
                     self.pattern_state.reload_garment()
                     self.upd_pattern_visual()
 
-            elif 'DESIGN-' in event and '-ENTER' in event:
+            elif event.startswith('DESIGN-'):    # DRAFT and '-ENTER' in event:
                 # Updated body parameter:
-                param_ids = event.split('-')[1:-1]
-                new_value = values[event.removesuffix('-ENTER')]
+                event_name = event.removesuffix('-ENTER')
+                param_ids = event_name.split('-')[1:]
+                new_value = values[event_name]
+
+                # DEBUG
+                print('NEW EVENT')
+                print(event, new_value, param_ids)
 
                 # TODO array values
-                # TODO range chekcs? 
-                # TODO Expected type checks?
-                # TODO None values?
                 try:   # https://stackoverflow.com/a/67432444
                     conv_value = float(new_value)
                 except: # check non-numericals
+                    # TODO is it even needed? 
                     if new_value == "True":  # TODO Is it the same if I use radiobutton?
                         conv_value = True
                     elif new_value == "False":
