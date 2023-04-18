@@ -327,16 +327,12 @@ class GUIState():
             ]
         ]
 
-        # TODO add Update button?
-
         return layout
 
     def def_design_layout(self, design_params, pre_key='DESIGN'):
         """Add fields to control design parameters"""
 
-        # TODO Background of collapsible blocks
-        # TODO Unused/non-relevant fields
-        # TODO reload values from file
+        # TODO Unused/non-relevant fields  # Low-priority
 
         text_size = max([len(param) for param in design_params])
 
@@ -359,7 +355,6 @@ class GUIState():
                         key=f'{pre_key}-{param}',
                     )
                 elif p_type == 'bool':
-                    # TODO styling
                     in_field = sg.Checkbox(
                         param, 
                         default=design_params[param]['v'], 
@@ -372,7 +367,7 @@ class GUIState():
                         default_value=design_params[param]['v'],  
                         orientation='horizontal',
                         relief=sg.RELIEF_FLAT, 
-                        resolution=1 if p_type == 'int' else 0.05,  # TODO as parameter?
+                        resolution=1 if p_type == 'int' else 0.05, 
                         key=f'{pre_key}-{param}', 
                         enable_events=True
                     )
@@ -453,7 +448,7 @@ class GUIState():
         ])   # Not the very bottom  # TODO avoid hardcoding the size..
         location = real_b_bottom - png_body
 
-        # TODO Bigger background image
+        # TODO Max canvas size from the get-go
         # Adjust the body location (margins) to fit the pattern
         if location[0] < 0: 
             self.canvas_margins[0] = self.default_canvas_margins[0] - location[0]
@@ -548,66 +543,62 @@ class GUIState():
                     self.window[field].metadata[0] if self.window[field].visible else self.window[field].metadata[1])
             
             # ----- Garment-related actions -----
-            # TODO process errors for wrong files chosen
-            if event == 'BODYFILE':
-                file = values['BODYFILE']
-                self.pattern_state.new_body_file(file)
+            try: 
+                if event == 'BODYFILE':
+                    file = values['BODYFILE']
+                    self.pattern_state.new_body_file(file)
 
-                self.upd_fields_body()
-                self.upd_pattern_visual()
-
-            elif event.startswith('BODY-') and '-ENTER' in event:
-                # Updated body parameter:
-                param = event.split('-')[1]
-                new_value = values[event.removesuffix('-ENTER')]
-
-                try:   # https://stackoverflow.com/a/67432444
-                    self.pattern_state.body_params[param] = float(new_value)
-                except: # check numerical
-                    sg.popup('Only numerical values are supported (int, float)')
-                else:
-                    self.pattern_state.reload_garment()
+                    self.upd_fields_body()
                     self.upd_pattern_visual()
 
-            elif event.startswith('DESIGN-'):    # DRAFT and '-ENTER' in event:
-                # Updated body parameter:
-                event_name = event.removesuffix('-ENTER')
-                param_ids = event_name.split('-')[1:]
-                new_value = values[event_name]
+                elif event.startswith('BODY-') and '-ENTER' in event:
+                    # Updated body parameter:
+                    param = event.split('-')[1]
+                    new_value = values[event.removesuffix('-ENTER')]
 
-                # DEBUG
-                print('NEW EVENT')
-                print(event, new_value, param_ids)
-
-                # TODO array values
-                try:   # https://stackoverflow.com/a/67432444
-                    conv_value = float(new_value)
-                except: # check non-numericals
-                    # TODO is it even needed? 
-                    if new_value == "True":  # TODO Is it the same if I use radiobutton?
-                        conv_value = True
-                    elif new_value == "False":
-                        conv_value = False
+                    try:   # https://stackoverflow.com/a/67432444
+                        self.pattern_state.body_params[param] = float(new_value)
+                    except: # check numerical
+                        sg.popup('Only numerical values are supported (int, float)')
                     else:
+                        self.pattern_state.reload_garment()
+                        self.upd_pattern_visual()
+
+                elif event.startswith('DESIGN-'): 
+                    # Updated body parameter:
+                    event_name = event.removesuffix('-ENTER')
+                    param_ids = event_name.split('-')[1:]
+                    new_value = values[event_name]
+
+                    # DEBUG
+                    print('NEW DESIGN EVENT: ', event, new_value, type(new_value))
+
+                    # TODO array values
+                    # TODO Is it needed?
+                    try:   # https://stackoverflow.com/a/67432444
+                        conv_value = float(new_value)
+                    except: # check non-numericals
                         conv_value = new_value
-                finally:
-                    nested_set(self.pattern_state.design_params, param_ids + ['v'], conv_value)
-                    self.pattern_state.reload_garment()
+                    finally:
+                        nested_set(self.pattern_state.design_params, param_ids + ['v'], conv_value)
+                        self.pattern_state.reload_garment()
+                        self.upd_pattern_visual()
+
+                elif event == 'DESIGNFILE':  # A file was chosen from the listbox
+                    file = values['DESIGNFILE']
+                    self.pattern_state.new_design_file(file)
+
+                    self.upd_fields_design(self.pattern_state.design_params)
                     self.upd_pattern_visual()
 
-            elif event == 'DESIGNFILE':  # A file was chosen from the listbox
-                file = values['DESIGNFILE']
-                self.pattern_state.new_design_file(file)
+                elif event == 'SAVE':
+                    self.pattern_state.save()
 
-                self.upd_fields_design(self.pattern_state.design_params)
-                self.upd_pattern_visual()
+                elif event == 'FOLDER-OUT':
+                    self.pattern_state.save_path = values['FOLDER-OUT']
 
-            elif event == 'SAVE':
-                self.pattern_state.save()
-
-            elif event == 'FOLDER-OUT':
-                self.pattern_state.save_path = values['FOLDER-OUT']
-
-                print('PatternConfigurator::INFO::New output path: ', self.pattern_state.save_path)
-
+                    print('PatternConfigurator::INFO::New output path: ', self.pattern_state.save_path)
+            
+            except BaseException as e:
+                sg.popup_error_with_traceback('Application ERROR detected (see below)', str(e))
 
