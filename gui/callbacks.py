@@ -270,16 +270,16 @@ class GUIState():
     def def_body_layout(self, guipattern:GUIPattern):
         """Add fields to control body measurements"""
 
-        # TODO with current settings column separation is not really needed
-        param_name_col = []
         param_input_col = []
 
         body = guipattern.body_params
         for param in body:
-            param_name_col.append([
-                sg.Text(param + ':', justification='right', expand_x=True), 
-                ])
             param_input_col.append([
+                sg.Text(
+                    param + ':', 
+                    justification='right', 
+                    expand_x=True), 
+
                 sg.Input(
                     str(body[param]), 
                     enable_events=False,  # Events enabled outside: only on Enter 
@@ -301,7 +301,6 @@ class GUIState():
                 sg.FileBrowse(initial_folder=os.path.dirname(self.pattern_state.body_file))
             ],
             [
-                sg.Column(param_name_col), 
                 sg.Column(param_input_col)
             ]
         ]
@@ -313,11 +312,10 @@ class GUIState():
     def def_design_layout(self, design_params, pre_key='DESIGN'):
         """Add fields to control design parameters"""
 
-        # TODO Types
-        # TODO Ranges
-        # TODO Processing
-        # TODO Alignment
+        # TODO Background of collapsible blocks
         # TODO Unused/non-relevant fields
+
+        text_size = max([len(param) for param in design_params])
 
         fields = []
         for param in design_params:
@@ -340,7 +338,7 @@ class GUIState():
                 elif p_type == 'bool':
                     # TODO styling
                     in_field = sg.Checkbox(
-                        '', 
+                        param, 
                         default=design_params[param]['v'], 
                         key=f'{pre_key}-{param}',
                         enable_events=True, 
@@ -365,7 +363,11 @@ class GUIState():
 
                 fields.append(
                     [
-                        sg.Text(param + ':', justification='right', expand_x=True), 
+                        sg.Text(
+                            param + ':', 
+                            justification='right', 
+                            size=text_size + 1
+                        ), 
                         in_field
                     ])
                 
