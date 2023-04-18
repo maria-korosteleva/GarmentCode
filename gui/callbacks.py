@@ -21,6 +21,43 @@ import PySimpleGUI as sg
 # Custom 
 from assets.garment_programs.meta_garment import MetaGarment
 
+# GUI Elements
+def Collapsible(layout, key, title='', arrows=(sg.SYMBOL_DOWN, sg.SYMBOL_RIGHT), collapsed=True):
+    """
+    User Defined Element
+    A "collapsable section" element. Like a container element that can be collapsed and brought back
+    :param layout:Tuple[List[sg.Element]]: The layout for the section
+    :param key:Any: Key used to make this section visible / invisible
+    :param title:str: Title to show next to arrow
+    :param arrows:Tuple[str, str]: The strings to use to show the section is (Open, Closed).
+    :param collapsed:bool: If True, then the section begins in a collapsed state
+    :return:sg.Column: Column including the arrows, title and the layout that is pinned
+
+    # NOTE: from https://github.com/PySimpleGUI/PySimpleGUI/blob/master/DemoPrograms/Demo_Column_Collapsible_Sections.py
+
+    """
+    return sg.Column([[sg.T((arrows[1] if collapsed else arrows[0]), enable_events=True, k=key+'-BUTTON'),
+                       sg.T(title, enable_events=True, key=key+'-TITLE')],
+                      [sg.pin(sg.Column(layout, key=key, visible=not collapsed, metadata=arrows))]], pad=(0,0))
+
+
+# Utils
+# TODO Probably don't belong here
+def nested_get(dic, keys):    
+    for key in keys:
+        dic = dic[key]
+    return dic
+
+def nested_set(dic, keys, value):
+    for key in keys[:-1]:
+        dic = dic.setdefault(key, {})
+    dic[keys[-1]] = value
+
+def nested_del(dic, keys):
+    for key in keys[:-1]:
+        dic = dic[key]
+    del dic[keys[-1]]
+
 # State of GUI
 class GUIPattern():
     def __init__(self) -> None:
@@ -153,7 +190,8 @@ class GUIState():
             finalize=True)
         
         # Modifiers after window finalization
-        self.input_text_on_enter()
+        self.input_text_on_enter('BODY-')
+        self.input_text_on_enter('DESIGN-')
         self.prettify_sliders()
         self.init_canvas_background()
 
@@ -186,12 +224,9 @@ class GUIState():
                 sg.FileBrowse(initial_folder=os.path.dirname(self.pattern_state.design_file))
             ],
             [
-                sg.Slider(
-                    [0, 10], 
-                    default_value=5, 
-                    orientation='horizontal',
-                    relief=sg.RELIEF_FLAT
-            )],
+                sg.Column(self.def_design_layout(self.pattern_state.design_params))
+            ]
+            
         ]
 
         # For now will only show the name of the file that was chosen
@@ -269,9 +304,54 @@ class GUIState():
             ]
         ]
 
-        # TODO Update button?
+        # TODO add Update button?
 
         return layout
+
+    def def_design_layout(self, design_params, pre_key='DESIGN'):
+        """Add fields to control design parameters"""
+
+        # TODO Types
+        # TODO Ranges
+        # TODO Processing
+        # TODO Alignment
+        # TODO Unused/non-relevant fields
+
+        fields = []
+        for param in design_params:
+            if 'v' in design_params[param]:
+                fields.append(
+                    [
+                        sg.Text(param + ':', justification='right', expand_x=True), 
+                        sg.Input(
+                            str(design_params[param]['v']), 
+                            enable_events=False,  # Events enabled outside: only on Enter 
+                            key=f'{pre_key}-{param}', 
+                            size=7) 
+                    ])
+                
+                # DRAFT [
+                #     sg.Slider(
+                #     [0, 10], 
+                #     default_value=5, 
+                #     orientation='horizontal',
+                #     relief=sg.RELIEF_FLAT
+                # )],
+            else:  # subsets of params
+                fields.append(
+                    [ 
+                        Collapsible(
+                            self.def_design_layout(
+                                design_params[param], 
+                                pre_key=f'{pre_key}-{param}'
+                            ), 
+                            key=f'COLLAPSE-{pre_key}-{param}',
+                            title=param
+                        )
+                    ])
+        
+        return fields
+
 
     def init_canvas_background(self):
         '''Add base background images to output canvas'''
@@ -336,12 +416,12 @@ class GUIState():
             filename=self.pattern_state.png_path, location=location.tolist())
 
     # Modifiers after window finalization
-    def input_text_on_enter(self):
+    def input_text_on_enter(self, tag):
         """Modify input text elements to only send events when Enter is pressed"""
         # https://stackoverflow.com/a/68528658
 
         # All body updates
-        fields = self.get_keys_by_instance_tag(sg.Input, 'BODY-')
+        fields = self.get_keys_by_instance_tag(sg.Input, tag)
         for key in fields:
             self.window[key].bind('<Return>', '-ENTER')
 
@@ -396,10 +476,19 @@ class GUIState():
     def event_loop(self):
         while True:
             event, values = self.window.read()
+
+            # --- Window layout actions ---
             if event == 'Exit' or event == sg.WIN_CLOSED:
                 break
-
-            # TODO Parameter update: change corresponding field
+            elif event.startswith('COLLAPSE'):
+                field = event.removesuffix('-BUTTON').removesuffix('-TITLE')
+                # Visibility
+                self.window[field].update(visible=not self.window[field].visible)
+                # UPD graphic
+                self.window[field + '-BUTTON'].update(
+                    self.window[field].metadata[0] if self.window[field].visible else self.window[field].metadata[1])
+            
+            # ----- Garment-related actions -----
             # TODO process errors for wrong files chosen
             if event == 'BODYFILE':
                 file = values['BODYFILE']
@@ -417,11 +506,34 @@ class GUIState():
                 param = event.split('-')[1]
                 new_value = values[event.removesuffix('-ENTER')]
 
-                try:
+                try:   # https://stackoverflow.com/a/67432444
                     self.pattern_state.body_params[param] = float(new_value)
                 except: # check numerical
                     sg.popup('Only numerical values are supported (int, float)')
                 else:
+                    self.pattern_state.reload_garment()
+                    self.upd_pattern_visual()
+
+            elif 'DESIGN-' in event and '-ENTER' in event:
+                # Updated body parameter:
+                param_ids = event.split('-')[1:-1]
+                new_value = values[event.removesuffix('-ENTER')]
+
+                # TODO array values
+                # TODO range chekcs? 
+                # TODO Expected type checks?
+                # TODO None values?
+                try:   # https://stackoverflow.com/a/67432444
+                    conv_value = float(new_value)
+                except: # check non-numericals
+                    if new_value == "True":  # TODO Is it the same if I use radiobutton?
+                        conv_value = True
+                    elif new_value == "False":
+                        conv_value = False
+                    else:
+                        conv_value = new_value
+                finally:
+                    nested_set(self.pattern_state.design_params, param_ids + ['v'], conv_value)
                     self.pattern_state.reload_garment()
                     self.upd_pattern_visual()
 
