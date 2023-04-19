@@ -177,11 +177,12 @@ class GUIState():
         self.pattern_state = GUIPattern()
 
         # Pattern display
-        self.default_canvas_margins = [20, 20]
-        self.canvas_margins = copy(self.default_canvas_margins)
+        self.min_margin = 10
+        self.default_body_img_margins = [125, 20]   
+        self.body_img_margins = copy(self.default_body_img_margins)
         self.body_img_id = None
         self.back_img_id = None
-        self.def_canvas_size = (842, 596)
+        self.def_canvas_size = (1385, 805)   # DRAFT Back image size (842, 596)   (1200, 900)
 
         # Last option needed to finalize GUI initialization and allow modifications
         self.theme()
@@ -283,7 +284,10 @@ class GUIState():
                         sg.Tab('Body', body_layout)
                     ]], 
                     expand_y=True, 
-                    tab_border_width=0, border_width=0),
+                    tab_border_width=0, 
+                    border_width=0,
+                    size=(450, 1500)
+                ),
                 sg.Column(viewer_column),
             ]
         ]
@@ -333,6 +337,7 @@ class GUIState():
         """Add fields to control design parameters"""
 
         # TODO Unused/non-relevant fields  # Low-priority
+        # TODO Tabs instead of collapsibles for cleaner layout?
 
         text_size = max([len(param) for param in design_params])
 
@@ -348,6 +353,9 @@ class GUIState():
                     values = design_params[param]['range']
                     if 'null' in p_type:
                         values.append(None)
+
+                    print(design_params[param]['v'])
+                    
                     in_field = sg.Combo(
                         values=design_params[param]['range'], 
                         default_value=design_params[param]['v'],
@@ -415,9 +423,12 @@ class GUIState():
             self.window['CANVAS'].delete_figure(self.body_img_id)
 
         self.back_img_id = self.window['CANVAS'].draw_image(
-            filename='assets/img/background_small.png', location=(0, 0))
+            filename='assets/img/millimiter_paper_1500_900.png', location=(0, 0))
         self.body_img_id = self.window['CANVAS'].draw_image(
-            filename='assets/img/body_sihl.png', location=self.canvas_margins)
+            filename='assets/img/body_sihl.png', location=self.body_img_margins)
+        
+        # DEBUG
+        print('Body Margins: ', self.body_img_margins)
 
     # Updates
     def upd_canvas_size(self, new):
@@ -427,6 +438,10 @@ class GUIState():
             max(new[0], self.def_canvas_size[0]),
             max(new[1], self.def_canvas_size[1])
         )
+
+        # DEBUG
+        print('RESIZING: ', upd_canvas_size)  # Canvas size and print body position
+
         # UPD canvas
         self.window['CANVAS'].erase()
         self.window['CANVAS'].set_size(upd_canvas_size)
@@ -443,24 +458,24 @@ class GUIState():
         # Image body center with the body center of a body silhouette
         png_body = self.pattern_state.body_bottom
         real_b_bottom = np.asarray([
-            429/2 + self.default_canvas_margins[0], 
-            530 + self.default_canvas_margins[1]
+            429/2 + self.default_body_img_margins[0], 
+            530 + self.default_body_img_margins[1]
         ])   # Not the very bottom  # TODO avoid hardcoding the size..
         location = real_b_bottom - png_body
 
         # TODO Max canvas size from the get-go
         # Adjust the body location (margins) to fit the pattern
         if location[0] < 0: 
-            self.canvas_margins[0] = self.default_canvas_margins[0] - location[0]
-            self.canvas_margins[1] = self.default_canvas_margins[1]
+            self.body_img_margins[0] = self.default_body_img_margins[0] - location[0]
+            self.body_img_margins[1] = self.default_body_img_margins[1]
             location[0] = 0
         else: 
-            self.canvas_margins[:] = self.default_canvas_margins
+            self.body_img_margins[:] = self.default_body_img_margins
         
         # Change canvas size to fit a pattern? -> 
         self.upd_canvas_size((
-            location[0] + self.pattern_state.png_size[0] + self.default_canvas_margins[0],
-            location[1] + self.pattern_state.png_size[1] + self.default_canvas_margins[1]
+            location[0] + self.pattern_state.png_size[0] + self.min_margin,
+            location[1] + self.pattern_state.png_size[1] + self.min_margin
         ))
 
         # draw everything
@@ -476,7 +491,6 @@ class GUIState():
         for elem in fields:
             param = elem.split('-')[1]
             self.window[elem].update(self.pattern_state.body_params[param])
-
     
     def upd_fields_design(self, design_params, pre_key='DESIGN'):
         """Update current values of the fields 

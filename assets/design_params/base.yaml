@@ -122,7 +122,7 @@ design:
       type: int
     length: 
       v: 30
-      range: [3, 100]
+      range: [3, 80]
       type: int
     connect_ruffle:
       v: 1
