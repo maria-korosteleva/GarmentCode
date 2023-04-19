@@ -163,7 +163,8 @@ class GUIPattern():
             yaml.dump(
                 {'design': self.design_params}, 
                 f,
-                default_flow_style=False
+                default_flow_style=False,
+                sort_keys=False
             )
 
         print(f'Success! {self.sew_pattern.name} saved to {folder}')
