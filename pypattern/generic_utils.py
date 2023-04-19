@@ -57,7 +57,7 @@ def close_enough(f1, f2=0, tol=1e-4):
     """Compare two floats correctly """
     return abs(f1 - f2) < tol
 
-
+# ---- Complex numbers converters ----- 
 def c_to_list(num):
     """Convert complex number to a list of 2 elements"""
     return [num.real, num.imag]
@@ -72,3 +72,20 @@ def list_to_c(num):
         return [complex(n[0], n[1]) for n in num]
     else: 
         return complex(num[0], num[1])
+    
+# ---- Nested Dictionaries shortcuts ---- 
+# https://stackoverflow.com/a/37704379
+def nested_get(dic, keys):    
+    for key in keys:
+        dic = dic[key]
+    return dic
+
+def nested_set(dic, keys, value):
+    for key in keys[:-1]:
+        dic = dic.setdefault(key, {})
+    dic[keys[-1]] = value
+
+def nested_del(dic, keys):
+    for key in keys[:-1]:
+        dic = dic[key]
+    del dic[keys[-1]]
