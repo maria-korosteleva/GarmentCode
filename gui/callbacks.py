@@ -358,15 +358,11 @@ class GUIState():
 
                 p_type = design_params[param]['type']
 
-                # TODO Display of initially NULL values? 
-
                 if 'select' in p_type:
                     values = design_params[param]['range']
                     if 'null' in p_type:
                         values.append(None)
 
-                    print(design_params[param]['v'])
-                    
                     in_field = sg.Combo(
                         values=design_params[param]['range'], 
                         default_value=design_params[param]['v'],
@@ -391,7 +387,7 @@ class GUIState():
                         enable_events=True
                     )
                 else:
-                    print(f'WARNING::Unknown parameter type: {p_type}')
+                    print(f'GUI::WARNING::Unknown parameter type: {p_type}')
                     in_field = sg.Input(
                         str(design_params[param]['v']), 
                         enable_events=False,  # Events enabled outside: only on Enter 
