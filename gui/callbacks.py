@@ -4,8 +4,6 @@
 
 # TODO allow changing window size? https://stackoverflow.com/questions/66379808/how-do-i-respond-to-window-resize-in-pysimplegui
 # https://stackoverflow.com/questions/63686020/pysimplegui-how-to-achieve-elements-frames-columns-to-align-to-the-right-and-r
-# TODO Scale of the visuals (note: large background image causes hanging)
-# TODO Icons
 # TODO Colorscheme
 
 import os.path
@@ -59,6 +57,17 @@ def nested_del(dic, keys):
     for key in keys[:-1]:
         dic = dic[key]
     del dic[keys[-1]]
+
+def vertical_text(title):
+    """ "verticalize" the text string (with newlines)
+
+        Ref: https://github.com/PySimpleGUI/PySimpleGUI/issues/2713#issue-586409727
+    """
+    new_title = ""
+    for letter in title:
+        new_title += f"{letter}\n"
+    return new_title
+
 
 # State of GUI
 class GUIPattern():
@@ -252,7 +261,7 @@ class GUIState():
                 sg.FileBrowse(initial_folder=os.path.dirname(self.pattern_state.design_file))
             ],
             [
-                sg.Column(self.def_design_layout(self.pattern_state.design_params))
+                sg.Column(self.def_design_tabs())
             ]
             
         ]
@@ -300,7 +309,7 @@ class GUIState():
                     expand_y=True, 
                     tab_border_width=0, 
                     border_width=0,
-                    size=(450, 1500)
+                    size=(550, 1100) 
                 ),
                 sg.Column(viewer_column),
             ]
@@ -347,11 +356,10 @@ class GUIState():
 
         return layout
 
-    def def_design_layout(self, design_params, pre_key='DESIGN'):
+    def def_flat_design_layout(self, design_params, pre_key='DESIGN', use_collapsible=False):
         """Add fields to control design parameters"""
 
         # TODO Unused/non-relevant fields  # Low-priority
-        # TODO Tabs instead of collapsibles for cleaner layout?
 
         text_size = max([len(param) for param in design_params])
 
@@ -409,19 +417,63 @@ class GUIState():
                 
                 
             else:  # subsets of params
-                fields.append(
-                    [ 
-                        Collapsible(
-                            self.def_design_layout(
-                                design_params[param], 
-                                pre_key=f'{pre_key}-{param}'
-                            ), 
-                            key=f'COLLAPSE-{pre_key}-{param}',
-                            title=param
-                        )
-                    ])
+                if use_collapsible:
+                    fields.append(
+                        [ 
+                            Collapsible(
+                                self.def_flat_design_layout(
+                                    design_params[param], 
+                                    pre_key=f'{pre_key}-{param}'
+                                ), 
+                                title=param,
+                                key=f'COLLAPSE-{pre_key}-{param}'
+                            )
+                        ])
+                else:
+                    fields.append(
+                        [ 
+                            sg.Frame(
+                                param,
+                                self.def_flat_design_layout(
+                                    design_params[param], 
+                                    pre_key=f'{pre_key}-{param}'
+                                ), 
+                                key=f'COLLAPSE-{pre_key}-{param}',
+                                expand_x=True
+                            )
+                        ])
         
         return fields
+
+    def def_design_tabs(self, pre_key='DESIGN'):
+        """Top level categories into tabs"""
+
+        design_params = self.pattern_state.design_params
+        tabs = []
+        for param in design_params:
+            if 'v' in design_params[param]:
+                sg.popup_error_with_traceback(
+                    f'Leaf parameter on top level of design hierarchy: {param}!!'
+                )
+                continue
+            # Tab
+            tabs.append(
+                sg.Tab(
+                    param, 
+                    self.def_flat_design_layout(
+                        design_params[param], 
+                        pre_key=f'{pre_key}-{param}', 
+                        use_collapsible=(param == 'left')
+                    ))
+            )
+
+        return [[sg.TabGroup(
+                    [tabs], 
+                    tab_location='lefttop', 
+                    tab_border_width=0, 
+                    border_width=0
+                )]]
+
 
     def init_canvas_background(self):
         '''Add base background image to output canvas'''
@@ -618,7 +670,6 @@ class GUIState():
                     # DEBUG
                     print('NEW DESIGN EVENT: ', event, new_value, type(new_value))
 
-                    # TODO array values
                     # TODO Is it needed?
                     try:   # https://stackoverflow.com/a/67432444
                         conv_value = float(new_value)
