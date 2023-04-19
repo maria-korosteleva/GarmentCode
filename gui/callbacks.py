@@ -196,6 +196,7 @@ class GUIState():
         self.input_text_on_enter('DESIGN-')
         self.prettify_sliders()
         self.init_canvas_background()
+        self.init_body_silhouette()
 
         # Draw initial pattern
         self.upd_pattern_visual()
@@ -255,12 +256,22 @@ class GUIState():
 
         # For now will only show the name of the file that was chosen
         viewer_column = [
-            [sg.Graph(
-                canvas_size=canvas_size, 
-                graph_bottom_left=(0, canvas_size[1]), 
-                graph_top_right=(canvas_size[0], 0), 
-                background_color='white', 
-                key='CANVAS')
+            [
+                sg.Push(),
+                sg.Checkbox(
+                    'Display Reference Silhouette', 
+                    default=True,
+                    key='BODYDISPLAY',
+                    enable_events=True
+                )
+            ],
+            [
+                sg.Graph(
+                    canvas_size=canvas_size, 
+                    graph_bottom_left=(0, canvas_size[1]), 
+                    graph_top_right=(canvas_size[0], 0), 
+                    background_color='white', 
+                    key='CANVAS')
             ],      
             [
                 sg.Text('Output Folder:'),
@@ -414,16 +425,19 @@ class GUIState():
         return fields
 
     def init_canvas_background(self):
-        '''Add base background images to output canvas'''
+        '''Add base background image to output canvas'''
         # https://stackoverflow.com/a/71816897
 
         if self.back_img_id is not None:
             self.window['CANVAS'].delete_figure(self.back_img_id)
-        if self.body_img_id is not None:
-            self.window['CANVAS'].delete_figure(self.body_img_id)
-
+        
         self.back_img_id = self.window['CANVAS'].draw_image(
             filename='assets/img/millimiter_paper_1500_900.png', location=(0, 0))
+
+    def init_body_silhouette(self):
+        """Add body figure to canvas"""
+        if self.body_img_id is not None:
+            self.window['CANVAS'].delete_figure(self.body_img_id)
         self.body_img_id = self.window['CANVAS'].draw_image(
             filename='assets/img/body_30_opacity.png', location=self.body_img_margins)
 
@@ -480,7 +494,8 @@ class GUIState():
             location[1] + self.pattern_state.png_size[1] + self.min_margin
         ))
         # Align body with the pattern
-        self.window['CANVAS'].relocate_figure(self.body_img_id, *self.body_img_margins)
+        if self.body_img_id is not None:
+            self.window['CANVAS'].relocate_figure(self.body_img_id, *self.body_img_margins)
 
         # Display the pattern
         self.pattern_state.ui_id = self.window['CANVAS'].draw_image(
@@ -558,7 +573,18 @@ class GUIState():
                 # UPD graphic
                 self.window[field + '-BUTTON'].update(
                     self.window[field].metadata[0] if self.window[field].visible else self.window[field].metadata[1])
-            
+            elif event == 'BODYDISPLAY':
+                # Toggle display of body figure
+                if self.body_img_id is not None:
+                    # Already diplayed
+                    self.window['CANVAS'].delete_figure(self.body_img_id)
+                    self.body_img_id = None
+                else:
+                    self.init_body_silhouette()
+                    # rearrange images correctly 
+                    self.window['CANVAS'].send_figure_to_back(self.body_img_id)
+                    self.window['CANVAS'].send_figure_to_back(self.back_img_id)
+
             # ----- Garment-related actions -----
             try: 
                 if event == 'BODYFILE':
