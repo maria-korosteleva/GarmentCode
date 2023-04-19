@@ -98,7 +98,7 @@ class PantsHalf(pyp.Component):
             length,
             rise=design['rise']['v'],
             dart_position=body['bust_points'] / 2,
-            ruffle=design['ruffle']['v'][0],
+            ruffle=design['ruffle_front']['v'],
             crotch_extention=design['crotch_extention']['v'],
             crotch_angle_adj=2
             ).translate_by([0, body['waist_level'] - 5, 25])
@@ -110,7 +110,7 @@ class PantsHalf(pyp.Component):
             length,
             rise=design['rise']['v'],
             dart_position=body['bum_points'] / 2,
-            ruffle=design['ruffle']['v'][1],
+            ruffle=design['ruffle_back']['v'],
             crotch_extention=design['crotch_extention']['v'],
             crotch_angle_adj=1.5
             ).translate_by([0, body['waist_level'] - 5, -20])

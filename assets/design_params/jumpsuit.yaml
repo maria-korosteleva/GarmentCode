@@ -134,9 +134,14 @@ design:
     rise:
       v: 1
       range: [0.5, 1]
-    ruffle:
-      v:  [True, True]   
+    ruffle_front:
+      v: True
       range: [True, False]
+      type: bool
+    ruffle_back:
+      v: True
+      range: [True, False]
+      type: bool
     crotch_extention:
       v: 4   
       range: None

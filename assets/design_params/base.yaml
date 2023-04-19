@@ -89,6 +89,18 @@ design:
       v: False
       range: [True, False]
       type: bool
+    length: 
+      v: 30
+      range: [3, 80]
+      type: int
+    connecting_width:
+      v: 20
+      range: [20, 40]   # TODO min armscye_depth . And no more then that for Bodice
+      type: int
+    end_width:
+      v: 20
+      range: [20, 40]  
+      type: int
     # Armhole
     armhole_shape: 
       v: ArmholeSmooth
@@ -102,10 +114,7 @@ design:
       v: 3
       range: [2, 6]
       type: float
-    connecting_width:
-      v: 20
-      range: [20, 40]   # TODO min armscye_depth . And no more then that for Bodice
-      type: int
+    
     # Shoulder shape
     standing_shoulder: 
       v: False
@@ -115,15 +124,8 @@ design:
       v: 7
       range: [4, 10]
       type: float
-    # Overalls
-    end_width:
-      v: 20
-      range: [20, 40]  
-      type: int
-    length: 
-      v: 30
-      range: [3, 80]
-      type: int
+
+    # Ruffle
     connect_ruffle:
       v: 1
       range: [1, 2]
@@ -222,6 +224,19 @@ design:
         v: False
         range: [True, False]
         type: bool
+      length: 
+        v: 30
+        range: [3, 100]
+        type: int
+      connecting_width:
+        v: 20
+        range: [20, 40]   # TODO min armscye_depth . And no more then that for Bodice
+        type: int
+      end_width:
+        v: 20
+        range: [20, 40]  
+        type: int
+
       # Armhole
       armhole_shape: 
         v: ArmholeSmooth
@@ -235,10 +250,7 @@ design:
         v: 3
         range: [2, 6]
         type: float
-      connecting_width:
-        v: 20
-        range: [20, 40]   # TODO min armscye_depth . And no more then that for Bodice
-        type: int
+      
       # Shoulder shape
       standing_shoulder: 
         v: False
@@ -248,15 +260,8 @@ design:
         v: 7
         range: [4, 10]
         type: float
-      # Overalls
-      end_width:
-        v: 20
-        range: [20, 40]  
-        type: int
-      length: 
-        v: 30
-        range: [3, 100]
-        type: int
+
+      # Ruffle
       connect_ruffle:
         v: 1
         range: [1, 2]
@@ -265,6 +270,7 @@ design:
         v: 1
         range: [1, 2]
         type: float
+      
       # Cuff
       cuff: 
         type:
@@ -386,8 +392,12 @@ design:
       v: 1
       range: [0.5, 1]
       type: float
-    ruffle:
-      v: [False, False]   # TODO Can be True only if connected to a waist band
+    ruffle_front:
+      v: False   # TODO Can be True only if connected to a waist band
+      range: [True, False]
+      type: bool
+    ruffle_back:
+      v: False   # TODO Can be True only if connected to a waist band
       range: [True, False]
       type: bool
     crotch_extention:
