@@ -425,7 +425,7 @@ class GUIState():
         self.back_img_id = self.window['CANVAS'].draw_image(
             filename='assets/img/millimiter_paper_1500_900.png', location=(0, 0))
         self.body_img_id = self.window['CANVAS'].draw_image(
-            filename='assets/img/body_sihl.png', location=self.body_img_margins)
+            filename='assets/img/body_30_opacity.png', location=self.body_img_margins)
 
     # Updates
     def upd_canvas_size(self, new):
