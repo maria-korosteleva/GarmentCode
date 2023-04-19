@@ -194,6 +194,7 @@ class GUIState():
         self.body_img_id = None
         self.back_img_id = None
         self.def_canvas_size = (1385, 805)   # TODO Adjust after fixing location issues
+        self.body_img_size = (None, None)  # NOTE updated in subroutines
 
         # Last option needed to finalize GUI initialization and allow modifications
         self.theme()
@@ -491,6 +492,12 @@ class GUIState():
             self.window['CANVAS'].delete_figure(self.body_img_id)
         self.body_img_id = self.window['CANVAS'].draw_image(
             filename='assets/img/body_30_opacity.png', location=self.body_img_margins)
+        
+        bbox = self.window['CANVAS'].get_bounding_box(self.body_img_id)
+        self.body_img_size = (
+            abs(bbox[0][0] - bbox[1][0]), 
+            abs(bbox[0][1] - bbox[1][1]), 
+        )  
 
     # Updates
     def upd_canvas_size(self, new):
@@ -508,8 +515,7 @@ class GUIState():
             # Don't do anything if the size didn't actually change
             return
         
-        # DEBUG
-        print(f'GUI::Resizing::{upd_canvas_size} from {self.window["CANVAS"].get_size()}')
+        print(f'GUI::Info::Resizing::{upd_canvas_size} from {self.window["CANVAS"].get_size()}')
 
         # UPD canvas
         self.window['CANVAS'].set_size(upd_canvas_size)
@@ -518,7 +524,6 @@ class GUIState():
 
     def upd_pattern_visual(self):
 
-        print(f'GUI::Info::New Pattern')  # DEBUG
         if self.pattern_state.ui_id is not None:
             self.window['CANVAS'].delete_figure(self.pattern_state.ui_id)
             self.pattern_state.ui_id = None
@@ -526,9 +531,9 @@ class GUIState():
         # Image body center with the body center of a body silhouette
         png_body = self.pattern_state.body_bottom
         real_b_bottom = np.asarray([
-            429/2 + self.default_body_img_margins[0], 
-            530 + self.default_body_img_margins[1]
-        ])   # Not the very bottom  # TODO avoid hardcoding the size..
+            self.body_img_size[0]/2 + self.default_body_img_margins[0], 
+            self.body_img_size[1]*0.95 + self.default_body_img_margins[1]
+        ])  # Coefficient to account for feet projection -- the bottom is lower then floor level
         location = real_b_bottom - png_body
 
         # Adjust the body location (margins) to fit the pattern
@@ -667,18 +672,14 @@ class GUIState():
                     param_ids = event_name.split('-')[1:]
                     new_value = values[event_name]
 
-                    # DEBUG
-                    print('NEW DESIGN EVENT: ', event, new_value, type(new_value))
+                    nested_set(
+                        self.pattern_state.design_params, 
+                        param_ids + ['v'], 
+                        new_value)
+                    self.pattern_state.reload_garment()
+                    self.upd_pattern_visual()
 
-                    # TODO Is it needed?
-                    try:   # https://stackoverflow.com/a/67432444
-                        conv_value = float(new_value)
-                    except: # check non-numericals
-                        conv_value = new_value
-                    finally:
-                        nested_set(self.pattern_state.design_params, param_ids + ['v'], conv_value)
-                        self.pattern_state.reload_garment()
-                        self.upd_pattern_visual()
+                    print(f'GUI::Info::New Design Event: {event} = {new_value} of {type(new_value)}')
 
                 elif event == 'DESIGNFILE':  # A file was chosen from the listbox
                     file = values['DESIGNFILE']
