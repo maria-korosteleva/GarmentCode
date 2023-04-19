@@ -178,11 +178,11 @@ class GUIState():
 
         # Pattern display
         self.min_margin = 10
-        self.default_body_img_margins = [125, 20]   
+        self.default_body_img_margins = [125, 20]   # TODO Adjust after fixing location issues
         self.body_img_margins = copy(self.default_body_img_margins)
         self.body_img_id = None
         self.back_img_id = None
-        self.def_canvas_size = (1385, 805)   # DRAFT Back image size (842, 596)   (1200, 900)
+        self.def_canvas_size = (1385, 805)   # TODO Adjust after fixing location issues
 
         # Last option needed to finalize GUI initialization and allow modifications
         self.theme()
@@ -426,31 +426,34 @@ class GUIState():
             filename='assets/img/millimiter_paper_1500_900.png', location=(0, 0))
         self.body_img_id = self.window['CANVAS'].draw_image(
             filename='assets/img/body_sihl.png', location=self.body_img_margins)
-        
-        # DEBUG
-        print('Body Margins: ', self.body_img_margins)
 
     # Updates
     def upd_canvas_size(self, new):
+        """Update size of canvas (visualization window)
+        
+            NOTE: Nothing is updated if the size is the same
+        """
 
         # https://github.com/PySimpleGUI/PySimpleGUI/issues/2842#issuecomment-890049683
         upd_canvas_size = (
             max(new[0], self.def_canvas_size[0]),
             max(new[1], self.def_canvas_size[1])
         )
-
+        if upd_canvas_size == self.window['CANVAS'].get_size():
+            # Don't do anything if the size didn't actually change
+            return
+        
         # DEBUG
-        print('RESIZING: ', upd_canvas_size)  # Canvas size and print body position
+        print(f'GUI::Resizing::{upd_canvas_size} from {self.window["CANVAS"].get_size()}')
 
         # UPD canvas
-        self.window['CANVAS'].erase()
         self.window['CANVAS'].set_size(upd_canvas_size)
         self.window['CANVAS'].change_coordinates(
             (0, upd_canvas_size[1]), (upd_canvas_size[0], 0))
 
     def upd_pattern_visual(self):
 
-        print('New Pattern!!', self.pattern_state.png_path)  # DEBUG
+        print(f'GUI::Info::New Pattern')  # DEBUG
         if self.pattern_state.ui_id is not None:
             self.window['CANVAS'].delete_figure(self.pattern_state.ui_id)
             self.pattern_state.ui_id = None
@@ -463,7 +466,6 @@ class GUIState():
         ])   # Not the very bottom  # TODO avoid hardcoding the size..
         location = real_b_bottom - png_body
 
-        # TODO Max canvas size from the get-go
         # Adjust the body location (margins) to fit the pattern
         if location[0] < 0: 
             self.body_img_margins[0] = self.default_body_img_margins[0] - location[0]
@@ -472,14 +474,15 @@ class GUIState():
         else: 
             self.body_img_margins[:] = self.default_body_img_margins
         
-        # Change canvas size to fit a pattern? -> 
+        # Change canvas size to fit a pattern (if needed)
         self.upd_canvas_size((
             location[0] + self.pattern_state.png_size[0] + self.min_margin,
             location[1] + self.pattern_state.png_size[1] + self.min_margin
         ))
+        # Align body with the pattern
+        self.window['CANVAS'].relocate_figure(self.body_img_id, *self.body_img_margins)
 
-        # draw everything
-        self.init_canvas_background()
+        # Display the pattern
         self.pattern_state.ui_id = self.window['CANVAS'].draw_image(
             filename=self.pattern_state.png_path, location=location.tolist())
 
