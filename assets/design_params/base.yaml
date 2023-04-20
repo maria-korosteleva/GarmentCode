@@ -16,7 +16,7 @@ design:
       range: [True, False]
       type: bool
     bottom: 
-      v: Pants
+      v: SkirtCircle
       range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt]
       type: select_null
 
@@ -315,7 +315,7 @@ design:
 
   flare-skirt:
     length:
-      v: 0.2
+      v: 1.0
       range: [0.1, 1]
       type: float 
     n_panels:

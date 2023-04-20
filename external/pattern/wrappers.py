@@ -88,6 +88,7 @@ class VisPattern(core.ParametrizedPattern):
         if len(self.pattern['panels']) == 0:  # empty pattern
             return None
         
+        # TODO Make the scale controllable from outside?
         avg_box_x = []
         for panel in self.pattern['panels'].values():
             vertices = np.asarray(panel['vertices'])
@@ -95,9 +96,9 @@ class VisPattern(core.ParametrizedPattern):
             avg_box_x.append(box_size[0])
         avg_box_x = sum(avg_box_x) / len(avg_box_x)
 
-        if avg_box_x < 2:      # meters
+        if avg_box_x < 3:      # meters
             scaling_to_px = 300
-        elif avg_box_x < 200:  # sentimeters
+        elif avg_box_x < 250:  # sentimeters
             scaling_to_px = 3
         else:                    # pixels
             scaling_to_px = 1  

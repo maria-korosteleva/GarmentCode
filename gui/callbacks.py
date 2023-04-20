@@ -5,6 +5,7 @@
 # TODOLOW LOW-Priority allow changing window size? https://stackoverflow.com/questions/66379808/how-do-i-respond-to-window-resize-in-pysimplegui
 # https://stackoverflow.com/questions/63686020/pysimplegui-how-to-achieve-elements-frames-columns-to-align-to-the-right-and-r
 # TODOLOW Low-Priority Colorscheme
+# TODO Window is too big on Win laptops
 
 import os.path
 from copy import copy
