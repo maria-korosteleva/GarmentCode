@@ -165,17 +165,3 @@ def scale_to_cm(target, max_height_cm=220):
     elif height > max_height_cm:  # millimiters or something strange
         cmds.scale(0.1, 0.1, 0.1, target, centerPivot=True, absolute=True)
         print('Warning: {} is found to use millimiters as units. Scaled down by 0.1 for cm'.format(target))
-
-
-def vector_angle(v1, v2):
-    """Find an angle between two 2D vectors"""
-    v1, v2 = np.asarray(v1), np.asarray(v2)
-    cos = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
-    cos = max(min(cos, 1), -1)  # NOTE: getting rid of numbers like 1.000002 that appear due to numerical instability
-    angle = np.arccos(cos) 
-    # Cross to indicate correct relative orienataion of v2 w.r.t. v1
-    cross = np.cross(v1, v2)
-    
-    if abs(cross) > 1e-5:
-        angle *= np.sign(cross)
-    return angle

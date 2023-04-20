@@ -22,6 +22,7 @@ import mtoa.core
 # My modules
 import pattern.core as core
 import pattern.wrappers as wrappers
+from pattern.utils import vector_angle
 from mayaqltools import qualothwrapper as qw
 from mayaqltools import utils
 reload(core)
@@ -750,7 +751,7 @@ class MayaGarment(wrappers.VisPattern):
         # Rotation
         curr_dir = sec_point - top_point
         target_dir = edge_3d[1] - edge_3d[0]
-        rot_angle = np.rad2deg(utils.vector_angle(curr_dir[:2], target_dir[:2])) 
+        rot_angle = np.rad2deg(vector_angle(curr_dir[:2], target_dir[:2])) 
         if not right:
             rot_angle = rot_angle - 360
 

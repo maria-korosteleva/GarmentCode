@@ -24,17 +24,7 @@ import matplotlib.pyplot as plt
 # my
 import customconfig
 from pattern import core
-
-def list_to_c(num):
-    """Convert 2D list or list of 2D lists into complex number/list of complex numbers"""
-    if isinstance(num[0], list) or isinstance(num[0], np.ndarray):
-        return [complex(n[0], n[1]) for n in num]
-    else: 
-        return complex(num[0], num[1])
-    
-def c_to_np(num):
-    """Convert complex number to a numpy array of 2 elements"""
-    return np.asarray([num.real, num.imag])
+from pattern.utils import *
 
 
 class VisPattern(core.ParametrizedPattern):
@@ -197,9 +187,16 @@ class VisPattern(core.ParametrizedPattern):
         # Z-fist rotation to only reflect rotation visible in XY plane
         # NOTE: Heuristic, might be bug-prone
         rotation = R.from_euler('XYZ', panel['rotation'], degrees=True)   # XYZ
-        rotation = rotation.as_euler('ZYX', degrees=True)
-        path = path.rotated(degs=-rotation[0], origin=list_to_c(vertices[0]))
 
+        # Estimate degree of rotation of Y axis
+        # NOTE: Ox sometimes gets flipped because of 
+        # Gimbal locks of this Euler angle representation
+        res = rotation.apply([0, 1, 0])
+        flat_rot_angle = np.rad2deg(vector_angle([0, 1], res[:2]))
+        path = path.rotated(
+            degs=-flat_rot_angle, 
+            origin=list_to_c(vertices[0])
+        )
         path = path.translated(list_to_c(translation))  # NOTE: rot/transl order is important!
 
         # TODO Collisions of non-2D panels when drawn together? 
