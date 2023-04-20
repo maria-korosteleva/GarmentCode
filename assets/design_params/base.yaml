@@ -16,7 +16,7 @@ design:
       range: [True, False]
       type: bool
     bottom: 
-      v: GodetSkirt
+      v: SkirtManyPanels
       range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt]
       type: select_null
 
@@ -319,7 +319,7 @@ design:
       range: [0.1, 1]
       type: float 
     n_panels:
-      v: 7
+      v: 8
       range: [4, 15]
       type: int 
     suns:     # one "sun" is 360 skirt

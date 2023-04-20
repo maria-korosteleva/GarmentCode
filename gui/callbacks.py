@@ -19,7 +19,6 @@ import PySimpleGUI as sg
 
 # Custom 
 from assets.garment_programs.meta_garment import MetaGarment
-from pypattern.generic_utils import nested_set
 
 # GUI Elements
 def Collapsible(layout, key, title='', arrows=(sg.SYMBOL_DOWN, sg.SYMBOL_RIGHT), collapsed=True):
@@ -86,6 +85,31 @@ class GUIPattern():
             des = yaml.safe_load(f)['design']
         self.design_params = des
         self.reload_garment()
+
+    def set_design_param(self, param_path, new_value, reload=True):
+        """Set the new value of design params"""
+
+        dic = self.design_params
+        param = param_path[-1]
+
+        # Skip the top levels
+        # https://stackoverflow.com/a/37704379
+        for key in param_path[:-1]:
+            dic = dic.setdefault(key, {})
+        
+        # Ensure correct typization
+        if dic[param]['type'] == 'int':
+            new_value = int(new_value)
+        elif dic[param]['type'] == 'bool':
+            new_value = bool(new_value)
+        elif dic[param]['type'] == 'float':
+            new_value = float(new_value)
+        # Otherwise stays as is
+
+        dic[param]['v'] = new_value
+
+        if reload:
+            self.reload_garment()
 
     def reload_garment(self):
         """Reload sewing pattern with current body and design parameters"""
@@ -655,15 +679,13 @@ class GUIState():
                     event_name = event.removesuffix('#ENTER')
                     param_ids = event_name.split('#')[1:]
                     new_value = values[event_name]
+                    print(f'GUI::Info::New Design Event: {event} = {new_value} of {type(new_value)}')
 
-                    nested_set(
-                        self.pattern_state.design_params, 
-                        param_ids + ['v'], 
-                        new_value)
-                    self.pattern_state.reload_garment()
+                    self.pattern_state.set_design_param(
+                        param_ids, new_value)
+
                     self.upd_pattern_visual()
 
-                    print(f'GUI::Info::New Design Event: {event} = {new_value} of {type(new_value)}')
 
                 elif event == 'DESIGNFILE':  # A file was chosen from the listbox
                     file = values['DESIGNFILE']
