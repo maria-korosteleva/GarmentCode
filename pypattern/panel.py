@@ -8,7 +8,7 @@ from scipy.spatial.transform import Rotation as R
 from pattern.core import BasicPattern
 from pattern.wrappers import VisPattern
 from .base import BaseComponent
-from .edge import EdgeSequence
+from .edge import Edge, EdgeSequence
 from .connector import Stitches
 from .generic_utils import close_enough, vector_align_3D
 
@@ -27,6 +27,34 @@ class Panel(BaseComponent):
         self.rotation = R.from_euler('XYZ', [0, 0, 0])  # zero rotation
         # NOTE: initiating with empty sequence allows .append() to it safely
         self.edges =  EdgeSequence() 
+
+    # Info
+    # DRAFT 
+    def is_right_inside_edge(self, edge:Edge):
+        """ Check if the inside of the panel is on the right side
+            of an edge
+        """
+        # FIXME This one is not working reliably =(
+        norm = self.norm()
+
+        test_edge = edge.linearize()
+        if isinstance(test_edge, EdgeSequence): 
+            # NOTE: side is the same for all edges in linearized sequence
+            # so it's enough to chech just one
+            test_edge = test_edge[0]
+
+        test_edge_3d = [self.point_to_3D(test_edge.start), self.point_to_3D(test_edge.end)]
+        test_vec_3d = test_edge_3d[1] - test_edge_3d[0]
+
+        center_of_mass = self.point_to_3D(self._center_2D())
+
+        # We can determine the side based on relationship between the norm and 
+        # the edge
+        # Knowing that the norm is defined by counterclockwise direction of edges
+        cross = np.cross(test_vec_3d, center_of_mass - test_edge_3d[0])
+
+        return np.dot(cross, norm) < 0
+
 
     # ANCHOR - Operations -- update object in-place 
     def set_pivot(self, point_2d, replicate_placement=False):
@@ -226,16 +254,15 @@ class Panel(BaseComponent):
 
     # ANCHOR utils
     def _center_2D(self):
-        """Location of the panel center. NOTE: does not account for the curvatures
+        """Approximate Location of the panel center. 
+            
+            NOTE: uses crude linear approximation for curved edges
         """
         # NOTE: assuming that edges are organized in a loop and share vertices
-        # TODO Account for curvatures?
-        center_2d = np.array([
-            sum([edge.start[0] + edge.end[0] for edge in self.edges]), 
-            sum([edge.start[1] + edge.end[1] for edge in self.edges])
-            ])
+        lin_edges = EdgeSequence([e.linearize() for e in self.edges])
+        verts = lin_edges.verts()
 
-        return center_2d / (2 * len(self.edges))
+        return np.mean(verts, axis=0)
 
     def point_to_3D(self, point_2d):
         """Calculate 3D location of a point given in the local 2D plane """

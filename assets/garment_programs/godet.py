@@ -71,7 +71,11 @@ class GodetSkirt(pyp.Component):
         # make appropriate cuts and stitches
         cut_depth = math.sqrt((ins_w / 2)**2 + ins_depth**2 - (cut_width / 2)**2)
         cut_shape = pyp.esf.from_verts([0,0], [cut_width / 2, cut_depth], [cut_width, 0])  
-        right = z_transl < 0    # NOTE: heuristic corresponding to skirts in our collection
+
+        right = z_transl < 0    # FIXME: heuristic corresponding to skirts in our collection
+
+        # DRAFT right = panel.is_right_inside_edge(bottom_edge) =( Does not work reliably!
+
         for i in range(num_inserts):
             offset = cut_width / 2 + (cuts_dist / 2 if i == 0 else cuts_dist)   #  start_offest + i * stride
 
