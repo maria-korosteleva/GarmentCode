@@ -45,10 +45,12 @@ icon_image_b64 = b'iVBORw0KGgoAAAANSUhEUgAAAQAAAAEBCAYAAACXLnvDAAAACXBIWXMAAAsSA
 # State of GUI
 class GUIPattern():
     def __init__(self) -> None:
-        self.save_path = os.path.abspath('./')   # TODO Use Path()
+        self.save_path = os.path.abspath('./Logs/')   # TODO Use Path()
         self.png_path = None
         self.tmp_path = os.path.abspath('./tmp')
-        # create tmp path
+        
+        # create paths
+        Path(self.save_path).mkdir(parents=True, exist_ok=True)
         Path(self.tmp_path).mkdir(parents=True, exist_ok=True)
 
         self.ui_id = None   # ID of current object in the interface

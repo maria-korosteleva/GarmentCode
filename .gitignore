@@ -24,3 +24,4 @@ system.json
 # file for small script tries
 tmp*
 *tmp*.mb
+Logs*
