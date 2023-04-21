@@ -136,6 +136,8 @@ class BasicPattern(object):
 
         if name_list is None:  # start from beginning
             name_list = self.pattern['panels'].keys() 
+        if not name_list:
+            return []
         if location_dict is None:  # obtain location for all panels to use in sorting further
             location_dict = {}
             for name in name_list:

@@ -125,6 +125,12 @@ class GUIPattern():
         # Clear up the folder from previous version -- it's not needed any more
         self.clear_tmp()
         pattern = self.sew_pattern()
+
+        if not len(pattern.panel_order()): 
+            # Empty pattern
+            self.png_path = ''
+            return
+
         # Save as json file
         folder = pattern.serialize(
             self.tmp_path, 
@@ -537,6 +543,9 @@ class GUIState():
         if self.pattern_state.ui_id is not None:
             self.window['CANVAS'].delete_figure(self.pattern_state.ui_id)
             self.pattern_state.ui_id = None
+
+        if not self.pattern_state.png_path:  # Empty pattern
+            return
 
         # Image body center with the body center of a body silhouette
         png_body = self.pattern_state.body_bottom
