@@ -60,13 +60,13 @@ class SkirtCircle(pyp.Component):
         arc = suns * 2 * np.pi
 
         # panels
-        # FIXME Placement is awqward 🤔
         self.front = CircleArcPanel(
             'front', waist_rad, length, arc / 2).translate_by([0, body['waist_level'], 15])
-        self.front.rotate_to(R.from_euler('XYZ', [-40, 0, 0]))
+        self.front.rotate_to(R.from_euler('XYZ', [-40, 0, 0], degrees=True))
+
         self.back = CircleArcPanel(
             'back', waist_rad, length, arc / 2).translate_by([0, body['waist_level'], -15])
-        self.back.rotate_to(R.from_euler('XYZ', [40, 0, 0]))
+        self.back.rotate_to(R.from_euler('XYZ', [40, 0, 0], degrees=True))
 
         # Stitches
         self.stitching_rules = pyp.Stitches(

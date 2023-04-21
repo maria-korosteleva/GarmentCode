@@ -92,6 +92,41 @@ class Edge():
 
         return self
 
+    # Support for relative coordinate system
+    def _rel_to_abs_2d(self, point):
+        """Convert coordinates expressed relative to an edge into absolute """
+        start, end = np.array(self.start), np.array(self.end)
+        edge = end - start
+        edge_perp = np.array([-edge[1], edge[0]])
+
+        conv_start = self.start + point[0] * edge
+        conv_point = conv_start + point[1] * edge_perp
+        
+        return conv_point
+
+    def _abs_to_rel_2d(self, point):
+        """Convert control points coordinates from absolute to relative"""
+        start, end = np.array(self.start), np.array(self.end)
+        edge = end - start
+        edge_len = norm(edge)
+
+        point_vec = np.asarray(point) - start
+
+        converted = [None, None]
+        # X
+        # project control_vec on edge by dot product properties
+        projected_len = edge.dot(point_vec) / edge_len 
+        converted[0] = projected_len / edge_len
+        # Y
+        control_projected = edge * converted[0]
+        vert_comp = point_vec - control_projected  
+        converted[1] = norm(vert_comp) / edge_len
+
+        # Distinguish left&right curvature
+        converted[1] *= -np.sign(np.cross(point_vec, edge)) 
+        
+        return np.asarray(converted)
+
     # Actions
     def reverse(self):
         """Flip the direction of the edge"""
@@ -210,9 +245,7 @@ class CircleEdge(Edge):
     
     def midpoint(self):
         """Center of the edge"""
-        str_len = self._straight_len()
-
-        return [0.5 * str_len, self.control_y * str_len]
+        return self._rel_to_abs_2d([0.5, self.control_y])
 
     # Actions
     def reverse(self):
@@ -313,8 +346,8 @@ class CircleEdge(Edge):
 
         return (self._rel_radius() * self._straight_len(), 
                 self._is_large_arc(),
-                self.control_y > 0)   # left/right orientation 
-
+                self.control_y < 0)   # left/right orientation 
+  
     def linearize(self):
         """Return a linear approximation of an edge using the same vertex objects
         
@@ -345,7 +378,7 @@ class CircleEdge(Edge):
         h = 1 / np.tan(arc_angle / 2) / 2
 
         control_y = radius + h if to_sum else radius - h  # relative control point
-        control_y *= 1 if right else -1
+        control_y *= -1 if right else 1
 
         return CircleEdge(start, end, cy=control_y)
 
@@ -365,7 +398,7 @@ class CircleEdge(Edge):
         control_y = control_y / str_dist
 
         # Flip sight according to "right" parameter
-        control_y *= 1 if right else -1 
+        control_y *= -1 if right else 1 
 
         return CircleEdge(start, end, cy=control_y)
 
@@ -454,7 +487,7 @@ class CurveEdge(Edge):
         # Storing control points as relative since it preserves overall curve shape during
         # edge extention/contration
         if not relative:
-            self.control_points = self._abs_to_rel_2d().tolist()
+            self.control_points = [self._abs_to_rel_2d(c).tolist() for c in self.control_points]
 
     def length(self):
         """Length of Bezier curve edge"""
@@ -556,48 +589,6 @@ class CurveEdge(Edge):
 
         return self
     
-    # Special tools for curve representation
-    def _rel_to_abs_2d(self):
-        """Convert control points coordinates from relative to absolute """
-        start, end = np.array(self.start), np.array(self.end)
-        edge = end - start
-        edge_perp = np.array([-edge[1], edge[0]])
-
-        conv = []
-        for cp in self.control_points:
-            control_start = self.start + cp[0] * edge
-            conv_cp = control_start + cp[1] * edge_perp
-            conv.append(conv_cp)
-        
-        return np.asarray(conv)
-
-    def _abs_to_rel_2d(self):
-        """Convert control points coordinates from absolute to relative"""
-        start, end = np.array(self.start), np.array(self.end)
-        edge = end - start
-        edge_len = norm(edge)
-
-        conv = []
-        for cp in self.control_points:
-            control_vec = cp - start
-
-            conv_cp = [None, None]
-            # X
-            # project control_vec on edge by dot product properties
-            control_projected_len = edge.dot(control_vec) / edge_len 
-            conv_cp[0] = control_projected_len / edge_len
-            # Y
-            control_projected = edge * conv_cp[0]
-            vert_comp = control_vec - control_projected  
-            conv_cp[1] = norm(vert_comp) / edge_len
-
-            # Distinguish left&right curvature
-            conv_cp[1] *= -np.sign(np.cross(control_vec, edge)) 
-
-            conv.append(conv_cp)
-        
-        return np.asarray(conv)
- 
     def as_curve(self):
         """As svgpath curve object
 
@@ -605,7 +596,7 @@ class CurveEdge(Edge):
             the creation of the edge
         """
         # Get the nodes correcly
-        cp = self._rel_to_abs_2d()
+        cp = [self._rel_to_abs_2d(c) for c in self.control_points]
         nodes = np.vstack((self.start, cp, self.end))
 
         params = nodes[:, 0] + 1j*nodes[:, 1]
@@ -617,6 +608,8 @@ class CurveEdge(Edge):
         
             # NOTE: Add extra vertex at an extremum of the edge
         """
+        # TODO Use linearization for more correct 3D visualization 
+        # and self-intersection estimation
         extreme_points = self._extreme_points()
 
         seq = EdgeSequence(Edge(self.start, extreme_points[0]))
