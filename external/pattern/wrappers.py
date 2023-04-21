@@ -202,7 +202,7 @@ class VisPattern(core.ParametrizedPattern):
         # TODO Collisions of non-2D panels when drawn together? 
         # Just overlap correctly, I guess
 
-        return path, attributes, panel['translation'][-1] > 0
+        return path, attributes, panel['translation'][-1] >= 0
 
     def _add_panel_annotations(
             self, drawing, panel_name, path:svgpath.Path, with_text=True, view_ids=True):
@@ -269,11 +269,12 @@ class VisPattern(core.ParametrizedPattern):
                     paths_back.append(path)
                     attributes_b.append(attr)
 
-        # Shift back panels
-        front_max_x = max([path.bbox()[1] for path in paths_front]) 
-        back_min_x = min([path.bbox()[0] for path in paths_back]) 
-        shift_x = front_max_x - back_min_x + 10   # A little spacing
-        paths_back = [path.translated(shift_x+0j) for path in paths_back]
+        # Shift back panels if both types exist
+        if len(paths_front) > 0 and len(paths_back) > 0:
+            front_max_x = max([path.bbox()[1] for path in paths_front]) 
+            back_min_x = min([path.bbox()[0] for path in paths_back]) 
+            shift_x = front_max_x - back_min_x + 10   # A little spacing
+            paths_back = [path.translated(shift_x+0j) for path in paths_back]
         
         # SVG convert
         paths = paths_front + paths_back

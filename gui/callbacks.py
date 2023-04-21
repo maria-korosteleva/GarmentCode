@@ -380,7 +380,7 @@ class GUIState():
 
                 if 'select' in p_type:
                     values = design_params[param]['range']
-                    if 'null' in p_type:
+                    if 'null' in p_type and not None in values:
                         values.append(None)
 
                     in_field = sg.Combo(
