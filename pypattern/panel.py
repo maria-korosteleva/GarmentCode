@@ -78,14 +78,15 @@ class Panel(BaseComponent):
     def translate_by(self, delta_vector):
         """Translate panel by a vector"""
         self.translation = self.translation + np.array(delta_vector)
-        # FIXME self.autonorm()
+        # TODO Autonorm only on the assembly?
+        self.autonorm()
 
         return self
     
     def translate_to(self, new_translation):
         """Set panel translation to be exactly that vector"""
         self.translation = np.asarray(new_translation)
-        # FIXME self.autonorm()
+        self.autonorm()
 
         return self
     
@@ -94,7 +95,7 @@ class Panel(BaseComponent):
             * delta_rotation: scipy rotation object
         """
         self.rotation = delta_rotation * self.rotation
-        # FIXME self.autonorm()
+        self.autonorm()
 
         return self
 
@@ -105,7 +106,7 @@ class Panel(BaseComponent):
         if not isinstance(new_rot, R):
             raise ValueError(f'{self.__class__.__name__}::Error::Only accepting rotations in scipy format')
         self.rotation = new_rot
-        # FIXME self.autonorm()
+        self.autonorm()
 
         return self
 
@@ -166,7 +167,7 @@ class Panel(BaseComponent):
             self.rotate_to(R.from_euler('XYZ', curr_euler))  
 
             # Fix right/wrong side
-            # FIXME self.autonorm()
+            self.autonorm()
         else:
             # TODO Any other axis
             raise NotImplementedError(f'{self.name}::Error::Mirrowing over arbitrary axis is not implemented')
@@ -249,8 +250,14 @@ class Panel(BaseComponent):
 
     def norm(self):
         """Normal direction for the current panel"""
+
+        # Take linear version of the edges
+        # To correctly process edges with extreme curvatures
+        lin_edges = EdgeSequence([e.linearize() for e in self.edges])
+
         # center of mass
-        verts = self.edges.verts()
+        verts = lin_edges.verts()
+
         center = np.mean(verts, axis=0)
         center_3d = self.point_to_3D(center)
 
@@ -258,7 +265,7 @@ class Panel(BaseComponent):
         # Evalute norm candidates for all edges and then weight them. 
         # The dominant norm direction should be the correct one 
         norms = []
-        for e in self.edges:
+        for e in lin_edges:
             vert_0 = self.point_to_3D(e.start)
             vert_1 = self.point_to_3D(e.end)
 

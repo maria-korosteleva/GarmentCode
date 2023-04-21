@@ -32,6 +32,7 @@ class Edge():
         # Filled out at the panel assembly time
         self.geometric_id = 0
 
+    # Info
     def length(self):
         """Return current length of an edge.
             Since vertices may change their locations externally, the length is dynamically evaluated
@@ -73,6 +74,7 @@ class Edge():
         """Center of the edge"""
         return (np.array(self.start) + np.array(self.end)) / 2
 
+    # Representation
     def as_curve(self):
         """As svgpath curve object"""
         # Get the nodes correcly
@@ -81,6 +83,14 @@ class Edge():
         params = nodes[:, 0] + 1j*nodes[:, 1]
 
         return svgpath.Line(*params)
+
+    def linearize(self):
+        """Return a linear approximation of an edge using the same vertex objects
+        
+            # NOTE: for the linear edge it is an egde
+        """
+
+        return self
 
     # Actions
     def reverse(self):
@@ -305,6 +315,16 @@ class CircleEdge(Edge):
                 self._is_large_arc(),
                 self.control_y > 0)   # left/right orientation 
 
+    def linearize(self):
+        """Return a linear approximation of an edge using the same vertex objects
+        
+            # NOTE: Add extra vertex at an extremum of the edge
+        """
+        midpoint = self.midpoint()
+        edges = [Edge(self.start, midpoint), Edge(midpoint, self.end)]
+
+        return EdgeSequence(*edges)
+
     # Factories
     @staticmethod
     def from_points_angle(start, end, arc_angle, right=True):
@@ -388,8 +408,6 @@ class CircleEdge(Edge):
         return CircleEdge.from_points_radius(
             start, end, radius=rad, 
             large_arc=mid_dist > rad, right=angle > 0) 
-
-
 
     # Finally
     def assembly(self):
@@ -593,6 +611,35 @@ class CurveEdge(Edge):
         params = nodes[:, 0] + 1j*nodes[:, 1]
 
         return svgpath.QuadraticBezier(*params) if len(cp) < 2 else svgpath.CubicBezier(*params)
+
+    def linearize(self):
+        """Return a linear approximation of an edge using the same vertex objects
+        
+            # NOTE: Add extra vertex at an extremum of the edge
+        """
+        extreme_points = self._extreme_points()
+
+        seq = EdgeSequence(Edge(self.start, extreme_points[0]))
+        for i in range(1, len(extreme_points)):
+            seq.append(Edge(seq[-1].end, extreme_points[i]))
+        seq.append(Edge(seq[-1].end, self.end))
+
+        return seq
+
+    def _extreme_points(self):
+        """Return extreme points (on Y) of the current edge"""
+
+        # Variation of https://github.com/mathandy/svgpathtools/blob/5c73056420386753890712170da602493aad1860/svgpathtools/bezier.py#L197
+        curve = self.as_curve()
+        poly = svgpath.bezier2polynomial(curve, return_poly1d=True)
+        y = svgpath.imag(poly)
+        dy = y.deriv()
+        y_extremizers = [0, 1] + svgpath.polyroots(dy, realroots=True,
+                                        condition=lambda r: 0 < r < 1)
+
+        extreme_points = np.array([c_to_list(curve.point(t)) for t in y_extremizers])
+
+        return extreme_points
 
     @staticmethod
     def from_svg_curve(seg):
