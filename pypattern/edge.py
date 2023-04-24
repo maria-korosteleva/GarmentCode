@@ -6,10 +6,6 @@ import svgpathtools as svgpath  # https://github.com/mathandy/svgpathtools
 # Custom
 from .generic_utils import vector_angle, R2D, close_enough, c_to_list, list_to_c
 
-# TODO Unify classes? svgpath might allow to do that!
-# TODO At least inferit more subroutines
-
-
 class Edge():
     """Edge -- an individual segement of a panel border connecting two panel vertices, 
      the basic building block of panels
@@ -22,8 +18,10 @@ class Edge():
         Parameters: 
             * start, end: from/to vertcies that the edge connectes, describing the _interface_ of an edge
 
-            # TODO Add support for fold schemes to allow guided folds at the edge (e.g. pleats)
+            # TODOLOW Add support for fold schemes to allow guided folds at the edge (e.g. pleats)
         """
+
+        assert not all(close_enough(s, e) for s, e in zip(start, end)), 'Start and end of an edge should differ'
 
         self.start = start  # NOTE: careful with references to vertex objects
         self.end = end
@@ -210,21 +208,19 @@ class CircleEdge(Edge):
 
     def __init__(self, start=[0, 0], end=[0, 0], cy=None) -> None:
         """
-        
-            # DRAFT
-            return Y value for the location of 3d (control) point 
-            expressed relatively w.r.t. distance between start and end vertex of an edge
-            X value for control point is fixed at x=0.5 (edge center) to avoid ambiguity
+            Define a circular arc edge
+            * start, end: from/to vertcies that the edge connectes
+            * cy: third point on a circle arc (= control point). 
+                Expressed relatively w.r.t. distance between start and end. 
+                X value for control point is fixed at x=0.5 (edge center) to avoid ambiguity
+            
+            NOTE: represening control point in relative coordinates
+            allows preservation of curvature (arc angle, relative raidus w.r.t. straight edge length)
+            When distance between vertices shrinks / extends
+
+            NOTE: full circle not supported: start & end should differ
         """
         super().__init__(start, end)
-
-        # TODO Func parameters description https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#info-field-lists
-        # TODO check full circle
-        # FIXME Autonorm is going crasy with the circular edges
-
-        # NOTE: represening in relative control point coordinate
-        # Allows preservation of curvature (arc angle, relative raidus w.r.t. straight edge length)
-        # When distance between vertices shrinks / extends
         
         self.control_y = cy
 
@@ -448,7 +444,7 @@ class CircleEdge(Edge):
             compatible with core -> BasePattern JSON (dict) 
         """
 
-        # TODO Try the 3-point representation? Might be more compact + more continious
+        # TODOLOW Try the 3-point representation in JSON? Might be more compact + more continious
         # How much human readible this one should be?
         # Even one number (Y axis) could be enough 
 
@@ -468,15 +464,19 @@ class CurveEdge(Edge):
     """Curvy edge as Besier curve / B-spline"""
 
     def __init__(self, start=[0, 0], end=[0, 0], control_points=[], relative=True) -> None:
-        """
-        
-        :arg bool relative: specify whether the control point coordinated are given 
+        """Define a Besier curve edge
+            * start, end: from/to vertcies that the edge connectes
+            * control_points: coordinated of Bezier control points.
+                Specification of One control point creates the Quadratic Bezier, 
+                Specification of 2 control points creates Cubic Bezier. 
+                Other degrees are not supported.
+
+            * relative: specify whether the control point coordinated are given 
             relative to the edge length (True) or in 2D coordinate system of a panel (False)
 
         """
         super().__init__(start, end)
 
-        # TODO Func parameters description https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#info-field-lists
         # FIXME Self-intersections tests
 
         self.control_points = control_points
@@ -658,7 +658,7 @@ class CurveEdge(Edge):
             [self.start, self.end], 
             {
                 "endpoints": [0, 1], 
-                "curvature": {   # TODO Remove this level? The the 'type' is always present? 
+                "curvature": {   # TODOLOW Remove this level? The the 'type' is always present? 
                                  # Will break backwards compatibility though..
                     "type": 'quadratic' if len(self.control_points) == 1 else 'cubic',
                     "params": self.control_points
@@ -793,7 +793,7 @@ class EdgeSequence():
         if isinstance(orig, Edge):
             orig = self.index(orig)
         if orig < 0: 
-            orig = len(self) + orig  # TODO Modulo would be safer? 
+            orig = len(self) + orig 
         self.pop(orig)
         self.insert(orig, new)
         return self
@@ -853,8 +853,8 @@ class EdgeSequence():
         """Extend or shrink the edges along the line from start of the first edge to the 
         end of the last edge in sequence
         """
-        # TODO Version With preservation of total length?
-        # TODO Base extention factor on change in total length of edges rather
+        # TODOLOW Version With preservation of total length?
+        # TODOLOW Base extention factor on change in total length of edges rather
         # than on the shortcut length
 
         # FIXME extending by negative factor should be predictable (e.g. opposite direction of extention)
