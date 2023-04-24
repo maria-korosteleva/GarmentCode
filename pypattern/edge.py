@@ -168,6 +168,25 @@ class Edge():
             splitting it's length according to fractions
             while preserving the overall shape
         """
+        # Parametrized by length
+        return self._subdivide(fractions, by_length=True)
+    
+    def subdivide_param(self, fractions: list):
+        """Add intermediate vertices to an edge, 
+            splitting its curve parametrization according to fractions
+            while preserving the overall shape
+
+            NOTE: for line, it's the same as subdivision by length
+        """
+        
+        return self._subdivide(fractions, by_length=False)
+
+    def _subdivide(self, fractions: list, by_length=True):
+        """Subdivide edge by length or curve parametrization
+
+            NOTE: equivalent for straight lines
+        """
+
         frac = [abs(f) for f in fractions]
         if not close_enough(fsum:=sum(frac), 1, 1e-4):
             raise RuntimeError(f'Edge Subdivision::Error::fraction is incorrect. The sum {fsum} is not 1')
@@ -185,14 +204,6 @@ class Edge():
         seq.append(Edge(verts[-2], verts[-1]))
         
         return seq
-    
-    def subdivide_param(self, fractions: list):
-        """Add intermediate vertices to an edge, 
-            splitting its curve parametrization according to fractions
-            while preserving the overall shape
-            NOTE: for line, it's the same as subdivision by length
-        """
-        return self.subdivide_len(fractions)
 
     # Assembly into serializable object
     def assembly(self):
@@ -259,14 +270,16 @@ class CircleEdge(Edge):
 
         return self
 
-    def subdivide_len(self, fractions: list):
+    def _subdivide(self, fractions: list, by_length=False):
         """Add intermediate vertices to an edge, 
-            splitting it's length according to fractions
+            splitting it's parametrization according to fractions
             while preserving the overall shape
+        
+            NOTE: param subdiv == length subdiv for circle arcs
         """
         # NOTE: subdivide_param() is the same as subdivide_len()
         # So parent implementation is ok
-        # TODO Implementation is very similar to CurveEdge param-based subdivision
+        # TODOLOW Implementation is very similar to CurveEdge param-based subdivision
         frac = [abs(f) for f in fractions]
         if not close_enough(fsum:=sum(frac), 1, 1e-4):
             raise RuntimeError(f'Edge Subdivision::Error::fraction is incorrect. The sum {fsum} is not 1')
@@ -510,50 +523,26 @@ class CurveEdge(Edge):
 
         t_mid = curve.ilength(curve.length()/2)
         return curve.point(t_mid)
-
-    # TODO merge two methods
-    def subdivide_len(self, fractions: list):
+    
+    def _subdivide(self, fractions: list, by_length=False):
         """Add intermediate vertices to an edge, 
-            splitting it's length according to fractions
-            while preserving the overall shape
+            splitting its curve parametrization or overall length according to 
+            fractions while preserving the overall shape
         """
         curve = self.as_curve()
 
         # Sub-curves
-        covered_fr = 0
-        prev_t = 0
+        covered_fr, prev_t = 0, 0
         clen = curve.length()
         subcurves = []
         for fr in fractions:
             covered_fr += fr
-            next_t = curve.ilength(clen * covered_fr)
-            subcurves.append(curve.cropped(prev_t, next_t))
-            prev_t = next_t
-
-        # Convert to CurveEdge objects
-        subedges = EdgeSequence()
-        for curve in subcurves:
-            subedges.append(CurveEdge.from_svg_curve(curve))
-
-        # Reference the first/last vertices correctly
-        subedges[0].start = self.start
-        subedges[-1].end = self.end
-
-        return subedges
-    
-    def subdivide_param(self, fractions: list):
-        """Add intermediate vertices to an edge, 
-            splitting its curve parametrization according to fractions
-            while preserving the overall shape
-        """
-        curve = self.as_curve()
-
-        # Sub-curves
-        covered_fr = 0
-        subcurves = []
-        for fr in fractions:
-            subcurves.append(curve.cropped(covered_fr, covered_fr + fr))
-            covered_fr += fr
+            if by_length:
+                next_t = curve.ilength(clen * covered_fr)
+                subcurves.append(curve.cropped(prev_t, next_t))
+                prev_t = next_t
+            else:
+                subcurves.append(curve.cropped(covered_fr - fr, covered_fr))
 
         # Convert to CurveEdge objects
         subedges = EdgeSequence()
