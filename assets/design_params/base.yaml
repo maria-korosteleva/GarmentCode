@@ -49,7 +49,7 @@ design:
       v: 1.
       range: [1., 2]    # 1 == bust size
       type: float
-    flare:    # TODO backward compatibility
+    flare:   
       v: 4
       range: [-20, 20]
       type: int
@@ -180,7 +180,7 @@ design:
         v: 1.
         range: [1., 2]    # 1 == bust size
         type: float
-      flare:    # TODO backward compatibility
+      flare:   
         v: 4
         range: [-20, 20]
         type: int
@@ -294,7 +294,6 @@ design:
           range: [1, 1.5]
           type: float
     
-
   skirt: 
     length:
       v: 60
