@@ -45,13 +45,13 @@ icon_image_b64 = b'iVBORw0KGgoAAAANSUhEUgAAAQAAAAEBCAYAAACXLnvDAAAACXBIWXMAAAsSA
 # State of GUI
 class GUIPattern():
     def __init__(self) -> None:
-        self.save_path = os.path.abspath('./Logs/')   # TODO Use Path()
+        self.save_path = Path.cwd() / 'Logs' 
         self.png_path = None
-        self.tmp_path = os.path.abspath('./tmp')
+        self.tmp_path = Path.cwd() / 'tmp'
         
         # create paths
-        Path(self.save_path).mkdir(parents=True, exist_ok=True)
-        Path(self.tmp_path).mkdir(parents=True, exist_ok=True)
+        self.save_path.mkdir(parents=True, exist_ok=True)
+        self.tmp_path.mkdir(parents=True, exist_ok=True)
 
         self.ui_id = None   # ID of current object in the interface
         self.body_bottom = None   # Location of body center in the current png representation of a garment
@@ -59,10 +59,10 @@ class GUIPattern():
         self.body_file = None
         self.design_file = None
         self.new_body_file(
-            os.path.abspath('./assets/body_measurments/f_smpl_avg.yaml')
+            Path.cwd() / 'assets/body_measurments/f_smpl_avg.yaml'
         )
         self.new_design_file(
-            os.path.abspath('./assets/design_params/base.yaml')
+            Path.cwd() / 'assets/design_params/base.yaml'
         )
 
     # Info
@@ -76,7 +76,7 @@ class GUIPattern():
         with open(path, 'r') as f:
             body = yaml.safe_load(f)['body']
             # TODO The following should not be here. 
-            # TODO Needs to be updated when interface updates
+            # Needs to be updated when interface updates
             body['waist_level'] = body['height'] - body['head_l'] - body['waist_line']
         self.body_params = body
         self.reload_garment()
@@ -152,7 +152,7 @@ class GUIPattern():
         """Clear tmp folder"""
         shutil.rmtree(self.tmp_path)
         if not root:
-            Path(self.tmp_path).mkdir(parents=True, exist_ok=True)
+            self.tmp_path.mkdir(parents=True, exist_ok=True)
 
     # Current state
     def save(self):
@@ -271,7 +271,7 @@ class GUIState():
                     enable_events=True, 
                     key='DESIGNFILE'
                 ),
-                sg.FileBrowse(initial_folder=os.path.dirname(self.pattern_state.design_file))
+                sg.FileBrowse(initial_folder=self.pattern_state.design_file.parent)
             ],
             [
                 sg.Column(self.def_design_tabs())
@@ -360,7 +360,7 @@ class GUIState():
                     enable_events=True,  
                     key='BODYFILE'
                 ),
-                sg.FileBrowse(initial_folder=os.path.dirname(self.pattern_state.body_file))
+                sg.FileBrowse(initial_folder=self.pattern_state.body_file.parent)
             ],
             [
                 sg.Column(param_input_col)
@@ -709,9 +709,11 @@ class GUIState():
                     self.pattern_state.save()
 
                 elif event == 'FOLDER-OUT':
-                    self.pattern_state.save_path = values['FOLDER-OUT']
+                    self.pattern_state.save_path = Path(values['FOLDER-OUT'])
 
-                    print('PatternConfigurator::INFO::New output path: ', self.pattern_state.save_path)
+                    print(
+                        'PatternConfigurator::INFO::New output path: ', 
+                        self.pattern_state.save_path)
             
             except BaseException as e:
                 sg.popup_error_with_traceback(
