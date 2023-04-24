@@ -55,6 +55,9 @@ class Panel(BaseComponent):
 
         return np.dot(cross, norm) < 0
 
+    def pivot_3D(self):
+        """Pivot point of a panel in 3D"""
+        return self.point_to_3D([0, 0])
 
     # ANCHOR - Operations -- update object in-place 
     def set_pivot(self, point_2d, replicate_placement=False):
@@ -313,6 +316,7 @@ class Panel(BaseComponent):
     def bbox3D(self):
         """Evaluate 3D bounding box of the current panel"""
 
+        # FIXME Use linearization for more accurate approximation!
         verts_2d = self.edges.verts()
         verts_3d = np.asarray([self.point_to_3D(v) for v in verts_2d])
 

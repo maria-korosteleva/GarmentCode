@@ -18,6 +18,16 @@ class BaseComponent():
         # Rules for connecting subcomponents
         self.stitching_rules = Stitches()
 
+    # Info
+    def pivot_3D(self):
+        """Pivot location of a component in 3D"""
+        return [0, 0, 0]
+    
+    def bbox(seld):
+        """Bounding box"""
+        return 0, 0, 0, 0, 0, 0
+
+    # Operations
     def translate_by(self, delta_translation):
         return self
 

@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.spatial.transform import Rotation as R
+
 # Custom
 from pattern.core import BasicPattern
 from pattern.wrappers import VisPattern
@@ -16,6 +18,19 @@ class Component(BaseComponent):
 
     # Operations -- update object in-place
     # All return self object to allow chained operations
+
+    # Placements
+    def pivot_3D(self):
+        """Pivot of a component as a block
+
+            NOTE: The relation of pivots of subblocks needs to be 
+            preserved in any placement operations on components
+        """
+        mins, maxes = self.bbox3D()
+
+        return np.array(((mins[0] + maxes[0]) / 2, maxes[1], (mins[-1] + maxes[-1]) / 2))
+    
+
     def translate_by(self, delta_vector):
         """Translate component by a vector"""
         for subs in self._get_subcomponents():
@@ -24,9 +39,10 @@ class Component(BaseComponent):
     
     def translate_to(self, new_translation):
         """Set panel translation to be exactly that vector"""
-        # FIXME does not preserve relative placement of subcomponents
+        pivot = self.pivot_3D()
         for subs in self._get_subcomponents():
-            subs.translate_to(new_translation)
+            sub_pivot = subs.pivot_3D()
+            subs.translate_to(np.asarray(new_translation) + (sub_pivot - pivot))
         return self
 
     def place_below(self, comp: BaseComponent, gap=2):
@@ -38,18 +54,25 @@ class Component(BaseComponent):
 
         return self
 
-    def rotate_by(self, delta_rotation):
+    def rotate_by(self, delta_rotation:R):
         """Rotate component by a given rotation"""
+        pivot = self.pivot_3D()
         for subs in self._get_subcomponents():
+            # With preserving relationships between components
+            rel = subs.pivot_3D() - pivot
+            rel_rotated = delta_rotation.apply(rel) 
             subs.rotate_by(delta_rotation)
+            subs.translate_by(rel_rotated - rel)
         return self
     
     def rotate_to(self, new_rot):
-        """Set panel rotation to be exactly given rotation"""
-        for subs in self._get_subcomponents():
-            subs.rotate_to(new_rot)
-        return self
+        # TODO Implement with correct preservation of relative placement
+        # of subcomponents
+        raise NotImplementedError(
+            f'Component::Error::rotate_to is not supported on component level.'
+            'Use relative <rotate_by()> method instead')
 
+    # Mirror
     def mirror(self, axis=[0, 1]):
         """Swap this component with it's mirror image by recursively mirroring sub-components
         
@@ -98,11 +121,10 @@ class Component(BaseComponent):
 
         return mins.min(axis=0), maxes.max(axis=0)
 
-
+    # Subcomponents
     def _get_subcomponents(self):
         """Unique set of subcomponents defined in the self.subs list or as attributes of the object"""
 
         all_attrs = [getattr(self, name) for name in dir(self) if name[:2] != '__' and name[-2:] != '__']
         return list(set([att for att in all_attrs if isinstance(att, BaseComponent)] + self.subs))
-
 

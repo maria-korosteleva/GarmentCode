@@ -8,7 +8,7 @@
 design: 
   meta: 
     upper: 
-      v: CurvyProjection
+      v: Shirt
       range: [FittedShirt, Shirt, CurvyProjection]
       type: select_null
     wb: 
