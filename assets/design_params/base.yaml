@@ -8,7 +8,7 @@
 design: 
   meta: 
     upper: 
-      v: CurvyProjection
+      v: FittedShirt
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection
       type: select_null
     wb: 
@@ -16,7 +16,7 @@ design:
       range: [True, False]
       type: bool
     bottom: 
-      v: GodetSkirt
+      v: Skirt2
       range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt]
       type: select_null
 
@@ -86,7 +86,7 @@ design:
     
   sleeve:
     sleeveless: 
-      v: False
+      v: True
       range: [True, False]
       type: bool
     length: 
@@ -137,7 +137,7 @@ design:
     # Cuff
     cuff: 
       type:
-        v: null
+        v: CuffBandSkirt
         range: [CuffBand, CuffSkirt, CuffBandSkirt]
         type: select_null
       # b_width:  # NOTE taken from end_width # TODO naming convention with waistband
@@ -296,7 +296,7 @@ design:
     
   skirt: 
     length:
-      v: 60
+      v: 30
       range: [30, 120]
       type: int
     ruffle: 

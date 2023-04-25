@@ -5,6 +5,7 @@ import svgpathtools as svgpath  # https://github.com/mathandy/svgpathtools
 
 # Custom
 from .generic_utils import vector_angle, R2D, close_enough, c_to_list, list_to_c
+from .flags import VERBOSE
 
 class Edge():
     """Edge -- an individual segement of a panel border connecting two panel vertices, 
@@ -708,8 +709,9 @@ class EdgeSequence():
 
         for i in range(1, len(self.edges)):
             if self.edges[i].start is not self.edges[i-1].end:
-                # This should be helpful to catch bugs
-                print(f'{self.__class__.__name__}::Warning!::Edge sequence is not properly chained')
+                if VERBOSE:
+                    # This should be helpful to catch bugs
+                    print(f'{self.__class__.__name__}::Warning!::Edge sequence is not properly chained')
                 return False
         return True
 
@@ -814,7 +816,7 @@ class EdgeSequence():
 
     def close_loop(self):
         """if edge loop is not closed, add and edge to close it"""
-        self.isChained()  # print worning if smth is wrong
+        self.isChained()  # print warning if smth is wrong
         if not self.isLoop():
             self.append(Edge(self[-1].end, self[0].start))
 
