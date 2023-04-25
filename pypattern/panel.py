@@ -316,8 +316,9 @@ class Panel(BaseComponent):
     def bbox3D(self):
         """Evaluate 3D bounding box of the current panel"""
 
-        # FIXME Use linearization for more accurate approximation!
-        verts_2d = self.edges.verts()
+        # Using curve linearization for more accurate approximation of bbox
+        lin_edges = EdgeSequence([e.linearize() for e in self.edges])
+        verts_2d = lin_edges.verts()
         verts_3d = np.asarray([self.point_to_3D(v) for v in verts_2d])
 
         return verts_3d.min(axis=0), verts_3d.max(axis=0)
