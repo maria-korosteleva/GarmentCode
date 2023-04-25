@@ -30,6 +30,8 @@ class SleevePanel(pyp.Panel):
 
         arm_width = abs(open_shape[0].start[1] - open_shape[-1].end[1])
 
+        # FIXME end_width not used
+
         # Main body of a sleeve
         self.edges = pyp.esf.from_verts(
             [0, 0], [0, arm_width], [length, arm_width]
@@ -109,19 +111,20 @@ class Sleeve(pyp.Component):
             design['cuff']['b_width'] = design['end_width']
             cuff_class = getattr(bands, design['cuff']['type']['v'])
             self.cuff = cuff_class(f'sl_{tag}', design)
-            cbbox = self.cuff.bbox3D()
 
             # Position
             pose_angle = np.deg2rad(body['arm_pose_angle'])
             self.cuff.rotate_by(R.from_euler('XYZ', [0, 0, -pose_angle]))
 
             # Translation
-            # TODO Align by stitch
-            self.cuff.translate_by([
-                bbox[0][0] + (cbbox[0][0] + cbbox[1][0]) / 2 + 13 * np.cos(pose_angle),
-                bbox[0][1] + 8 * np.sin(pose_angle), 
-                0
-            ])
+            self.cuff.place_by_interface(
+                self.cuff.interfaces['top'],
+                pyp.Interface.from_multiple(
+                    self.f_sleeve.interfaces['out'], 
+                    self.b_sleeve.interfaces['out']
+                ),
+                gap=5
+            )
 
             # Stitch
             # modify interfaces to control connection

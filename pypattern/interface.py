@@ -1,5 +1,6 @@
 from copy import copy
 from numpy.linalg import norm
+import numpy as np
 
 # Custom
 from .edge import EdgeSequence
@@ -105,6 +106,27 @@ class Interface():
             else:
                 oriented[i].flipped = False
         return oriented
+
+    def verts_3d(self):
+        """Return 3D locations of all vertices that participate in the interface"""
+
+        verts_2d = []
+        matching_panels = []
+        for e, panel in zip(self.edges, self.panel):
+            if all(e.start is not v for v in verts_2d):  # Ensuring uniqueness
+                verts_2d.append(e.start)
+                matching_panels.append(panel)
+            
+            if all(e.end is not v for v in verts_2d):  # Ensuring uniqueness
+                verts_2d.append(e.end)
+                matching_panels.append(panel)
+
+        # To 3D
+        verts_3d = []
+        for v, panel in zip(verts_2d, matching_panels):
+            verts_3d.append(panel.point_to_3D(v))
+
+        return np.asarray(verts_3d)
 
     def __len__(self):
         return len(self.edges)

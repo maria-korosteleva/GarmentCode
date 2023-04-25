@@ -5,6 +5,7 @@ from scipy.spatial.transform import Rotation as R
 from pattern.core import BasicPattern
 from pattern.wrappers import VisPattern
 from .base import BaseComponent
+from .interface import Interface
 
 class Component(BaseComponent):
     """Garment element (or whole piece) composed of simpler connected garment elements"""
@@ -29,7 +30,6 @@ class Component(BaseComponent):
         mins, maxes = self.bbox3D()
 
         return np.array(((mins[0] + maxes[0]) / 2, maxes[1], (mins[-1] + maxes[-1]) / 2))
-    
 
     def translate_by(self, delta_vector):
         """Translate component by a vector"""
@@ -45,15 +45,6 @@ class Component(BaseComponent):
             subs.translate_to(np.asarray(new_translation) + (sub_pivot - pivot))
         return self
 
-    def place_below(self, comp: BaseComponent, gap=2):
-        """Place below the provided component"""
-        other_bbox = comp.bbox3D()
-        curr_bbox = self.bbox3D()
-
-        self.translate_by([0, other_bbox[0][1] - curr_bbox[1][1] - gap, 0])
-
-        return self
-
     def rotate_by(self, delta_rotation:R):
         """Rotate component by a given rotation"""
         pivot = self.pivot_3D()
@@ -66,11 +57,54 @@ class Component(BaseComponent):
         return self
     
     def rotate_to(self, new_rot):
-        # TODO Implement with correct preservation of relative placement
+        # TODOLOW Implement with correct preservation of relative placement
         # of subcomponents
         raise NotImplementedError(
             f'Component::Error::rotate_to is not supported on component level.'
             'Use relative <rotate_by()> method instead')
+
+    def place_below(self, comp: BaseComponent, gap=2):
+        """Place below the provided component"""
+        other_bbox = comp.bbox3D()
+        curr_bbox = self.bbox3D()
+
+        self.translate_by([0, other_bbox[0][1] - curr_bbox[1][1] - gap, 0])
+
+        return self
+
+    def place_by_interface(self, 
+                            self_interface:Interface, 
+                            out_interface:Interface, 
+                            gap=2):
+        """Adjust the placement of component acconding to the connectivity instuction        
+        """
+        
+        # Alight translation
+        self_verts = self_interface.verts_3d()
+        out_verts = out_interface.verts_3d()
+        mid_out = np.mean(out_verts, axis=0)
+        mid_self = np.mean(self_verts, axis=0)
+
+        bbox = self.bbox3D()
+        center = (bbox[0] + bbox[1]) / 2
+
+        # Add a gap outside of the current 
+        gap_dir = mid_self - center
+        gap_dir = gap * gap_dir / np.linalg.norm(gap_dir)
+        
+        diff = mid_out - (mid_self + gap_dir)
+
+        self.translate_by(diff)
+
+        # NOTE: Norm evaluation of vertex set will fail 
+        # for the alignment of 2D panels, where they are likely
+        # to be in one line or in a panel plane instead of 
+        # the interface place
+        # TODO try anyway? 
+
+        # TODO Estimate rotation
+
+        return self
 
     # Mirror
     def mirror(self, axis=[0, 1]):

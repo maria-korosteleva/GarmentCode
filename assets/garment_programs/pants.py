@@ -122,23 +122,21 @@ class PantsHalf(pyp.Component):
 
         # add a cuff
         if design['cuff']['type']['v']:
-            bbox = self.bbox3D()
-
             cuff_class = getattr(bands, design['cuff']['type']['v'])
             self.cuff = cuff_class(tag, design)
-            cbbox = self.cuff.bbox3D()
 
+            pant_bottom = pyp.Interface.from_multiple(
+                    self.front.interfaces['bottom'], self.back.interfaces['bottom'])
             # Position
-            self.cuff.translate_by([
-                (bbox[1][0] - cbbox[1][0]),
-                bbox[0][1] - 3, 
-                0
-            ])
+            self.cuff.place_by_interface(
+                self.cuff.interfaces['top'],
+                pant_bottom,
+                gap=5
+            )
 
             # Stitch
             self.stitching_rules.append((
-                pyp.Interface.from_multiple(
-                    self.front.interfaces['bottom'], self.back.interfaces['bottom']),
+                pant_bottom,
                 self.cuff.interfaces['top'])
             )
 

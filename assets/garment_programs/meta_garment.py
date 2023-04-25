@@ -33,7 +33,12 @@ class MetaGarment(pyp.Component):
 
             # Place below the upper garment 
             if len(self.subs) > 1:
-                self.subs[-1].place_below(self.subs[-2])
+                # DRAFT self.subs[-1].place_below(self.subs[-2])
+                self.subs[-1].place_by_interface(
+                    self.subs[-1].interfaces['top'],
+                    self.subs[-2].interfaces['bottom'], 
+                    gap=3
+                )
 
                 self.stitching_rules.append(
                     (self.subs[-2].interfaces['bottom'], self.subs[-1].interfaces['top']))
@@ -46,7 +51,12 @@ class MetaGarment(pyp.Component):
 
             # Place below the upper garment or self.wb
             if len(self.subs) > 1:
-                self.subs[-1].place_below(self.subs[-2])
+                # DRAFT self.subs[-1].place_below(self.subs[-2])
+                self.subs[-1].place_by_interface(
+                    self.subs[-1].interfaces['top'],
+                    self.subs[-2].interfaces['bottom'], 
+                    gap=3
+                )
 
                 self.stitching_rules.append(
                     (self.subs[-2].interfaces['bottom'], self.subs[-1].interfaces['top']))
