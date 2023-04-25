@@ -17,7 +17,7 @@ class EdgeSeqFactory:
     def from_verts(*verts, loop=False):
         """Generate edge sequence from given vertices. If loop==True, the method also closes the edge sequence as a loop
         """
-        # TODO Curvatures
+        # TODO Curvatures -- on the go
 
         seq = EdgeSequence(Edge(verts[0], verts[1]))
         for i in range(2, len(verts)):
@@ -61,7 +61,7 @@ class EdgeSeqFactory:
 
             start_cut and end_cut specify the fraction of the edge to to add extra vertices at
         """
-        # TODO Curvature support?
+        # TODO Curvature support? -- if needed in modeling
 
         nstart, nend = np.array(start), np.array(end)
         verts = [start]
