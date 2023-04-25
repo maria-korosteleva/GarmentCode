@@ -37,7 +37,7 @@ class CircleArcPanel(pyp.Panel):
 
         # Interfaces
         self.interfaces = {
-            'top': pyp.Interface(self, self.edges[0]),
+            'top': pyp.Interface(self, self.edges[0]).reverse(True),
             'bottom': pyp.Interface(self, self.edges[2]),
             'right': pyp.Interface(self, self.edges[1]),
             'left': pyp.Interface(self, self.edges[3])
