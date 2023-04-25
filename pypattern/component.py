@@ -85,10 +85,9 @@ class Component(BaseComponent):
         mid_out = np.mean(out_verts, axis=0)
         mid_self = np.mean(self_verts, axis=0)
 
+        # Add a gap outside of the current 
         bbox = self.bbox3D()
         center = (bbox[0] + bbox[1]) / 2
-
-        # Add a gap outside of the current 
         gap_dir = mid_self - center
         gap_dir = gap * gap_dir / np.linalg.norm(gap_dir)
         
@@ -99,10 +98,10 @@ class Component(BaseComponent):
         # NOTE: Norm evaluation of vertex set will fail 
         # for the alignment of 2D panels, where they are likely
         # to be in one line or in a panel plane instead of 
-        # the interface place
-        # TODO try anyway? 
+        # the interface place -- so I'm not using norms for gap esitmation
 
         # TODO Estimate rotation
+        # TODO not just placement by the midpoint of the interfaces?
 
         return self
 
