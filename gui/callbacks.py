@@ -201,11 +201,11 @@ class GUIState():
 
         # Pattern display
         self.min_margin = 10
-        self.default_body_img_margins = [125, 20]   # TODO Adjust after fixing location issues
+        self.default_body_img_margins = [125, 20] 
         self.body_img_margins = copy(self.default_body_img_margins)
         self.body_img_id = None
         self.back_img_id = None
-        self.def_canvas_size = (1385, 805)   # TODO Adjust after fixing location issues
+        self.def_canvas_size = (1315, 670) 
         self.body_img_size = (None, None)  # NOTE updated in subroutines
 
         # Last option needed to finalize GUI initialization and allow modifications
