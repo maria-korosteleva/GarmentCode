@@ -8,15 +8,15 @@
 design: 
   meta: 
     upper: 
-      v: Shirt
-      range: [FittedShirt, Shirt, CurvyProjection]
+      v: CurvyProjection
+      range: [FittedShirt, Shirt]    # For curves debug CurvyProjection
       type: select_null
     wb: 
       v: False
       range: [True, False]
       type: bool
     bottom: 
-      v: null
+      v: GodetSkirt
       range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt]
       type: select_null
 

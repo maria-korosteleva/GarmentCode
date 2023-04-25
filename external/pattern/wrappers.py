@@ -256,10 +256,16 @@ class VisPattern(core.ParametrizedPattern):
             self.scaling_for_drawing = self._verts_to_px_scaling_factor()
 
         # Get svg representation per panel
+        # Order by depth (=> most front panels render in front)
+        # TODOLOW Even smarter way is needed for prettier allignment
         panel_order = self.panel_order()
+        panel_z = [self.pattern['panels'][pn]['translation'][-1] for pn in panel_order]
+        z_sorted_panels = [p for _, p in sorted(zip(panel_z, panel_order))]
+
+        # Get panel paths
         paths_front, paths_back = [], []
         attributes_f, attributes_b = [], []
-        for panel in panel_order:
+        for panel in z_sorted_panels:
             if panel is not None:
                 path, attr, front = self._draw_a_panel(panel)
                 if front:
@@ -269,7 +275,7 @@ class VisPattern(core.ParametrizedPattern):
                     paths_back.append(path)
                     attributes_b.append(attr)
 
-        # Shift back panels if both types exist
+        # Shift back panels if both front and back exist
         if len(paths_front) > 0 and len(paths_back) > 0:
             front_max_x = max([path.bbox()[1] for path in paths_front]) 
             back_min_x = min([path.bbox()[0] for path in paths_back]) 
