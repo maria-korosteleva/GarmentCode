@@ -43,12 +43,16 @@ class SleevePanel(pyp.Panel):
         # align the angle with the pose -- for draping
         self.edges.rotate(pose_angle) 
 
-        # FIXME Update standing sholder with a new formulation
         if standing:  # Add a "shelve" to create square shoulder appearance
-            end = self.edges[-1].end
+            top_edge = self.edges[1]
+            end = top_edge.end
             len = design['standing_shoulder_len']['v']
-            self.edges.append(pyp.Edge(
-                end, [end[0] - len * np.cos(shoulder_angle), end[1] - len * np.sin(shoulder_angle)]))
+
+            standing_edge = pyp.Edge(
+                [end[0] - len * np.cos(shoulder_angle), end[1] - len * np.sin(shoulder_angle)], end)
+            top_edge.end = standing_edge.start
+
+            self.edges.substitute(top_edge, [top_edge, standing_edge])
 
         # Fin
         self.edges.close_loop()
