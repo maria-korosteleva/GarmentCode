@@ -131,19 +131,24 @@ class StitchingRule():
                 # Swap subdiv order for interface to s.w. the interface sequence remains oriented
                 if flip: 
                     subdiv.edges.reverse()
-
+                    
                 # Update interface accordingly
                 inter.edges.substitute(base_edge, subdiv)  
                 inter.panel.insert(in_id, inter.panel[in_id]) 
                 inter.edges_flipping.insert(in_id, inter.edges_flipping[in_id]) 
+                for it in inter.ruffle:  # UPD ruffle indicators
+                    if it['sec'][0] > in_id:
+                        it['sec'][0] += 1
+                    if it['sec'][1] > in_id:
+                        it['sec'][1] += 1
 
                 # TODO what if these edges are used in other interfaces? Do they need to be updated as well?
-                
                 # next step
+                # By the size of new edge
+                covered_init += inter.projecting_edges()[in_id].length() / total_len 
+                covered_added = next_added
                 in_id += 1
                 add_id += 1
-                covered_init += subdiv[0].length() / total_len
-                covered_added = next_added
 
         if add_id != len(to_add):
             raise RuntimeError(f'{self.__class__.__name__}::Error::Projection failed')
