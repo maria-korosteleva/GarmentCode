@@ -601,7 +601,6 @@ class CurveEdge(Edge):
         # TODO Use linearization for more correct 3D visualization 
         # and self-intersection estimation
         extreme_points = self._extreme_points()
-
         seq = EdgeSequence(Edge(self.start, extreme_points[0]))
         for i in range(1, len(extreme_points)):
             seq.append(Edge(seq[-1].end, extreme_points[i]))
@@ -610,15 +609,17 @@ class CurveEdge(Edge):
         return seq
 
     def _extreme_points(self):
-        """Return extreme points (on Y) of the current edge"""
+        """Return extreme points (on Y) of the current edge
+            NOTE: this does NOT include the border vertices of an edge
+        """
 
         # Variation of https://github.com/mathandy/svgpathtools/blob/5c73056420386753890712170da602493aad1860/svgpathtools/bezier.py#L197
         curve = self.as_curve()
         poly = svgpath.bezier2polynomial(curve, return_poly1d=True)
         y = svgpath.imag(poly)
         dy = y.deriv()
-        y_extremizers = [0, 1] + svgpath.polyroots(dy, realroots=True,
-                                        condition=lambda r: 0 < r < 1)
+        y_extremizers = svgpath.polyroots(dy, realroots=True,
+                                          condition=lambda r: 0 < r < 1)
 
         extreme_points = np.array([c_to_list(curve.point(t)) for t in y_extremizers])
 

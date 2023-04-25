@@ -56,7 +56,7 @@ design:
 
   collar:
     f_collar: 
-      v: CircleArcNeckHalf
+      v: CurvyNeckHalf
       range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf]
       type: select_null
     b_collar: 
@@ -166,7 +166,11 @@ design:
       v: False    # True == create asymmetric top
       range: [True, False]
       type: bool
-      bodice: 
+    bodice: 
+      ease:
+        v: 0
+        range: [0, 3]
+        type: float
     shirt: 
       ease:
         v: 0
