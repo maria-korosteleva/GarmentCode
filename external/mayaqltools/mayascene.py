@@ -557,6 +557,9 @@ class MayaGarment(wrappers.VisPattern):
         panel_geom = list(set(panel_geom) - set(solvers))
         panel_geom = cmds.parent(panel_geom, panel_group)  # organize
 
+        # TODO Compare the norm of loaded pattern with our custom
+        # evaluated norm (see GarmentCode) and flip if different 
+
         pattern_object = [node for node in panel_geom if 'Pattern' in node]
         
         self.MayaObjects['panels'][panel_name]['qlPattern'] = (
