@@ -127,7 +127,7 @@ design:
 
     # Ruffle
     connect_ruffle:
-      v: 1
+      v: 1.2
       range: [1, 2]
       type: float
     end_ruffle: 
@@ -137,7 +137,7 @@ design:
     # Cuff
     cuff: 
       type:
-        v: CuffBandSkirt
+        v: null
         range: [CuffBand, CuffSkirt, CuffBandSkirt]
         type: select_null
       # b_width:  # NOTE taken from end_width # TODO naming convention with waistband
@@ -314,7 +314,7 @@ design:
 
   flare-skirt:
     length:
-      v: 1.0
+      v: 0.2
       range: [0.1, 1]
       type: float 
     n_panels:

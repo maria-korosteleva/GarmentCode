@@ -24,15 +24,10 @@ class SleevePanel(pyp.Panel):
             connecting_depth, connecting_width, 
             angle=base_angle, incl_coeff=smoothing_coeff, w_coeff=smoothing_coeff)
 
-        open_shape.reverse()  # TODO CHECK if needed
-
+        # Add ruffles
         if not pyp.utils.close_enough(design['connect_ruffle']['v'], 1):
             open_shape.extend(design['connect_ruffle']['v'])
 
-        open_shape.rotate(-base_angle)  
-
-        # TODO end ruffle may need to extend in both direction instead
-        # DEBUG arm_width = (design['end_width']['v'] + width_diff) / 2  * design['end_ruffle']['v']
         arm_width = abs(open_shape[0].start[1] - open_shape[-1].end[1])
 
         # Main body of a sleeve
@@ -40,7 +35,8 @@ class SleevePanel(pyp.Panel):
             [0, 0], [0, arm_width], [length, arm_width]
         )
         
-        open_shape.snap_to(self.edges[-1].end)
+        # Align the opening
+        open_shape.reverse().rotate(-base_angle).snap_to(self.edges[-1].end)
         open_shape[0].start = self.edges[-1].end   # chain
         self.edges.append(open_shape)
 
@@ -59,7 +55,8 @@ class SleevePanel(pyp.Panel):
 
         # Interfaces
         self.interfaces = {
-            'in': pyp.Interface(self, open_shape, ruffle=design['connect_ruffle']['v']),
+            # NOTE: interface needs reversing because the open_shape was reversed for construction
+            'in': pyp.Interface(self, open_shape, ruffle=design['connect_ruffle']['v']).reverse(),
             'in_shape': pyp.Interface(self, proj_shape),
             'out': pyp.Interface(self, self.edges[0], ruffle=design['end_ruffle']['v']),
             'top': pyp.Interface(self, self.edges[1:3] if standing else self.edges[1]),   
