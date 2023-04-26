@@ -264,8 +264,25 @@ def ArmholeOpeningSquare(width, depth_front, depth_back, angle=None, **kwargs):
 
     # DRAFT # add to the back_opening, remove from front_opening
     # TODO Append and subdivide instead
+    #DEBUG 
+    fsh, bsh = front_opening.shortcut(), back_opening.shortcut()
+    print(
+        'Shorthand before: ',
+        np.linalg.norm(fsh[1] - fsh[0]), np.linalg.norm(bsh[1] - bsh[0])
+    )
     front_opening.edges[-1].end[1] -= diff_x  # shorten
     back_opening.edges[-1].end[1] += diff_x  # extend
+    # Align the angle 
+    sl_angle = np.arctan(slope_m)
+    front_opening.rotate(-sl_angle)  # TODO sign
+    back_opening.rotate(sl_angle)
+
+    # DEBUG
+    fsh, bsh = front_opening.shortcut(), back_opening.shortcut()
+    print(
+        'Shorthand after: ',
+        np.linalg.norm(fsh[1] - fsh[0]), np.linalg.norm(bsh[1] - bsh[0])
+    )
 
     # DEBUG matplotlib visuals
     # # Function to generate y-coordinates of the line
@@ -314,10 +331,10 @@ class ExperimentalSleevePanel(pyp.Panel):
         # TODO end_width to be not less then the width of the arm??
 
         ease = 5  # TODO Parameter
-        pose_angle = np.deg2rad(body['arm_pose_angle'])
+        pose_angle = np.deg2rad(body['arm_pose_angle'])  # TODO Design parameter
         shoulder_angle = np.deg2rad(body['shoulder_incl'])
         standing = design['standing_shoulder']['v']
-        base_angle = pose_angle if standing else shoulder_angle
+        base_angle = pose_angle   # DRAFT if standing else shoulder_angle
 
         length = design['length']['v']
         connecting_width =   design['connecting_width']['v'] + ease
@@ -344,12 +361,16 @@ class ExperimentalSleevePanel(pyp.Panel):
         open_shape[0].start = self.edges[-1].end   # chain
         self.edges.append(open_shape)
 
+        # DEBUG
+        print('Total len ', self.edges.length())
+
         self.edges.close_loop()
+
+        # DEBUG
+        print('top_edge: ', self.edges[-1].length())
 
         # align the angle with the pose -- for draping
         self.edges.rotate(pose_angle) 
-
-        # TODO the only edge left is the opening shape
 
         # Interfaces
         self.interfaces = {
@@ -363,7 +384,7 @@ class ExperimentalSleevePanel(pyp.Panel):
         # Default placement
         self.set_pivot(self.edges[1].end)
         self.translate_to(
-            [- body['sholder_w'] / 2 - arm_width,    # TODO Probably not accurate
+            [- body['sholder_w'] / 2,
             body['height'] - body['head_l'] - body['armscye_depth'],
             0]) 
 
@@ -399,9 +420,11 @@ class ExperimentalSleeve(pyp.Component):
 
         # sleeves
         self.f_sleeve = ExperimentalSleevePanel(
-            f'{tag}_sleeve_f', body, design, front_opening).translate_by([0, 0, 25])
+            f'{tag}_sleeve_f', body, design, front_opening).translate_by(
+                [-inclanation - depth_diff, 0, 25])
         self.b_sleeve = ExperimentalSleevePanel(
-            f'{tag}_sleeve_b', body, design, back_opening).translate_by([0, 0, -20])
+            f'{tag}_sleeve_b', body, design, back_opening).translate_by(
+                [-inclanation, 0, -20])
 
         # DEBUG
         print('Stitch size matching')

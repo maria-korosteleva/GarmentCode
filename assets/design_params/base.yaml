@@ -98,7 +98,7 @@ design:
       range: [20, 40]   # TODO min armscye_depth . And no more then that for Bodice
       type: int
     end_width:
-      v: 20
+      v: 25
       range: [20, 40]  
       type: int
     # Armhole
