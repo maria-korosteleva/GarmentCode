@@ -442,11 +442,18 @@ class ExperimentalSleeve(pyp.Component):
             (self.f_sleeve.interfaces['bottom'], self.b_sleeve.interfaces['bottom']),
         )
 
+        # TODO Proper stitching 
+        # (projections & openings do not correspond exactly anymore)
+
         self.interfaces = {
             'in_front': self.f_sleeve.interfaces['in'].reverse(),
             'in_front_shape': pyp.Interface(self.f_sleeve, front_project),
             'in_back': self.b_sleeve.interfaces['in'],
-            'in_back_shape': pyp.Interface(self.f_sleeve, back_project)
+            'in_back_shape': pyp.Interface(self.f_sleeve, back_project), 
+            'in': pyp.Interface.from_multiple(
+                self.f_sleeve.interfaces['in'].reverse(),
+                self.b_sleeve.interfaces['in']
+            )
         }
 
 
