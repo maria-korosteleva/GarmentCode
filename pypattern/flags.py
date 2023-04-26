@@ -1,1 +1,1 @@
-VERBOSE = False
+VERBOSE = True

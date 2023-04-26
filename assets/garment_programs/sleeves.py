@@ -237,8 +237,11 @@ def ArmholeOpeningSquare(width, depth_front, depth_back, angle=None, **kwargs):
     )
 
     # TODO Construct connected shape from opening inverses
+    cfront, cback = front_opening.copy(), back_opening.copy()
 
-    slope = np.array([[0, -depth_back], [2 * width, -depth_front]])
+    cback.reflect([0, 0], [1, 0]).reverse().snap_to(cfront[-1].end)
+
+    slope = np.array([cfront[0].start, cback[-1].end])
 
     slope_vec = slope[1] - slope[0]
     slope_midpoint = (slope[0] + slope[1]) / 2
@@ -249,48 +252,53 @@ def ArmholeOpeningSquare(width, depth_front, depth_back, angle=None, **kwargs):
 
     # Intersection with the top line
     # TODO Use svgtools' curve intersect as a universal solution
-    top_x, top_y = line_intersection_with_segment((slope_m, slope_c), [0, 0], [2 * width, 0])
+    inter_segment = [cfront[1].start, cfront[1].end]
+    intersect = line_intersection_with_segment(
+        (slope_m, slope_c), inter_segment[0], inter_segment[1])
 
     # DEBUG
-    print('Sleeve midpoint ', top_x, top_y)
-    print('Sleeve diff ', top_x - width)
-    diff_x = top_x - width   
+    connecting_point = np.array(front_opening[-1].end)
+    print('Sleeve midpoint ', intersect)
+    print('Sleeve diff ', np.linalg.norm(intersect - connecting_point))
+    diff_x = np.linalg.norm(intersect - connecting_point)   
 
     # DRAFT # add to the back_opening, remove from front_opening
+    # TODO Append and subdivide instead
     front_opening.edges[-1].end[1] -= diff_x  # shorten
     back_opening.edges[-1].end[1] += diff_x  # extend
 
     # DEBUG matplotlib visuals
+    # # Function to generate y-coordinates of the line
+    # def line_y(x, m, c):
+    #     return m * x + c
 
-    # Function to generate y-coordinates of the line
-    def line_y(x, m, c):
-        return m * x + c
+    # # Define x-values range and calculate y-values for the line
+    # x_values = np.linspace(1, 30, 100)
+    # y_values = line_y(x_values, slope_m, slope_c)
 
-    # Define x-values range and calculate y-values for the line
-    x_values = np.linspace(1, 30, 100)
-    y_values = line_y(x_values, slope_m, slope_c)
+    # points = (slope_midpoint, intersect)
 
-    points = (slope_midpoint, (top_x, top_y))
+    # # Plot the line, line segment, and points
+    # plt.plot(x_values, y_values, label="Line: y = 2x + 3")
+    # plt.plot([inter_segment[0][0], inter_segment[1][0]], [inter_segment[0][1], inter_segment[1][1]], 
+    #          'ro-', label="Slope")
+    # plt.plot([inter_segment[0][0], inter_segment[1][0]], [inter_segment[0][1], inter_segment[1][1]], 
+    #          label='to_intersect')
+    # plt.scatter(*zip(*points), color='blue', label="Intersect points")
 
-    # Plot the line, line segment, and points
-    plt.plot(x_values, y_values, label="Line: y = 2x + 3")
-    plt.plot([slope[0][0], slope[1][0]], [slope[0][1],slope[1][1]], 'ro-', label="Slope")
-    plt.plot([0, 2 * width], [0, 0], label='to_intersect')
-    plt.scatter(*zip(*points), color='blue', label="Intersect points")
+    # # Add labels and legends
+    # plt.xlabel("x-axis")
+    # plt.ylabel("y-axis")
+    # plt.xlim([-1, 60])
+    # plt.ylim([-10, 30])
+    # # plt.legend()
+    # plt.grid(True)
 
-    # Add labels and legends
-    plt.xlabel("x-axis")
-    plt.ylabel("y-axis")
-    plt.xlim([-1, 60])
-    plt.ylim([-10, 30])
-    # plt.legend()
-    plt.grid(True)
+    # # Set the aspect ratio to be equal
+    # plt.gca().set_aspect('equal', adjustable='box')
 
-    # Set the aspect ratio to be equal
-    plt.gca().set_aspect('equal', adjustable='box')
-
-    # Show the plot
-    plt.show()
+    # # Show the plot
+    # plt.show()
 
     return front_project, back_project, front_opening, back_opening
 
@@ -315,7 +323,7 @@ class ExperimentalSleevePanel(pyp.Panel):
         connecting_width =   design['connecting_width']['v'] + ease
         smoothing_coeff = design['smoothing_coeff']['v']
 
-        end_width = design['end_width']['v']
+        end_width = design['end_width']['v'] / 2
 
         open_shape.rotate(-base_angle)   # TODO DEBUG
         # Correct sleeve width -- after aligning rotation
@@ -364,8 +372,11 @@ class ExperimentalSleeve(pyp.Component):
     """Trying to do a proper sleeve"""
 
 
-    def __init__(self, body, design, tag='solo', depth_diff=3) -> None:
+    def __init__(self, tag, body, design, depth_diff=3) -> None:   # DEBUG
         super().__init__(f'{self.__class__.__name__}_{tag}')
+
+        # DEBUG
+        print(design.keys())
 
         design = design['sleeve']
         inclanation = design['inclanation']['v']
@@ -391,6 +402,17 @@ class ExperimentalSleeve(pyp.Component):
             f'{tag}_sleeve_f', body, design, front_opening).translate_by([0, 0, 25])
         self.b_sleeve = ExperimentalSleevePanel(
             f'{tag}_sleeve_b', body, design, back_opening).translate_by([0, 0, -20])
+
+        # DEBUG
+        print('Stitch size matching')
+        print(
+            self.f_sleeve.interfaces['top'].edges.length(),
+            self.b_sleeve.interfaces['top'].edges.length()
+        )
+        print(
+            self.f_sleeve.interfaces['bottom'].edges.length(),
+            self.b_sleeve.interfaces['bottom'].edges.length()
+        )
 
         self.stitching_rules = pyp.Stitches(
             (self.f_sleeve.interfaces['top'], self.b_sleeve.interfaces['top']),
