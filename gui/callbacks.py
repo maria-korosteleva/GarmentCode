@@ -406,7 +406,7 @@ class GUIState():
                         relief=sg.RELIEF_FLAT, 
                         resolution=1 if p_type == 'int' else 0.05, 
                         key=f'{pre_key}#{param}', 
-                        enable_events=True # comment to only send events when slider is released
+                        # DRAFT enable_events=True # comment to only send events when slider is released
                     )
                 else:
                     print(f'GUI::WARNING::Unknown parameter type: {p_type}')
@@ -617,7 +617,7 @@ class GUIState():
         for key in slider_keys:
             window[key].Widget.config(sliderlength=10)
             window[key].Widget.config(sliderrelief=sg.RELIEF_FLAT)
-            # window[key].bind('<ButtonRelease-1>', '') # uncomment to only send events when slider is released
+            window[key].bind('<ButtonRelease-1>', '')  # DRAFT  uncomment to only send events when slider is released
             # window[key].Widget.config(background='#000000') # slider button
             # window[key].Widget.config(troughcolor='#FFFFFF')  
 

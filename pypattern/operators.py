@@ -384,13 +384,20 @@ def even_armhole_openings(front_opening, back_opening):
 # ANCHOR ----- Curve tools -----
 def _avg_curvature(curve, points_estimates=100):
     """Average curvature in a curve"""
-    # FIXME this work slow, so GUI manipulation is lagging
-    # UPD to direct evaluation
+    # NOTE: this work slow, but direct evaluation seems
+    # infeasible
     # Some hints here:
     # https://math.stackexchange.com/questions/220900/bezier-curvature
-    # Another option: using the maximum curvature
     t_space = np.linspace(0, 1, points_estimates)
     return sum([curve.curvature(t) for t in t_space]) / points_estimates
+
+def _max_curvature(curve, points_estimates=100):
+    """Average curvature in a curve"""
+    # NOTE: this work slow, but direct evaluation seems
+    # infeasible
+    # Some hints here: https://math.stackexchange.com/questions/1954845/bezier-curvature-extrema
+    t_space = np.linspace(0, 1, points_estimates)
+    return max([curve.curvature(t) for t in t_space])
 
 def _bend_extend_2_tangent(
         shift, cp, target_len, direction, 
@@ -405,8 +412,8 @@ def _bend_extend_2_tangent(
 
     control = np.array([
         cp[0], 
-        [cp[1][0] + shift[0], cp[1][0] + shift[1]], 
-        [cp[2][0] + shift[2], cp[2][0] + shift[3]],
+        [cp[1][0] + shift[0], cp[1][1] + shift[1]], 
+        [cp[2][0] + shift[2], cp[2][1] + shift[3]],
         cp[-1] + direction * shift[4]
     ])
 
@@ -420,7 +427,8 @@ def _bend_extend_2_tangent(
 
     # NOTE: tried regularizing based on Y value in relative coordinates (for speed), 
     # But it doesn't produce good results
-    curvature_reg = _avg_curvature(curve_inverse, points_estimates=point_estimates)**2
+    curvature_reg = _max_curvature(curve_inverse, points_estimates=point_estimates)**2
+
     end_expantion_reg = 0.001*shift[-1]**2 
 
     return length_diff + tan_0_diff + tan_1_diff + curvature_reg + end_expantion_reg
@@ -458,8 +466,9 @@ def curve_match_tangents(curve, target_tan0, target_tan1, return_as_edge=False):
             direction,
             list_to_c(target_tan0),  
             list_to_c(target_tan1), 
-            50
-        )
+            70   # NOTE: Low values cause instable resutls
+        ),
+        method='L-BFGS-B',
     )
     if not out.success:
         print(f'Curve_match_tangents::Warning::optimization not successfull')
@@ -470,8 +479,8 @@ def curve_match_tangents(curve, target_tan0, target_tan1, return_as_edge=False):
 
     fin_curve_cps = [
         curve_cps[0].tolist(),
-        [curve_cps[1][0] + shift[0], curve_cps[1][0] + shift[1]], 
-        [curve_cps[2][0] + shift[2], curve_cps[2][0] + shift[3]],
+        [curve_cps[1][0] + shift[0], curve_cps[1][1] + shift[1]], 
+        [curve_cps[2][0] + shift[2], curve_cps[2][1] + shift[3]],
         (curve_cps[-1] + direction*shift[-1]).tolist(), 
     ]
 
