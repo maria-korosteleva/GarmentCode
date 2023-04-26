@@ -8,15 +8,15 @@
 design: 
   meta: 
     upper: 
-      v: FittedShirt
-      range: [FittedShirt, Shirt]    # For curves debug CurvyProjection
+      v: ExperimentalSleeve
+      range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
       v: False
       range: [True, False]
       type: bool
     bottom: 
-      v: Skirt2
+      v: null
       range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt]
       type: select_null
 
@@ -103,7 +103,7 @@ design:
       type: int
     # Armhole
     armhole_shape: 
-      v: ArmholeSmooth
+      v: ArmholeSquare
       range: [ArmholeSquare, ArmholeSmooth]
       type: select_null
     smoothing_coeff:
@@ -117,7 +117,7 @@ design:
     
     # Shoulder shape
     standing_shoulder: 
-      v: True
+      v: False
       range: [True, False]
       type: bool
     standing_shoulder_len:   # can create "Standing" shoulder
