@@ -357,7 +357,7 @@ class ExperimentalSleevePanel(pyp.Panel):
             'in': pyp.Interface(self, open_shape, ruffle=design['connect_ruffle']['v']),   # TODO .reverse(),
             'out': pyp.Interface(self, self.edges[0], ruffle=design['end_ruffle']['v']),
             'top': pyp.Interface(self, self.edges[1:3] if standing else self.edges[-1]),   # TODO relation for standing
-            'bottom': pyp.Interface(self, self.edges[-1])
+            'bottom': pyp.Interface(self, self.edges[1])
         }
 
         # Default placement
