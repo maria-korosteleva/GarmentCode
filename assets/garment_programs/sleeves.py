@@ -452,7 +452,7 @@ class ExperimentalSleeve(pyp.Component):
             'in_back_shape': pyp.Interface(self.f_sleeve, back_project), 
             'in': pyp.Interface.from_multiple(
                 self.f_sleeve.interfaces['in'].reverse(),
-                self.b_sleeve.interfaces['in']
+                self.b_sleeve.interfaces['in'].reverse()
             )
         }
 

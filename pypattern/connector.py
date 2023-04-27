@@ -38,7 +38,7 @@ class StitchingRule():
                 f'{len1}: {int1}\n{len2}: {int2}')
     
 
-    def isMatching(self, tol=0.1):
+    def isMatching(self, tol=0.05):
         # if both the breakdown and relative partitioning is similar
 
         rev_frac1 = self.int1.edges.fractions()
@@ -188,7 +188,10 @@ class Stitches():
 
     def append(self, pair):  # TODO two parameters explicitely rather then "pair" object?
         self.rules.append(StitchingRule(*pair))
-    
+
+    def __getitem__(self, id):
+        return self.rules[id]
+
     def assembly(self):
         stitches = []
         for rule in self.rules:
