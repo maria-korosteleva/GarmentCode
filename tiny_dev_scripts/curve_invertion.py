@@ -75,7 +75,6 @@ def bend_tangent(shift, cp, target_len, target_tangent):
         cp[0], 
         [cp[1][0] + shift[0], cp[1][0] + shift[1]], 
         cp[2],
-        # [cp[2][0] + shift[2], cp[2][0] + shift[3]], 
         cp[-1]
     ])
 
@@ -90,9 +89,7 @@ def bend_tangent(shift, cp, target_len, target_tangent):
     print(length_diff, tan_diff)  # DEBUG
     print(curve_inverse.unit_tangent(0))
 
-    reg = sum([x**2 for x in shift]) 
-
-    return length_diff + tan_diff # DRAFT + 0.1*reg
+    return length_diff + tan_diff 
 
 
 shortcut_dist = 20  # Notably, this factor does not affect any calculations
@@ -184,9 +181,9 @@ print(curve_inverse_opt.unit_tangent(0))
 
 
 # --- Bending to the desired angle from inverse --- 
-angle = 0
-# Start from simple inverse
-curve_inverse_rot = curve_inverse.rotated(-angle, origin=curve_inverse.point(0))
+angle = 50
+# Start from optimized inverse
+curve_inverse_rot = curve_inverse_opt.rotated(-angle, origin=curve_inverse.point(0))
 rot_cps = [
     curve_inverse_rot.start,
     curve_inverse_rot.control1,
@@ -196,10 +193,13 @@ rot_cps = [
 
 rot_cps = [[cp.real, cp.imag] for cp in rot_cps]
 
+# Allow to move the ending a little bit? 
+# => didn't work that nicely
+
 # match tangent while preserving length
 out = minimize(
     bend_tangent,  # with tangent matching
-    [0, 0, 0, 0], 
+    [0, 0], 
     args=(
         rot_cps, 
         curve_forward.length(),
@@ -213,9 +213,9 @@ shift = out.x
 
 control_bend = np.array([
         rot_cps[0], 
-        [rot_cps[1][0] + shift[0], rot_cps[1][0] + shift[1]], 
+        [rot_cps[1][0] + shift[0], rot_cps[1][0] + shift[1]],   
         rot_cps[2],   # DRAFT [rot_cps[2][0] + shift[2], rot_cps[2][0] + shift[3]],  # DRAFT 
-        rot_cps[-1]
+        rot_cps[-1] # DRAFT + curve_forward.unit_tangent(t=0) * shift[-1]
     ])
 
 params = control_bend[:, 0] + 1j*control_bend[:, 1]
