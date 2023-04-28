@@ -334,7 +334,7 @@ class ExperimentalSleevePanel(pyp.Panel):
         pose_angle = np.deg2rad(body['arm_pose_angle'])  # TODO Design parameter
         shoulder_angle = np.deg2rad(body['shoulder_incl'])
         standing = design['standing_shoulder']['v']
-        base_angle = pose_angle   # DRAFT if standing else shoulder_angle
+        base_angle = pose_angle   # DEBUG if standing else shoulder_angle  # DEBUG Trying drape with smaller angle 
 
         length = design['length']['v']
         connecting_width =   design['connecting_width']['v'] + ease

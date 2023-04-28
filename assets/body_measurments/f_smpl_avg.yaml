@@ -10,7 +10,7 @@ body:
   armscye_depth: 20  # Nape of the Neck to armscye depth on the back
   shoulder_incl: 10  # degrees
 
-  arm_pose_angle: 40  # Degrees
+  arm_pose_angle: 10   # DEBUG  40  # Degrees
 
   waist:  82
   waist_line:  35  # Nape of the Neck to waist (on the back)
