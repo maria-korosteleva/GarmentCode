@@ -92,18 +92,18 @@ def bend_tangent(shift, cp, target_len, target_tangent):
     return length_diff + tan_diff 
 
 
-def bend_2_tangent(shift, cp, target_len, direction, target_tangent_start, target_tangent_end):
+def bend_extend_2_tangent(shift, cp, target_len, direction, target_tangent_start, target_tangent_end):
 
 
     # DRAFT rel_control_1 = [cp[1][0] + shift[0], cp[1][0] + shift[1]]
     # rel_control_2 = [cp[2][0] + shift[2], cp[2][0] + shift[3]]
-    cp[-1] += direction * shift[4]
+    # cp[-1] += direction * shift[4]
 
     control = np.array([
         cp[0], 
         [cp[1][0] + shift[0], cp[1][0] + shift[1]], 
         [cp[2][0] + shift[2], cp[2][0] + shift[3]],
-        cp[-1]
+        cp[-1] + direction * shift[4]
     ])
 
     params = control[:, 0] + 1j*control[:, 1]
@@ -112,13 +112,17 @@ def bend_2_tangent(shift, cp, target_len, direction, target_tangent_start, targe
     length_diff = (curve_inverse.length() - target_len)**2  # preservation
 
     tan_0_diff = (abs(curve_inverse.unit_tangent(0) - target_tangent_start))**2
-    tan_1_diff = (abs(curve_inverse.unit_tangent(0) - target_tangent_end))**2
+    tan_1_diff = (abs(curve_inverse.unit_tangent(1) - target_tangent_end))**2
 
     print('Step')
     print(length_diff, tan_0_diff, tan_1_diff)  # DEBUG
     print(curve_inverse.unit_tangent(0))
+    print(target_tangent_start)
+    print(curve_inverse.unit_tangent(1))
+    print(target_tangent_end)
 
-    return length_diff + tan_0_diff + tan_1_diff 
+    return length_diff + tan_0_diff + tan_1_diff + 0.001*shift[-1]**2 # DRAFT sum([s**2 for s in shift])
+
 
 
 shortcut_dist = 20  # Notably, this factor does not affect any calculations
@@ -180,7 +184,7 @@ start = control_inv[1].tolist() + control_inv[2].tolist()
 direction = control_inv[-1] - control_inv[0]
 direction /= np.linalg.norm(direction)
 out = minimize(
-    bend_2_tangent,   # with tangent matching
+    bend_extend_2_tangent,   # with tangent matching
     [0, 0, 0, 0, 0], 
     args=(
         control_inv, 
@@ -230,9 +234,10 @@ print(curve_inverse_opt.unit_tangent(0))
 
 
 # --- Bending to the desired angle from inverse --- 
-angle = 50
+angle = 20
 # Start from optimized inverse
-curve_inverse_rot = curve_inverse_opt.rotated(-angle, origin=curve_inverse.point(0))
+# DRAFT curve_inverse_rot = curve_inverse_opt.rotated(-angle, origin=curve_inverse.point(0))
+curve_inverse_rot = curve_inverse.rotated(-angle, origin=curve_inverse.point(0))
 rot_cps = [
     curve_inverse_rot.start,
     curve_inverse_rot.control1,
@@ -240,37 +245,54 @@ rot_cps = [
     curve_inverse_rot.end
 ]
 
-rot_cps = [[cp.real, cp.imag] for cp in rot_cps]
+rot_cps = np.array([[cp.real, cp.imag] for cp in rot_cps])
 
 # Allow to move the ending a little bit? 
 # => didn't work that nicely
 
+direction = rot_cps[-1] - rot_cps[0]
+direction /= np.linalg.norm(direction)
 # match tangent while preserving length
 out = minimize(
-    bend_tangent,  # with tangent matching
-    [0, 0], 
+    bend_extend_2_tangent, # DRAFT bend_tangent,  # with tangent matching
+    [0, 0, 0, 0, 0], 
     args=(
         rot_cps, 
         curve_forward.length(),
-        curve_forward.unit_tangent(t=0)
+        direction,
+        curve_forward.unit_tangent(t=0),
+        curve_inverse_rot.unit_tangent(t=1)   # Should be of rotated inverse!
     )
+    # [0, 0], 
+    # args=(
+    #     rot_cps, 
+    #     curve_forward.length(),
+    #     curve_forward.unit_tangent(t=0)
+    # )
 )
 
 print(out)
 
 shift = out.x
 
+# DEBUG 
+print('Final shift for rotated curve')
+print(shift)
+
+
 control_bend = np.array([
         rot_cps[0], 
         [rot_cps[1][0] + shift[0], rot_cps[1][0] + shift[1]],   
-        rot_cps[2],   # DRAFT [rot_cps[2][0] + shift[2], rot_cps[2][0] + shift[3]],  # DRAFT 
-        rot_cps[-1] # DRAFT + curve_forward.unit_tangent(t=0) * shift[-1]
+        [rot_cps[2][0] + shift[2], rot_cps[2][0] + shift[3]],  # DRAFT rot_cps[2],   
+        rot_cps[-1] + direction * shift[-1] # DRAFT + curve_forward.unit_tangent(t=0) * shift[-1]
     ])
 
 params = control_bend[:, 0] + 1j*control_bend[:, 1]
 curve_inverse_bend = CubicBezier(*params)
 
 print(curve_inverse_bend.unit_tangent(0))
+print(curve_inverse_bend.unit_tangent(1))
+print('Target 1 tangent ', curve_inverse_rot.unit_tangent(1)) 
 print('Shortcut_dist = ', shortcut_dist)
 print(f_len:=curve_forward.length())
 print(in_len:=curve_inverse_bend.length())
