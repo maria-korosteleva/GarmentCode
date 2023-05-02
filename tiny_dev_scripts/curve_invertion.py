@@ -92,6 +92,35 @@ def bend_tangent(shift, cp, target_len, target_tangent):
     return length_diff + tan_diff 
 
 
+def bend_2_tangent(shift, cp, target_len, direction, target_tangent_start, target_tangent_end):
+
+
+    # DRAFT rel_control_1 = [cp[1][0] + shift[0], cp[1][0] + shift[1]]
+    # rel_control_2 = [cp[2][0] + shift[2], cp[2][0] + shift[3]]
+    cp[-1] += direction * shift[4]
+
+    control = np.array([
+        cp[0], 
+        [cp[1][0] + shift[0], cp[1][0] + shift[1]], 
+        [cp[2][0] + shift[2], cp[2][0] + shift[3]],
+        cp[-1]
+    ])
+
+    params = control[:, 0] + 1j*control[:, 1]
+    curve_inverse = CubicBezier(*params)
+
+    length_diff = (curve_inverse.length() - target_len)**2  # preservation
+
+    tan_0_diff = (abs(curve_inverse.unit_tangent(0) - target_tangent_start))**2
+    tan_1_diff = (abs(curve_inverse.unit_tangent(0) - target_tangent_end))**2
+
+    print('Step')
+    print(length_diff, tan_0_diff, tan_1_diff)  # DEBUG
+    print(curve_inverse.unit_tangent(0))
+
+    return length_diff + tan_0_diff + tan_1_diff 
+
+
 shortcut_dist = 20  # Notably, this factor does not affect any calculations
 
 # Forward
@@ -139,27 +168,47 @@ print('Length diff before opt: ', abs(f_len - in_len))
 # In sleeve examples: overall lengths and ????
 start = control_inv[1].tolist() + control_inv[2].tolist()
 # DRAFT start[-1] *= -1    # Invert the Y   
+# out = minimize(
+#     match_length_tangent,   # with tangent matching
+#     start, 
+#     args=(
+#         [control_inv[0], control_inv[-1]], 
+#         curve_forward.length(),
+#         curve_forward.unit_tangent(t=0)
+#     )
+# )
+direction = control_inv[-1] - control_inv[0]
+direction /= np.linalg.norm(direction)
 out = minimize(
-    match_length_tangent,   # with tangent matching
-    start, 
+    bend_2_tangent,   # with tangent matching
+    [0, 0, 0, 0, 0], 
     args=(
-        [control_inv[0], control_inv[-1]], 
+        control_inv, 
         curve_forward.length(),
-        curve_forward.unit_tangent(t=0)
+        direction,
+        curve_forward.unit_tangent(t=0),
+        curve_inverse.unit_tangent(t=1)   # TODO Inverse or forward?
     )
 )
 
 # DEBUG
 # print(out)
 
-cp = out.x
+shift = out.x
+
+# DRAFT control_opt = np.array([
+#         control_inv[0], 
+#         [cp[0], cp[1]], 
+#         [cp[2], cp[3]], 
+#         control_inv[-1]
+#     ])
 
 control_opt = np.array([
-        control_inv[0], 
-        [cp[0], cp[1]], 
-        [cp[2], cp[3]], 
-        control_inv[-1]
-    ])
+    control_inv[0], 
+    [control_inv[1][0] + shift[0], control_inv[1][0] + shift[1]], 
+    [control_inv[2][0] + shift[2], control_inv[2][0] + shift[3]],
+    control_inv[-1] + direction * shift[4]
+])
 
 params = control_opt[:, 0] + 1j*control_opt[:, 1]
 curve_inverse_opt = CubicBezier(*params)
