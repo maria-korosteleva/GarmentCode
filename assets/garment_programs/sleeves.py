@@ -1,5 +1,7 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
+import svgpathtools as svgpath
+from copy import copy
 
 import matplotlib.pyplot as plt # DEBUG only
 
@@ -232,50 +234,60 @@ def ArmholeOpeningSquare(width, depth_front, depth_back, angle=None, **kwargs):
 
     # TODO special case when depth_front = depth_back
 
-    connected_shape = pyp.esf.from_verts(
-        [0, -depth_back], [0, 0], [2 * width, 0], [2 * width, -depth_front]
-    )
-
-    # TODO Construct connected shape from opening inverses
+    # Construct connected shape from opening inverses
     cfront, cback = front_opening.copy(), back_opening.copy()
 
     cback.reflect([0, 0], [1, 0]).reverse().snap_to(cfront[-1].end)
 
     slope = np.array([cfront[0].start, cback[-1].end])
-
     slope_vec = slope[1] - slope[0]
+    slope_perp = np.asarray([-slope_vec[1], slope_vec[0]])
     slope_midpoint = (slope[0] + slope[1]) / 2
 
-    # line equation for a perpendicular
+    # DRAFT 
+    # # line equation for a perpendicular
     slope_m = -slope_vec[0] / slope_vec[1]
-    slope_c = slope_midpoint[1] - slope_m * slope_midpoint[0]
 
     # Intersection with the top line
-    # TODO Use svgtools' curve intersect as a universal solution
-    inter_segment = [cfront[1].start, cfront[1].end]
-    intersect = line_intersection_with_segment(
-        (slope_m, slope_c), inter_segment[0], inter_segment[1])
+    # svgpath tools allow solution regardless of egde types
+    inter_segment = svgpath.Line(
+        pyp.list_to_c(slope_midpoint - 20 * slope_perp), 
+        pyp.list_to_c(slope_midpoint + 20 * slope_perp)
+    )
+    
+    target_segment = cfront[1].as_curve()
+    intersect_t = target_segment.intersect(inter_segment)
+
+    if len(intersect_t) > 1:
+        raise RuntimeError(
+            f'Sleeve Opening Inversion::Error::{len(intersect_t)} intersection points instead of one'
+        )
+    
+    intersect_t = intersect_t[0][0]
+    intersect = np.array(pyp.c_to_list(target_segment.point(intersect_t)))
+
 
     # DEBUG
     connecting_point = np.array(front_opening[-1].end)
     print('Sleeve midpoint ', intersect)
     print('Sleeve diff ', np.linalg.norm(intersect - connecting_point))
-    diff_x = np.linalg.norm(intersect - connecting_point)   
-
-    # DRAFT # add to the back_opening, remove from front_opening
-    # TODO Append and subdivide instead
-    #DEBUG 
     fsh, bsh = front_opening.shortcut(), back_opening.shortcut()
     print(
         'Shorthand before: ',
         np.linalg.norm(fsh[1] - fsh[0]), np.linalg.norm(bsh[1] - bsh[0])
     )
-    front_opening.edges[-1].end[1] -= diff_x  # shorten
-    back_opening.edges[-1].end[1] += diff_x  # extend
-    # Align the angle 
-    sl_angle = np.arctan(slope_m)
-    front_opening.rotate(-sl_angle)  # TODO sign
-    back_opening.rotate(sl_angle)
+
+    # Update the opening shapes
+    subdiv = front_opening.edges[-1].subdivide_param([intersect_t, 1 - intersect_t])
+    front_opening.substitute(-1, subdiv[0])  # TODO connected correctly?
+
+    # Move this part to the back opening
+    subdiv[1].start, subdiv[1].end = copy(subdiv[1].start), copy(subdiv[1].end)  # Disconnect vertices in subdivided version
+    subdiv.pop(0)   # TODO No reflect in the edge class??
+    subdiv.reflect([0, 0], [1, 0]).reverse().snap_to(back_opening[-1].end)
+    subdiv[0].start = back_opening[-1].end
+    
+    back_opening.append(subdiv[0])
 
     # DEBUG
     fsh, bsh = front_opening.shortcut(), back_opening.shortcut()
@@ -284,31 +296,37 @@ def ArmholeOpeningSquare(width, depth_front, depth_back, angle=None, **kwargs):
         np.linalg.norm(fsh[1] - fsh[0]), np.linalg.norm(bsh[1] - bsh[0])
     )
 
-    # DEBUG matplotlib visuals
-    # # Function to generate y-coordinates of the line
-    # def line_y(x, m, c):
-    #     return m * x + c
+    # Align the angle # TODO Figure out these alignements
+    sl_angle = np.arctan(slope_m)
+    front_opening.rotate(-sl_angle)  # TODO sign
+    back_opening.rotate(sl_angle)
 
-    # # Define x-values range and calculate y-values for the line
-    # x_values = np.linspace(1, 30, 100)
-    # y_values = line_y(x_values, slope_m, slope_c)
 
+    # DEBUG matplotlib visuals for svgpathtools
     # points = (slope_midpoint, intersect)
-
-    # # Plot the line, line segment, and points
-    # plt.plot(x_values, y_values, label="Line: y = 2x + 3")
-    # plt.plot([inter_segment[0][0], inter_segment[1][0]], [inter_segment[0][1], inter_segment[1][1]], 
-    #          'ro-', label="Slope")
-    # plt.plot([inter_segment[0][0], inter_segment[1][0]], [inter_segment[0][1], inter_segment[1][1]], 
-    #          label='to_intersect')
     # plt.scatter(*zip(*points), color='blue', label="Intersect points")
+    # st_int = slope_midpoint - 20 * slope_perp
+    # end_int = slope_midpoint + 20 * slope_perp
+    # plt.plot(
+    #     [st_int[0], end_int[0]], 
+    #     [st_int[1], end_int[1]],
+    #     label='Inersect line'
+    #     )
+    # plt.plot(
+    #     [slope[0][0], slope[1][0]], 
+    #     [slope[0][1], slope[1][1]], 
+    #     label="Slope")
+    # plt.plot(
+    #     [cfront[1].start[0], cfront[1].end[0]], 
+    #     [cfront[1].start[1], cfront[1].end[1]], 
+    #     label="Front line")
 
-    # # Add labels and legends
+    # # # Add labels and legends
     # plt.xlabel("x-axis")
     # plt.ylabel("y-axis")
     # plt.xlim([-1, 60])
     # plt.ylim([-10, 30])
-    # # plt.legend()
+    # plt.legend()
     # plt.grid(True)
 
     # # Set the aspect ratio to be equal

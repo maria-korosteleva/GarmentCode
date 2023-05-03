@@ -182,6 +182,18 @@ class Edge():
         
         return self._subdivide(fractions, by_length=False)
 
+    # DRAFT This will not work for curves though
+    #  def subdivide_point(self, point:list):
+    #     """Subdivide the edge into two at the given point
+    #     """
+    #     # NOTE: works for children classes as well
+    #     curve = self.as_curve()
+    #     param = curve.point_to_t(list_to_c(point))
+
+    #     curve = svgpath.CubicBezier(0+0j, 0.3+0.5j, 0.6+0.2j, 1+0j)
+
+    #     return self._subdivide([param, 1-param], False)
+
     def _subdivide(self, fractions: list, by_length=True):
         """Subdivide edge by length or curve parametrization
 
