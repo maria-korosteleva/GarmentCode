@@ -1,7 +1,8 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
+from scipy.optimize import minimize
 import svgpathtools as svgpath
-from copy import copy
+from copy import copy, deepcopy
 
 import matplotlib.pyplot as plt # DEBUG only
 
@@ -157,7 +158,7 @@ class Sleeve(pyp.Component):
 
 
 # ------  Armhole shapes ------
-def ArmholeSquare(incl, width, angle=None, **kwargs):
+def ArmholeSquare(incl, width, angle, **kwargs):
     """Simple square armhole cut-out
         Not recommended to use for sleeves, stitching in 3D might be hard
 
@@ -180,7 +181,7 @@ def ArmholeSquare(incl, width, angle=None, **kwargs):
     return edges, sleeve_edges
 
 
-def ArmholeSmooth(incl, width, angle=None, incl_coeff=0.2, w_coeff=0.2):
+def ArmholeSmooth(incl, width, angle, incl_coeff=0.2, w_coeff=0.2):
     """Piece-wise smooth armhole shape"""
     diff_incl = incl * (1 - incl_coeff)
     edges = pyp.esf.from_verts([0, 0], [diff_incl, w_coeff * width],  [incl, width])
@@ -196,6 +197,111 @@ def ArmholeSmooth(incl, width, angle=None, incl_coeff=0.2, w_coeff=0.2):
     return edges, sleeve_edges
 
 
+def _avg_curvature(curve, points_estimates=100):
+    """Average curvature in a curve"""
+    t_space = np.linspace(0, 1, points_estimates)
+    return sum([curve.curvature(t) for t in t_space]) / points_estimates
+
+
+def _bend_extend_2_tangent(shift, cp, target_len, direction, target_tangent_start, target_tangent_end):
+
+    control = np.array([
+        cp[0], 
+        [cp[1][0] + shift[0], cp[1][0] + shift[1]], 
+        [cp[2][0] + shift[2], cp[2][0] + shift[3]],
+        cp[-1] + direction * shift[4]
+    ])
+
+    params = control[:, 0] + 1j*control[:, 1]
+    curve_inverse = svgpath.CubicBezier(*params)
+
+    length_diff = (curve_inverse.length() - target_len)**2  # preservation
+
+    tan_0_diff = (abs(curve_inverse.unit_tangent(0) - target_tangent_start))**2
+    tan_1_diff = (abs(curve_inverse.unit_tangent(1) - target_tangent_end))**2
+
+    curvature_reg = _avg_curvature(curve_inverse)**2
+    end_expantion_reg = 0.001*shift[-1]**2 
+
+    return length_diff + tan_0_diff + tan_1_diff + curvature_reg + end_expantion_reg
+      
+
+
+def ArmholeCurve(incl, width, angle, **kwargs):
+    """ Classic sleeve opening on Cubic Bezier curves
+    """
+
+    # Curvature as parameters?
+    cps = [[0.5, 0.2], [0.8, 0.35]]
+    edge = pyp.CurveEdge([incl, width], [0, 0], cps)
+
+    # Inverse
+    curve = edge.as_curve()
+    # DRAFT tangent = pyp.utils.c_to_np(curve.unit_tangent(t=0))
+    tangent = np.array([0, -1])
+    inv_end = np.array([incl, width]) + tangent * edge._straight_len()
+
+    inv_cps = deepcopy(cps)
+    inv_cps[-1][1] *= -1  # Invert the last 
+
+    inv_edge = pyp.CurveEdge(
+        [incl, width], 
+        inv_end.tolist(), 
+        inv_cps
+        )
+    
+    # Rotate by desired angle
+    inv_edge.rotate(angle=-angle)  # TODO Angle
+
+    # TODO Optimize the shape to be nice
+    curve_inv = inv_edge.as_curve()
+    shortcut = inv_edge.shortcut()
+    direction = shortcut[-1] - shortcut[0]
+    direction /= np.linalg.norm(direction)
+    curve_cps = pyp.utils.c_to_np(curve_inv.bpoints())
+
+    # match tangent with the sleeve opening while preserving length
+    out = minimize(
+        _bend_extend_2_tangent, # with tangent matching
+        [0, 0, 0, 0, 0], 
+        args=(
+            curve_cps, 
+            curve.length(),
+            direction,
+            pyp.utils.list_to_c(tangent),   # DRAFT curve_inv.unit_tangent(t=0) 
+            pyp.utils.list_to_c(direction),  # DRAFT pyp.utils.list_to_c(np.array([-1 / np.sqrt(2), -1 / np.sqrt(2)])),  # DRAFT curve_inv.unit_tangent(t=1) 
+        )
+    )
+
+    # DEBUG if not successfull.. etc.
+    print(out)
+
+    shift = out.x
+
+    # DEBUG 
+    print('Final shift for rotated curve')
+    print(shift)
+
+    # Final inverse edge
+    fin_inv_edge = pyp.CurveEdge(
+        start=curve_cps[0].tolist(), 
+        end=(curve_cps[-1] + direction*shift[-1]).tolist(), 
+        control_points=[
+            [curve_cps[1][0] + shift[0], curve_cps[1][0] + shift[1]], 
+            [curve_cps[2][0] + shift[2], curve_cps[2][0] + shift[3]],
+        ],
+        relative=False
+    )
+
+    # DEBUG
+    print('Inverted Edge')
+    print(edge)
+    print(fin_inv_edge)
+
+    return pyp.EdgeSequence(edge.reverse()), pyp.EdgeSequence(fin_inv_edge.reverse())
+
+
+# TODO Move
 def ArmholeOpeningEvening(front_opening, back_opening):
     """
         Rearrange sleeve openings for front and back s.t. we can costruct 
@@ -226,7 +332,7 @@ def ArmholeOpeningEvening(front_opening, back_opening):
         pyp.list_to_c(slope_midpoint + 20 * slope_perp)
     )
     
-    target_segment = cfront[1].as_curve()
+    target_segment = cfront[-1].as_curve()
     intersect_t = target_segment.intersect(inter_segment)
 
     if len(intersect_t) > 1:
@@ -303,6 +409,9 @@ def ArmholeOpeningEvening(front_opening, back_opening):
 
     return front_opening, back_opening
 
+
+
+# -------- New sleeve definitions -------
 
 class ExperimentalSleevePanel(pyp.Panel):
     """Trying proper sleeve panel"""

@@ -73,6 +73,15 @@ class Edge():
         """Center of the edge"""
         return (np.array(self.start) + np.array(self.end)) / 2
 
+    def shortcut(self):
+        """Return straight shortcut for an edge, 
+            as np.array
+        
+            For straight edges it's the same as the edge itself
+        """
+
+        return np.array([self.start, self.end])
+
     # Representation
     def as_curve(self):
         """As svgpath curve object"""
@@ -535,7 +544,7 @@ class CurveEdge(Edge):
         curve = self.as_curve()
 
         t_mid = curve.ilength(curve.length()/2)
-        return curve.point(t_mid)
+        return c_to_list(curve.point(t_mid))
     
     def _subdivide(self, fractions: list, by_length=False):
         """Add intermediate vertices to an edge, 
@@ -613,12 +622,16 @@ class CurveEdge(Edge):
         # TODO Use linearization for more correct 3D visualization 
         # and self-intersection estimation
         extreme_points = self._extreme_points()
-        seq = EdgeSequence(Edge(self.start, extreme_points[0]))
-        for i in range(1, len(extreme_points)):
-            seq.append(Edge(seq[-1].end, extreme_points[i]))
-        seq.append(Edge(seq[-1].end, self.end))
 
-        return seq
+        if len(extreme_points):
+            seq = EdgeSequence(Edge(self.start, extreme_points[0]))
+            for i in range(1, len(extreme_points)):
+                seq.append(Edge(seq[-1].end, extreme_points[i]))
+            seq.append(Edge(seq[-1].end, self.end))
+
+            return seq
+        else:
+            return Edge(self.start, self.end)
 
     def _extreme_points(self):
         """Return extreme points (on Y) of the current edge

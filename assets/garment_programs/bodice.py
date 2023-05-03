@@ -195,14 +195,14 @@ class BodiceHalf(pyp.Component):
                 bodice_sleeve_int
             ))
 
-        # DEBUG
-        print('Stitches of sleeves')
-        print(self.stitching_rules[-1].int1.edges.length())
-        print(self.stitching_rules[-1].int1.edges.lengths())
-        print(self.stitching_rules[-1].int1.edges.fractions())
-        print(self.stitching_rules[-1].int2.edges.length())
-        print(self.stitching_rules[-1].int2.edges.lengths())
-        print(self.stitching_rules[-1].int2.edges.fractions())
+            # DEBUG
+            print('Stitches of sleeves')
+            print(self.stitching_rules[-1].int1.edges.length())
+            print(self.stitching_rules[-1].int1.edges.lengths())
+            print(self.stitching_rules[-1].int1.edges.fractions())
+            print(self.stitching_rules[-1].int2.edges.length())
+            print(self.stitching_rules[-1].int2.edges.lengths())
+            print(self.stitching_rules[-1].int2.edges.fractions())
 
         # Collars
         # TODO collars with extra panels!
