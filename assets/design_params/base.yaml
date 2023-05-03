@@ -103,7 +103,7 @@ design:
       type: int
     # Armhole
     armhole_shape: 
-      v: ArmholeSquare
+      v: ArmholeSmooth
       range: [ArmholeSquare, ArmholeSmooth]
       type: select_null
     smoothing_coeff:
@@ -114,6 +114,11 @@ design:
       v: 3
       range: [2, 6]
       type: float
+
+    sleeve_angle:  # the rest angle of a sleeve, created at connected point
+      v: 40  # deg   
+      range: [10, 50]
+      type: int
     
     # Shoulder shape
     standing_shoulder: 
