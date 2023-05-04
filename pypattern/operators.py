@@ -11,7 +11,7 @@ import svgpathtools as svgpath
 # Custom 
 from .edge import Edge, EdgeSequence
 from .interface import Interface
-from .generic_utils import vector_angle, close_enough, c_to_list, c_to_np
+from .generic_utils import vector_angle, close_enough, c_to_list, c_to_np, list_to_c
 from .base import BaseComponent
 from . import flags
 
@@ -276,6 +276,65 @@ def distribute_horisontally(component, n_copies, stride=20, name_tag='panel'):
     return copies
 
 
+# ----- Sleeve support -----
+
+def even_armhole_openings(front_opening, back_opening):
+    """
+        Rearrange sleeve openings for front and back s.t. their projection 
+        on vertical line is the same, while preserving the overall shape.
+        Allows for creation of two symmetric sleeve panels from them
+
+        !! Important: assumes that the front opening is longer then back opening
+    """
+    # Construct sleeve panel shapes from opening inverses
+    cfront, cback = front_opening.copy(), back_opening.copy()
+    cback.reflect([0, 0], [1, 0]).reverse().snap_to(cfront[-1].end)
+
+    # Cutout
+    slope = np.array([cfront[0].start, cback[-1].end])
+    slope_vec = slope[1] - slope[0]
+    slope_perp = np.asarray([-slope_vec[1], slope_vec[0]])
+    slope_midpoint = (slope[0] + slope[1]) / 2
+
+    # Intersection with the sleeve itself line
+    # svgpath tools allow solution regardless of egde types
+    inter_segment = svgpath.Line(
+        list_to_c(slope_midpoint - 20 * slope_perp), 
+        list_to_c(slope_midpoint + 20 * slope_perp)
+    )
+    target_segment = cfront[-1].as_curve()
+
+    intersect_t = target_segment.intersect(inter_segment)
+    if len(intersect_t) > 1:
+        raise RuntimeError(
+            f'Sleeve Opening Inversion::Error::{len(intersect_t)} intersection points instead of one'
+        )
+    intersect_t = intersect_t[0][0]
+
+    if not close_enough(intersect_t, 0, tol=0.01):
+        # The current separation is not satisfactory
+        # Update the opening shapes
+        subdiv = front_opening.edges[-1].subdivide_param([intersect_t, 1 - intersect_t])
+        front_opening.substitute(-1, subdiv[0])  
+
+        # Move this part to the back opening
+        subdiv[1].start, subdiv[1].end = copy(subdiv[1].start), copy(subdiv[1].end)  # Disconnect vertices in subdivided version
+        subdiv.pop(0)   # TODOLOW No reflect in the edge class??
+        subdiv.reflect([0, 0], [1, 0]).reverse().snap_to(back_opening[-1].end)
+        subdiv[0].start = back_opening[-1].end
+        
+        back_opening.append(subdiv[0])
+
+    # Align the slope with OY direction
+    # for correct size of sleeve panels
+    slope_angle = np.arctan(-slope_vec[0] / slope_vec[1])	
+    front_opening.rotate(-slope_angle)
+    back_opening.rotate(slope_angle)
+
+    return front_opening, back_opening
+
+
+
 # ---- Utils ----
 
 def _dist(v1, v2):
@@ -304,7 +363,6 @@ def _fit_location_corner(l, diff_target, curve1, curve2):
 
     return ((diff_curr[0] - diff_target[0])**2 
             + (diff_curr[1] - diff_target[1])**2)
-
 
 def _fit_location_edge(shift, location, width_target, curve):
     """Find the points on two curves s.t. vector between them is the same as shortcut"""

@@ -161,8 +161,7 @@ class BodiceHalf(pyp.Component):
 
         # Sleeves    
         diff = self.ftorso.width - self.btorso.width
-        # DRAFT self.sleeve = sleeves.Sleeve(name, body, design, depth_diff=diff)
-        self.sleeve = sleeves.ExperimentalSleeve(name, body, design, depth_diff=diff)  # DEBUG
+        self.sleeve = sleeves.Sleeve(name, body, design, depth_diff=diff)
 
         print('FRONT SLEEVE')  # DEBUG
         _, f_sleeve_int = pyp.ops.cut_corner(
