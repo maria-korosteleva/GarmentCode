@@ -184,6 +184,11 @@ class BodiceHalf(pyp.Component):
                 self.sleeve.interfaces['in'], 
                 bodice_sleeve_int
             ))
+            self.sleeve.place_by_interface(
+                self.sleeve.interfaces['in'], 
+                bodice_sleeve_int, 
+                gap=5
+            )
 
         # Collars
         # TODO collars with extra panels!
