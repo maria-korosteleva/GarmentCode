@@ -4,158 +4,9 @@ from scipy.optimize import minimize
 import svgpathtools as svgpath
 from copy import copy, deepcopy
 
-import matplotlib.pyplot as plt # DEBUG only
-
 # Custom
 import pypattern as pyp
 from . import bands
-
-#  ---- Initial sleeve classes ----
-class SleevePanel(pyp.Panel):
-    def __init__(self, name, body, design, connecting_depth, width_diff=0) -> None:
-        super().__init__(name)
-
-        pose_angle = np.deg2rad(body['arm_pose_angle'])
-        shoulder_angle = np.deg2rad(body['shoulder_incl'])
-        standing = design['standing_shoulder']['v']
-        base_angle = pose_angle if standing else shoulder_angle
-
-        length = design['length']['v']
-        connecting_width = design['connecting_width']['v']
-        smoothing_coeff = design['smoothing_coeff']['v']
-
-        armhole = globals()[design['armhole_shape']['v']]
-        proj_shape, open_shape = armhole(
-            connecting_depth, connecting_width, 
-            angle=base_angle, incl_coeff=smoothing_coeff, w_coeff=smoothing_coeff)
-
-        # Add ruffles
-        if not pyp.utils.close_enough(design['connect_ruffle']['v'], 1):
-            open_shape.extend(design['connect_ruffle']['v'])
-
-        arm_width = abs(open_shape[0].start[1] - open_shape[-1].end[1])
-
-        # DEBUG
-        print('Actual width ', arm_width)
-        print('Required width ', design['end_width']['v'])
-        print('Estimated width ', design['end_width']['v'] + width_diff)
-
-        # FIXME end_width not used
-
-        # Main body of a sleeve
-        self.edges = pyp.esf.from_verts(
-            [0, 0], [0, arm_width], [length, arm_width]
-        )
-        
-        # Align the opening
-        open_shape.reverse().rotate(-base_angle).snap_to(self.edges[-1].end)
-        open_shape[0].start = self.edges[-1].end   # chain
-        self.edges.append(open_shape)
-
-        # align the angle with the pose -- for draping
-        self.edges.rotate(pose_angle) 
-
-        if standing:  # Add a "shelve" to create square shoulder appearance
-            top_edge = self.edges[1]
-            end = top_edge.end
-            len = design['standing_shoulder_len']['v']
-
-            standing_edge = pyp.Edge(
-                [end[0] - len * np.cos(shoulder_angle), end[1] - len * np.sin(shoulder_angle)], end)
-            top_edge.end = standing_edge.start
-
-            self.edges.substitute(top_edge, [top_edge, standing_edge])
-
-        # Fin
-        self.edges.close_loop()
-
-        # Interfaces
-        self.interfaces = {
-            # NOTE: interface needs reversing because the open_shape was reversed for construction
-            'in': pyp.Interface(self, open_shape, ruffle=design['connect_ruffle']['v']).reverse(),
-            'in_shape': pyp.Interface(self, proj_shape),
-            'out': pyp.Interface(self, self.edges[0], ruffle=design['end_ruffle']['v']),
-            'top': pyp.Interface(self, self.edges[1:3] if standing else self.edges[1]),   
-            'bottom': pyp.Interface(self, self.edges[-1])
-        }
-
-        # Default placement
-        self.set_pivot(self.edges[-1].start)
-        self.translate_to(
-            [- body['sholder_w'] / 2 - connecting_depth, 
-            body['height'] - body['head_l'] - body['armscye_depth'],
-            0]) 
-
-
-class Sleeve(pyp.Component):
-
-    def __init__(self, tag, body, design, depth_diff) -> None:
-        super().__init__(f'{self.__class__.__name__}_{tag}')
-
-        design = design['sleeve']
-        inclanation = design['inclanation']['v']
-        
-        # sleeves
-        self.f_sleeve = SleevePanel(
-            f'{tag}_sl_f', body, design, inclanation + depth_diff, depth_diff).translate_by([0, 0, 25])
-        self.b_sleeve = SleevePanel(
-            f'{tag}_sl_b', body, design, inclanation, -depth_diff).translate_by([0, 0, -20])
-
-        self.stitching_rules = pyp.Stitches(
-            (self.f_sleeve.interfaces['top'], self.b_sleeve.interfaces['top']),
-            (self.f_sleeve.interfaces['bottom'], self.b_sleeve.interfaces['bottom']),
-        )
-
-        self.interfaces = {
-            'in_front': self.f_sleeve.interfaces['in'].reverse(),
-            'in_front_shape': self.f_sleeve.interfaces['in_shape'],
-            'in_back': self.b_sleeve.interfaces['in'],
-            'in_back_shape': self.b_sleeve.interfaces['in_shape'],
-        }
-
-        # Cuff
-        if design['cuff']['type']['v']:
-            bbox = self.bbox3D()
-
-            # Class
-            design['cuff']['b_width'] = design['end_width']
-            cuff_class = getattr(bands, design['cuff']['type']['v'])
-            self.cuff = cuff_class(f'sl_{tag}', design)
-
-            # Position
-            pose_angle = np.deg2rad(body['arm_pose_angle'])
-            self.cuff.rotate_by(R.from_euler('XYZ', [0, 0, -pose_angle]))
-
-            # Translation
-            self.cuff.place_by_interface(
-                self.cuff.interfaces['top'],
-                pyp.Interface.from_multiple(
-                    self.f_sleeve.interfaces['out'], 
-                    self.b_sleeve.interfaces['out']
-                ),
-                gap=5
-            )
-
-            # Stitch
-            # modify interfaces to control connection
-            front_int = self.f_sleeve.interfaces['out'].edges
-            frac = design['end_ruffle']['v'] * design['end_width']['v'] / 2 / front_int.length()
-            subdiv = pyp.esf.from_fractions(
-                front_int[0].start, front_int[0].end, [frac, (1 - frac)])
-            self.f_sleeve.edges.substitute(front_int[0], subdiv)
-
-            new_front_int = pyp.Interface(self.f_sleeve, subdiv[0])
-            new_back_int = pyp.Interface.from_multiple( 
-                pyp.Interface(self.f_sleeve, subdiv[1]),
-                self.b_sleeve.interfaces['out'])
-
-            # stitch
-            self.stitching_rules.append(  
-                (self.cuff.interfaces['top_front'], new_front_int))
-            self.stitching_rules.append(
-                (self.cuff.interfaces['top_back'], new_back_int),
-                )
-
 
 # ------  Armhole shapes ------
 def ArmholeSquare(incl, width, angle, **kwargs):
@@ -237,7 +88,7 @@ def ArmholeCurve(incl, width, angle, **kwargs):
 
     # Inverse
     curve = edge.as_curve()
-    tangent = np.array([0, -1])
+    tangent = np.array([0, -1])  # Full opening is vertically aligned
     inv_end = np.array([incl, width]) + tangent * edge._straight_len()
 
     inv_cps = deepcopy(cps)
@@ -250,7 +101,7 @@ def ArmholeCurve(incl, width, angle, **kwargs):
         )
     
     # Rotate by desired angle
-    inv_edge.rotate(angle=-angle)  # TODO Angle
+    inv_edge.rotate(angle=-angle)
 
     # Optimize the shape to be nice
     curve_inv = inv_edge.as_curve()
@@ -267,19 +118,16 @@ def ArmholeCurve(incl, width, angle, **kwargs):
             curve_cps, 
             curve.length(),
             direction,
-            pyp.utils.list_to_c(tangent),   # DRAFT curve_inv.unit_tangent(t=0) 
-            pyp.utils.list_to_c(direction),  # DRAFT pyp.utils.list_to_c(np.array([-1 / np.sqrt(2), -1 / np.sqrt(2)])),  # DRAFT curve_inv.unit_tangent(t=1) 
+            pyp.utils.list_to_c(tangent),  
+            pyp.utils.list_to_c(direction), 
         )
     )
-
-    # DEBUG if not successfull.. etc.
-    print(out)
+    if not out.success:
+        print(f'ArmholeCurve::Error::Inverse optimization not successfull')
+        if pyp.flags.VERBOSE:
+            print(out)
 
     shift = out.x
-
-    # DEBUG 
-    print('Final shift for rotated curve')
-    print(shift)
 
     # Final inverse edge
     fin_inv_edge = pyp.CurveEdge(
@@ -292,11 +140,6 @@ def ArmholeCurve(incl, width, angle, **kwargs):
         relative=False
     )
 
-    # DEBUG
-    print('Inverted Edge')
-    print(edge)
-    print(fin_inv_edge)
-
     return pyp.EdgeSequence(edge.reverse()), pyp.EdgeSequence(fin_inv_edge.reverse())
 
 
@@ -308,12 +151,6 @@ def ArmholeOpeningEvening(front_opening, back_opening):
 
         !! Important: assumes that the front opening is longer then back opening
     """
-
-    # DEBUG
-    print('Opening Rearrangements')
-
-    # TODO special case when depth_front = depth_back
-
     # Construct sleeve panel shapes from opening inverses
     cfront, cback = front_opening.copy(), back_opening.copy()
     cback.reflect([0, 0], [1, 0]).reverse().snap_to(cfront[-1].end)
@@ -324,60 +161,34 @@ def ArmholeOpeningEvening(front_opening, back_opening):
     slope_perp = np.asarray([-slope_vec[1], slope_vec[0]])
     slope_midpoint = (slope[0] + slope[1]) / 2
 
-    # DEBUG
-    print(f'Expected arm length'
-          f' {np.linalg.norm(slope_midpoint - slope[0])}'
-          f' {np.linalg.norm(slope_midpoint - slope[1])}'
-          )
-    print('Slope_vec: ', slope_vec)
-
     # Intersection with the sleeve itself line
     # svgpath tools allow solution regardless of egde types
     inter_segment = svgpath.Line(
         pyp.list_to_c(slope_midpoint - 20 * slope_perp), 
         pyp.list_to_c(slope_midpoint + 20 * slope_perp)
     )
-    
     target_segment = cfront[-1].as_curve()
-    intersect_t = target_segment.intersect(inter_segment)
 
+    intersect_t = target_segment.intersect(inter_segment)
     if len(intersect_t) > 1:
         raise RuntimeError(
             f'Sleeve Opening Inversion::Error::{len(intersect_t)} intersection points instead of one'
         )
-    
     intersect_t = intersect_t[0][0]
-    intersect = np.array(pyp.c_to_list(target_segment.point(intersect_t)))
 
+    if not pyp.utils.close_enough(intersect_t, 0, tol=0.01):
+        # The current separation is not satisfactory
+        # Update the opening shapes
+        subdiv = front_opening.edges[-1].subdivide_param([intersect_t, 1 - intersect_t])
+        front_opening.substitute(-1, subdiv[0])  
 
-    # DEBUG
-    connecting_point = np.array(front_opening[-1].end)
-    print('Sleeve midpoint ', intersect)
-    print('Sleeve diff ', np.linalg.norm(intersect - connecting_point))
-    fsh, bsh = front_opening.shortcut(), back_opening.shortcut()
-    print(
-        'Shorthand before: ',
-        np.linalg.norm(fsh[1] - fsh[0]), np.linalg.norm(bsh[1] - bsh[0])
-    )
-
-    # Update the opening shapes
-    subdiv = front_opening.edges[-1].subdivide_param([intersect_t, 1 - intersect_t])
-    front_opening.substitute(-1, subdiv[0])  # TODO connected correctly?
-
-    # Move this part to the back opening
-    subdiv[1].start, subdiv[1].end = copy(subdiv[1].start), copy(subdiv[1].end)  # Disconnect vertices in subdivided version
-    subdiv.pop(0)   # TODO No reflect in the edge class??
-    subdiv.reflect([0, 0], [1, 0]).reverse().snap_to(back_opening[-1].end)
-    subdiv[0].start = back_opening[-1].end
-    
-    back_opening.append(subdiv[0])
-
-    # DEBUG
-    fsh, bsh = front_opening.shortcut(), back_opening.shortcut()
-    print(
-        'Shorthand after: ',
-        np.linalg.norm(fsh[1] - fsh[0]), np.linalg.norm(bsh[1] - bsh[0])
-    )
+        # Move this part to the back opening
+        subdiv[1].start, subdiv[1].end = copy(subdiv[1].start), copy(subdiv[1].end)  # Disconnect vertices in subdivided version
+        subdiv.pop(0)   # TODO No reflect in the edge class??
+        subdiv.reflect([0, 0], [1, 0]).reverse().snap_to(back_opening[-1].end)
+        subdiv[0].start = back_opening[-1].end
+        
+        back_opening.append(subdiv[0])
 
     # Align the slope with OY direction
     # for correct size of sleeve panels
@@ -385,41 +196,7 @@ def ArmholeOpeningEvening(front_opening, back_opening):
     front_opening.rotate(-slope_angle)
     back_opening.rotate(slope_angle)
 
-    # DEBUG matplotlib visuals for svgpathtools
-    # points = (slope_midpoint, intersect)
-    # plt.scatter(*zip(*points), color='blue', label="Intersect points")
-    # st_int = slope_midpoint - 20 * slope_perp
-    # end_int = slope_midpoint + 20 * slope_perp
-    # plt.plot(
-    #     [st_int[0], end_int[0]], 
-    #     [st_int[1], end_int[1]],
-    #     label='Inersect line'
-    #     )
-    # plt.plot(
-    #     [slope[0][0], slope[1][0]], 
-    #     [slope[0][1], slope[1][1]], 
-    #     label="Slope")
-    # plt.plot(
-    #     [cfront[1].start[0], cfront[1].end[0]], 
-    #     [cfront[1].start[1], cfront[1].end[1]], 
-    #     label="Front line")
-
-    # # # Add labels and legends
-    # plt.xlabel("x-axis")
-    # plt.ylabel("y-axis")
-    # plt.xlim([-1, 60])
-    # plt.ylim([-10, 30])
-    # plt.legend()
-    # plt.grid(True)
-
-    # # Set the aspect ratio to be equal
-    # plt.gca().set_aspect('equal', adjustable='box')
-
-    # # Show the plot
-    # plt.show()
-
     return front_opening, back_opening
-
 
 
 # -------- New sleeve definitions -------
@@ -445,9 +222,6 @@ class ExperimentalSleevePanel(pyp.Panel):
 
         # Correct sleeve width -- after aligning rotation
         arm_width = abs(open_shape[0].start[1] - open_shape[-1].end[1])
-
-        # DEBUG
-        print(f'Arm width for {self.name}: {arm_width}')
 
         # Main body of a sleeve 
         self.edges = pyp.esf.from_verts(
@@ -528,10 +302,6 @@ class ExperimentalSleeve(pyp.Component):
                 front_opening, back_opening
             )
 
-        # DEBUG
-        print('Success!! ')
-        print(front_project, back_project, front_opening, back_opening)
-
         # Get sleeve panels
         self.f_sleeve = ExperimentalSleevePanel(
             f'{tag}_sleeve_f', body, design, front_opening).translate_by(
@@ -539,17 +309,6 @@ class ExperimentalSleeve(pyp.Component):
         self.b_sleeve = ExperimentalSleevePanel(
             f'{tag}_sleeve_b', body, design, back_opening).translate_by(
                 [-inclanation, 0, -20])
-
-        # DEBUG
-        print('Stitch size matching')
-        print(
-            self.f_sleeve.interfaces['top'].edges.length(),
-            self.b_sleeve.interfaces['top'].edges.length()
-        )
-        print(
-            self.f_sleeve.interfaces['bottom'].edges.length(),
-            self.b_sleeve.interfaces['bottom'].edges.length()
-        )
 
         # Connect panels
         self.stitching_rules = pyp.Stitches(
