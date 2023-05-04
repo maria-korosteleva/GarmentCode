@@ -533,9 +533,7 @@ class ExperimentalSleeve(pyp.Component):
 
         # Interfaces
         self.interfaces = {
-            'in_front': self.f_sleeve.interfaces['in'].reverse(),
             'in_front_shape': pyp.Interface(self.f_sleeve, front_project),
-            'in_back': self.b_sleeve.interfaces['in'],
             'in_back_shape': pyp.Interface(self.f_sleeve, back_project), 
             'in': pyp.Interface.from_multiple(
                 self.f_sleeve.interfaces['in'].reverse(),
@@ -562,33 +560,11 @@ class ExperimentalSleeve(pyp.Component):
                     degrees=True
                 )
             )
-
-            # Translation
             self.cuff.place_by_interface(
                 self.cuff.interfaces['top'],
                 self.interfaces['out'],
                 gap=5
             )
-
-            # Stitch
-            # DRAFT # modify interfaces to control connection
-            # front_int = self.f_sleeve.interfaces['out'].edges
-            # frac = design['end_ruffle']['v'] * design['end_width']['v'] / 2 / front_int.length()
-            # subdiv = pyp.esf.from_fractions(
-            #     front_int[0].start, front_int[0].end, [frac, (1 - frac)])
-            # self.f_sleeve.edges.substitute(front_int[0], subdiv)
-
-            # new_front_int = pyp.Interface(self.f_sleeve, subdiv[0])
-            # new_back_int = pyp.Interface.from_multiple( 
-            #     pyp.Interface(self.f_sleeve, subdiv[1]),
-            #     self.b_sleeve.interfaces['out'])
-
-            # # stitch
-            # self.stitching_rules.append(  
-            #     (self.cuff.interfaces['top_front'], new_front_int))
-            # self.stitching_rules.append(
-            #     (self.cuff.interfaces['top_back'], new_back_int),
-            #     )
 
             self.stitching_rules.append(
                 (
@@ -597,5 +573,5 @@ class ExperimentalSleeve(pyp.Component):
                 )
             )
             
-            # TODO UPD out interface!
+            # UPD out interface!
             self.interfaces['out'] = self.cuff.interfaces['bottom']
