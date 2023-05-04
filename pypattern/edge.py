@@ -682,7 +682,7 @@ class CurveEdge(Edge):
             })
 
     
-
+# TODO as svgpath path object (?)
 class EdgeSequence():
     """Represents a sequence of (possibly chained) edges (e.g. every next edge starts from the same vertex that the previous edge ends with
         and allows building some typical edge sequences
