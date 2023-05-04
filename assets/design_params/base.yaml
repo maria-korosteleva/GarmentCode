@@ -116,13 +116,13 @@ design:
       type: float
 
     sleeve_angle:  # the rest angle of a sleeve, created at connected point
-      v: 10  # deg   
+      v: 30  # deg   
       range: [10, 50]
       type: int
     
     # Shoulder shape
     standing_shoulder: 
-      v: False
+      v: True
       range: [True, False]
       type: bool
     standing_shoulder_len:   # can create "Standing" shoulder
@@ -142,7 +142,7 @@ design:
     # Cuff
     cuff: 
       type:
-        v: CuffBandSkirt
+        v: null
         range: [CuffBand, CuffSkirt, CuffBandSkirt]
         type: select_null
       # b_width:  # NOTE taken from end_width # TODO naming convention with waistband

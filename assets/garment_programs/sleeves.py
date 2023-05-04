@@ -451,12 +451,33 @@ class ExperimentalSleevePanel(pyp.Panel):
         # Fin
         self.edges.close_loop()
 
+        if standing and rest_angle > shoulder_angle:  # Add a "shelve" to create square shoulder appearance
+            top_edge = self.edges[-1]
+            start = top_edge.start
+            len = design['standing_shoulder_len']['v']
+
+            x_shift = len * np.cos(rest_angle - shoulder_angle)
+            y_shift = len * np.sin(rest_angle - shoulder_angle)
+
+            # DEBUG
+            print('Standing shoulder')
+            print(x_shift, y_shift, np.cos(rest_angle - shoulder_angle))
+
+            standing_edge = pyp.Edge(
+                start=start,
+                end=[start[0] - x_shift, start[1] + y_shift]
+            )
+            top_edge.start = standing_edge.end
+
+            self.edges.substitute(top_edge, [standing_edge, top_edge])
+
+
         # Interfaces
         self.interfaces = {
             # NOTE: interface needs reversing because the open_shape was reversed for construction
-            'in': pyp.Interface(self, open_shape, ruffle=design['connect_ruffle']['v']),   # TODO .reverse(),
+            'in': pyp.Interface(self, open_shape, ruffle=design['connect_ruffle']['v']),
             'out': pyp.Interface(self, self.edges[0], ruffle=design['end_ruffle']['v']),
-            'top': pyp.Interface(self, self.edges[1:3] if standing else self.edges[-1]),   # TODO relation for standing
+            'top': pyp.Interface(self, self.edges[-2:] if standing else self.edges[-1]),   # TODO relation for standing
             'bottom': pyp.Interface(self, self.edges[1])
         }
 
