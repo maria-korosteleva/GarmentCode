@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import svgpathtools as svgpath
 
 # Custom 
-from .edge import Edge, EdgeSequence
+from .edge import Edge, CurveEdge, CircleEdge, EdgeSequence
 from .interface import Interface
 from .generic_utils import vector_angle, close_enough, c_to_list, c_to_np, list_to_c
 from .base import BaseComponent
@@ -227,6 +227,57 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
     
     return new_edges, new_edges[start_id:end_id], base_edge_leftovers
 
+def _fit_location_corner(l, diff_target, curve1, curve2):
+    """Find the points on two curves s.t. vector between them is the same as shortcut"""
+
+    # Current points on curves
+    point1 = c_to_np(curve1.point(l[0]))
+    point2 = c_to_np(curve2.point(l[1]))
+    diff_curr = point2 - point1
+
+    # DEBUG
+    # points = np.vstack((point1, point2))
+    # points = points.transpose()
+    # ax1 = curve1.plot(40)
+    # _ = curve2.plot(40, ax=ax1)
+    # lines = ax1.plot(  
+    #     points[0, :], points[1, :],
+    #     marker="o", linestyle="None", color="black")
+    # plt.show()
+
+    if flags.VERBOSE:
+        print('Location Progression: ', (diff_curr[0] - diff_target[0])**2, (diff_curr[1] - diff_target[1])**2)
+
+    return ((diff_curr[0] - diff_target[0])**2 
+            + (diff_curr[1] - diff_target[1])**2)
+
+def _fit_location_edge(shift, location, width_target, curve):
+    """Find the points on two curves s.t. vector between them is the same as shortcut"""
+
+    # Current points on curves
+    pointc = c_to_np(curve.point(location))   # TODO this is constant
+    point1 = c_to_np(curve.point(location + shift[0]))
+    point2 = c_to_np(curve.point(location - shift[1]))
+    diff_curr = point2 - point1
+
+    # DEBUG
+    # points = np.vstack((point1, point2))
+    # points = points.transpose()
+    # ax1 = curve.plot(40)
+    # lines = ax1.plot(  
+    #     points[0, :], points[1, :],
+    #     marker="o", linestyle="None", color="black")
+    # plt.show()
+
+    if flags.VERBOSE:
+        print('Location Progression: ', (_dist(point1, point2) - width_target)**2)
+
+    # regularize points to be at the same distance from center
+    reg = (_dist(point1, pointc) - _dist(point2, pointc))**2
+
+    return (_dist(point1, point2) - width_target)**2 + reg
+
+
 # ANCHOR ----- Panel operations ------
 def distribute_Y(component, n_copies, odd_copy_shift=10):
     """Distribute copies of component over the circle around Oy"""
@@ -249,7 +300,6 @@ def distribute_Y(component, n_copies, odd_copy_shift=10):
         
     return copies
 
-
 def distribute_horisontally(component, n_copies, stride=20, name_tag='panel'):
     """Distribute copies of component over the straight horisontal line perpendicular to the norm"""
     copies = [ component ]
@@ -271,13 +321,10 @@ def distribute_horisontally(component, n_copies, stride=20, name_tag='panel'):
 
         copies.append(new_component)
 
-    # TODO resolve collisions though!
-
     return copies
 
 
-# ----- Sleeve support -----
-
+# ANCHOR ----- Sleeve support -----
 def even_armhole_openings(front_opening, back_opening):
     """
         Rearrange sleeve openings for front and back s.t. their projection 
@@ -333,6 +380,93 @@ def even_armhole_openings(front_opening, back_opening):
 
     return front_opening, back_opening
 
+# ANCHOR ----- Curve tools -----
+def _avg_curvature(curve, points_estimates=100):
+    """Average curvature in a curve"""
+    t_space = np.linspace(0, 1, points_estimates)
+    return sum([curve.curvature(t) for t in t_space]) / points_estimates
+
+def _bend_extend_2_tangent(shift, cp, target_len, direction, target_tangent_start, target_tangent_end):
+
+    control = np.array([
+        cp[0], 
+        [cp[1][0] + shift[0], cp[1][0] + shift[1]], 
+        [cp[2][0] + shift[2], cp[2][0] + shift[3]],
+        cp[-1] + direction * shift[4]
+    ])
+
+    params = control[:, 0] + 1j*control[:, 1]
+    curve_inverse = svgpath.CubicBezier(*params)
+
+    length_diff = (curve_inverse.length() - target_len)**2  # preservation
+
+    tan_0_diff = (abs(curve_inverse.unit_tangent(0) - target_tangent_start))**2
+    tan_1_diff = (abs(curve_inverse.unit_tangent(1) - target_tangent_end))**2
+
+    curvature_reg = _avg_curvature(curve_inverse)**2
+    end_expantion_reg = 0.001*shift[-1]**2 
+
+    return length_diff + tan_0_diff + tan_1_diff + curvature_reg + end_expantion_reg
+      
+def curve_match_tangents(curve, target_tan0, target_tan1, return_as_edge=False):
+    """Update the curve to have the desired tangent directions at endpoints 
+        while preserving curve length and overall direction
+
+        Returns 
+        * control points for the final CubicBezier curves
+        * Or CurveEdge instance, if return_as_edge=True
+
+        NOTE: Only Cubic Bezier curves are supported
+    """
+    if not isinstance(curve, svgpath.CubicBezier):
+        raise NotImplementedError(
+            f'Curve_match_tangents::Error::Only Cubic Bezier curves are supported ', 
+            f'(got {type(curve)})')
+
+    curve_cps = c_to_np(curve.bpoints())
+
+    direction = curve_cps[-1] - curve_cps[0]
+    direction /= np.linalg.norm(direction)
+
+    target_tan0 = target_tan0 / np.linalg.norm(target_tan0)
+    target_tan1 = target_tan1 / np.linalg.norm(target_tan1)
+
+    # match tangents with the requested ones while preserving length
+    out = minimize(
+        _bend_extend_2_tangent, # with tangent matching
+        [0, 0, 0, 0, 0], 
+        args=(
+            curve_cps, 
+            curve.length(),
+            direction,
+            list_to_c(target_tan0),  
+            list_to_c(target_tan1), 
+        )
+    )
+    if not out.success:
+        print(f'Curve_match_tangents::Warning::optimization not successfull')
+        if flags.VERBOSE:
+            print(out)
+
+    shift = out.x
+
+    fin_curve_cps = [
+        curve_cps[0].tolist(),
+        [curve_cps[1][0] + shift[0], curve_cps[1][0] + shift[1]], 
+        [curve_cps[2][0] + shift[2], curve_cps[2][0] + shift[3]],
+        (curve_cps[-1] + direction*shift[-1]).tolist(), 
+    ]
+
+    if return_as_edge:
+        fin_inv_edge = CurveEdge(
+            start=fin_curve_cps[0], 
+            end=fin_curve_cps[-1], 
+            control_points=fin_curve_cps[1:3],
+            relative=False
+        )
+        return fin_inv_edge
+    
+    return fin_curve_cps
 
 
 # ---- Utils ----
@@ -340,55 +474,6 @@ def even_armhole_openings(front_opening, back_opening):
 def _dist(v1, v2):
     return norm(v2-v1)
 
-def _fit_location_corner(l, diff_target, curve1, curve2):
-    """Find the points on two curves s.t. vector between them is the same as shortcut"""
-
-    # Current points on curves
-    point1 = c_to_np(curve1.point(l[0]))
-    point2 = c_to_np(curve2.point(l[1]))
-    diff_curr = point2 - point1
-
-    # DEBUG
-    # points = np.vstack((point1, point2))
-    # points = points.transpose()
-    # ax1 = curve1.plot(40)
-    # _ = curve2.plot(40, ax=ax1)
-    # lines = ax1.plot(  
-    #     points[0, :], points[1, :],
-    #     marker="o", linestyle="None", color="black")
-    # plt.show()
-
-    if flags.VERBOSE:
-        print('Location Progression: ', (diff_curr[0] - diff_target[0])**2, (diff_curr[1] - diff_target[1])**2)
-
-    return ((diff_curr[0] - diff_target[0])**2 
-            + (diff_curr[1] - diff_target[1])**2)
-
-def _fit_location_edge(shift, location, width_target, curve):
-    """Find the points on two curves s.t. vector between them is the same as shortcut"""
-
-    # Current points on curves
-    pointc = c_to_np(curve.point(location))   # TODO this is constant
-    point1 = c_to_np(curve.point(location + shift[0]))
-    point2 = c_to_np(curve.point(location - shift[1]))
-    diff_curr = point2 - point1
-
-    # DEBUG
-    # points = np.vstack((point1, point2))
-    # points = points.transpose()
-    # ax1 = curve.plot(40)
-    # lines = ax1.plot(  
-    #     points[0, :], points[1, :],
-    #     marker="o", linestyle="None", color="black")
-    # plt.show()
-
-    if flags.VERBOSE:
-        print('Location Progression: ', (_dist(point1, point2) - width_target)**2)
-
-    # regularize points to be at the same distance from center
-    reg = (_dist(point1, pointc) - _dist(point2, pointc))**2
-
-    return (_dist(point1, point2) - width_target)**2 + reg
 
 def _fit_scale(s, shortcut, v1, v2, vc, d_v1, d_v2):
     """Evaluate how good a shortcut fits the corner if the vertices are shifted 

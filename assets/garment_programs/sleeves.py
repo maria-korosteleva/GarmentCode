@@ -48,97 +48,6 @@ def ArmholeSmooth(incl, width, angle, incl_coeff=0.2, w_coeff=0.2):
     return edges, sleeve_edges
 
 
-
-# TODO Move
-def _avg_curvature(curve, points_estimates=100):
-    """Average curvature in a curve"""
-    t_space = np.linspace(0, 1, points_estimates)
-    return sum([curve.curvature(t) for t in t_space]) / points_estimates
-
-
-def _bend_extend_2_tangent(shift, cp, target_len, direction, target_tangent_start, target_tangent_end):
-
-    control = np.array([
-        cp[0], 
-        [cp[1][0] + shift[0], cp[1][0] + shift[1]], 
-        [cp[2][0] + shift[2], cp[2][0] + shift[3]],
-        cp[-1] + direction * shift[4]
-    ])
-
-    params = control[:, 0] + 1j*control[:, 1]
-    curve_inverse = svgpath.CubicBezier(*params)
-
-    length_diff = (curve_inverse.length() - target_len)**2  # preservation
-
-    tan_0_diff = (abs(curve_inverse.unit_tangent(0) - target_tangent_start))**2
-    tan_1_diff = (abs(curve_inverse.unit_tangent(1) - target_tangent_end))**2
-
-    curvature_reg = _avg_curvature(curve_inverse)**2
-    end_expantion_reg = 0.001*shift[-1]**2 
-
-    return length_diff + tan_0_diff + tan_1_diff + curvature_reg + end_expantion_reg
-      
-def curve_match_tangents(curve, target_tan0, target_tan1, return_as_edge=False):
-    """Update the curve to have the desired tangents 
-        while preserving curve length and overall direction
-
-        Returns 
-        * control points for the final CubicBezier curves
-        * Or CurveEdge instance, if return_as_edge=True
-
-        NOTE: Only Cubic Bezier curves are supported
-    """
-    if not isinstance(curve, svgpath.CubicBezier):
-        raise NotImplementedError(
-            f'Curve_match_tangents::Error::Only Cubic Bezier curves are supported ', 
-            f'(got {type(curve)})')
-
-    curve_cps = pyp.utils.c_to_np(curve.bpoints())
-
-    direction = curve_cps[-1] - curve_cps[0]
-    direction /= np.linalg.norm(direction)
-
-    target_tan0 = target_tan0 / np.linalg.norm(target_tan0)
-    target_tan1 = target_tan1 / np.linalg.norm(target_tan1)
-
-    # match tangents with the requested ones while preserving length
-    out = minimize(
-        _bend_extend_2_tangent, # with tangent matching
-        [0, 0, 0, 0, 0], 
-        args=(
-            curve_cps, 
-            curve.length(),
-            direction,
-            pyp.utils.list_to_c(target_tan0),  
-            pyp.utils.list_to_c(target_tan1), 
-        )
-    )
-    if not out.success:
-        print(f'Curve_match_tangents::Warning::optimization not successfull')
-        if pyp.flags.VERBOSE:
-            print(out)
-
-    shift = out.x
-
-    fin_curve_cps = [
-        curve_cps[0].tolist(),
-        [curve_cps[1][0] + shift[0], curve_cps[1][0] + shift[1]], 
-        [curve_cps[2][0] + shift[2], curve_cps[2][0] + shift[3]],
-        (curve_cps[-1] + direction*shift[-1]).tolist(), 
-    ]
-
-    if return_as_edge:
-        fin_inv_edge = pyp.CurveEdge(
-            start=fin_curve_cps[0], 
-            end=fin_curve_cps[-1], 
-            control_points=fin_curve_cps[1:3],
-            relative=False
-        )
-        return fin_inv_edge
-    
-    return fin_curve_cps
-
-
 def ArmholeCurve(incl, width, angle, **kwargs):
     """ Classic sleeve opening on Cubic Bezier curves
     """
@@ -165,7 +74,7 @@ def ArmholeCurve(incl, width, angle, **kwargs):
     rotated_direction = shortcut[-1] - shortcut[0]
     rotated_direction /= np.linalg.norm(rotated_direction)
 
-    fin_inv_edge = curve_match_tangents(
+    fin_inv_edge = pyp.ops.curve_match_tangents(
         inv_edge.as_curve(), 
         down_direction, 
         rotated_direction, 
