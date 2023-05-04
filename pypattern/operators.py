@@ -456,7 +456,7 @@ def curve_match_tangents(curve, target_tan0, target_tan1, return_as_edge=False):
             direction,
             list_to_c(target_tan0),  
             list_to_c(target_tan1), 
-            30
+            50
         )
     )
     if not out.success:
