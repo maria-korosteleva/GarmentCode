@@ -237,7 +237,6 @@ def ArmholeCurve(incl, width, angle, **kwargs):
 
     # Inverse
     curve = edge.as_curve()
-    # DRAFT tangent = pyp.utils.c_to_np(curve.unit_tangent(t=0))
     tangent = np.array([0, -1])
     inv_end = np.array([incl, width]) + tangent * edge._straight_len()
 
@@ -253,7 +252,7 @@ def ArmholeCurve(incl, width, angle, **kwargs):
     # Rotate by desired angle
     inv_edge.rotate(angle=-angle)  # TODO Angle
 
-    # TODO Optimize the shape to be nice
+    # Optimize the shape to be nice
     curve_inv = inv_edge.as_curve()
     shortcut = inv_edge.shortcut()
     direction = shortcut[-1] - shortcut[0]
@@ -420,7 +419,6 @@ class ExperimentalSleevePanel(pyp.Panel):
         super().__init__(name)
 
         # TODO Standing sleeve
-        # TODO ruffle
         # TODO end_width to be not less then the width of the arm??
 
         shoulder_angle = np.deg2rad(body['shoulder_incl'])
@@ -430,7 +428,10 @@ class ExperimentalSleevePanel(pyp.Panel):
 
         length = design['length']['v']
 
-        end_width = design['end_width']['v'] / 2
+        # Sleeve width with accounting for ruffles
+        end_width = design['end_width']['v'] / 2 * design['end_ruffle']['v']
+        if not pyp.utils.close_enough(design['connect_ruffle']['v'], 1):
+            open_shape.extend(design['connect_ruffle']['v'])
 
         # Correct sleeve width -- after aligning rotation
         arm_width = abs(open_shape[0].start[1] - open_shape[-1].end[1])
