@@ -9,14 +9,14 @@ design:
   meta: 
     upper: 
       v: FittedShirt
-      range: [FittedShirt, Shirt]    # For curves debug CurvyProjection
+      range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
       v: False
       range: [True, False]
       type: bool
     bottom: 
-      v: Skirt2
+      v: null
       range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt]
       type: select_null
 
@@ -86,7 +86,7 @@ design:
     
   sleeve:
     sleeveless: 
-      v: True
+      v: False
       range: [True, False]
       type: bool
     length: 
@@ -98,13 +98,13 @@ design:
       range: [20, 40]   # TODO min armscye_depth . And no more then that for Bodice
       type: int
     end_width:
-      v: 20
+      v: 40
       range: [20, 40]  
       type: int
     # Armhole
     armhole_shape: 
-      v: ArmholeSmooth
-      range: [ArmholeSquare, ArmholeSmooth]
+      v: ArmholeCurve
+      range: [ArmholeSquare, ArmholeSmooth, ArmholeCurve]
       type: select_null
     smoothing_coeff:
       v: 0.25
@@ -114,10 +114,15 @@ design:
       v: 3
       range: [2, 6]
       type: float
+
+    sleeve_angle:  # the rest angle of a sleeve, created at connected point
+      v: 30  # deg   
+      range: [10, 50]
+      type: int
     
     # Shoulder shape
     standing_shoulder: 
-      v: True
+      v: False
       range: [True, False]
       type: bool
     standing_shoulder_len:   # can create "Standing" shoulder
@@ -137,7 +142,7 @@ design:
     # Cuff
     cuff: 
       type:
-        v: CuffBandSkirt
+        v: null
         range: [CuffBand, CuffSkirt, CuffBandSkirt]
         type: select_null
       # b_width:  # NOTE taken from end_width # TODO naming convention with waistband

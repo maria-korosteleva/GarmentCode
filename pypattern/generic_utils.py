@@ -59,16 +59,28 @@ def close_enough(f1, f2=0, tol=1e-4):
 
 # ---- Complex numbers converters ----- 
 def c_to_list(num):
-    """Convert complex number to a list of 2 elements"""
-    return [num.real, num.imag]
+    """Convert complex number to a list of 2 elements
+        Allows processing of lists of complex numbers
+    """
+
+    if isinstance(num, list) or isinstance(num, tuple):
+        return [c_to_list(n) for n in num]
+    else: 
+        return [num.real, num.imag]
+
 
 def c_to_np(num):
-    """Convert complex number to a numpy array of 2 elements"""
-    return np.asarray([num.real, num.imag])
+    """Convert complex number to a numpy array of 2 elements
+        Allows processing of lists of complex numbers
+    """
+    if isinstance(num, list) or isinstance(num, tuple):
+        return np.asarray([c_to_list(n) for n in num])
+    else: 
+        return np.asarray([num.real, num.imag])
 
 def list_to_c(num):
     """Convert 2D list or list of 2D lists into complex number/list of complex numbers"""
-    if isinstance(num[0], list):
+    if isinstance(num[0], list) or isinstance(num, tuple):
         return [complex(n[0], n[1]) for n in num]
     else: 
         return complex(num[0], num[1])

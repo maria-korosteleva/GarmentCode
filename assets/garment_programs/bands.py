@@ -119,7 +119,9 @@ class CuffSkirt(pyp.Component):
             'top': pyp.Interface.from_multiple(
                 self.front.interfaces['top'], self.back.interfaces['top']),
             'top_front': self.front.interfaces['top'],
-            'top_back': self.back.interfaces['top']
+            'top_back': self.back.interfaces['top'],
+            'bottom': pyp.Interface.from_multiple(
+                self.front.interfaces['bottom'], self.back.interfaces['bottom']),
         }
 
 class CuffBandSkirt(pyp.Component):
@@ -143,4 +145,5 @@ class CuffBandSkirt(pyp.Component):
             'top': self.cuff.interfaces['top'],
             'top_front': self.cuff.interfaces['top_front'],
             'top_back': self.cuff.interfaces['top_back'],
+            'bottom': self.skirt.interfaces['bottom']
         }

@@ -16,4 +16,5 @@ from .edge_factory import EdgeSeqFactory as esf
 # Operations
 import pypattern.operators as ops
 import pypattern.generic_utils as utils
+import pypattern.flags as flags
 

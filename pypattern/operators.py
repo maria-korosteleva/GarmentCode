@@ -9,9 +9,9 @@ import matplotlib.pyplot as plt
 import svgpathtools as svgpath
 
 # Custom 
-from .edge import Edge, EdgeSequence
+from .edge import Edge, CurveEdge, CircleEdge, EdgeSequence
 from .interface import Interface
-from .generic_utils import vector_angle, close_enough, c_to_list, c_to_np
+from .generic_utils import vector_angle, close_enough, c_to_list, c_to_np, list_to_c
 from .base import BaseComponent
 from . import flags
 
@@ -227,60 +227,6 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
     
     return new_edges, new_edges[start_id:end_id], base_edge_leftovers
 
-# ANCHOR ----- Panel operations ------
-def distribute_Y(component, n_copies, odd_copy_shift=10):
-    """Distribute copies of component over the circle around Oy"""
-    copies = [ component ]
-    delta_rotation = R.from_euler('XYZ', [0, 360 / n_copies, 0], degrees=True)
-    
-    for i in range(n_copies - 1):
-        new_component = deepcopy(copies[-1])
-        new_component.name = f'panel_{i}'   # Unique
-        new_component.rotate_by(delta_rotation)
-        new_component.translate_to(delta_rotation.apply(new_component.translation))
-
-        copies.append(new_component)
-
-    # shift around to resolve collisions (hopefully)
-    if odd_copy_shift:
-        for i in range(n_copies):
-            if not i % 2:
-                copies[i].translate_by(copies[i].norm() * odd_copy_shift)
-        
-    return copies
-
-
-def distribute_horisontally(component, n_copies, stride=20, name_tag='panel'):
-    """Distribute copies of component over the straight horisontal line perpendicular to the norm"""
-    copies = [ component ]
-    component.name = f'{name_tag}_0'   # Unique
-
-    if isinstance(component, BaseComponent):
-        translation_dir = component.rotation.apply([0, 0, 1])   # Horisontally along the panel
-        # FIXME What if it's looking up?
-        translation_dir = np.cross(translation_dir, [0, 1, 0])   # perpendicular to Y
-        translation_dir = translation_dir / norm(translation_dir)
-        delta_translation = translation_dir * stride
-    else:
-        translation_dir = [1, 0, 0] 
-
-    for i in range(n_copies - 1):
-        new_component = deepcopy(copies[-1])   # TODO proper copy
-        new_component.name = f'{name_tag}_{i + 1}'   # Unique
-        new_component.translate_by(delta_translation)
-
-        copies.append(new_component)
-
-    # TODO resolve collisions though!
-
-    return copies
-
-
-# ---- Utils ----
-
-def _dist(v1, v2):
-    return norm(v2-v1)
-
 def _fit_location_corner(l, diff_target, curve1, curve2):
     """Find the points on two curves s.t. vector between them is the same as shortcut"""
 
@@ -304,7 +250,6 @@ def _fit_location_corner(l, diff_target, curve1, curve2):
 
     return ((diff_curr[0] - diff_target[0])**2 
             + (diff_curr[1] - diff_target[1])**2)
-
 
 def _fit_location_edge(shift, location, width_target, curve):
     """Find the points on two curves s.t. vector between them is the same as shortcut"""
@@ -331,6 +276,220 @@ def _fit_location_edge(shift, location, width_target, curve):
     reg = (_dist(point1, pointc) - _dist(point2, pointc))**2
 
     return (_dist(point1, point2) - width_target)**2 + reg
+
+
+# ANCHOR ----- Panel operations ------
+def distribute_Y(component, n_copies, odd_copy_shift=10):
+    """Distribute copies of component over the circle around Oy"""
+    copies = [ component ]
+    delta_rotation = R.from_euler('XYZ', [0, 360 / n_copies, 0], degrees=True)
+    
+    for i in range(n_copies - 1):
+        new_component = deepcopy(copies[-1])
+        new_component.name = f'panel_{i}'   # Unique
+        new_component.rotate_by(delta_rotation)
+        new_component.translate_to(delta_rotation.apply(new_component.translation))
+
+        copies.append(new_component)
+
+    # shift around to resolve collisions (hopefully)
+    if odd_copy_shift:
+        for i in range(n_copies):
+            if not i % 2:
+                copies[i].translate_by(copies[i].norm() * odd_copy_shift)
+        
+    return copies
+
+def distribute_horisontally(component, n_copies, stride=20, name_tag='panel'):
+    """Distribute copies of component over the straight horisontal line perpendicular to the norm"""
+    copies = [ component ]
+    component.name = f'{name_tag}_0'   # Unique
+
+    if isinstance(component, BaseComponent):
+        translation_dir = component.rotation.apply([0, 0, 1])   # Horisontally along the panel
+        # FIXME What if it's looking up?
+        translation_dir = np.cross(translation_dir, [0, 1, 0])   # perpendicular to Y
+        translation_dir = translation_dir / norm(translation_dir)
+        delta_translation = translation_dir * stride
+    else:
+        translation_dir = [1, 0, 0] 
+
+    for i in range(n_copies - 1):
+        new_component = deepcopy(copies[-1])   # TODO proper copy
+        new_component.name = f'{name_tag}_{i + 1}'   # Unique
+        new_component.translate_by(delta_translation)
+
+        copies.append(new_component)
+
+    return copies
+
+
+# ANCHOR ----- Sleeve support -----
+def even_armhole_openings(front_opening, back_opening):
+    """
+        Rearrange sleeve openings for front and back s.t. their projection 
+        on vertical line is the same, while preserving the overall shape.
+        Allows for creation of two symmetric sleeve panels from them
+
+        !! Important: assumes that the front opening is longer then back opening
+    """
+    # Construct sleeve panel shapes from opening inverses
+    cfront, cback = front_opening.copy(), back_opening.copy()
+    cback.reflect([0, 0], [1, 0]).reverse().snap_to(cfront[-1].end)
+
+    # Cutout
+    slope = np.array([cfront[0].start, cback[-1].end])
+    slope_vec = slope[1] - slope[0]
+    slope_perp = np.asarray([-slope_vec[1], slope_vec[0]])
+    slope_midpoint = (slope[0] + slope[1]) / 2
+
+    # Intersection with the sleeve itself line
+    # svgpath tools allow solution regardless of egde types
+    inter_segment = svgpath.Line(
+        list_to_c(slope_midpoint - 20 * slope_perp), 
+        list_to_c(slope_midpoint + 20 * slope_perp)
+    )
+    target_segment = cfront[-1].as_curve()
+
+    intersect_t = target_segment.intersect(inter_segment)
+    if len(intersect_t) != 1:
+        print(
+            f'Sleeve Opening Inversion::Error::{len(intersect_t)} intersection points instead of one. '
+            'Check the quality of supplied curves'
+        )
+    
+    if len(intersect_t) >= 1 and not close_enough(intersect_t[0][0], 0, tol=0.01):
+        # The current separation is not satisfactory
+        # Update the opening shapes
+        intersect_t = intersect_t[0][0]
+        subdiv = front_opening.edges[-1].subdivide_param([intersect_t, 1 - intersect_t])
+        front_opening.substitute(-1, subdiv[0])  
+
+        # Move this part to the back opening
+        subdiv[1].start, subdiv[1].end = copy(subdiv[1].start), copy(subdiv[1].end)  # Disconnect vertices in subdivided version
+        subdiv.pop(0)   # TODOLOW No reflect in the edge class??
+        subdiv.reflect([0, 0], [1, 0]).reverse().snap_to(back_opening[-1].end)
+        subdiv[0].start = back_opening[-1].end
+        
+        back_opening.append(subdiv[0])
+
+    # Align the slope with OY direction
+    # for correct size of sleeve panels
+    slope_angle = np.arctan(-slope_vec[0] / slope_vec[1])	
+    front_opening.rotate(-slope_angle)
+    back_opening.rotate(slope_angle)
+
+    return front_opening, back_opening
+
+# ANCHOR ----- Curve tools -----
+def _avg_curvature(curve, points_estimates=100):
+    """Average curvature in a curve"""
+    # FIXME this work slow, so GUI manipulation is lagging
+    # UPD to direct evaluation
+    # Some hints here:
+    # https://math.stackexchange.com/questions/220900/bezier-curvature
+    # Another option: using the maximum curvature
+    t_space = np.linspace(0, 1, points_estimates)
+    return sum([curve.curvature(t) for t in t_space]) / points_estimates
+
+def _bend_extend_2_tangent(
+        shift, cp, target_len, direction, 
+        target_tangent_start, target_tangent_end, 
+        point_estimates=50):
+    """Evaluate how well curve preserves the length and tangents
+
+        NOTE: point_estimates controls average curvature evaluation.
+            The higher the number, the more stable the optimization,
+            but higher computational cost
+    """
+
+    control = np.array([
+        cp[0], 
+        [cp[1][0] + shift[0], cp[1][0] + shift[1]], 
+        [cp[2][0] + shift[2], cp[2][0] + shift[3]],
+        cp[-1] + direction * shift[4]
+    ])
+
+    params = control[:, 0] + 1j*control[:, 1]
+    curve_inverse = svgpath.CubicBezier(*params)
+
+    length_diff = (curve_inverse.length() - target_len)**2  # preservation
+
+    tan_0_diff = (abs(curve_inverse.unit_tangent(0) - target_tangent_start))**2
+    tan_1_diff = (abs(curve_inverse.unit_tangent(1) - target_tangent_end))**2
+
+    curvature_reg = _avg_curvature(curve_inverse, points_estimates=point_estimates)**2
+    end_expantion_reg = 0.001*shift[-1]**2 
+
+    return length_diff + tan_0_diff + tan_1_diff + curvature_reg + end_expantion_reg
+      
+def curve_match_tangents(curve, target_tan0, target_tan1, return_as_edge=False):
+    """Update the curve to have the desired tangent directions at endpoints 
+        while preserving curve length and overall direction
+
+        Returns 
+        * control points for the final CubicBezier curves
+        * Or CurveEdge instance, if return_as_edge=True
+
+        NOTE: Only Cubic Bezier curves are supported
+    """
+    if not isinstance(curve, svgpath.CubicBezier):
+        raise NotImplementedError(
+            f'Curve_match_tangents::Error::Only Cubic Bezier curves are supported ', 
+            f'(got {type(curve)})')
+
+    curve_cps = c_to_np(curve.bpoints())
+
+    direction = curve_cps[-1] - curve_cps[0]
+    direction /= np.linalg.norm(direction)
+
+    target_tan0 = target_tan0 / np.linalg.norm(target_tan0)
+    target_tan1 = target_tan1 / np.linalg.norm(target_tan1)
+
+    # match tangents with the requested ones while preserving length
+    out = minimize(
+        _bend_extend_2_tangent, # with tangent matching
+        [0, 0, 0, 0, 0], 
+        args=(
+            curve_cps, 
+            curve.length(),
+            direction,
+            list_to_c(target_tan0),  
+            list_to_c(target_tan1), 
+            50
+        )
+    )
+    if not out.success:
+        print(f'Curve_match_tangents::Warning::optimization not successfull')
+        if flags.VERBOSE:
+            print(out)
+
+    shift = out.x
+
+    fin_curve_cps = [
+        curve_cps[0].tolist(),
+        [curve_cps[1][0] + shift[0], curve_cps[1][0] + shift[1]], 
+        [curve_cps[2][0] + shift[2], curve_cps[2][0] + shift[3]],
+        (curve_cps[-1] + direction*shift[-1]).tolist(), 
+    ]
+
+    if return_as_edge:
+        fin_inv_edge = CurveEdge(
+            start=fin_curve_cps[0], 
+            end=fin_curve_cps[-1], 
+            control_points=fin_curve_cps[1:3],
+            relative=False
+        )
+        return fin_inv_edge
+    
+    return fin_curve_cps
+
+
+# ---- Utils ----
+
+def _dist(v1, v2):
+    return norm(v2-v1)
+
 
 def _fit_scale(s, shortcut, v1, v2, vc, d_v1, d_v2):
     """Evaluate how good a shortcut fits the corner if the vertices are shifted 
