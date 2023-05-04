@@ -352,15 +352,16 @@ def even_armhole_openings(front_opening, back_opening):
     target_segment = cfront[-1].as_curve()
 
     intersect_t = target_segment.intersect(inter_segment)
-    if len(intersect_t) > 1:
-        raise RuntimeError(
-            f'Sleeve Opening Inversion::Error::{len(intersect_t)} intersection points instead of one'
+    if len(intersect_t) != 1:
+        print(
+            f'Sleeve Opening Inversion::Error::{len(intersect_t)} intersection points instead of one. '
+            'Check the quality of supplied curves'
         )
-    intersect_t = intersect_t[0][0]
-
-    if not close_enough(intersect_t, 0, tol=0.01):
+    
+    if len(intersect_t) >= 1 and not close_enough(intersect_t[0][0], 0, tol=0.01):
         # The current separation is not satisfactory
         # Update the opening shapes
+        intersect_t = intersect_t[0][0]
         subdiv = front_opening.edges[-1].subdivide_param([intersect_t, 1 - intersect_t])
         front_opening.substitute(-1, subdiv[0])  
 
@@ -383,10 +384,24 @@ def even_armhole_openings(front_opening, back_opening):
 # ANCHOR ----- Curve tools -----
 def _avg_curvature(curve, points_estimates=100):
     """Average curvature in a curve"""
+    # FIXME this work slow, so GUI manipulation is lagging
+    # UPD to direct evaluation
+    # Some hints here:
+    # https://math.stackexchange.com/questions/220900/bezier-curvature
+    # Another option: using the maximum curvature
     t_space = np.linspace(0, 1, points_estimates)
     return sum([curve.curvature(t) for t in t_space]) / points_estimates
 
-def _bend_extend_2_tangent(shift, cp, target_len, direction, target_tangent_start, target_tangent_end):
+def _bend_extend_2_tangent(
+        shift, cp, target_len, direction, 
+        target_tangent_start, target_tangent_end, 
+        point_estimates=50):
+    """Evaluate how well curve preserves the length and tangents
+
+        NOTE: point_estimates controls average curvature evaluation.
+            The higher the number, the more stable the optimization,
+            but higher computational cost
+    """
 
     control = np.array([
         cp[0], 
@@ -403,7 +418,7 @@ def _bend_extend_2_tangent(shift, cp, target_len, direction, target_tangent_star
     tan_0_diff = (abs(curve_inverse.unit_tangent(0) - target_tangent_start))**2
     tan_1_diff = (abs(curve_inverse.unit_tangent(1) - target_tangent_end))**2
 
-    curvature_reg = _avg_curvature(curve_inverse)**2
+    curvature_reg = _avg_curvature(curve_inverse, points_estimates=point_estimates)**2
     end_expantion_reg = 0.001*shift[-1]**2 
 
     return length_diff + tan_0_diff + tan_1_diff + curvature_reg + end_expantion_reg
@@ -441,6 +456,7 @@ def curve_match_tangents(curve, target_tan0, target_tan1, return_as_edge=False):
             direction,
             list_to_c(target_tan0),  
             list_to_c(target_tan1), 
+            30
         )
     )
     if not out.success:
