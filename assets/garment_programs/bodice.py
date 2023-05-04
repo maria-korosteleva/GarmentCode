@@ -177,32 +177,14 @@ class BodiceHalf(pyp.Component):
             # No sleeve component, only the cut remains
             del self.sleeve
         else:
-            # DRAFT self.stitching_rules.append((self.sleeve.interfaces['in_front'], f_sleeve_int))
-            # self.stitching_rules.append((self.sleeve.interfaces['in_back'], b_sleeve_int))
-            # DEBUG
-            # Correct sleeve stitching
-            # TODO Ordering
+            # Ordering
             bodice_sleeve_int = pyp.Interface.from_multiple(
                 f_sleeve_int.reverse(),
                 b_sleeve_int.reverse())
-            # DEBUG 
-            print('Ordering')
-            print(self.sleeve.interfaces['in'].edges.lengths())
-            print(bodice_sleeve_int.edges.lengths())
-
             self.stitching_rules.append((
                 self.sleeve.interfaces['in'], 
                 bodice_sleeve_int
             ))
-
-            # DEBUG
-            print('Stitches of sleeves')
-            print(self.stitching_rules[-1].int1.edges.length())
-            print(self.stitching_rules[-1].int1.edges.lengths())
-            print(self.stitching_rules[-1].int1.edges.fractions())
-            print(self.stitching_rules[-1].int2.edges.length())
-            print(self.stitching_rules[-1].int2.edges.lengths())
-            print(self.stitching_rules[-1].int2.edges.fractions())
 
         # Collars
         # TODO collars with extra panels!

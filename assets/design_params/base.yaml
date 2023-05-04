@@ -122,7 +122,7 @@ design:
     
     # Shoulder shape
     standing_shoulder: 
-      v: True
+      v: False
       range: [True, False]
       type: bool
     standing_shoulder_len:   # can create "Standing" shoulder
@@ -132,11 +132,11 @@ design:
 
     # Ruffle
     connect_ruffle:
-      v: 1.5
+      v: 1
       range: [1, 2]
       type: float
     end_ruffle: 
-      v: 1.2
+      v: 1
       range: [1, 2]
       type: float
     # Cuff

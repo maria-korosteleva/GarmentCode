@@ -324,6 +324,13 @@ def ArmholeOpeningEvening(front_opening, back_opening):
     slope_perp = np.asarray([-slope_vec[1], slope_vec[0]])
     slope_midpoint = (slope[0] + slope[1]) / 2
 
+    # DEBUG
+    print(f'Expected arm length'
+          f' {np.linalg.norm(slope_midpoint - slope[0])}'
+          f' {np.linalg.norm(slope_midpoint - slope[1])}'
+          )
+    print('Slope_vec: ', slope_vec)
+
     # Intersection with the sleeve itself line
     # svgpath tools allow solution regardless of egde types
     inter_segment = svgpath.Line(
@@ -372,6 +379,11 @@ def ArmholeOpeningEvening(front_opening, back_opening):
         np.linalg.norm(fsh[1] - fsh[0]), np.linalg.norm(bsh[1] - bsh[0])
     )
 
+    # Align the slope with OY direction
+    # for correct size of sleeve panels
+    slope_angle = np.arctan(-slope_vec[0] / slope_vec[1])	
+    front_opening.rotate(-slope_angle)
+    back_opening.rotate(slope_angle)
 
     # DEBUG matplotlib visuals for svgpathtools
     # points = (slope_midpoint, intersect)
@@ -418,13 +430,11 @@ class ExperimentalSleevePanel(pyp.Panel):
     def __init__(self, name, body, design, open_shape):
         super().__init__(name)
 
-        # TODO Standing sleeve
         # TODO end_width to be not less then the width of the arm??
 
         shoulder_angle = np.deg2rad(body['shoulder_incl'])
         rest_angle = np.deg2rad(design['sleeve_angle']['v'])
         standing = design['standing_shoulder']['v']
-        base_angle = max(rest_angle, shoulder_angle) # TODO if standing else shoulder_angle  # DEBUG Trying drape with smaller angle 
 
         length = design['length']['v']
 
@@ -437,7 +447,7 @@ class ExperimentalSleevePanel(pyp.Panel):
         arm_width = abs(open_shape[0].start[1] - open_shape[-1].end[1])
 
         # DEBUG
-        print('Panel size: ', arm_width, end_width)
+        print(f'Arm width for {self.name}: {arm_width}')
 
         # Main body of a sleeve 
         self.edges = pyp.esf.from_verts(
@@ -459,10 +469,6 @@ class ExperimentalSleevePanel(pyp.Panel):
             x_shift = len * np.cos(rest_angle - shoulder_angle)
             y_shift = len * np.sin(rest_angle - shoulder_angle)
 
-            # DEBUG
-            print('Standing shoulder')
-            print(x_shift, y_shift, np.cos(rest_angle - shoulder_angle))
-
             standing_edge = pyp.Edge(
                 start=start,
                 end=[start[0] - x_shift, start[1] + y_shift]
@@ -477,7 +483,7 @@ class ExperimentalSleevePanel(pyp.Panel):
             # NOTE: interface needs reversing because the open_shape was reversed for construction
             'in': pyp.Interface(self, open_shape, ruffle=design['connect_ruffle']['v']),
             'out': pyp.Interface(self, self.edges[0], ruffle=design['end_ruffle']['v']),
-            'top': pyp.Interface(self, self.edges[-2:] if standing else self.edges[-1]),   # TODO relation for standing
+            'top': pyp.Interface(self, self.edges[-2:] if standing else self.edges[-1]),  
             'bottom': pyp.Interface(self, self.edges[1])
         }
 
@@ -487,23 +493,22 @@ class ExperimentalSleevePanel(pyp.Panel):
             [- body['sholder_w'] / 2,
             body['height'] - body['head_l'] - body['armscye_depth'],
             0]) 
-        self.rotate_to(R.from_euler('XYZ', [0, 0, body['arm_pose_angle']], degrees=True))
+        self.rotate_to(R.from_euler(
+            'XYZ', [0, 0, body['arm_pose_angle']], degrees=True))
 
 
 class ExperimentalSleeve(pyp.Component):
     """Trying to do a proper sleeve"""
 
 
-    def __init__(self, tag, body, design, depth_diff=3) -> None:   # DEBUG
+    def __init__(self, tag, body, design, depth_diff=3) -> None: 
         super().__init__(f'{self.__class__.__name__}_{tag}')
 
         design = design['sleeve']
         inclanation = design['inclanation']['v']
 
-        shoulder_angle = np.deg2rad(body['shoulder_incl'])
+        # TODO Min with shoulder angle? 
         rest_angle = np.deg2rad(design['sleeve_angle']['v'])
-        standing = design['standing_shoulder']['v']
-        base_angle = rest_angle # DEBUG pose_angle if standing else shoulder_angle
 
         connecting_width = design['connecting_width']['v']
         smoothing_coeff = design['smoothing_coeff']['v']
@@ -512,11 +517,11 @@ class ExperimentalSleeve(pyp.Component):
         armhole = globals()[design['armhole_shape']['v']]
         front_project, front_opening = armhole(
             inclanation + depth_diff, connecting_width, 
-            angle=base_angle, incl_coeff=smoothing_coeff, w_coeff=smoothing_coeff)
+            angle=rest_angle, incl_coeff=smoothing_coeff, w_coeff=smoothing_coeff)
         
         back_project, back_opening = armhole(
             inclanation, connecting_width, 
-            angle=base_angle, incl_coeff=smoothing_coeff, w_coeff=smoothing_coeff)
+            angle=rest_angle, incl_coeff=smoothing_coeff, w_coeff=smoothing_coeff)
 
         if depth_diff != 0: 
             front_opening, back_opening = ArmholeOpeningEvening(
