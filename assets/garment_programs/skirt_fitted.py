@@ -2,7 +2,7 @@ import pypattern as pyp
 from scipy.spatial.transform import Rotation as R
 import numpy as np
 
-# TODO front shorter then the back
+# TODO front more narrow then the back
 class CurveFittedSkirtPanel(pyp.Panel):
     """Fitted panel for a pencil skirt
     
@@ -44,14 +44,8 @@ class CurveFittedSkirtPanel(pyp.Panel):
         # We distribute w_diff among the side angle and a dart 
         hw_shift = w_diff / 6
 
-        # TODO Make a curve edge with peak at hips 
-        # that respects hw_shift 
         # TODO hips depth measurement not correct -- don't correspond to the widest on the sides
         # Predictable difference?
-        
-        # DEBUG
-        print('Params')
-        print(adj_crotch_depth, hips_depth)
 
         self.edges = pyp.esf.from_verts(
             [hips - low_width, 0],   #   [hips - low_width, -length],
@@ -62,6 +56,27 @@ class CurveFittedSkirtPanel(pyp.Panel):
             [hips + low_width, 0],
             loop=True
         )
+
+        top = self.edges[2]
+
+        # right
+        right = pyp.esf.curve_from_extreme(
+            self.edges[0].start,
+            self.edges[1].end,
+            self.edges[0].end
+        )
+        self.edges.substitute(0, right)
+        self.edges.pop(1)
+
+        left = pyp.esf.curve_from_extreme(
+            self.edges[2].start,
+            self.edges[3].end,
+            self.edges[2].end
+        )
+
+        self.edges.substitute(2, left)
+        self.edges.pop(3)
+
 
         # inside_edge = self.edges[-3]
         # FIXME add the cut back
@@ -79,8 +94,8 @@ class CurveFittedSkirtPanel(pyp.Panel):
         # Out interfaces (easier to define before adding a dart)
         self.interfaces = {
             'bottom': pyp.Interface(self, self.edges[-1]),
-            'right': pyp.Interface(self, self.edges[:2]), 
-            'left': pyp.Interface(self, self.edges[3:5]), 
+            'right': pyp.Interface(self, right), 
+            'left': pyp.Interface(self, left),  
         }
 
         # Add top dart 
@@ -89,10 +104,10 @@ class CurveFittedSkirtPanel(pyp.Panel):
             # FIXME front/back darts don't appear to be located at the same position
             dart_width = w_diff - hw_shift
             dart_shape = pyp.esf.dart_shape(dart_width, dart_depth)
-            top_edge_len = self.edges[2].length()
+            top_edge_len = top.length()
             top_edges, dart_edges, int_edges = pyp.ops.cut_into_edge(
                 dart_shape, 
-                self.edges[2], 
+                top, 
                 offset=(top_edge_len / 2 - dart_position),   # from the middle of the edge
                 right=True)
             
@@ -114,7 +129,7 @@ class CurveFittedSkirtPanel(pyp.Panel):
             int_edges.substitute(-1, int_edges_2)
 
             self.interfaces['top'] = pyp.Interface(self, int_edges) 
-            self.edges.substitute(2, top_edges)
+            self.edges.substitute(top, top_edges)
 
             # Second dart
 
@@ -138,7 +153,7 @@ class CurvePencilSkirt(pyp.Component):
             low_width=design['flare']['v'] * body['hips'] / 4,
             rise=design['rise']['v'],
             dart_position=body['bust_points'] / 2,
-            dart_frac=1.5,  # Diff for front and back
+            dart_frac=1.7,  # Diff for front and back
             ruffle=design['ruffle']['v'][0], 
             cut=design['front_cut']['v']
         ).translate_to([0, body['waist_level'], 25])
@@ -151,7 +166,7 @@ class CurvePencilSkirt(pyp.Component):
             low_width=design['flare']['v'] * body['hips'] / 4,
             rise=design['rise']['v'],
             dart_position=body['bum_points'] / 2,
-            dart_frac=1.,   
+            dart_frac=1.1,   
             ruffle=design['ruffle']['v'][1],
             cut=design['back_cut']['v']
         ).translate_to([0, body['waist_level'], -20])

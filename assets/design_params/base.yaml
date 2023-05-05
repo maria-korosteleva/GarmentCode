@@ -363,11 +363,11 @@ design:
       range: [10, 80]   # TODO related with height and body proportions? 
       type: int
     rise:
-      v: 0.75
+      v: 1
       range: [0.5, 1]
       type: float
     flare:   # coefficient may depend on length
-      v: 0.6
+      v: 0.8
       range: [0.3, 1]   
       type: float
     front_cut: 

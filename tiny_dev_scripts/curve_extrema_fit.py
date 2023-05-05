@@ -118,11 +118,18 @@ def _fit_quadratic(cp, ends, target_location):
 
     control_bezier = np.array([
         ends[0], 
-        [target_location[0], cp[1]], 
+        cp,  # DRAFT [target_location[0], cp[1]], 
         ends[-1]
     ])
+
+    dir0 = target_location - ends[0]
+    dir0 = dir0 / norm(dir0)
+
+    dir1 = - (target_location - ends[1])
+    dir1 = dir1 / norm(dir1)
+
     params = list_to_c(control_bezier)
-    curve = QuadraticBezier(*params)
+    curve = svgpath.QuadraticBezier(*params)
 
     extreme = _extreme_points(curve)
 
@@ -131,10 +138,46 @@ def _fit_quadratic(cp, ends, target_location):
 
     diff = np.linalg.norm(extreme - target_location)
 
+    tan0_diff = norm(curve.unit_tangent(0) - dir0)
+    tan1_diff = norm(curve.unit_tangent(1) - dir1)
+
     #DEBUG 
     print('Inter: ', diff, extreme)
 
-    return diff**2
+    return diff**2 + 0.01 * (tan0_diff**2 + tan1_diff**2)
+
+
+def _fit_pass_quadratic(cp, ends, target_location):
+
+    control_bezier = np.array([
+        ends[0], 
+        cp,  # DRAFT [target_location[0], cp[1]], 
+        ends[-1]
+    ])
+
+    dir0 = target_location - ends[0]
+    dir0 = dir0 / norm(dir0)
+
+    dir1 = - (target_location - ends[1])
+    dir1 = dir1 / norm(dir1)
+
+    params = list_to_c(control_bezier)
+    curve = svgpath.QuadraticBezier(*params)
+
+    extreme = _extreme_points(curve)
+
+    if not len(extreme):
+        raise RuntimeError('No extreme points!!')
+
+    diff = np.linalg.norm(extreme - target_location)
+
+    tan0_diff = norm(curve.unit_tangent(0) - dir0)
+    tan1_diff = norm(curve.unit_tangent(1) - dir1)
+
+    #DEBUG 
+    print('Inter: ', diff, extreme)
+
+    return diff**2 + 0.01 * (tan0_diff**2 + tan1_diff**2)
 
 bshift, top_shift, length, crotch = 10, 5, 30, 15
 ends = np.array([[bshift, 0], [top_shift, length + crotch]])

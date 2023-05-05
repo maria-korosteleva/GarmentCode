@@ -616,6 +616,9 @@ class CurveEdge(Edge):
         
         params = nodes[:, 0] + 1j*nodes[:, 1]
 
+        # DEBUG
+        print(self)
+
         return svgpath.QuadraticBezier(*params) if len(cp) < 2 else svgpath.CubicBezier(*params)
 
     def linearize(self):
