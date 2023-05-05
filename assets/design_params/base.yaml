@@ -8,7 +8,7 @@
 design: 
   meta: 
     upper: 
-      v: FittedShirt
+      v: null
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
@@ -16,8 +16,8 @@ design:
       range: [True, False]
       type: bool
     bottom: 
-      v: null
-      range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt]
+      v: CurvePencilSkirt
+      range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, CurvePencilSkirt]
       type: select_null
 
   waistband:
@@ -363,7 +363,7 @@ design:
       range: [10, 80]   # TODO related with height and body proportions? 
       type: int
     rise:
-      v: 1
+      v: 0.75
       range: [0.5, 1]
       type: float
     flare:   # coefficient may depend on length
@@ -378,7 +378,7 @@ design:
       v: 0
       range: [0, 20]   # TODO Max = length
       type: int
-    ruffle:
+    ruffle:  # FIXME Ruffle front/back!!
       v: [False, False]   # TODO Can be True only if connected to a waist band
       range: [True, False]
       type: bool

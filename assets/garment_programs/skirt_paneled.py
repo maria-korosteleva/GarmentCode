@@ -104,8 +104,11 @@ class FittedSkirtPanelHalf(pyp.Panel):
         # We distribute w_diff among the side angle and a dart 
         hw_shift = w_diff / 6
         
+        # DEBUG
+        print(adj_crotch_depth, hips_depth)
+
         self.edges = pyp.esf.from_verts(
-            [0, adj_crotch_depth - hips_depth],
+            [0, 0],   # DRAFT adj_crotch_depth - hips_depth
             [hw_shift, adj_crotch_depth], 
             [hips, adj_crotch_depth],
             [hips, -length], 
