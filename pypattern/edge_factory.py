@@ -3,12 +3,13 @@ from copy import copy
 import numpy as np
 from numpy.linalg import norm
 import svgpathtools as svgpath
+from scipy.optimize import minimize
 
 # Custom
 from .edge import EdgeSequence, Edge, CurveEdge
 from .generic_utils import vector_angle, close_enough, c_to_list, list_to_c
 from .interface import Interface
-from scipy.optimize import minimize
+from . import flags
 
 class EdgeSeqFactory:
     """Create EdgeSequence objects for some common edge seqeunce patterns
@@ -268,12 +269,12 @@ class EdgeSeqFactory:
     def curve_from_extreme(start, end, target_extreme):
         """Create (Quadratic) curve edge that 
             has an extreme point as close as possible to target_extreme
+            with extreme point aligned with it
         """
         # TODO Is this a CurveEdge method? 
         rel_target = _abs_to_rel_2d(start, end, target_extreme)
 
-        # TODO Only on Y or both should be optimized?
-        init_guess = copy(rel_target)
+        init_guess = copy(rel_target)  # TODO make it clear that only Y is optimized?
         out = minimize(
             _fit_quadratic, 
             init_guess,
@@ -283,7 +284,10 @@ class EdgeSeqFactory:
             )
         )
 
-        print(out)  # DEBUG
+        if not out.success:
+            print('Curve From Extreme::Warning::Optimization not successful')
+            if flags.VERBOSE:
+                print(out)
 
         cp = out.x
 
@@ -292,7 +296,7 @@ class EdgeSeqFactory:
 # Utils
 def _rel_to_abs_coords(start, end, vrel):
     """Convert coordinates specified relative to vector v2 - v1 to world coords"""
-    # TODO It's in the edges?
+    # TODOLOW It's in the edges?
     start, end, vrel = np.asarray(start), np.asarray(end), np.asarray(vrel)
     vec = end - start
     vec = vec / norm(vec)
@@ -305,7 +309,7 @@ def _rel_to_abs_coords(start, end, vrel):
 
 def _abs_to_rel_2d(start, end, point):
     """Convert control points coordinates from absolute to relative"""
-    # TODO It's in the edges?
+    # TODOLOW It's in the edge class?
     start, end = np.asarray(start), np.asarray(end)
     edge = end - start
     edge_len = norm(edge)
@@ -360,7 +364,7 @@ def _extreme_points(curve, on_x=False, on_y=True):
     """Return extreme points of the current edge
         NOTE: this does NOT include the border vertices of an edge
     """
-
+    # TODOLOW it repeats code from Edge() class in a way
     # Variation of https://github.com/mathandy/svgpathtools/blob/5c73056420386753890712170da602493aad1860/svgpathtools/bezier.py#L197
     poly = svgpath.bezier2polynomial(curve, return_poly1d=True)
     
@@ -371,13 +375,11 @@ def _extreme_points(curve, on_x=False, on_y=True):
         
         y_extremizers = svgpath.polyroots(dy, realroots=True,
                                             condition=lambda r: 0 < r < 1)
-    
     if on_x:
         x = svgpath.real(poly)
         dx = x.deriv()
         x_extremizers = svgpath.polyroots(dx, realroots=True,
                                     condition=lambda r: 0 < r < 1)
-
     all_extremizers = x_extremizers + y_extremizers
 
     extreme_points = np.array([c_to_list(curve.point(t)) for t in all_extremizers])
@@ -388,12 +390,9 @@ def _fit_quadratic(cp, ends, target_location):
 
     control_bezier = np.array([
         ends[0], 
-        [target_location[0], cp[1]],    # cp,  # DRAFT 
+        [target_location[0], cp[1]],     # TODO Only accept one cp coordinate then!
         ends[-1]
     ])
-
-
-
     params = list_to_c(control_bezier)
     curve = svgpath.QuadraticBezier(*params)
 
@@ -404,16 +403,4 @@ def _fit_quadratic(cp, ends, target_location):
 
     diff = np.linalg.norm(extreme - target_location)
 
-    # DRAFT Tangent matching
-    # dir0 = target_location - ends[0]
-    # dir0 = dir0 / norm(dir0)
-
-    # dir1 = - (target_location - ends[1])
-    # dir1 = dir1 / norm(dir1)
-    # tan0_diff = (curve.unit_tangent(0) - dir0)
-    # tan1_diff = (curve.unit_tangent(1) - dir1)
-
-    #DEBUG 
-    print('Inter: ', diff, extreme)
-
-    return diff**2 # DRAFT + tan0_diff**2 + tan1_diff**2
+    return diff**2 

@@ -44,12 +44,11 @@ class CurveFittedSkirtPanel(pyp.Panel):
         # We distribute w_diff among the side angle and a dart 
         hw_shift = w_diff / 6
 
-        # TODO hips depth measurement not correct -- don't correspond to the widest on the sides
+        # FIXME hips depth measurement may be not correct -- don't correspond to the widest on the sides
         # Predictable difference?
-
         self.edges = pyp.esf.from_verts(
-            [hips - low_width, 0],   #   [hips - low_width, -length],
-            [0, length],    # DRAFT adj_crotch_depth - hips_depth  # This point is on a curve
+            [hips - low_width, 0],  
+            [0, length],    
             [hw_shift, length + adj_crotch_depth], 
             [hips * 2 - hw_shift, length + adj_crotch_depth], 
             [hips * 2, length],
@@ -58,8 +57,11 @@ class CurveFittedSkirtPanel(pyp.Panel):
         )
 
         top = self.edges[2]
+        bottom = self.edges[-1]
 
         # right
+        # TODO Define in one go though
+        # TODO Try with full optimization again
         right = pyp.esf.curve_from_extreme(
             self.edges[0].start,
             self.edges[1].end,
@@ -93,7 +95,7 @@ class CurveFittedSkirtPanel(pyp.Panel):
 
         # Out interfaces (easier to define before adding a dart)
         self.interfaces = {
-            'bottom': pyp.Interface(self, self.edges[-1]),
+            'bottom': pyp.Interface(self, bottom),
             'right': pyp.Interface(self, right), 
             'left': pyp.Interface(self, left),  
         }
