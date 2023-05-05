@@ -359,7 +359,7 @@ design:
 
   pencil-skirt: 
     length:   # From hips
-      v: 80
+      v: 30
       range: [10, 80]   # TODO related with height and body proportions? 
       type: int
     rise:

@@ -2,7 +2,7 @@ import pypattern as pyp
 from scipy.spatial.transform import Rotation as R
 import numpy as np
 
-
+# TODO front shorter then the back
 class CurveFittedSkirtPanel(pyp.Panel):
     """Fitted panel for a pencil skirt
     
@@ -14,6 +14,7 @@ class CurveFittedSkirtPanel(pyp.Panel):
         dart_position=None,  dart_frac=0.5,
         cut=0,
         ruffle=False) -> None:
+        # TODO ONly the parameters that differ between front/back panels?
         """
             Basic pant panel with option to be fitted (with darts) or ruffled at waist area.
             
@@ -45,12 +46,11 @@ class CurveFittedSkirtPanel(pyp.Panel):
 
         # TODO Make a curve edge with peak at hips 
         # that respects hw_shift 
-        # TODO make a full skirt panel, rather then a half of it
         # TODO hips depth measurement not correct -- don't correspond to the widest on the sides
+        # Predictable difference?
         
         # DEBUG
         print('Params')
-        print(adj_crotch_depth, hips_depth)
         print(adj_crotch_depth, hips_depth)
 
         self.edges = pyp.esf.from_verts(
@@ -77,10 +77,7 @@ class CurveFittedSkirtPanel(pyp.Panel):
         self.translation = [-hips / 2, 5, 0]
 
         # Out interfaces (easier to define before adding a dart)
-        # TODO Left & right
         self.interfaces = {
-            # DRAFT 'outside': pyp.Interface(self, pyp.EdgeSequence(self.edges[-1], self.edges[0])),
-            # DRAFT 'inside': pyp.Interface(self, inside_edge),
             'bottom': pyp.Interface(self, self.edges[-1]),
             'right': pyp.Interface(self, self.edges[:2]), 
             'left': pyp.Interface(self, self.edges[3:5]), 
