@@ -1,3 +1,12 @@
+"""
+NOTE: This scripts needs to be run on a scene with full setup:
+    * Lights
+    * Backdrops
+    * Fabric material
+    * Body model 
+NOTE: creating cloth materials: https://www.youtube.com/watch?v=umrARvXC_MI
+"""
+
 import bpy
 import bmesh
 
@@ -6,6 +15,10 @@ from datetime import datetime
 
 def retreive_obj_tag(tag=''):
     return [obj for obj in bpy.context.scene.objects if tag in obj.name]
+
+def retreive_mat_tag(tag=''):
+    # https://s-nako.work/2020/08/how-to-get-material-with-python-api-in-blender/
+    return [mat for mat in bpy.data.materials if tag in mat.name]
 
 def select_object(obj, edit_mode=False):
     bpy.ops.object.mode_set(mode='OBJECT')
@@ -58,6 +71,18 @@ def mark_edges_to_render(objects):
     bpy.ops.object.select_all(action='DESELECT')
     print('Marking edges successful')
 
+def assign_materials(meshes, base_shader):
+    # TODO Define color list
+    # Go over meshes
+    for obj in meshes:
+        
+        # TODO Copy shader into a new one
+        # TODO Setup new color
+        # assign the shader 
+        # https://blenderartists.org/t/how-do-i-select-a-material/593489
+        obj.active_material_index = 0
+        obj.active_material = base_shader
+
 def render(path):
     filename = 'blender_render_' + datetime.now().strftime("%y%m%d-%H-%M-%S")
     
@@ -72,14 +97,19 @@ def render(path):
         bpy.context.scene.render.filepath = str(path / (filename + f'_{cam.name}.png'))
         bpy.ops.render.render(write_still = True)
 
-
-# TODO for multiple garments at once?
+# TODO overall scene setup
+# TODO Multiple garments?
 # ---- Preparation ---- 
-
-# Body and garment scaling
+# TODO Load from garment folder?
+# TODO Body and garment scaling
+# TODO Mesh processing: add a "Solidify" modifier to give the mesh a tiny bit of thickness, 
+# consider a subdivision modifier to boost shading smoothness
 garment = retreive_obj_tag('sim')[0]  # single one
 
 # Prepare garment for rendering
+# TODO pack UVs for correct material
+bpy.ops.uv.pack_islands(margin=0.001)
+
 # Separate by loose parts
 garment_parts = separate_object_by_parts(garment)
 
@@ -87,19 +117,20 @@ garment_parts = separate_object_by_parts(garment)
 mark_edges_to_render(garment_parts)
 
 # ---- Colors -----
-# Get the shader
-    
-# Define color list
+# TODO Make a nice shader!
 
-# Go over UV shells and colors
-    # Copy shader into a new one
-    # Setup new color
-    # Select all faces in the UV shell
-    # assign the shader 
+mat = retreive_mat_tag('exp')[0]
+
+assign_materials(garment_parts, mat)
+    
 
 # ----- Rendering -----
 # Run render for each camera in the scene
+# TODO To folder?
 path = Path(r'C:\Users\MariaKo\Documents\Docs\GarmentCode SA23\Blender tries')
 render(path)
 
+print('Rendering finished')
+
+# TODO Wait for render?
 # And wait.. =)
