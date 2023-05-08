@@ -99,7 +99,18 @@ def assign_materials(meshes, base_shader):
     # for idx in range(len(color_hex)):
     #     color_list[idx] = np.array([int(color_hex[idx][i:i + 2], 16) for i in (0, 2, 4)] + [255.]) / 255.0
         
-    cmap = matplotlib.cm.get_cmap('twilight')   # Using smooth Matplotlib colormaps
+    cmap = matplotlib.cm.get_cmap('copper')   # copper cool  spring winter twilight  # Using smooth Matplotlib colormaps
+    color_sample = [cmap(id / len(meshes)) for id in range(len(meshes))]
+    
+    # Shuffle the collor to distinguish nearby panels
+    half = int(len(meshes) / 2)
+    id_f_range = list(range(half))
+    id_s_range = list(range(half, len(meshes)))
+    
+    for i in range(half):
+        id_s_range.insert(2*i, id_f_range[i])
+        
+    color_sample = np.array([color_sample[i] for i in id_s_range])
 
     # Go over meshes
     for id, obj in enumerate(meshes):
@@ -110,8 +121,8 @@ def assign_materials(meshes, base_shader):
         # DRAFT color_id = id % len(color_list)
         # DRAFT color = color_list[color_id] # DRAFT * 0.9 # / factor  # gets darker the more labels there are
 
-        color = np.array(cmap(id / len(meshes)))
-        color[:3] *= 0.7  # DEBUG Brightness
+        color = color_sample[id]
+        # color[:3] *= 0.7  # DEBUG Brightness
         print(f'Using color {color} for {new_shader.name}')
 
         new_shader.node_tree.nodes["ColorRamp.002"].color_ramp.elements[1].color = color
