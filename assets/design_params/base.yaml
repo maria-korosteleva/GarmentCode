@@ -16,8 +16,8 @@ design:
       range: [True, False]
       type: bool
     bottom: 
-      v: CurvePencilSkirt
-      range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, CurvePencilSkirt]
+      v: PencilSkirt
+      range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt]
       type: select_null
 
   waistband:
@@ -371,7 +371,7 @@ design:
       range: [0.3, 1]   
       type: float
     front_cut: 
-      v: 10
+      v: 0
       range: [0, 20]   # TODO Max = length
       type: int
     back_cut: 

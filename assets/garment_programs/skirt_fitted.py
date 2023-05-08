@@ -3,13 +3,12 @@ from scipy.spatial.transform import Rotation as R
 import numpy as np
 
 # TODOLOW front more narrow then the back
-class CurveFittedSkirtPanel(pyp.Panel):
+# TODO Fix dependent (Godet) skirt
+class FittedSkirtPanel(pyp.Panel):
     """Fitted panel for a pencil skirt
-    
-        Inspired by pants panels
     """
     def __init__(
-        self, name, waist, hips, 
+        self, name, waist, hips,   # TODO Half measurement instead of a quarter
         hips_depth, length, low_width, rise=1,
         dart_position=None,  dart_frac=0.5,
         cut=0,
@@ -119,14 +118,13 @@ class CurveFittedSkirtPanel(pyp.Panel):
             self.interfaces['top'] = pyp.Interface(self, self.edges[1], ruffle=ruffle_rate)   
 
 
-# TODOLOW Use Skirt2 for all skirts of two parts like this?
-class CurvePencilSkirt(pyp.Component):
+class PencilSkirt(pyp.Component):
     def __init__(self, body, design) -> None:
         super().__init__(self.__class__.__name__)
 
         design = design['pencil-skirt']
 
-        self.front = CurveFittedSkirtPanel(
+        self.front = FittedSkirtPanel(
             f'skirt_f',   
             body['waist'] / 4, 
             body['hips'] / 4, 
@@ -139,7 +137,7 @@ class CurvePencilSkirt(pyp.Component):
             ruffle=design['ruffle']['v'][0], 
             cut=design['front_cut']['v']
         ).translate_to([0, body['waist_level'], 25])
-        self.back = CurveFittedSkirtPanel(
+        self.back = FittedSkirtPanel(
             f'skirt_b', 
             body['waist'] / 4, 
             body['hips'] / 4,
