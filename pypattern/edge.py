@@ -600,16 +600,20 @@ class CurveEdge(Edge):
 
         return self
     
-    def as_curve(self):
+    def as_curve(self, absolute=True):
         """As svgpath curve object
 
             Converting on the fly as exact vertex location might have been updated since
             the creation of the edge
         """
         # Get the nodes correcly
-        cp = [self._rel_to_abs_2d(c) for c in self.control_points]
-        nodes = np.vstack((self.start, cp, self.end))
-
+        if absolute:
+            cp = [self._rel_to_abs_2d(c) for c in self.control_points]
+            nodes = np.vstack((self.start, cp, self.end))
+        else:
+            cp = self.control_points
+            nodes = np.vstack(([0, 0], cp, [1, 0]))
+        
         params = nodes[:, 0] + 1j*nodes[:, 1]
 
         return svgpath.QuadraticBezier(*params) if len(cp) < 2 else svgpath.CubicBezier(*params)
@@ -639,14 +643,16 @@ class CurveEdge(Edge):
         """
 
         # Variation of https://github.com/mathandy/svgpathtools/blob/5c73056420386753890712170da602493aad1860/svgpathtools/bezier.py#L197
-        curve = self.as_curve()
+        curve = self.as_curve(absolute=False)   # relative coords to find real extremizers
         poly = svgpath.bezier2polynomial(curve, return_poly1d=True)
         y = svgpath.imag(poly)
         dy = y.deriv()
         y_extremizers = svgpath.polyroots(dy, realroots=True,
                                           condition=lambda r: 0 < r < 1)
 
-        extreme_points = np.array([c_to_list(curve.point(t)) for t in y_extremizers])
+        extreme_points = np.array(
+            [self._rel_to_abs_2d(c_to_list(curve.point(t))) for t in y_extremizers]
+        )
 
         return extreme_points
 
@@ -845,6 +851,7 @@ class EdgeSequence():
         self.isChained()  # print warning if smth is wrong
         if not self.isLoop():
             self.append(Edge(self[-1].end, self[0].start))
+        return self
 
     def rotate(self, angle):
         """Rotate edge sequence by angle in place, using first point as a reference

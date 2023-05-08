@@ -8,7 +8,7 @@
 design: 
   meta: 
     upper: 
-      v: FittedShirt
+      v: null
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
@@ -16,7 +16,7 @@ design:
       range: [True, False]
       type: bool
     bottom: 
-      v: null
+      v: PencilSkirt
       range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt]
       type: select_null
 
@@ -349,8 +349,8 @@ design:
       range: [10, 50]  # TODO DEpends on the skirt length though
       type: int
     num_inserts:  # total
-      v: 4     # NOTE for pencil skirt base this should be divisible by 4
-      range: [4, 8, 12]   # selective options.
+      v: 8     # NOTE this should be divisible by 2 (front/back panels of base)
+      range: [4, 6, 8, 10, 12]   # selective options.
       type: select
     cuts_distance:
       v: 5
@@ -359,7 +359,7 @@ design:
 
   pencil-skirt: 
     length:   # From hips
-      v: 80
+      v: 50
       range: [10, 80]   # TODO related with height and body proportions? 
       type: int
     rise:
@@ -367,7 +367,7 @@ design:
       range: [0.5, 1]
       type: float
     flare:   # coefficient may depend on length
-      v: 0.6
+      v: 0.8
       range: [0.3, 1]   
       type: float
     front_cut: 
@@ -378,7 +378,7 @@ design:
       v: 0
       range: [0, 20]   # TODO Max = length
       type: int
-    ruffle:
+    ruffle:  # FIXME Ruffle front/back!!
       v: [False, False]   # TODO Can be True only if connected to a waist band
       range: [True, False]
       type: bool

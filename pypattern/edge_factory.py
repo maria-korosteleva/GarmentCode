@@ -2,12 +2,14 @@
 from copy import copy
 import numpy as np
 from numpy.linalg import norm
+import svgpathtools as svgpath
+from scipy.optimize import minimize
 
 # Custom
-from .edge import EdgeSequence, Edge
-from .generic_utils import vector_angle, close_enough
+from .edge import EdgeSequence, Edge, CurveEdge
+from .generic_utils import vector_angle, close_enough, c_to_list, list_to_c
 from .interface import Interface
-from scipy.optimize import minimize
+from . import flags
 
 class EdgeSeqFactory:
     """Create EdgeSequence objects for some common edge seqeunce patterns
@@ -263,21 +265,67 @@ class EdgeSeqFactory:
 
         return EdgeSeqFactory.from_verts([0, 0], [width / 2, -depth_perp], [width, 0])
 
+    @staticmethod
+    def curve_from_extreme(start, end, target_extreme):
+        """Create (Quadratic) curve edge that 
+            has an extreme point as close as possible to target_extreme
+            with extreme point aligned with it
+        """
+        rel_target = _abs_to_rel_2d(start, end, target_extreme)
+
+        out = minimize(
+            _fit_y_extremum, 
+            rel_target[1],    
+            args=(rel_target)
+        )
+
+        if not out.success:
+            print('Curve From Extreme::Warning::Optimization not successful')
+            if flags.VERBOSE:
+                print(out)
+
+        cp = [rel_target[0], out.x.item()]
+
+        return CurveEdge(start, end, control_points=[cp], relative=True)
 
 # Utils
+# TODOLOW Move to generic_utils
 def _rel_to_abs_coords(start, end, vrel):
-        """Convert coordinates specified relative to vector v2 - v1 to world coords"""
-        # TODO It's in the edges?
-        start, end, vrel = np.asarray(start), np.asarray(end), np.asarray(vrel)
-        vec = end - start
-        vec = vec / norm(vec)
-        vec_perp = np.array([-vec[1], vec[0]])
-        
-        new_start = start + vrel[0] * vec
-        new_point = new_start + vrel[1] * vec_perp
+    """Convert coordinates specified relative to vector v2 - v1 to world coords"""
+    # TODOLOW It's in the edges?
+    start, end, vrel = np.asarray(start), np.asarray(end), np.asarray(vrel)
+    vec = end - start
+    vec = vec / norm(vec)
+    vec_perp = np.array([-vec[1], vec[0]])
+    
+    new_start = start + vrel[0] * vec
+    new_point = new_start + vrel[1] * vec_perp
 
-        return new_point 
+    return new_point 
 
+def _abs_to_rel_2d(start, end, point):
+    """Convert control points coordinates from absolute to relative"""
+    # TODOLOW It's in the edge class?
+    start, end = np.asarray(start), np.asarray(end)
+    edge = end - start
+    edge_len = norm(edge)
+
+    point_vec = np.asarray(point) - start
+
+    converted = [None, None]
+    # X
+    # project control_vec on edge by dot product properties
+    projected_len = edge.dot(point_vec) / edge_len 
+    converted[0] = projected_len / edge_len
+    # Y
+    control_projected = edge * converted[0]
+    vert_comp = point_vec - control_projected  
+    converted[1] = norm(vert_comp) / edge_len
+
+    # Distinguish left&right curvature
+    converted[1] *= -np.sign(np.cross(point_vec, edge)) 
+    
+    return np.asarray(converted)
 
 def _fit_dart(coords, v0, v1, d0, d1, depth, theta=90):
     """Placements of three dart points respecting the constraints"""
@@ -306,3 +354,56 @@ def _fit_dart(coords, v0, v1, d0, d1, depth, theta=90):
 
 def _softsign(x):
     return x / (abs(x) + 1)
+
+def _extreme_points(curve, on_x=False, on_y=True):
+    """Return extreme points of the current edge
+        NOTE: this does NOT include the border vertices of an edge
+    """
+    # TODOLOW it repeats code from Edge() class in a way
+    # Variation of https://github.com/mathandy/svgpathtools/blob/5c73056420386753890712170da602493aad1860/svgpathtools/bezier.py#L197
+    poly = svgpath.bezier2polynomial(curve, return_poly1d=True)
+    
+    x_extremizers, y_extremizers = [], []
+    if on_y:
+        y = svgpath.imag(poly)
+        dy = y.deriv()
+        
+        y_extremizers = svgpath.polyroots(dy, realroots=True,
+                                            condition=lambda r: 0 < r < 1)
+    if on_x:
+        x = svgpath.real(poly)
+        dx = x.deriv()
+        x_extremizers = svgpath.polyroots(dx, realroots=True,
+                                    condition=lambda r: 0 < r < 1)
+    all_extremizers = x_extremizers + y_extremizers
+
+    extreme_points = np.array([c_to_list(curve.point(t)) for t in all_extremizers])
+
+    return extreme_points
+
+def _fit_y_extremum(cp_y, target_location):
+    """ Fit the control point of basic [[0, 0] -> [1, 0]] Quadratic Bezier s.t. 
+        it's expremum is close to target location.
+
+        * cp_y - initial guess for Quadratic Bezier control point y coordinate
+            (relative to the edge)
+        * target_location -- target to fit extremum to -- 
+            expressed in RELATIVE coordinates to your desired edge
+    """
+
+    control_bezier = np.array([
+        [0, 0], 
+        [target_location[0], cp_y[0]], 
+        [1, 0]
+    ])
+    params = list_to_c(control_bezier)
+    curve = svgpath.QuadraticBezier(*params)
+
+    extremum = _extreme_points(curve)
+
+    if not len(extremum):
+        raise RuntimeError('No extreme points!!')
+
+    diff = np.linalg.norm(extremum - target_location)
+
+    return diff**2 

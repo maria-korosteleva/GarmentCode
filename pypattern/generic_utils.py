@@ -63,7 +63,7 @@ def c_to_list(num):
         Allows processing of lists of complex numbers
     """
 
-    if isinstance(num, list) or isinstance(num, tuple):
+    if isinstance(num, (list, tuple, set, np.ndarray)):
         return [c_to_list(n) for n in num]
     else: 
         return [num.real, num.imag]
@@ -73,14 +73,14 @@ def c_to_np(num):
     """Convert complex number to a numpy array of 2 elements
         Allows processing of lists of complex numbers
     """
-    if isinstance(num, list) or isinstance(num, tuple):
+    if isinstance(num, (list, tuple, set, np.ndarray)):
         return np.asarray([c_to_list(n) for n in num])
     else: 
         return np.asarray([num.real, num.imag])
 
 def list_to_c(num):
     """Convert 2D list or list of 2D lists into complex number/list of complex numbers"""
-    if isinstance(num[0], list) or isinstance(num, tuple):
+    if isinstance(num[0], (list, tuple, set, np.ndarray)):
         return [complex(n[0], n[1]) for n in num]
     else: 
         return complex(num[0], num[1])
