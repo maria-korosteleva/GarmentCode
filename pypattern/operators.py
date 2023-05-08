@@ -418,6 +418,8 @@ def _bend_extend_2_tangent(
     tan_0_diff = (abs(curve_inverse.unit_tangent(0) - target_tangent_start))**2
     tan_1_diff = (abs(curve_inverse.unit_tangent(1) - target_tangent_end))**2
 
+    # NOTE: tried regularizing based on Y value in relative coordinates (for speed), 
+    # But it doesn't produce good results
     curvature_reg = _avg_curvature(curve_inverse, points_estimates=point_estimates)**2
     end_expantion_reg = 0.001*shift[-1]**2 
 
