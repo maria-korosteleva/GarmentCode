@@ -12,6 +12,7 @@ import bmesh
 
 from pathlib import Path
 from datetime import datetime
+import numpy as np
 
 def retreive_obj_tag(tag=''):
     return [obj for obj in bpy.context.scene.objects if tag in obj.name]
@@ -26,6 +27,14 @@ def select_object(obj, edit_mode=False):
     obj.select_set(True)
     if edit_mode:
         bpy.ops.object.mode_set(mode='EDIT')
+
+def pack_uvs(obj):
+    select_object(obj, edit_mode=True)
+    bpy.ops.uv.pack_islands(margin=0.001)
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.uv.select_all(action='SELECT')
+
+    bpy.ops.object.mode_set(mode='OBJECT')  # restore the mode
 
 def separate_object_by_parts(obj):
     # select the object to focus on
@@ -72,16 +81,32 @@ def mark_edges_to_render(objects):
     print('Marking edges successful')
 
 def assign_materials(meshes, base_shader):
-    # TODO Define color list
-    # Go over meshes
-    for obj in meshes:
+    # Define color list
+    # TODO Update colors?
+    # NOTE: from my Maya setup
+    color_hex = ['8594AB', '9FBBBA', 'FACDA7', 'EDA19D', 'CF8299', '8B6B96', 'A4DE87']   # CRAZY SITUATION  + 0.85 https://www.schemecolor.com/crazy-situation.php
+    color_list = np.empty((len(color_hex), 4))
+    for idx in range(len(color_hex)):
+        color_list[idx] = np.array([int(color_hex[idx][i:i + 2], 16) for i in (0, 2, 4)] + [255.]) / 255.0
         
-        # TODO Copy shader into a new one
-        # TODO Setup new color
+    # Go over meshes
+    for id, obj in enumerate(meshes):
+        
+        # Copy shader into a new one
+        new_shader = base_shader.copy()
+        # Setup new color
+        color_id = id % len(color_list)
+        color = color_list[color_id] # DRAFT * 0.9 # / factor  # gets darker the more labels there are
+
+        print(f'Using color {color} for {new_shader.name}')
+
+        new_shader.node_tree.nodes["ColorRamp.002"].color_ramp.elements[1].color = color
+        # DRAF T(0.0869196, 0.124639, 0.315605, 1)
+
         # assign the shader 
         # https://blenderartists.org/t/how-do-i-select-a-material/593489
         obj.active_material_index = 0
-        obj.active_material = base_shader
+        obj.active_material = new_shader
 
 def render(path):
     filename = 'blender_render_' + datetime.now().strftime("%y%m%d-%H-%M-%S")
@@ -97,18 +122,19 @@ def render(path):
         bpy.context.scene.render.filepath = str(path / (filename + f'_{cam.name}.png'))
         bpy.ops.render.render(write_still = True)
 
-# TODO overall scene setup
-# TODO Multiple garments?
-# ---- Preparation ---- 
-# TODO Load from garment folder?
-# TODO Body and garment scaling
-# TODO Mesh processing: add a "Solidify" modifier to give the mesh a tiny bit of thickness, 
-# consider a subdivision modifier to boost shading smoothness
-garment = retreive_obj_tag('sim')[0]  # single one
 
-# Prepare garment for rendering
-# TODO pack UVs for correct material
-bpy.ops.uv.pack_islands(margin=0.001)
+# TODO Multiple garments?
+# Load from garment folder? Then save to the same one?
+# NOPE: Mesh processing: add a "Solidify" modifier to give the mesh a tiny bit of thickness, 
+# consider a subdivision modifier to boost shading smoothness
+
+# ---- Preparation ---- 
+# TODO Load body if not yet
+body_path = r"C:\Users\MariaKo\Documents\Code\Procedural-Garments\assets\Bodies\f_average_A40.obj"
+
+# TODO Garment scaling
+garment = retreive_obj_tag('sim')[0]  # single one
+pack_uvs(garment)    # Make sure UVs look nice
 
 # Separate by loose parts
 garment_parts = separate_object_by_parts(garment)
@@ -117,20 +143,18 @@ garment_parts = separate_object_by_parts(garment)
 mark_edges_to_render(garment_parts)
 
 # ---- Colors -----
-# TODO Make a nice shader!
-
-mat = retreive_mat_tag('exp')[0]
-
+# Material setup: https://www.youtube.com/watch?v=umrARvXC_MI
+mat = retreive_mat_tag('ryan')[0]   # FIXME Make sure it uses correct name
 assign_materials(garment_parts, mat)
     
 
 # ----- Rendering -----
 # Run render for each camera in the scene
-# TODO To folder?
 path = Path(r'C:\Users\MariaKo\Documents\Docs\GarmentCode SA23\Blender tries')
 render(path)
 
 print('Rendering finished')
 
-# TODO Wait for render?
 # And wait.. =)
+
+# TODO (optionally) Delete body and all garment objects
