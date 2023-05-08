@@ -58,14 +58,16 @@ class CurveFittedSkirtPanel(pyp.Panel):
         self.edges = pyp.EdgeSequence(right, top, left).close_loop()
         bottom = self.edges[-1]
 
-        # inside_edge = self.edges[-3]
-        # FIXME add the cut back
-        # if cut:  # add a cut -- part of inner edge at the bottom that won't be connected
-        #     cut_frac = cut / inside_edge.length()
-        #     cutted_side = pyp.esf.from_fractions(
-        #         inside_edge.start, inside_edge.end, [1 - cut_frac, cut_frac])
-        #     self.edges.substitute(inside_edge, cutted_side)
-        #     inside_edge = cutted_side[0]
+        if cut:  # add a cut
+            # Use long and thin disconnected dart for a cutout
+            new_edges, _, int_edges = pyp.ops.cut_into_edge(
+                pyp.esf.dart_shape(1, cut),    # 1 cm  # TODOLOW width could also be a parameter?
+                bottom, 
+                offset= bottom.length() / 2,
+                right=True)
+
+            self.edges.substitute(bottom, new_edges)
+            bottom = int_edges
 
         # Default placement
         self.top_center_pivot()
