@@ -349,8 +349,8 @@ design:
       range: [10, 50]  # TODO DEpends on the skirt length though
       type: int
     num_inserts:  # total
-      v: 4     # NOTE for pencil skirt base this should be divisible by 4
-      range: [4, 8, 12]   # selective options.
+      v: 8     # NOTE this should be divisible by 2 (front/back panels of base)
+      range: [4, 6, 8, 10, 12]   # selective options.
       type: select
     cuts_distance:
       v: 5
@@ -359,7 +359,7 @@ design:
 
   pencil-skirt: 
     length:   # From hips
-      v: 30
+      v: 50
       range: [10, 80]   # TODO related with height and body proportions? 
       type: int
     rise:

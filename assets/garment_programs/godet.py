@@ -54,7 +54,7 @@ class GodetSkirt(pyp.Component):
         pbbox = panel.bbox3D()
         z_transl = panel.translation[-1] + np.sign(panel.translation[-1]) * 5
         y_base = pbbox[0][1]   # min Y
-        x_shift = pbbox[0][0]
+        x_shift = (pbbox[0][0] + pbbox[1][0]) / 2
 
         cut_width = (bottom_len - cuts_dist * num_inserts) / num_inserts 
         if cut_width < 1:
@@ -65,7 +65,7 @@ class GodetSkirt(pyp.Component):
 
         # Insert panels
         insert = Insert(0, width=ins_w, depth=ins_depth).translate_by([
-            x_shift + num_inserts * ins_w / 2, y_base + ins_depth, z_transl])
+            x_shift - num_inserts * ins_w / 2 + ins_w / 2, y_base + ins_depth, z_transl])
         self.subs += pyp.ops.distribute_horisontally(insert, num_inserts, -ins_w, panel.name)
 
         # make appropriate cuts and stitches
