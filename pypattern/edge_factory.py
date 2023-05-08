@@ -271,17 +271,12 @@ class EdgeSeqFactory:
             has an extreme point as close as possible to target_extreme
             with extreme point aligned with it
         """
-        # TODO Is this a CurveEdge method? 
         rel_target = _abs_to_rel_2d(start, end, target_extreme)
 
-        init_guess = copy(rel_target)  # TODO make it clear that only Y is optimized?
         out = minimize(
-            _fit_quadratic, 
-            init_guess,
-            args=(
-                [[0, 0], [1, 0]],
-                rel_target
-            )
+            _fit_y_extremum, 
+            rel_target[1],    
+            args=(rel_target)
         )
 
         if not out.success:
@@ -289,11 +284,12 @@ class EdgeSeqFactory:
             if flags.VERBOSE:
                 print(out)
 
-        cp = out.x
+        cp = [rel_target[0], out.x.item()]
 
-        return CurveEdge(start, end, control_points=[cp.tolist()], relative=True)
+        return CurveEdge(start, end, control_points=[cp], relative=True)
 
 # Utils
+# TODOLOW Move to generic_utils
 def _rel_to_abs_coords(start, end, vrel):
     """Convert coordinates specified relative to vector v2 - v1 to world coords"""
     # TODOLOW It's in the edges?
@@ -330,7 +326,6 @@ def _abs_to_rel_2d(start, end, point):
     converted[1] *= -np.sign(np.cross(point_vec, edge)) 
     
     return np.asarray(converted)
-
 
 def _fit_dart(coords, v0, v1, d0, d1, depth, theta=90):
     """Placements of three dart points respecting the constraints"""
@@ -386,21 +381,29 @@ def _extreme_points(curve, on_x=False, on_y=True):
 
     return extreme_points
 
-def _fit_quadratic(cp, ends, target_location):
+def _fit_y_extremum(cp_y, target_location):
+    """ Fit the control point of basic [[0, 0] -> [1, 0]] Quadratic Bezier s.t. 
+        it's expremum is close to target location.
+
+        * cp_y - initial guess for Quadratic Bezier control point y coordinate
+            (relative to the edge)
+        * target_location -- target to fit extremum to -- 
+            expressed in RELATIVE coordinates to your desired edge
+    """
 
     control_bezier = np.array([
-        ends[0], 
-        [target_location[0], cp[1]],     # TODO Only accept one cp coordinate then!
-        ends[-1]
+        [0, 0], 
+        [target_location[0], cp_y[0]], 
+        [1, 0]
     ])
     params = list_to_c(control_bezier)
     curve = svgpath.QuadraticBezier(*params)
 
-    extreme = _extreme_points(curve)
+    extremum = _extreme_points(curve)
 
-    if not len(extreme):
+    if not len(extremum):
         raise RuntimeError('No extreme points!!')
 
-    diff = np.linalg.norm(extreme - target_location)
+    diff = np.linalg.norm(extremum - target_location)
 
     return diff**2 

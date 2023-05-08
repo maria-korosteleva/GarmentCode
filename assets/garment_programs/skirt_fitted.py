@@ -14,7 +14,7 @@ class CurveFittedSkirtPanel(pyp.Panel):
         dart_position=None,  dart_frac=0.5,
         cut=0,
         ruffle=False) -> None:
-        # TODO ONly the parameters that differ between front/back panels?
+        # TODOLOW Only the parameters that differ between front/back panels?
         """
             Basic pant panel with option to be fitted (with darts) or ruffled at waist area.
             
@@ -44,7 +44,6 @@ class CurveFittedSkirtPanel(pyp.Panel):
         # We distribute w_diff among the side angle and a dart 
         hw_shift = w_diff / 6
 
-        # FIXME hips depth measurement may be not correct -- don't correspond to the widest on the sides
         # Predictable difference?
         self.edges = pyp.esf.from_verts(
             [hips - low_width, 0],  
@@ -61,7 +60,6 @@ class CurveFittedSkirtPanel(pyp.Panel):
 
         # right
         # TODO Define in one go though
-        # TODO Try with full optimization again
         right = pyp.esf.curve_from_extreme(
             self.edges[0].start,
             self.edges[1].end,
