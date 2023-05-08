@@ -45,8 +45,9 @@ class CircleArcPanel(pyp.Panel):
 
 class SkirtCircle(pyp.Component):
     """Simple circle skirt"""
-    def __init__(self, body, design) -> None:
-        super().__init__(self.__class__.__name__)
+    def __init__(self, body, design, tag='') -> None:
+        super().__init__(
+            self.__class__.__name__ if not tag else f'{self.__class__.__name__}_{tag}')
 
         design = design['flare-skirt']
 
@@ -61,11 +62,13 @@ class SkirtCircle(pyp.Component):
 
         # panels
         self.front = CircleArcPanel(
-            'front', waist_rad, length, arc / 2).translate_by([0, body['waist_level'], 15])
+            f'front_{tag}' if tag else 'front', 
+            waist_rad, length, arc / 2).translate_by([0, body['waist_level'], 15])
         self.front.rotate_to(R.from_euler('XYZ', [-40, 0, 0], degrees=True))
 
         self.back = CircleArcPanel(
-            'back', waist_rad, length, arc / 2).translate_by([0, body['waist_level'], -15])
+            f'back_{tag}'  if tag else 'back', 
+            waist_rad, length, arc / 2).translate_by([0, body['waist_level'], -15])
         self.back.rotate_to(R.from_euler('XYZ', [40, 0, 0], degrees=True))
 
         # Stitches

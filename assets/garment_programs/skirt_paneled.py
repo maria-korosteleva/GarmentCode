@@ -232,13 +232,14 @@ class PencilSkirt(pyp.Component):
 # Full garments - Components
 class Skirt2(pyp.Component):
     """Simple 2 panel skirt"""
-    def __init__(self, body, design) -> None:
-        super().__init__(self.__class__.__name__)
+    def __init__(self, body, design, tag='') -> None:
+        super().__init__(
+            self.__class__.__name__ if not tag else f'{self.__class__.__name__}_{tag}')
 
         design = design['skirt']
 
         self.front = SkirtPanel(
-            'front', 
+            f'front_{tag}' if tag else 'front', 
             waist_length=body['waist'], 
             length=design['length']['v'],
             ruffles=design['ruffle']['v'],   # Only if on waistband
@@ -246,7 +247,7 @@ class Skirt2(pyp.Component):
             bottom_cut=design['bottom_cut']['v']
         ).translate_to([0, body['waist_level'], 25])
         self.back = SkirtPanel(
-            'back', 
+            f'back_{tag}'  if tag else 'back', 
             waist_length=body['waist'], 
             length=design['length']['v'],
             ruffles=design['ruffle']['v'],   # Only if on waistband
