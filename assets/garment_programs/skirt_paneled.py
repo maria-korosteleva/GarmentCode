@@ -71,6 +71,7 @@ class FittedSkirtPanel(pyp.Panel):
     def __init__(
         self, name, waist, hips,   # TODO Half measurement instead of a quarter
         hips_depth, length, low_width, rise=1,
+        low_angle=0,
         dart_position=None,  dart_frac=0.5,
         cut=0,
         ruffle=False) -> None:
@@ -104,15 +105,18 @@ class FittedSkirtPanel(pyp.Panel):
         # We distribute w_diff among the side angle and a dart 
         hw_shift = w_diff / 6
 
+        # Adjust the bottom edge to the desired angle
+        angle_shift = np.tan(np.deg2rad(low_angle)) * low_width
+
         right = pyp.esf.curve_from_extreme(
-            [hips - low_width, 0],    
+            [hips - low_width, angle_shift],    
             [hw_shift, length + adj_crotch_depth],
             target_extreme=[0, length]
         )
         top = pyp.Edge(right.end, [hips * 2 - hw_shift, length + adj_crotch_depth])
         left = pyp.esf.curve_from_extreme(
             top.end,
-            [hips + low_width, 0],
+            [hips + low_width, -angle_shift],
             target_extreme=[hips * 2, length]
         )
         self.edges = pyp.EdgeSequence(right, top, left).close_loop()
@@ -183,6 +187,7 @@ class PencilSkirt(pyp.Component):
         super().__init__(self.__class__.__name__)
 
         design = design['pencil-skirt']
+        self.design = design  # Make accessible from outside
 
         self.front = FittedSkirtPanel(
             f'skirt_f',   
@@ -192,6 +197,7 @@ class PencilSkirt(pyp.Component):
             design['length']['v'],
             low_width=design['flare']['v'] * body['hips'] / 4,
             rise=design['rise']['v'],
+            low_angle=design['low_angle']['v'],
             dart_position=body['bust_points'] / 2,
             dart_frac=1.7,  # Diff for front and back
             ruffle=design['ruffle']['v'][0], 
@@ -205,6 +211,7 @@ class PencilSkirt(pyp.Component):
             design['length']['v'],
             low_width=design['flare']['v'] * body['hips'] / 4,
             rise=design['rise']['v'],
+            low_angle=design['low_angle']['v'],
             dart_position=body['bum_points'] / 2,
             dart_frac=1.1,   
             ruffle=design['ruffle']['v'][1],

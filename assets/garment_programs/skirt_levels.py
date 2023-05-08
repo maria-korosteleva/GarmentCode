@@ -1,11 +1,13 @@
 
 from copy import deepcopy
+from scipy.spatial.transform import Rotation as R
 
 # Custom
 import pypattern as pyp
 from .skirt_paneled import *
 from .circle_skirt import *
 
+# TODO Test geometry with different settings
 class SkirtLevels(pyp.Component):
     """Skirt constiting of multuple stitched skirts"""
 
@@ -17,10 +19,16 @@ class SkirtLevels(pyp.Component):
         n_levels = ldesign['num_levels']['v']
         ruffle = ldesign['level_ruffle']['v']
 
-        base_skirt = globals()[ldesign['base']['v']]
-        self.subs.append(base_skirt(body, design))
+        base_skirt_class = globals()[ldesign['base']['v']]
+        self.subs.append(base_skirt_class(body, design))
 
-        level_skirt = globals()[ldesign['level']['v']]
+        level_skirt_class = globals()[ldesign['level']['v']]
+
+        if (hasattr(base:=self.subs[0], 'design') 
+                and 'low_angle' in base.design):
+            angle = base.design['low_angle']['v']
+        else:
+            angle = 0
 
         # Place the levels
         for i in range(n_levels):
@@ -31,10 +39,15 @@ class SkirtLevels(pyp.Component):
 
             # Adjust the mesurement to trick skirts into producing correct width
             lbody['waist'] = top_width
-            self.subs.append(level_skirt(lbody, design, tag=i))
+            self.subs.append(level_skirt_class(lbody, design, tag=i))
 
             # Placement
-            # TODO Rotation if base is assymetric
+            # Rotation if base is assymetric
+            self.subs[-1].rotate_by(R.from_euler('XYZ', [0, 0, -angle], degrees=True))
+
+            # DEBUG
+            print(self.subs[-1].front.rotation.as_euler('XYZ'))
+
             self.subs[-1].place_by_interface(
                 self.subs[-1].interfaces['top'],
                 self.subs[-2].interfaces['bottom'], 

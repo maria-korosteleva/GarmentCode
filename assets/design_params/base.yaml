@@ -370,7 +370,11 @@ design:
       v: 0.8
       range: [0.3, 1]   
       type: float
-    front_cut: 
+    low_angle: 
+      v: 30
+      range: [-50, 50]
+      type: int
+    front_cut: # TODO Not to be used with low_angle!
       v: 0
       range: [0, 20]   # TODO Max = length
       type: int
@@ -393,7 +397,7 @@ design:
       range: [Skirt2, SkirtCircle]
       type: select
     num_levels: 
-      v: 4
+      v: 1
       range: [1, 5]
       type: int 
     level_ruffle:   # NOTE: it will multiple the ruffle setup in the level setting, if any
