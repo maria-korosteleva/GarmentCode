@@ -851,6 +851,7 @@ class EdgeSequence():
         self.isChained()  # print warning if smth is wrong
         if not self.isLoop():
             self.append(Edge(self[-1].end, self[0].start))
+        return self
 
     def rotate(self, angle):
         """Rotate edge sequence by angle in place, using first point as a reference

@@ -2,7 +2,7 @@ import pypattern as pyp
 from scipy.spatial.transform import Rotation as R
 import numpy as np
 
-# TODO front more narrow then the back
+# TODOLOW front more narrow then the back
 class CurveFittedSkirtPanel(pyp.Panel):
     """Fitted panel for a pencil skirt
     
@@ -44,39 +44,19 @@ class CurveFittedSkirtPanel(pyp.Panel):
         # We distribute w_diff among the side angle and a dart 
         hw_shift = w_diff / 6
 
-        # Predictable difference?
-        self.edges = pyp.esf.from_verts(
-            [hips - low_width, 0],  
-            [0, length],    
-            [hw_shift, length + adj_crotch_depth], 
-            [hips * 2 - hw_shift, length + adj_crotch_depth], 
-            [hips * 2, length],
-            [hips + low_width, 0],
-            loop=True
-        )
-
-        top = self.edges[2]
-        bottom = self.edges[-1]
-
-        # right
-        # TODO Define in one go though
         right = pyp.esf.curve_from_extreme(
-            self.edges[0].start,
-            self.edges[1].end,
-            self.edges[0].end
+            [hips - low_width, 0],    
+            [hw_shift, length + adj_crotch_depth],
+            target_extreme=[0, length]
         )
-        self.edges.substitute(0, right)
-        self.edges.pop(1)
-
+        top = pyp.Edge(right.end, [hips * 2 - hw_shift, length + adj_crotch_depth])
         left = pyp.esf.curve_from_extreme(
-            self.edges[2].start,
-            self.edges[3].end,
-            self.edges[2].end
+            top.end,
+            [hips + low_width, 0],
+            target_extreme=[hips * 2, length]
         )
-
-        self.edges.substitute(2, left)
-        self.edges.pop(3)
-
+        self.edges = pyp.EdgeSequence(right, top, left).close_loop()
+        bottom = self.edges[-1]
 
         # inside_edge = self.edges[-3]
         # FIXME add the cut back
@@ -137,7 +117,7 @@ class CurveFittedSkirtPanel(pyp.Panel):
             self.interfaces['top'] = pyp.Interface(self, self.edges[1], ruffle=ruffle_rate)   
 
 
-# TODO Use Skirt2 for all skirts of two parts like this?
+# TODOLOW Use Skirt2 for all skirts of two parts like this?
 class CurvePencilSkirt(pyp.Component):
     def __init__(self, body, design) -> None:
         super().__init__(self.__class__.__name__)
