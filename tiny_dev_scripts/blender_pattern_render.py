@@ -13,6 +13,7 @@ import bmesh
 from pathlib import Path
 from datetime import datetime
 import numpy as np
+import matplotlib
 
 def retreive_obj_tag(tag=''):
     return [obj for obj in bpy.context.scene.objects if tag in obj.name]
@@ -22,17 +23,26 @@ def retreive_mat_tag(tag=''):
     return [mat for mat in bpy.data.materials if tag in mat.name]
 
 def select_object(obj, edit_mode=False):
+    bpy.context.view_layer.objects.active = obj
+    
     bpy.ops.object.mode_set(mode='OBJECT')
     bpy.ops.object.select_all(action='DESELECT')
     obj.select_set(True)
+    
+    # print(obj.select_get())
+    # print(bpy.context)
+    
     if edit_mode:
         bpy.ops.object.mode_set(mode='EDIT')
 
 def pack_uvs(obj):
+    # correct selection
     select_object(obj, edit_mode=True)
-    bpy.ops.uv.pack_islands(margin=0.001)
     bpy.ops.mesh.select_all(action='SELECT')
     bpy.ops.uv.select_all(action='SELECT')
+
+    # Pack
+    bpy.ops.uv.pack_islands(margin=0.001)
 
     bpy.ops.object.mode_set(mode='OBJECT')  # restore the mode
 
@@ -62,7 +72,7 @@ def separate_object_by_parts(obj):
     print('Separation successful')
     
     bpy.ops.object.mode_set(mode='OBJECT')  # recover the mode
-    return retreive_obj_tag(obj.name)
+    return retreive_obj_tag(obj.name[:5])   # NOTE Could be source of trouble
 
 def mark_edges_to_render(objects):
     for obj in objects:
@@ -84,20 +94,24 @@ def assign_materials(meshes, base_shader):
     # Define color list
     # TODO Update colors?
     # NOTE: from my Maya setup
-    color_hex = ['8594AB', '9FBBBA', 'FACDA7', 'EDA19D', 'CF8299', '8B6B96', 'A4DE87']   # CRAZY SITUATION  + 0.85 https://www.schemecolor.com/crazy-situation.php
-    color_list = np.empty((len(color_hex), 4))
-    for idx in range(len(color_hex)):
-        color_list[idx] = np.array([int(color_hex[idx][i:i + 2], 16) for i in (0, 2, 4)] + [255.]) / 255.0
+    # color_hex = ['8594AB', '9FBBBA', 'FACDA7', 'EDA19D', 'CF8299', '8B6B96', 'A4DE87']   # CRAZY SITUATION  + 0.85 https://www.schemecolor.com/crazy-situation.php
+    # color_list = np.empty((len(color_hex), 4))
+    # for idx in range(len(color_hex)):
+    #     color_list[idx] = np.array([int(color_hex[idx][i:i + 2], 16) for i in (0, 2, 4)] + [255.]) / 255.0
         
+    cmap = matplotlib.cm.get_cmap('twilight')   # Using smooth Matplotlib colormaps
+
     # Go over meshes
     for id, obj in enumerate(meshes):
         
         # Copy shader into a new one
         new_shader = base_shader.copy()
         # Setup new color
-        color_id = id % len(color_list)
-        color = color_list[color_id] # DRAFT * 0.9 # / factor  # gets darker the more labels there are
+        # DRAFT color_id = id % len(color_list)
+        # DRAFT color = color_list[color_id] # DRAFT * 0.9 # / factor  # gets darker the more labels there are
 
+        color = np.array(cmap(id / len(meshes)))
+        color[:3] *= 0.7  # DEBUG Brightness
         print(f'Using color {color} for {new_shader.name}')
 
         new_shader.node_tree.nodes["ColorRamp.002"].color_ramp.elements[1].color = color
@@ -130,24 +144,28 @@ def render(path):
 
 # ---- Preparation ---- 
 # TODO Load body if not yet
-body_path = r"C:\Users\MariaKo\Documents\Code\Procedural-Garments\assets\Bodies\f_average_A40.obj"
+#body_path = r"C:\Users\MariaKo\Documents\Code\Procedural-Garments\assets\Bodies\f_average_A40.obj"
 
-# TODO Garment scaling
-garment = retreive_obj_tag('sim')[0]  # single one
-pack_uvs(garment)    # Make sure UVs look nice
+garment_path = r"C:\Users\MariaKo\Documents\Docs\GarmentCode SA23\test_models\Dress_50s_230123-21-52-33_specification_sim.obj"
+bpy.ops.import_scene.obj(filepath=garment_path)
+
+garment = retreive_obj_tag('sim')[0]  # NOTE Make sure it uses correct name
+garment.scale = (1/100, 1/100, 1/100)
+pack_uvs(garment)    # Make sure UVs look nice  # TODO Check if working!!
 
 # Separate by loose parts
 garment_parts = separate_object_by_parts(garment)
+
+print(garment_parts)
 
 # Mark US seams as freestyle edge marks 
 mark_edges_to_render(garment_parts)
 
 # ---- Colors -----
 # Material setup: https://www.youtube.com/watch?v=umrARvXC_MI
-mat = retreive_mat_tag('ryan')[0]   # FIXME Make sure it uses correct name
+mat = retreive_mat_tag('ryan')[0]   # NOTE Make sure it uses correct name
 assign_materials(garment_parts, mat)
     
-
 # ----- Rendering -----
 # Run render for each camera in the scene
 path = Path(r'C:\Users\MariaKo\Documents\Docs\GarmentCode SA23\Blender tries')
@@ -157,4 +175,4 @@ print('Rendering finished')
 
 # And wait.. =)
 
-# TODO (optionally) Delete body and all garment objects
+# TODO (optionally) Delete body and/or all garment objects
