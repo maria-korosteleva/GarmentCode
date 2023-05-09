@@ -345,7 +345,7 @@ class GUIState():
                 sg.Input(
                     str(body[param]), 
                     enable_events=False,  # Events enabled outside: only on Enter 
-                    key=f'BODY-{param}', 
+                    key=f'BODY#{param}', 
                     size=7) 
                 ])
             
