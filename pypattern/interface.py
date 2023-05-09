@@ -128,6 +128,12 @@ class Interface():
 
         return np.asarray(verts_3d)
 
+    def bbox_3d(self):
+        """Return Interface bounding box"""
+        verts = self.verts_3d()
+
+        return [np.min(verts, axis=0), np.max(verts, axis=0)]
+
     def __len__(self):
         return len(self.edges)
     

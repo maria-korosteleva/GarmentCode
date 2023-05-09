@@ -189,11 +189,9 @@ class Sleeve(pyp.Component):
 
         # Get sleeve panels
         self.f_sleeve = SleevePanel(
-            f'{tag}_sleeve_f', body, design, front_opening).translate_by(
-                [-inclanation - depth_diff, 0, 25])
+            f'{tag}_sleeve_f', body, design, front_opening).translate_by([0, 0, 15])
         self.b_sleeve = SleevePanel(
-            f'{tag}_sleeve_b', body, design, back_opening).translate_by(
-                [-inclanation, 0, -20])
+            f'{tag}_sleeve_b', body, design, back_opening).translate_by([0, 0, -15])
 
         # Connect panels
         self.stitching_rules = pyp.Stitches(

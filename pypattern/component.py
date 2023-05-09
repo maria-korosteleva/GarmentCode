@@ -80,19 +80,19 @@ class Component(BaseComponent):
         """
         
         # Alight translation
-        self_verts = self_interface.verts_3d()
-        out_verts = out_interface.verts_3d()
-        mid_out = np.mean(out_verts, axis=0)
-        mid_self = np.mean(self_verts, axis=0)
+        self_bbox = self_interface.bbox_3d()
+        out_bbox = out_interface.bbox_3d()
+        mid_out = (out_bbox[1] + out_bbox[0]) / 2
+        mid_self = (self_bbox[1] + self_bbox[0]) / 2
 
         # Add a gap outside of the current 
-        bbox = self.bbox3D()
-        center = (bbox[0] + bbox[1]) / 2
+        full_bbox = self.bbox3D()
+        center = (full_bbox[0] + full_bbox[1]) / 2
         gap_dir = mid_self - center
         gap_dir = gap * gap_dir / np.linalg.norm(gap_dir)
         
         diff = mid_out - (mid_self + gap_dir)
-
+        
         self.translate_by(diff)
 
         # NOTE: Norm evaluation of vertex set will fail 
