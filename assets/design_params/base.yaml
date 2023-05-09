@@ -8,15 +8,15 @@
 design: 
   meta: 
     upper: 
-      v: null
+      v: Shirt
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
-      v: False
+      v: True
       range: [True, False]
       type: bool
     bottom: 
-      v: SkirtLevels
+      v: Skirt2
       range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, SkirtLevels]
       type: select_null
 
@@ -51,7 +51,7 @@ design:
       type: float
     flare:   
       v: 4
-      range: [-20, 20]
+      range: [-10, 20]
       type: int
 
   collar:
@@ -99,7 +99,7 @@ design:
       type: int
     end_width:
       v: 40
-      range: [20, 40]  
+      range: [20, 70]  
       type: int
     # Armhole
     armhole_shape: 
@@ -142,7 +142,7 @@ design:
     # Cuff
     cuff: 
       type:
-        v: null
+        v: CuffBandSkirt
         range: [CuffBand, CuffSkirt, CuffBandSkirt]
         type: select_null
       # b_width:  # NOTE taken from end_width # TODO naming convention with waistband
@@ -306,7 +306,7 @@ design:
   skirt: 
     length:
       v: 30
-      range: [30, 120]
+      range: [5, 120]
       type: int
     ruffle: 
       v: 1.

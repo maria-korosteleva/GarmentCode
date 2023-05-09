@@ -187,7 +187,7 @@ class BodiceHalf(pyp.Component):
             self.sleeve.place_by_interface(
                 self.sleeve.interfaces['in'], 
                 bodice_sleeve_int, 
-                gap=5
+                gap=7
             )
 
         # Collars

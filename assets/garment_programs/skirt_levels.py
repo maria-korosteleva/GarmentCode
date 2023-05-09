@@ -39,14 +39,11 @@ class SkirtLevels(pyp.Component):
 
             # Adjust the mesurement to trick skirts into producing correct width
             lbody['waist'] = top_width
-            self.subs.append(level_skirt_class(lbody, design, tag=i))
+            self.subs.append(level_skirt_class(lbody, design, tag=str(i)))
 
             # Placement
             # Rotation if base is assymetric
             self.subs[-1].rotate_by(R.from_euler('XYZ', [0, 0, -angle], degrees=True))
-
-            # DEBUG
-            print(self.subs[-1].front.rotation.as_euler('XYZ'))
 
             self.subs[-1].place_by_interface(
                 self.subs[-1].interfaces['top'],

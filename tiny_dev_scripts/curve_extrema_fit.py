@@ -118,7 +118,7 @@ def _fit_quadratic(cp, ends, target_location):
 
     control_bezier = np.array([
         ends[0], 
-        cp,  # DRAFT [target_location[0], cp[1]], 
+        [target_location[0], cp[1]],   # cp,  # DRAFT 
         ends[-1]
     ])
 
