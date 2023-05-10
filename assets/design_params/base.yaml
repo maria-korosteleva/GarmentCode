@@ -155,7 +155,7 @@ design:
         type: int
       skirt_length: 
         v: 10
-        range: [5, 20]
+        range: [5, 50]
         type: int
       skirt_flare:
         v: 1.5
@@ -306,7 +306,7 @@ design:
   skirt: 
     length:
       v: 30
-      range: [5, 120]
+      range: [5, 100]
       type: int
     ruffle: 
       v: 1.
@@ -360,7 +360,7 @@ design:
   pencil-skirt: 
     length:   # From hips
       v: 50
-      range: [10, 80]   # TODO related with height and body proportions? 
+      range: [10, 100]   # TODO related with height and body proportions? 
       type: int
     rise:
       v: 1
