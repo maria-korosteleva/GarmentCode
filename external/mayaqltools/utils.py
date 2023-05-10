@@ -159,7 +159,7 @@ def scale_to_cm(target, max_height_cm=220):
     if height < max_height_cm * 0.01:  # meters
         cmds.scale(100, 100, 100, target, centerPivot=True, absolute=True)
         print('Warning: {} is found to use meters as units. Scaled up by 100 for cm'.format(target))
-    elif height < max_height_cm * 0.01:  # decimeters
+    elif height < max_height_cm * 0.1:  # decimeters
         cmds.scale(10, 10, 10, target, centerPivot=True, absolute=True)
         print('Warning: {} is found to use decimeters as units. Scaled up by 10 for cm'.format(target))
     elif height > max_height_cm:  # millimiters or something strange

@@ -1284,7 +1284,6 @@ class Scene(object):
                 print('Deleting... ', key)
                 cmds.delete(self.scene[key])
                 
-
     def _init_arnold(self):
         """Ensure Arnold objects are launched in Maya & init GPU rendering settings"""
 
