@@ -8,7 +8,7 @@
 design: 
   meta: 
     upper: 
-      v: FittedShirt
+      v: Shirt
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
@@ -220,7 +220,7 @@ design:
         range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf]
         type: select_null
       fc_depth:   # Front collar depth
-        v: 18
+        v: 20
         range: [3, 25]
         type: int
       bc_depth:   # back collar depth
