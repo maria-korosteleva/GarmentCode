@@ -176,7 +176,7 @@ design:
 
   left:   # If this section is not defined, the garment will be symmetric by default
     enable_asym: 
-      v: False    # True == create asymmetric top
+      v: True    # True == create asymmetric top
       range: [True, False]
       type: bool
     bodice: 
@@ -185,7 +185,7 @@ design:
         range: [0, 3]
         type: float
       strapless: 
-        v: True
+        v: False
         range: [True, False]
         type: bool
       strapless_depth: 
@@ -245,10 +245,6 @@ design:
         v: False
         range: [True, False]
         type: bool
-      strapless: 
-        v: True
-        range: [True, False]
-        type: bool
       length: 
         v: 30
         range: [3, 100]
@@ -276,6 +272,11 @@ design:
         range: [2, 6]
         type: float
       
+      sleeve_angle:  # the rest angle of a sleeve, created at connected point
+        v: 30  # deg   
+        range: [10, 50]
+        type: int
+    
       # Shoulder shape
       standing_shoulder: 
         v: False

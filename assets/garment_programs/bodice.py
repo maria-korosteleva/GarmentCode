@@ -148,7 +148,7 @@ class BodiceBackHalf(pyp.Panel):
 class BodiceHalf(pyp.Component):
     """Definition of an upper garment with sleeves and collars"""
 
-    def __init__(self, name, body, design, fitted=True) -> None:
+    def __init__(self, name, body, design, fitted=True, **kwargs) -> None:
         super().__init__(name)
 
         # Torso
@@ -227,7 +227,7 @@ class StrapplessBodiceHalf(pyp.Component):
         NOTE: Assumes the top of the panel is a single edge
     """
 
-    def __init__(self, name, body, design, fitted=True) -> None:
+    def __init__(self, name, body, design, fitted=True, in_depth_f=None, in_depth_b=None) -> None:
         super().__init__(name)
 
         # TODO Match level of inner cut (for collar matching in asymmetric case)
@@ -241,23 +241,15 @@ class StrapplessBodiceHalf(pyp.Component):
             self.btorso = tee.TorsoBackHalfPanel(f'{name}_btorso', body, design).translate_by([0, 0, -20])
 
         # adjust the panel levels
-        # DEBUG
-        print('Stitch matching before crop')
-        print(self.ftorso.interfaces['outside'].edges.length())
-        print(self.btorso.interfaces['outside'].edges.length())
-
-        # TODO Use param value or something
         depth = design['bodice']['strapless_depth']['v']
+        # DRAFT 
+        # if in_depth is None:
+        #     in_depth = depth
         self.adjust_top_level(self.ftorso, depth)
         self.adjust_top_level(self.btorso, depth)
-
-        # DEBUG
-        print('Stitch matching after crop')
-        print(self.ftorso.interfaces['outside'].edges.length())
-        print(self.btorso.interfaces['outside'].edges.length())
-        
         # Stitches
-        self.stitching_rules.append((self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
+        self.stitching_rules.append(
+            (self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
 
         # Interfaces
         self.interfaces = {
@@ -270,16 +262,48 @@ class StrapplessBodiceHalf(pyp.Component):
         }
 
     def adjust_top_level(self, panel, level):
-        """NOTE: Assumes the top of the panel is a single edge"""
+        """NOTE: Assumes the top of the panel is a single edge
+            and adjustment can be made vertically
+        """
 
-        # DRAFT
         panel_top = panel.interfaces['shoulder'].edges[0]
         new_y = min(panel_top.start[1], panel_top.end[1]) - level
         panel_top.start[1] = new_y
         panel_top.end[1] = new_y
 
+    def match_inner_cut(self, front_interface:pyp.Interface, back_interface:pyp.Interface):
+        """Match the inner side of the strapless half to the outside interface
+        """
+        self._match_inner_panel(self.ftorso, front_interface)
+        self._match_inner_panel(self.btorso, back_interface)
+
+        # DEBUG
+        print(self.btorso.interfaces['inside'].edges.length())
+
+    def _match_inner_panel(self, panel:pyp.Panel, other_interface:pyp.Interface):
+        """NOTE: Assumes the inside of the panel is a single edge
+            and adjustment can be made vertically
+        """
+        panel_side = panel.interfaces['inside'].edges[0]
+        tagret_len = other_interface.edges.length()
+        diff = tagret_len - panel_side.length()
+
+        # DEBUG
+        print('Matching ', panel.name)
+        print(panel.interfaces['inside'].edges.length())
+        print(tagret_len)
+        print(panel_side.length(), diff)
+
+        to_adjust = panel_side.start if panel_side.start[1] > panel_side.end[1] else panel_side.end
+
+        print(to_adjust)  # DEBUG
+
+        to_adjust[1] += diff
+
+        print(panel_side.length(), to_adjust)   # DEBUG
 
 
+# TODO Merge the following two classes nicely
 class FittedShirt(pyp.Component):
     """Panel for the front of upper garments with darts to properly fit it to the shape"""
 
@@ -287,23 +311,29 @@ class FittedShirt(pyp.Component):
         name_with_params = f"{self.__class__.__name__}"
         super().__init__(name_with_params)
 
-        strapless = design['bodice']['strapless']['v']
+        # TODO refactor these
+
+        strapless_right = design['bodice']['strapless']['v']
+        strapless_left = design['left']['bodice']['strapless']['v'] if design['left']['enable_asym']['v'] else strapless_right
 
         # DEBUG
-        print('RIGHT!!')
-        right_bodice_class = globals()['StrapplessBodiceHalf'] if strapless else globals()['BodiceHalf']
+        print('Straplessness')
+        print(strapless_right, strapless_left)
+
+        right_bodice_class = globals()['StrapplessBodiceHalf'] if strapless_right else globals()['BodiceHalf']
+        left_bodice_class = globals()['StrapplessBodiceHalf'] if strapless_left else globals()['BodiceHalf']
+
         self.right = right_bodice_class(f'right', body, design)
+        self.left = left_bodice_class(f'left', body, design['left']).mirror()
 
-        # DEBUG
-        print('LEFT!!')
-        if 'left' in design and design['left']['enable_asym']['v']:
-            # TODO Check both are not strappless
-            # TODO match collar!
-            strapless = design['left']['sleeve']['strapless']['v']
-            bodice_class = globals()['StrapplessBodiceHalf'] if strapless else globals()['BodiceHalf']
-            self.left = bodice_class(f'left', body, design['left']).mirror()
-        else: 
-            self.left = right_bodice_class(f'left', body, design).mirror()
+        # TODO Use a parameter instead?
+        if (strapless_left != strapless_right):
+            # Match the strapless side to non-strapless side
+            adjust_half = self.right if strapless_right else self.left
+            adjust_half.match_inner_cut(
+                self.right.interfaces['front_in'], 
+                self.left.interfaces['back_in']
+            )
 
         self.stitching_rules.append((self.right.interfaces['front_in'], self.left.interfaces['front_in']))
         self.stitching_rules.append((self.right.interfaces['back_in'], self.left.interfaces['back_in']))
