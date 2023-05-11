@@ -16,7 +16,7 @@ design:
       range: [True, False]
       type: bool
     bottom: 
-      v: False
+      v: Skirt2
       range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, SkirtLevels]
       type: select_null
 
@@ -40,7 +40,7 @@ design:
       range: [True, False]
       type: bool
     strapless_depth: 
-      v: 10
+      v: 15
       range: [10, 20]  # TODO armscue depth to connecting width
       type: bool
 
@@ -329,7 +329,7 @@ design:
       range: [5, 100]
       type: int
     ruffle: 
-      v: 1.
+      v: 1.5
       range: [1, 2]
       type: float 
     bottom_cut: 
