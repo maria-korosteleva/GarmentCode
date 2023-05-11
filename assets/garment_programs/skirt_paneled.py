@@ -189,12 +189,17 @@ class PencilSkirt(pyp.Component):
         design = design['pencil-skirt']
         self.design = design  # Make accessible from outside
 
+        # Depends on leg length
+        # TODO Calculated Body parameter
+        leg_length = body['height'] - body['head_l'] - body['waist_line'] - body['hips_line']
+        length = body['hips_line'] * design['rise']['v'] + design['length']['v'] * leg_length
+
         self.front = FittedSkirtPanel(
             f'skirt_f',   
             body['waist'] / 4, 
             body['hips'] / 4, 
             body['hips_line'],
-            design['length']['v'],
+            length,
             low_width=design['flare']['v'] * body['hips'] / 4,
             rise=design['rise']['v'],
             low_angle=design['low_angle']['v'],
@@ -208,7 +213,7 @@ class PencilSkirt(pyp.Component):
             body['waist'] / 4, 
             body['hips'] / 4,
             body['hips_line'],
-            design['length']['v'],
+            length,
             low_width=design['flare']['v'] * body['hips'] / 4,
             rise=design['rise']['v'],
             low_angle=design['low_angle']['v'],

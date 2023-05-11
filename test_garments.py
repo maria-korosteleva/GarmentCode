@@ -33,9 +33,9 @@ if __name__ == '__main__':
         body['waist_level'] = body['height'] - body['head_l'] - body['waist_line']
 
     design_files = {
-        # 'base': './assets/design_params/base.yaml',
+        'base': './assets/design_params/base.yaml',
         # 'Dress_20s': './assets/design_params/dress_20s.yaml',
-        'Dress_30s': './assets/design_params/dress_30s_upd.yaml',
+        # 'Dress_30s': './assets/design_params/dress_30s_header.yaml',
         # 'Dress_40s': './assets/design_params/dress_40s.yaml',
         # 'Dress_50s': './assets/design_params/dress_50s.yaml',
         # 'Dress_regency': './assets/design_params/dress_regency.yaml',

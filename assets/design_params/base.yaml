@@ -358,10 +358,10 @@ design:
       type: int
 
   pencil-skirt: 
-    length:   # From hips
-      v: 50
-      range: [10, 100]   # TODO related with height and body proportions? 
-      type: int
+    length:
+      v: 1
+      range: [0.1, 1]
+      type: float 
     rise:
       v: 1
       range: [0.5, 1]

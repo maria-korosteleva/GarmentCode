@@ -716,6 +716,7 @@ class GUIState():
                         self.pattern_state.save_path)
             
             except BaseException as e:
+                # TODO Add intructions
                 sg.popup_error_with_traceback(
                     'Application ERROR detected (see below)', 
                     str(e)

@@ -14,7 +14,7 @@ design:
       - false
       type: bool
     bottom:
-      v: null  # GodetSkirt
+      v: GodetSkirt
       range:
       - SkirtCircle
       - GodetSkirt
@@ -118,14 +118,14 @@ design:
       - 180
       type: int
     width:
-      v: 20  # DEBUG 23   
+      v: 20  # DEBUG 23
       range:
       - 18
       - 30
       type: int
   sleeve:
     sleeveless:
-      v: false
+      v: False
       range:
       - true
       - false
@@ -200,7 +200,7 @@ design:
       type: float
     cuff:
       type:
-        v: null # DEBUG CuffSkirt
+        v: CuffSkirt
         range:
         - CuffBand
         - CuffSkirt
@@ -499,18 +499,18 @@ design:
       - 12
       type: select
     cuts_distance:
-      v: 0
+      v: 1
       range:
       - 0
       - 10
       type: int
   pencil-skirt:
     length:
-      v: 90
+      v: 0.8 
       range:
-      - 10
-      - 80
-      type: int
+      - 0.1
+      - 1
+      type: float
     rise:
       v: 1
       range:
@@ -518,7 +518,7 @@ design:
       - 1
       type: float
     flare:
-      v: 0.55
+      v: 0.8   
       range:
       - 0.3
       - 1
