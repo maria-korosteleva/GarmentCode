@@ -39,10 +39,6 @@ design:
       v: True
       range: [True, False]
       type: bool
-    strapless_depth: 
-      v: 15
-      range: [10, 20]  # TODO armscue depth to connecting width
-      type: bool
 
   shirt: 
     ease:
@@ -188,10 +184,6 @@ design:
         v: False
         range: [True, False]
         type: bool
-      strapless_depth: 
-        v: 10
-        range: [10, 20]  # TODO armscue depth to connecting width
-        type: bool
     shirt: 
       ease:
         v: 0
@@ -260,8 +252,8 @@ design:
 
       # Armhole
       armhole_shape: 
-        v: ArmholeSmooth
-        range: [ArmholeSquare, ArmholeSmooth]
+        v: ArmholeCurve
+        range: [ArmholeSquare, ArmholeSmooth, ArmholeCurve]
         type: select_null
       smoothing_coeff:
         v: 0.25

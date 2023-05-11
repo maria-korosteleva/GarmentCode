@@ -165,10 +165,10 @@ class BodiceHalf(pyp.Component):
             # Sleeves and collars 
             self.add_sleeves(name, body, design)
             self.add_collars(body, design)
+            self.stitching_rules.append((self.ftorso.interfaces['shoulder'], self.btorso.interfaces['shoulder']))  # tops
 
         # Main connectivity
         self.stitching_rules.append((self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
-        self.stitching_rules.append((self.ftorso.interfaces['shoulder'], self.btorso.interfaces['shoulder']))  # tops
 
         self.interfaces = {
             'front_in': self.ftorso.interfaces['inside'],
