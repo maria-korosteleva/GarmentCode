@@ -146,7 +146,7 @@ class BodiceBackHalf(pyp.Panel):
 
 
 class BodiceHalf(pyp.Component):
-    """Definition of a fitted upper garment with sleeves and collars"""
+    """Definition of an upper garment with sleeves and collars"""
 
     def __init__(self, name, body, design, fitted=True) -> None:
         super().__init__(name)
@@ -207,6 +207,7 @@ class BodiceHalf(pyp.Component):
             angle=design['collar']['bc_angle']['v'])
         pyp.ops.cut_corner(b_collar, self.btorso.interfaces['collar_corner'])
 
+        # Main connectivity
         self.stitching_rules.append((self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
         self.stitching_rules.append((self.ftorso.interfaces['shoulder'], self.btorso.interfaces['shoulder']))  # tops
 
@@ -220,6 +221,65 @@ class BodiceHalf(pyp.Component):
         }
 
 
+class StrapplessBodiceHalf(pyp.Component):
+    """Definition of a strappless upper garment
+    
+        NOTE: Assumes the top of the panel is a single edge
+    """
+
+    def __init__(self, name, body, design, fitted=True) -> None:
+        super().__init__(name)
+
+        # TODO Match level of inner cut (for collar matching in asymmetric case)
+
+        # Torso
+        if fitted:
+            self.ftorso = BodiceFrontHalf(f'{name}_ftorso', body, design).translate_by([0, 0, 25])
+            self.btorso = BodiceBackHalf(f'{name}_btorso', body, design).translate_by([0, 0, -20])
+        else:
+            self.ftorso = tee.TorsoFrontHalfPanel(f'{name}_ftorso', body, design).translate_by([0, 0, 25])
+            self.btorso = tee.TorsoBackHalfPanel(f'{name}_btorso', body, design).translate_by([0, 0, -20])
+
+        # adjust the panel levels
+        # DEBUG
+        print('Stitch matching before crop')
+        print(self.ftorso.interfaces['outside'].edges.length())
+        print(self.btorso.interfaces['outside'].edges.length())
+
+        # TODO Use param value or something
+        depth = design['bodice']['strapless_depth']['v']
+        self.adjust_top_level(self.ftorso, depth)
+        self.adjust_top_level(self.btorso, depth)
+
+        # DEBUG
+        print('Stitch matching after crop')
+        print(self.ftorso.interfaces['outside'].edges.length())
+        print(self.btorso.interfaces['outside'].edges.length())
+        
+        # Stitches
+        self.stitching_rules.append((self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
+
+        # Interfaces
+        self.interfaces = {
+            'front_in': self.ftorso.interfaces['inside'],
+            'back_in': self.btorso.interfaces['inside'],
+
+            'f_bottom': self.ftorso.interfaces['bottom_front'],
+            'b_bottom': pyp.Interface.from_multiple(
+                self.btorso.interfaces['bottom'], self.ftorso.interfaces['bottom_back'])
+        }
+
+    def adjust_top_level(self, panel, level):
+        """NOTE: Assumes the top of the panel is a single edge"""
+
+        # DRAFT
+        panel_top = panel.interfaces['shoulder'].edges[0]
+        new_y = min(panel_top.start[1], panel_top.end[1]) - level
+        panel_top.start[1] = new_y
+        panel_top.end[1] = new_y
+
+
+
 class FittedShirt(pyp.Component):
     """Panel for the front of upper garments with darts to properly fit it to the shape"""
 
@@ -227,11 +287,23 @@ class FittedShirt(pyp.Component):
         name_with_params = f"{self.__class__.__name__}"
         super().__init__(name_with_params)
 
-        self.right = BodiceHalf(f'right', body, design)
+        strapless = design['bodice']['strapless']['v']
+
+        # DEBUG
+        print('RIGHT!!')
+        right_bodice_class = globals()['StrapplessBodiceHalf'] if strapless else globals()['BodiceHalf']
+        self.right = right_bodice_class(f'right', body, design)
+
+        # DEBUG
+        print('LEFT!!')
         if 'left' in design and design['left']['enable_asym']['v']:
-            self.left = BodiceHalf(f'left', body, design['left']).mirror()
+            # TODO Check both are not strappless
+            # TODO match collar!
+            strapless = design['left']['sleeve']['strapless']['v']
+            bodice_class = globals()['StrapplessBodiceHalf'] if strapless else globals()['BodiceHalf']
+            self.left = bodice_class(f'left', body, design['left']).mirror()
         else: 
-            self.left = BodiceHalf(f'left', body, design).mirror()
+            self.left = right_bodice_class(f'left', body, design).mirror()
 
         self.stitching_rules.append((self.right.interfaces['front_in'], self.left.interfaces['front_in']))
         self.stitching_rules.append((self.right.interfaces['back_in'], self.left.interfaces['back_in']))
@@ -255,16 +327,23 @@ class Shirt(pyp.Component):
         name_with_params = f"{self.__class__.__name__}"
         super().__init__(name_with_params)
 
+        strapless = design['bodice']['strapless']['v']
+
         # DEBUG
         print('RIGHT!!')
-        self.right = BodiceHalf(f'right', body, design, fitted=False)
+        right_bodice_class = globals()['StrapplessBodiceHalf'] if strapless else globals()['BodiceHalf']
+        self.right = right_bodice_class(f'right', body, design, fitted=False)
 
         # DEBUG
         print('LEFT!!')
         if 'left' in design and design['left']['enable_asym']['v']:
-            self.left = BodiceHalf(f'left', body, design['left'], fitted=False).mirror()
+            # TODO Check both are not strappless
+            # TODO match collar!
+            strapless = design['left']['sleeve']['strapless']['v']
+            bodice_class = globals()['StrapplessBodiceHalf'] if strapless else globals()['BodiceHalf']
+            self.left = bodice_class(f'left', body, design['left'], fitted=False).mirror()
         else: 
-            self.left = BodiceHalf(f'left', body, design, fitted=False).mirror()
+            self.left = right_bodice_class(f'left', body, design, fitted=False).mirror()
 
         self.stitching_rules.append((self.right.interfaces['front_in'], self.left.interfaces['front_in']))
         self.stitching_rules.append((self.right.interfaces['back_in'], self.left.interfaces['back_in']))

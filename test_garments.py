@@ -24,7 +24,7 @@ from assets.body_measurments.body_params import BodyParameters
 if __name__ == '__main__':
 
     body_file = './assets/body_measurments/f_smpl_avg.yaml'
-    body_file = './assets/body_measurments/f_avatar.yaml'
+    # body_file = './assets/body_measurments/f_avatar.yaml'
     # body_file = './assets/body_measurments/f_smpl_model.yaml'
     # body_file = './assets/body_measurments/f_smpl_model_fluffy.yaml'
     # body_file = './assets/body_measurments/m_smpl_avg.yaml'
