@@ -520,6 +520,7 @@ class BasicPattern(object):
             0 if collinear"""
             return (end[0] - start[0]) * (point[1] - start[1]) - (point[0] - start[0]) * (end[1] - start[1])
 
+        # FIXME allow some tolerance ? Godet skirts fail sometimes
         # == 0 for edges sharing a vertex
         if (ccw(segment1[0], segment1[1], segment2[0]) * ccw(segment1[0], segment1[1], segment2[1]) >= 0
                 or ccw(segment2[0], segment2[1], segment1[0]) * ccw(segment2[0], segment2[1], segment1[1]) >= 0):

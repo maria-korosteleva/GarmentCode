@@ -35,7 +35,7 @@ if __name__ == '__main__':
     design_files = {
         # 'base': './assets/design_params/base.yaml',
         # 'Dress_20s': './assets/design_params/dress_20s.yaml',
-        'Dress_30s': './Logs/Configured_design__230510-17-26-16/design_params.yaml',
+        'Dress_30s': './assets/design_params/dress_30s_upd.yaml',
         # 'Dress_40s': './assets/design_params/dress_40s.yaml',
         # 'Dress_50s': './assets/design_params/dress_50s.yaml',
         # 'Dress_regency': './assets/design_params/dress_regency.yaml',

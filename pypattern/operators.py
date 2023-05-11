@@ -164,7 +164,7 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
     target_shape_w = norm(shortcut)
     edge_len = base_edge.length()
 
-    if offset < target_shape_w / 2 or offset > (edge_len - target_shape_w / 2):   
+    if offset < target_shape_w / 2  - tol or offset > (edge_len - target_shape_w / 2) + tol:   
         raise ValueError(f'Operators-CutingIntoEdge::Error::offset value is not within the base_edge length')
 
     # find starting vertex for insertion & place edges there

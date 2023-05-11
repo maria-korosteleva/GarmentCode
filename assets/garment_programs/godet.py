@@ -79,6 +79,9 @@ class GodetSkirt(pyp.Component):
         for i in range(num_inserts):
             offset = cut_width / 2 + (cuts_dist / 2 if i == 0 else cuts_dist)   #  start_offest + i * stride
 
+            # DEBUG
+            print(offset, ' out of ', bottom_edge.length())
+
             new_bottom, cutted, _ = pyp.ops.cut_into_edge(
                 cut_shape, bottom_edge, offset=offset, right=right)
             panel.edges.substitute(bottom_edge, new_bottom)
