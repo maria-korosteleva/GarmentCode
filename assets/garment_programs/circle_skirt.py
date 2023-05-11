@@ -3,10 +3,7 @@ import pypattern as pyp
 from scipy.spatial.transform import Rotation as R
 import numpy as np
 
-# other assets
-from .bands import WB
 
-# TODO Edge factory?? Then scale, location specification is on the panel
 class CircleArcPanel(pyp.Panel):
     """One panel circle skirt"""
 
@@ -54,8 +51,8 @@ class SkirtCircle(pyp.Component):
         waist = body['waist']
         suns = design['suns']['v']
 
-        # TODO Should be part of smart parameters evaluation
-        length = body['hips_line'] + design['length']['v'] * (body['waist_level'] - body['hips_line'])
+        # Depends on leg length
+        length = body['hips_line'] + design['length']['v'] * body['leg_length']
 
         waist_rad = waist / (suns * 2 * np.pi)
         arc = suns * 2 * np.pi

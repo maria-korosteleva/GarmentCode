@@ -19,6 +19,7 @@ import PySimpleGUI as sg
 
 # Custom 
 from assets.garment_programs.meta_garment import MetaGarment
+from assets.body_measurments.body_params import BodyParameters
 
 # GUI Elements
 def Collapsible(layout, key, title='', arrows=(sg.SYMBOL_DOWN, sg.SYMBOL_RIGHT), collapsed=True):
@@ -73,12 +74,7 @@ class GUIPattern():
     # Updates
     def new_body_file(self, path):
         self.body_file = path
-        with open(path, 'r') as f:
-            body = yaml.safe_load(f)['body']
-            # TODO The following should not be here. 
-            # Needs to be updated when interface updates
-            body['waist_level'] = body['height'] - body['head_l'] - body['waist_line']
-        self.body_params = body
+        self.body_params = BodyParameters(path)
         self.reload_garment()
 
     def new_design_file(self, path):
@@ -167,12 +163,7 @@ class GUIPattern():
             to_subfolder=True, 
             with_3d=True, with_text=False, view_ids=False)
 
-        with open(Path(folder) / 'body_measurements.yaml', 'w') as f:
-            yaml.dump(
-                {'body': self.body_params}, 
-                f,
-                default_flow_style=False
-            )
+        self.body_params.save(folder)
 
         with open(Path(folder) / 'design_params.yaml', 'w') as f:
             yaml.dump(
@@ -683,6 +674,7 @@ class GUIState():
                         )
                     else:
                         self.pattern_state.reload_garment()
+                        self.upd_fields_body()
                         self.upd_pattern_visual()
 
                 elif event.startswith('DESIGN#'): 

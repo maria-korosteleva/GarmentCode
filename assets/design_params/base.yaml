@@ -359,7 +359,7 @@ design:
 
   pencil-skirt: 
     length:
-      v: 1
+      v: 0.5
       range: [0.1, 1]
       type: float 
     rise:

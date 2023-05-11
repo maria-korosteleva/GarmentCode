@@ -88,7 +88,10 @@ class PantsHalf(pyp.Component):
         design = design['pants']
 
         # TODO assymmetric front/back
-        length = design['length']['v'] * (body['waist_level'] - body['crotch_depth'] + design['crotch_extention']['v'])
+        # FIXME What did this length calculation mean??
+        # length = design['length']['v'] * (body['waist_level'] - body['crotch_depth'] + design['crotch_extention']['v'])
+        
+        length = body['hips_line'] + design['length']['v'] * body['leg_length']
         width = design['width']['v'] * body['hips'] / 4
         self.front = PantPanel(
             f'pant_f_{tag}',   

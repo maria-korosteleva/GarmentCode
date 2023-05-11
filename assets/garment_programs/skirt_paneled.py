@@ -64,7 +64,6 @@ class ThinSkirtPanel(pyp.Panel):
         }
 
 # TODOLOW front more narrow then the back
-# TODO Fix dependent (Godet) skirt
 class FittedSkirtPanel(pyp.Panel):
     """Fitted panel for a pencil skirt
     """
@@ -190,9 +189,10 @@ class PencilSkirt(pyp.Component):
         self.design = design  # Make accessible from outside
 
         # Depends on leg length
-        # TODO Calculated Body parameter
-        leg_length = body['height'] - body['head_l'] - body['waist_line'] - body['hips_line']
-        length = body['hips_line'] * design['rise']['v'] + design['length']['v'] * leg_length
+        length = (
+            body['hips_line'] * design['rise']['v'] 
+            + design['length']['v'] * body['leg_length']
+        )
 
         self.front = FittedSkirtPanel(
             f'skirt_f',   
@@ -313,8 +313,8 @@ class SkirtManyPanels(pyp.Component):
         design = design['flare-skirt']
         n_panels = design['n_panels']['v']
 
-        # Length is dependent on a height of a person
-        length = body['hips_line'] + design['length']['v'] * (body['waist_level'] - body['hips_line'])
+        # Length is dependent on length of legs
+        length = body['hips_line'] + design['length']['v'] * body['leg_length']
 
         flare_coeff_pi = 1 + design['suns']['v'] * length * 2 * np.pi / waist
 
