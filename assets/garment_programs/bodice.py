@@ -164,8 +164,8 @@ class BodiceHalf(pyp.Component):
         else:
             # Sleeves and collars 
             self.add_sleeves(name, body, design)
-            self.add_collars(design)
-        
+            self.add_collars(body, design)
+
         # Main connectivity
         self.stitching_rules.append((self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
         self.stitching_rules.append((self.ftorso.interfaces['shoulder'], self.btorso.interfaces['shoulder']))  # tops
@@ -184,11 +184,9 @@ class BodiceHalf(pyp.Component):
         diff = self.ftorso.width - self.btorso.width
         self.sleeve = sleeves.Sleeve(name, body, design, depth_diff=diff)
 
-        print('FRONT SLEEVE')  # DEBUG
         _, f_sleeve_int = pyp.ops.cut_corner(
             self.sleeve.interfaces['in_front_shape'].projecting_edges(), 
             self.ftorso.interfaces['shoulder_corner'])
-        print('BACK SLEEVE')  # DEBUG
         _, b_sleeve_int = pyp.ops.cut_corner(
             self.sleeve.interfaces['in_back_shape'].projecting_edges(), 
             self.btorso.interfaces['shoulder_corner'])
@@ -211,23 +209,29 @@ class BodiceHalf(pyp.Component):
                 gap=7
             )
     
-    def add_collars(self, design):
+    def add_collars(self, body, design):
         # TODO collars with extra panels!
-        # TODO Adjust collar depth s.t. it stable w.r.t. to overall length, and collar width
-        # 
-        # collar_depth_adj = 
+
+        # Collar depth is given w.r.t. length.
+        # adjust for the shoulder inclination
+        width = design['collar']['width']['v']
+        tg = np.tan(np.deg2rad(body['shoulder_incl']))
+        f_depth_adj = tg * (self.ftorso.width - width / 2)
+        b_depth_adj = tg * (self.btorso.width - width / 2)
+
         # Front
-        print('FRONT COLLAR')  # DEBUG
         collar_type = getattr(collars, design['collar']['f_collar']['v'])
         f_collar = collar_type(
-            design['collar']['fc_depth']['v'], design['collar']['width']['v'], 
+            design['collar']['fc_depth']['v'] + f_depth_adj, 
+            width, 
             angle=design['collar']['fc_angle']['v'])
         pyp.ops.cut_corner(f_collar, self.ftorso.interfaces['collar_corner'])
+
         # Back
-        print('BACK COLLAR')  # DEBUG
         collar_type = getattr(collars, design['collar']['b_collar']['v'])
         b_collar = collar_type(
-            design['collar']['bc_depth']['v'], design['collar']['width']['v'], 
+            design['collar']['bc_depth']['v'] + b_depth_adj, 
+            width, 
             angle=design['collar']['bc_angle']['v'])
         pyp.ops.cut_corner(b_collar, self.btorso.interfaces['collar_corner'])
 
@@ -256,7 +260,6 @@ class BodiceHalf(pyp.Component):
         out[1] = min_y - out_level
 
 
-# TODO Merge the following two classes nicely
 class Shirt(pyp.Component):
     """Panel for the front of upper garments with darts to properly fit it to the shape"""
 

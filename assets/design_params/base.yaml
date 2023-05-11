@@ -212,11 +212,11 @@ design:
 
     collar:
       f_collar: 
-        v: CircleArcNeckHalf
+        v: VNeckHalf
         range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf]
         type: select_null
       b_collar: 
-        v: CircleNeckHalf
+        v: VNeckHalf
         range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf]
         type: select_null
       fc_depth:   # Front collar depth
@@ -236,7 +236,7 @@ design:
         range: [30, 180]
         type: int
       width: 
-        v: 18  # 18
+        v: 10  # 18
         range: [18, 30]   # TODO min is a neck width
         type: int
       
