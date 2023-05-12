@@ -216,9 +216,12 @@ class Sleeve(pyp.Component):
         # Cuff
         if design['cuff']['type']['v']:
             # Class
-            design['cuff']['b_width'] = design['end_width']
-            cuff_class = getattr(bands, design['cuff']['type']['v'])
-            self.cuff = cuff_class(f'sl_{tag}', design)
+            # Copy to avoid editing original design dict
+            cdesign = deepcopy(design)
+            cdesign['cuff']['b_width'] = design['end_width']
+
+            cuff_class = getattr(bands, cdesign['cuff']['type']['v'])
+            self.cuff = cuff_class(f'sl_{tag}', cdesign)
 
             # Position
             self.cuff.rotate_by(

@@ -59,6 +59,7 @@ class GUIPattern():
 
         self.body_file = None
         self.design_file = None
+        self.design_params = {}
         self.new_body_file(
             Path.cwd() / 'assets/body_measurments/f_smpl_avg.yaml'
         )
@@ -74,6 +75,7 @@ class GUIPattern():
     # Updates
     def new_body_file(self, path):
         self.body_file = path
+        # FIXME Update instead of re-writing
         self.body_params = BodyParameters(path)
         self.reload_garment()
 
@@ -81,7 +83,10 @@ class GUIPattern():
         self.design_file = path
         with open(path, 'r') as f:
             des = yaml.safe_load(f)['design']
-        self.design_params = des
+
+        # FIXME Updating should allows loading partial design files
+        # Need nested updates
+        self.design_params.update(des)
         self.reload_garment()
 
     def set_design_param(self, param_path, new_value, reload=True):
@@ -713,7 +718,7 @@ class GUIState():
                     str(e),
                     '',
                     'Most likely, the generated pattern is in incorrect state due to current parameter values',
-                    '   Click "Close" and undo your last change to return to correct garment state',
+                    '   Undo your last change to return to correct garment state and click "Close"',
                     ''
                 )
 

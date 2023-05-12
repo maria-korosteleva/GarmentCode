@@ -8,15 +8,15 @@
 design: 
   meta: 
     upper: 
-      v: Shirt
+      v: False
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
-      v: True
+      v: False
       range: [True, False]
       type: bool
     bottom: 
-      v: Skirt2
+      v: SkirtCircle
       range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, SkirtLevels]
       type: select_null
 
@@ -345,8 +345,26 @@ design:
       type: int 
     suns:     # one "sun" is 360 skirt
       v: 0.7
-      range: [0.5, 1.95]
+      range: [0.1, 1.95]
       type: float 
+    cut:
+      add: 
+        v: True
+        range: [True, False]
+        type: bool
+      depth:
+        v: 0.5    # 0 == no cut
+        range: [0, 0.95]   # Fraction of skirt length
+        type: float
+      width: 
+        v: 0.1    # 0 == no cut
+        range: [0, 0.95]   # TODO Fraction of skirt length??
+        type: float
+      place: 
+        v: 0.5
+        range: [-1, 1]   # Fraction of the edge length
+        type: float
+      
 
   godet-skirt: 
     base: 
