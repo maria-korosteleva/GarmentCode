@@ -22,14 +22,7 @@ class PantPanel(pyp.Panel):
         waist = body['waist'] / 4
         hips_depth = body['hips_line']
         dart_position = body['bust_points'] / 2
-        
-        # adjust for a rise
-        # FIXME rise is not workting now
-        # TODO Refactor with new rise calculations
-        rise = 1.   # DRAFT design['rise']['v']
-        adj_hips_depth = rise * hips_depth
-        adj_waist = pant_width - rise * (pant_width - waist)
-        dart_depth = adj_hips_depth * 0.8 
+        dart_depth = hips_depth * 0.8 
 
         # Crotch cotrols
         # TODO Add to all my measurements
@@ -40,26 +33,26 @@ class PantPanel(pyp.Panel):
         # eval pants shape
         # Check for ruffle
         if ruffle: 
-            ruffle_rate = pant_width / adj_waist
-            adj_waist = pant_width 
+            ruffle_rate = pant_width / waist
+            waist = pant_width 
         else:
             ruffle_rate = 1
 
         # amount of extra fabric at waist
-        w_diff = pant_width - adj_waist   # Assume its positive since waist is smaller then hips
+        w_diff = pant_width - waist   # Assume its positive since waist is smaller then hips
         # We distribute w_diff among the side angle and a dart 
         hw_shift = w_diff / 3
 
         # FIXME extending low part too much inside created weird edge
         right = pyp.esf.curve_from_extreme(
             [(pant_width - low_width) / 2, 0],    
-            [hw_shift, length + adj_hips_depth],
+            [hw_shift, length + hips_depth],
             target_extreme=[0, length]
         )
 
         top = pyp.Edge(
             right.end, 
-            [w_diff + adj_waist, length + adj_hips_depth] 
+            [w_diff + waist, length + hips_depth] 
         )
 
         crotch = pyp.CurveEdge(
@@ -86,7 +79,7 @@ class PantPanel(pyp.Panel):
 
         # Default placement
         self.set_pivot(crotch.end)
-        self.translation = [-0.5, - adj_hips_depth - crotch_depth_diff + 5, 0] 
+        self.translation = [-0.5, - hips_depth - crotch_depth_diff + 5, 0] 
 
         # Out interfaces (easier to define before adding a dart)
         self.interfaces = {
@@ -101,7 +94,7 @@ class PantPanel(pyp.Panel):
             dart_width = w_diff - hw_shift
             dart_shape = pyp.esf.dart_shape(dart_width, dart_depth)
             top_edges, dart_edges, int_edges = pyp.ops.cut_into_edge(
-                dart_shape, top, offset=(hw_shift + adj_waist - dart_position), right=True)
+                dart_shape, top, offset=(hw_shift + waist - dart_position), right=True)
 
             self.edges.substitute(top, top_edges)
             self.stitching_rules.append((pyp.Interface(self, dart_edges[0]), pyp.Interface(self, dart_edges[1])))
@@ -112,7 +105,7 @@ class PantPanel(pyp.Panel):
 
     def apply_rise(self, level, right, top, crotch):
 
-        # TODO This is an operator
+        # TODOLOW This could be an operator or edge function
         right_c, crotch_c = right.as_curve(), crotch.as_curve()
         cutout = svgpath.Line(0 + 1j*level, crotch.end[0] + 1j*level)
 
@@ -123,10 +116,6 @@ class PantPanel(pyp.Panel):
         c_intersect = crotch_c.intersect(cutout)[0]
         c_cut = crotch_c.cropped(c_intersect[0], 1)
         new_crotch = pyp.CurveEdge.from_svg_curve(c_cut)
-
-        # DEBUG
-        print(right_intersect)
-        print(c_intersect)
 
         new_top = pyp.Edge(new_right.end, new_crotch.start)
 
