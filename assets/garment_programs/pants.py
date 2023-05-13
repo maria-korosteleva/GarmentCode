@@ -20,19 +20,21 @@ class PantPanel(pyp.Panel):
         waist = body['waist'] / 4
         hips_depth = body['hips_line']
         dart_position = body['bust_points'] / 2
-
-        # Crotch cotrols
-        # TODO Evaluate from measurements?
-        crotch_extention = design['crotch_extention']['v']
-        crotch_depth_diff = 14
         
         # adjust for a rise
         # NOTE crotch_depth is not properly used
-        # DRAFT adj_crotch_depth = rise * crotch_depth
+        # DRAFT 
         rise = design['rise']['v']
         adj_hips_depth = rise * hips_depth
+        adj_crotch_depth = body['crotch_depth'] - (1 - rise) * hips_depth 
         adj_waist = pant_width - rise * (pant_width - waist)
         dart_depth = adj_hips_depth * 0.8 
+
+        # Crotch cotrols
+        # TODO Add to all my measurements
+        # DRAFT crotch_extention = design['crotch_extention']['v']
+        crotch_depth_diff =  body['crotch_hip_diff'] * 2  # NOTE: 2 is an approximation # DRAFT 14
+        crotch_extention = body['leg_circ'] / 2 - body['hips'] / 4
 
         # eval pants shape
         # Check for ruffle
@@ -47,7 +49,6 @@ class PantPanel(pyp.Panel):
         # We distribute w_diff among the side angle and a dart 
         hw_shift = w_diff / 3
 
-        
         right = pyp.esf.curve_from_extreme(
             [(pant_width - low_width) / 2, 0],    
             [hw_shift, length + adj_hips_depth],
@@ -59,11 +60,17 @@ class PantPanel(pyp.Panel):
             [w_diff + adj_waist, length + adj_hips_depth - 1]  # small angle
         )
 
+        # TODO More straight at the top
         crotch = pyp.CurveEdge(
             top.end,
             [pant_width + crotch_extention, length - crotch_depth_diff], 
-            [[0.8, -0.4]]
+            [[0.9, -0.3]]   # 0.75 ?  Deeper for back then for front??
         )
+
+        # DEBUG
+        print('Crotch eval')
+        print(adj_hips_depth, adj_crotch_depth, ' diff = ', abs(adj_crotch_depth - adj_hips_depth))
+        print(crotch_extention, crotch_depth_diff, ' length = ', crotch.length())
 
         left = pyp.CurveEdge(
             crotch.end,
