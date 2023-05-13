@@ -22,18 +22,16 @@ class PantPanel(pyp.Panel):
         dart_position = body['bust_points'] / 2
         
         # adjust for a rise
-        # NOTE crotch_depth is not properly used
-        # DRAFT 
+        # FIXME rise is not workting now
         rise = design['rise']['v']
         adj_hips_depth = rise * hips_depth
-        adj_crotch_depth = body['crotch_depth'] - (1 - rise) * hips_depth 
         adj_waist = pant_width - rise * (pant_width - waist)
         dart_depth = adj_hips_depth * 0.8 
 
         # Crotch cotrols
         # TODO Add to all my measurements
-        # DRAFT crotch_extention = design['crotch_extention']['v']
-        crotch_depth_diff =  body['crotch_hip_diff'] * 2  # NOTE: 2 is an approximation # DRAFT 14
+        # DRAFT 14
+        crotch_depth_diff =  body['crotch_hip_diff']  * 2  # NOTE: 2 is an heristic 
         crotch_extention = body['leg_circ'] / 2 - body['hips'] / 4
 
         # eval pants shape
@@ -49,6 +47,7 @@ class PantPanel(pyp.Panel):
         # We distribute w_diff among the side angle and a dart 
         hw_shift = w_diff / 3
 
+        # FIXME extending low part too much inside created weird edge
         right = pyp.esf.curve_from_extreme(
             [(pant_width - low_width) / 2, 0],    
             [hw_shift, length + adj_hips_depth],
@@ -57,20 +56,14 @@ class PantPanel(pyp.Panel):
 
         top = pyp.Edge(
             right.end, 
-            [w_diff + adj_waist, length + adj_hips_depth - 1]  # small angle
+            [w_diff + adj_waist, length + adj_hips_depth]  # small angle  # DRAFT -1
         )
 
-        # TODO More straight at the top
         crotch = pyp.CurveEdge(
             top.end,
             [pant_width + crotch_extention, length - crotch_depth_diff], 
-            [[0.9, -0.3]]   # 0.75 ?  Deeper for back then for front??
+            [[0.9, -0.3]]    # NOTE: relative contols allow adaptation to different bodies
         )
-
-        # DEBUG
-        print('Crotch eval')
-        print(adj_hips_depth, adj_crotch_depth, ' diff = ', abs(adj_crotch_depth - adj_hips_depth))
-        print(crotch_extention, crotch_depth_diff, ' length = ', crotch.length())
 
         left = pyp.CurveEdge(
             crotch.end,
@@ -83,7 +76,7 @@ class PantPanel(pyp.Panel):
 
         # Default placement
         self.set_pivot(crotch.end)
-        self.translation = [-0.5, 5, 0] 
+        self.translation = [-0.5, - adj_hips_depth - crotch_depth_diff + 5, 0] 
 
         # Out interfaces (easier to define before adding a dart)
         self.interfaces = {
@@ -93,7 +86,6 @@ class PantPanel(pyp.Panel):
             'bottom': pyp.Interface(self, bottom)
         }
 
-        # FIXME Version with ruffles
         # Add top dart 
         if not ruffle and dart_depth: 
             dart_width = w_diff - hw_shift

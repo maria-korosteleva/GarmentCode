@@ -88,10 +88,10 @@ class FittedSkirtPanel(pyp.Panel):
         super().__init__(name)
 
         # adjust for a rise
-        adj_crotch_depth = rise * hips_depth
+        adj_hips_depth = rise * hips_depth
         adj_waist = hips - rise * (hips - waist)
         dart_depth = hips_depth * dart_frac
-        dart_depth = max(dart_depth - (hips_depth - adj_crotch_depth), 0)
+        dart_depth = max(dart_depth - (hips_depth - adj_hips_depth), 0)
 
         # eval shape
         # Check for ruffle
@@ -111,10 +111,10 @@ class FittedSkirtPanel(pyp.Panel):
 
         right = pyp.esf.curve_from_extreme(
             [hips - low_width, angle_shift],    
-            [hw_shift, length + adj_crotch_depth],
+            [hw_shift, length + adj_hips_depth],
             target_extreme=[0, length]
         )
-        top = pyp.Edge(right.end, [hips * 2 - hw_shift, length + adj_crotch_depth])
+        top = pyp.Edge(right.end, [hips * 2 - hw_shift, length + adj_hips_depth])
         left = pyp.esf.curve_from_extreme(
             top.end,
             [hips + low_width, -angle_shift],
