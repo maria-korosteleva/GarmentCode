@@ -5,79 +5,69 @@ import pypattern as pyp
 from . import bands
 
 
-# TODO different fit in thights and  ankles
-# TODO Add ease
 class PantPanel(pyp.Panel):
-    def __init__(
-        self, name, 
-        waist, 
-        pant_width, 
-        hips_depth,
-        crotch_depth, 
-        length, 
-        rise=1,
-        dart_position=None, 
-        ruffle=False, 
-        crotch_extention=5, 
-        crotch_angle_adj=1.) -> None:
+    def __init__(self, name, body, design) -> None:
         """
             Basic pant panel with option to be fitted (with darts) or ruffled at waist area.
-            
-            * rise -- the pant rize. 1 = waistline, 0 = crotch line (I'd not recommend to go all the way to zero 😅)
-            * dart_position -- from the center of the body to the dart
-            * ruffle -- use ruffles instead of fitting with darts. If ruffle = False, the dart_position needs to be specified
-            * crotch_extention amount of exta fabric between legs
         """
         super().__init__(name)
 
+        pant_width = design['width']['v'] * body['hips'] / 4
+        low_width = pant_width * design['flare']['v']  
+        length = body['hips_line'] + design['length']['v'] * body['leg_length']
+        ruffle = design['ruffle_front']['v']
+
+        waist = body['waist'] / 4
+        hips_depth = body['hips_line']
+        dart_position = body['bust_points'] / 2
+
+        # Crotch cotrols
+        # TODO Evaluate from measurements?
+        crotch_extention = design['crotch_extention']['v']
+        crotch_depth_diff = 14
+        
         # adjust for a rise
         # NOTE crotch_depth is not properly used
-        crotch_depth = crotch_depth - crotch_extention
         # DRAFT adj_crotch_depth = rise * crotch_depth
-        adj_crotch_depth = rise * hips_depth
+        rise = design['rise']['v']
+        adj_hips_depth = rise * hips_depth
         adj_waist = pant_width - rise * (pant_width - waist)
-        dart_depth = adj_crotch_depth * 0.8
-        # DRAFT dart_depth = crotch_depth * 0.6  
-        # DRAFT dart_depth = max(dart_depth - (crotch_depth - adj_crotch_depth), 0)
+        dart_depth = adj_hips_depth * 0.8 
 
         # eval pants shape
-        hips = pant_width   # DRAFT + 2 * crotch_extention   # TODO Really??
-        default_width = pant_width  
         # Check for ruffle
         if ruffle: 
-            ruffle_rate = default_width / adj_waist
-            adj_waist = default_width 
+            ruffle_rate = pant_width / adj_waist
+            adj_waist = pant_width 
         else:
             ruffle_rate = 1
 
         # amount of extra fabric at waist
-        w_diff = default_width - adj_waist   # Assume its positive since waist is smaller then hips
+        w_diff = pant_width - adj_waist   # Assume its positive since waist is smaller then hips
         # We distribute w_diff among the side angle and a dart 
         hw_shift = w_diff / 3
 
-        # DRAFT 
-        low_width = hips * 0.8   # TODO Parameter
+        
         right = pyp.esf.curve_from_extreme(
-            [(hips - low_width) / 2, 0],    
-            [hw_shift, length + adj_crotch_depth],
+            [(pant_width - low_width) / 2, 0],    
+            [hw_shift, length + adj_hips_depth],
             target_extreme=[0, length]
         )
 
         top = pyp.Edge(
             right.end, 
-            [w_diff + adj_waist, length + adj_crotch_depth - 1]
+            [w_diff + adj_waist, length + adj_hips_depth - 1]  # small angle
         )
 
         crotch = pyp.CurveEdge(
             top.end,
-            [hips + crotch_extention, length - 14],   # 14 TODO Placement?
+            [pant_width + crotch_extention, length - crotch_depth_diff], 
             [[0.8, -0.4]]
         )
 
-        # TODO Make sure it doesn't cur above the crotch
         left = pyp.CurveEdge(
             crotch.end,
-            [hips - (hips - low_width) / 2, 0],   # TODO Placement?  
+            [pant_width - (pant_width - low_width) / 2, min(0, length - crotch_depth_diff)], 
             [[0.2, -0.2]]
         )
 
@@ -85,8 +75,8 @@ class PantPanel(pyp.Panel):
         bottom = self.edges[-1]
 
         # Default placement
-        self.top_center_pivot()
-        self.translation = [-hips / 2 - 0.5, 5, 0]
+        self.set_pivot(crotch.end)
+        self.translation = [-0.5, 5, 0] 
 
         # Out interfaces (easier to define before adding a dart)
         self.interfaces = {
@@ -117,36 +107,13 @@ class PantsHalf(pyp.Component):
         design = design['pants']
 
         # TODO assymmetric front/back
-        # FIXME What did this length calculation mean??
-        # length = design['length']['v'] * (body['waist_level'] - body['crotch_depth'] + design['crotch_extention']['v'])
-        
-        length = body['hips_line'] + design['length']['v'] * body['leg_length']
-        width = design['width']['v'] * body['hips'] / 4
         self.front = PantPanel(
-            f'pant_f_{tag}',   
-            body['waist'] / 4, 
-            width, 
-            body['hips_line'],
-            body['crotch_depth'],
-            length,
-            rise=design['rise']['v'],
-            dart_position=body['bust_points'] / 2,
-            ruffle=design['ruffle_front']['v'],
-            crotch_extention=design['crotch_extention']['v'],
-            crotch_angle_adj=2
+            f'pant_f_{tag}', body, design
+            # crotch_angle_adj=2
             ).translate_by([0, body['waist_level'] - 5, 25])
         self.back = PantPanel(
-            f'pant_b_{tag}', 
-            body['waist'] / 4, 
-            width,
-            body['hips_line'],
-            body['crotch_depth'],
-            length,
-            rise=design['rise']['v'],
-            dart_position=body['bum_points'] / 2,
-            ruffle=design['ruffle_back']['v'],
-            crotch_extention=design['crotch_extention']['v'],
-            crotch_angle_adj=1.5
+            f'pant_b_{tag}', body, design
+            # crotch_angle_adj=1.5
             ).translate_by([0, body['waist_level'] - 5, -20])
 
         self.stitching_rules = pyp.Stitches(
@@ -158,6 +125,8 @@ class PantsHalf(pyp.Component):
         if design['cuff']['type']['v']:
             cuff_class = getattr(bands, design['cuff']['type']['v'])
             self.cuff = cuff_class(tag, design)
+
+            # TODO cuff width to match?
 
             pant_bottom = pyp.Interface.from_multiple(
                     self.front.interfaces['bottom'], self.back.interfaces['bottom'])

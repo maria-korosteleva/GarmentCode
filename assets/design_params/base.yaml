@@ -443,12 +443,16 @@ design:
 
   pants: 
     length: 
-      v: 0.3
-      range: [0.2, 1]   # 0 == hip line, 1 == floor length
+      v: 0.1
+      range: [0.1, 1]   # 0 == hip line, 1 == floor length
       type: float
     width: 
       v: 1.
       range: [1., 1.5]   # 1 = fits the hips
+      type: float
+    flare: 
+      v: 0.5
+      range: [0.5, 1.5]   # 1 = same as hips
       type: float
     rise:
       v: 1
