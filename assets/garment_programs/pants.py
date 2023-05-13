@@ -10,7 +10,10 @@ from . import bands
 class PantPanel(pyp.Panel):
     def __init__(
         self, name, waist, pant_width, 
-        crotch_depth, length, rise=1,
+        hips_depth,
+        crotch_depth, 
+        length, 
+        rise=1,
         dart_position=None, ruffle=False, crotch_extention=5, crotch_angle_adj=1.) -> None:
         """
             Basic pant panel with option to be fitted (with darts) or ruffled at waist area.
@@ -23,11 +26,14 @@ class PantPanel(pyp.Panel):
         super().__init__(name)
 
         # adjust for a rise
+        # NOTE crotch_depth is not properly used
         crotch_depth = crotch_depth - crotch_extention
-        adj_crotch_depth = rise * crotch_depth
+        # DRAFT adj_crotch_depth = rise * crotch_depth
+        adj_crotch_depth = rise * hips_depth
         adj_waist = pant_width - rise * (pant_width - waist)
-        dart_depth = crotch_depth * 0.6  
-        dart_depth = max(dart_depth - (crotch_depth - adj_crotch_depth), 0)
+        dart_depth = adj_crotch_depth * 0.8
+        # DRAFT dart_depth = crotch_depth * 0.6  
+        # DRAFT dart_depth = max(dart_depth - (crotch_depth - adj_crotch_depth), 0)
 
         # eval pants shape
         hips = pant_width + 2 * crotch_extention
@@ -64,12 +70,13 @@ class PantPanel(pyp.Panel):
             [hw_shift, length + adj_crotch_depth],
             target_extreme=[0, length]
         )
+
         top = pyp.Edge(right.end, [w_diff + adj_waist, length + adj_crotch_depth])
 
         crotch = pyp.CurveEdge(
             top.end,
-            [hips + crotch_extention, length],   # TODO Placement?
-            [[0.8, -0.3]]
+            [hips + crotch_extention, length - 8],   # TODO Placement?
+            [[0.8, -0.4]]
         )
 
         left = pyp.CurveEdge(
@@ -123,6 +130,7 @@ class PantsHalf(pyp.Component):
             f'pant_f_{tag}',   
             body['waist'] / 4, 
             width, 
+            body['hips_line'],
             body['crotch_depth'],
             length,
             rise=design['rise']['v'],
@@ -135,6 +143,7 @@ class PantsHalf(pyp.Component):
             f'pant_b_{tag}', 
             body['waist'] / 4, 
             width,
+            body['hips_line'],
             body['crotch_depth'],
             length,
             rise=design['rise']['v'],
