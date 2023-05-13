@@ -45,7 +45,9 @@ class PantPanel(pyp.Panel):
 
         # FIXME extending low part too much inside created weird edge
         right = pyp.esf.curve_from_extreme(
-            [(pant_width - low_width) / 2, 0],    
+            [
+                min(- (low_width - pant_width), (pant_width - low_width) / 2),   # extend wide pants out
+                0],    
             [hw_shift, length + hips_depth],
             target_extreme=[0, length]
         )
@@ -70,12 +72,17 @@ class PantPanel(pyp.Panel):
 
         left = pyp.CurveEdge(
             crotch.end,
-            [pant_width - (pant_width - low_width) / 2, min(0, length - crotch_depth_diff)], 
+            [
+                min(pant_width, pant_width - (pant_width - low_width) / 2), 
+                min(0, length - crotch_depth_diff)], 
             [[0.2, -0.2]]
         )
 
         self.edges = pyp.EdgeSequence(right, top, crotch, left).close_loop()
         bottom = self.edges[-1]
+
+        # DEBUG
+        print('Bottom: ', bottom.length(), low_width)
 
         # Default placement
         self.set_pivot(crotch.end)
