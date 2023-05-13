@@ -43,7 +43,6 @@ class PantPanel(pyp.Panel):
         # We distribute w_diff among the side angle and a dart 
         hw_shift = w_diff / 3
 
-        # FIXME extending low part too much inside created weird edge
         right = pyp.esf.curve_from_extreme(
             [
                 min(- (low_width - pant_width), (pant_width - low_width) / 2),   # extend wide pants out
@@ -80,9 +79,6 @@ class PantPanel(pyp.Panel):
 
         self.edges = pyp.EdgeSequence(right, top, crotch, left).close_loop()
         bottom = self.edges[-1]
-
-        # DEBUG
-        print('Bottom: ', bottom.length(), low_width)
 
         # Default placement
         self.set_pivot(crotch.end)
