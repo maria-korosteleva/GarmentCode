@@ -16,7 +16,7 @@ design:
       range: [True, False]
       type: bool
     bottom: 
-      v: SkirtCircle
+      v: PencilSkirt
       range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, SkirtLevels]
       type: select_null
 
@@ -413,6 +413,10 @@ design:
       v: 0
       range: [0, 20]   # TODO Max = length
       type: int
+    style_side_cut:
+      v: False
+      range: [True, False]
+      type: bool
     ruffle:  # FIXME Ruffle front/back!!
       v: [False, False]   # TODO Can be True only if connected to a waist band
       range: [True, False]

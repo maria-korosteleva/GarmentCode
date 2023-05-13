@@ -5,6 +5,7 @@ import numpy as np
 
 # other assets
 from .bands import WB
+from .shapes import Sun
 
 # Panels
 class SkirtPanel(pyp.Panel):
@@ -73,6 +74,7 @@ class FittedSkirtPanel(pyp.Panel):
         low_angle=0,
         dart_position=None,  dart_frac=0.5,
         cut=0,
+        side_cut=None,
         ruffle=False) -> None:
         # TODOLOW Only the parameters that differ between front/back panels?
         """
@@ -132,6 +134,17 @@ class FittedSkirtPanel(pyp.Panel):
             self.edges.substitute(bottom, new_edges)
             bottom = int_edges
 
+        if side_cut is not None:
+            # Add a stylistic cutout to the skirt
+            new_edges, _, int_edges = pyp.ops.cut_into_edge(
+                side_cut,    
+                right, 
+                offset=right.length() / 2,   # TODO define
+                right=True)
+
+            self.edges.substitute(right, new_edges)
+            right = int_edges
+
         # Default placement
         self.top_center_pivot()
         self.translation = [-hips / 2, 5, 0]
@@ -145,41 +158,44 @@ class FittedSkirtPanel(pyp.Panel):
 
         # Add top dart 
         if not ruffle and dart_depth: 
-            # TODO: routine for multiple darts
-            # FIXME front/back darts don't appear to be located at the same position
             dart_width = w_diff - hw_shift
-            dart_shape = pyp.esf.dart_shape(dart_width, dart_depth)
-            top_edge_len = top.length()
-            top_edges, dart_edges, int_edges = pyp.ops.cut_into_edge(
-                dart_shape, 
-                top, 
-                offset=(top_edge_len / 2 - dart_position),   # from the middle of the edge
-                right=True)
-            
-            self.stitching_rules.append(
-                (pyp.Interface(self, dart_edges[0]), pyp.Interface(self, dart_edges[1])))
-
-            left_edge_len = top_edges[-1].length()
-            top_edges_2, dart_edges, int_edges_2 = pyp.ops.cut_into_edge(
-                dart_shape, 
-                top_edges[-1], 
-                offset=left_edge_len - top_edge_len / 2 + dart_position, # from the middle of the edge
-                right=True)
-
-            self.stitching_rules.append(
-                (pyp.Interface(self, dart_edges[0]), pyp.Interface(self, dart_edges[1])))
-            
-            # Update panel
-            top_edges.substitute(-1, top_edges_2)
-            int_edges.substitute(-1, int_edges_2)
-
-            self.interfaces['top'] = pyp.Interface(self, int_edges) 
-            self.edges.substitute(top, top_edges)
-
-            # Second dart
+            self.add_darts(top, dart_width, dart_depth, dart_position)
 
         else: 
-            self.interfaces['top'] = pyp.Interface(self, self.edges[1], ruffle=ruffle_rate)   
+            self.interfaces['top'] = pyp.Interface(self, self.edges[1], ruffle=ruffle_rate)  
+
+    def add_darts(self, top, dart_width, dart_depth, dart_position):
+        
+        # TODO: routine for multiple darts
+        # FIXME front/back darts don't appear to be located at the same position
+        dart_shape = pyp.esf.dart_shape(dart_width, dart_depth)
+        top_edge_len = top.length()
+        top_edges, dart_edges, int_edges = pyp.ops.cut_into_edge(
+            dart_shape, 
+            top, 
+            offset=(top_edge_len / 2 - dart_position),   # from the middle of the edge
+            right=True)
+        
+        self.stitching_rules.append(
+            (pyp.Interface(self, dart_edges[0]), pyp.Interface(self, dart_edges[1])))
+
+        left_edge_len = top_edges[-1].length()
+        top_edges_2, dart_edges, int_edges_2 = pyp.ops.cut_into_edge(
+            dart_shape, 
+            top_edges[-1], 
+            offset=left_edge_len - top_edge_len / 2 + dart_position, # from the middle of the edge
+            right=True)
+
+        self.stitching_rules.append(
+            (pyp.Interface(self, dart_edges[0]), pyp.Interface(self, dart_edges[1])))
+        
+        # Update panel
+        top_edges.substitute(-1, top_edges_2)
+        int_edges.substitute(-1, int_edges_2)
+
+        self.interfaces['top'] = pyp.Interface(self, int_edges) 
+        self.edges.substitute(top, top_edges)
+
 
 class PencilSkirt(pyp.Component):
     def __init__(self, body, design) -> None:
@@ -194,6 +210,13 @@ class PencilSkirt(pyp.Component):
             + design['length']['v'] * body['leg_length']
         )
 
+        # TODO condition
+        if design['style_side_cut']['v']:
+            depth = 0.7 * (body['hips'] / 4 - body['bust_points'] / 2)
+            style_shape = Sun(depth * 2, depth, n_rays=6, d_rays=depth*0.2)
+        else:
+            style_shape = None
+
         self.front = FittedSkirtPanel(
             f'skirt_f',   
             body['waist'] / 4, 
@@ -206,7 +229,8 @@ class PencilSkirt(pyp.Component):
             dart_position=body['bust_points'] / 2,
             dart_frac=1.7,  # Diff for front and back
             ruffle=design['ruffle']['v'][0], 
-            cut=design['front_cut']['v']
+            cut=design['front_cut']['v'], 
+            side_cut=style_shape
         ).translate_to([0, body['waist_level'], 25])
         self.back = FittedSkirtPanel(
             f'skirt_b', 
@@ -220,7 +244,8 @@ class PencilSkirt(pyp.Component):
             dart_position=body['bum_points'] / 2,
             dart_frac=1.1,   
             ruffle=design['ruffle']['v'][1],
-            cut=design['back_cut']['v']
+            cut=design['back_cut']['v'], 
+            side_cut=style_shape
         ).translate_to([0, body['waist_level'], -20])
 
         self.stitching_rules = pyp.Stitches(
