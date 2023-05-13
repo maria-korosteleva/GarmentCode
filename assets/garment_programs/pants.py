@@ -9,12 +9,17 @@ from . import bands
 # TODO Add ease
 class PantPanel(pyp.Panel):
     def __init__(
-        self, name, waist, pant_width, 
+        self, name, 
+        waist, 
+        pant_width, 
         hips_depth,
         crotch_depth, 
         length, 
         rise=1,
-        dart_position=None, ruffle=False, crotch_extention=5, crotch_angle_adj=1.) -> None:
+        dart_position=None, 
+        ruffle=False, 
+        crotch_extention=5, 
+        crotch_angle_adj=1.) -> None:
         """
             Basic pant panel with option to be fitted (with darts) or ruffled at waist area.
             
@@ -36,7 +41,7 @@ class PantPanel(pyp.Panel):
         # DRAFT dart_depth = max(dart_depth - (crotch_depth - adj_crotch_depth), 0)
 
         # eval pants shape
-        hips = pant_width + 2 * crotch_extention
+        hips = pant_width   # DRAFT + 2 * crotch_extention   # TODO Really??
         default_width = pant_width  
         # Check for ruffle
         if ruffle: 
@@ -49,39 +54,30 @@ class PantPanel(pyp.Panel):
         w_diff = default_width - adj_waist   # Assume its positive since waist is smaller then hips
         # We distribute w_diff among the side angle and a dart 
         hw_shift = w_diff / 3
-        
-        # DRAFT
-        # self.edges = pyp.esf.from_verts(
-        #     [0, adj_crotch_depth - dart_depth],
-        #     [hw_shift, adj_crotch_depth], 
-        #     [w_diff + adj_waist, adj_crotch_depth],
-        #     [w_diff + adj_waist, crotch_extention * crotch_angle_adj],
-        #     [hips, 0],
-        #     [hips - crotch_extention, - crotch_extention],
-        #     [hips - crotch_extention, -length],
-        #     [hips - 2*crotch_extention - pant_width, -length],
-        #     loop=True
-        # )
 
         # DRAFT 
-        low_width = hips * 0.7   # TODO Parameter
+        low_width = hips * 0.8   # TODO Parameter
         right = pyp.esf.curve_from_extreme(
             [(hips - low_width) / 2, 0],    
             [hw_shift, length + adj_crotch_depth],
             target_extreme=[0, length]
         )
 
-        top = pyp.Edge(right.end, [w_diff + adj_waist, length + adj_crotch_depth])
+        top = pyp.Edge(
+            right.end, 
+            [w_diff + adj_waist, length + adj_crotch_depth - 1]
+        )
 
         crotch = pyp.CurveEdge(
             top.end,
-            [hips + crotch_extention, length - 8],   # TODO Placement?
+            [hips + crotch_extention, length - 14],   # 14 TODO Placement?
             [[0.8, -0.4]]
         )
 
+        # TODO Make sure it doesn't cur above the crotch
         left = pyp.CurveEdge(
             crotch.end,
-            [hips - (hips - low_width) / 2, 0],   # TODO Placement?
+            [hips - (hips - low_width) / 2, 0],   # TODO Placement?  
             [[0.2, -0.2]]
         )
 

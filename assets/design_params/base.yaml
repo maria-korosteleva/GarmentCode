@@ -463,7 +463,7 @@ design:
       range: [True, False]
       type: bool
     crotch_extention:
-      v: 2.5   # TODO depends on measurements?
+      v: 5  # 2.5   # TODO depends on measurements?
       range: [3, 7]
       type: float
     cuff: 
