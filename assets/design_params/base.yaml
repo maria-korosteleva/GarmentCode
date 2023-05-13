@@ -16,7 +16,7 @@ design:
       range: [True, False]
       type: bool
     bottom: 
-      v: PencilSkirt
+      v: Pants
       range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, SkirtLevels]
       type: select_null
 
@@ -468,7 +468,7 @@ design:
       type: float
     cuff: 
       type:
-        v: CuffBandSkirt
+        v: null
         range: [CuffBand, CuffSkirt, CuffBandSkirt]
         type: select_null
       b_width:   # TODO naming convention with waistband

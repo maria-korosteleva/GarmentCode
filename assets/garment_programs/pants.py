@@ -39,22 +39,47 @@ class PantPanel(pyp.Panel):
         else:
             ruffle_rate = 1
 
-        # amount of extra fabric
+        # amount of extra fabric at waist
         w_diff = default_width - adj_waist   # Assume its positive since waist is smaller then hips
         # We distribute w_diff among the side angle and a dart 
         hw_shift = w_diff / 3
         
-        self.edges = pyp.esf.from_verts(
-            [0, adj_crotch_depth - dart_depth],
-            [hw_shift, adj_crotch_depth], 
-            [w_diff + adj_waist, adj_crotch_depth],
-            [w_diff + adj_waist, crotch_extention * crotch_angle_adj],
-            [hips, 0],
-            [hips - crotch_extention, - crotch_extention],
-            [hips - crotch_extention, -length],
-            [hips - 2*crotch_extention - pant_width, -length],
-            loop=True
+        # DRAFT
+        # self.edges = pyp.esf.from_verts(
+        #     [0, adj_crotch_depth - dart_depth],
+        #     [hw_shift, adj_crotch_depth], 
+        #     [w_diff + adj_waist, adj_crotch_depth],
+        #     [w_diff + adj_waist, crotch_extention * crotch_angle_adj],
+        #     [hips, 0],
+        #     [hips - crotch_extention, - crotch_extention],
+        #     [hips - crotch_extention, -length],
+        #     [hips - 2*crotch_extention - pant_width, -length],
+        #     loop=True
+        # )
+
+        # DRAFT 
+        low_width = hips * 0.7   # TODO Parameter
+        right = pyp.esf.curve_from_extreme(
+            [(hips - low_width) / 2, 0],    
+            [hw_shift, length + adj_crotch_depth],
+            target_extreme=[0, length]
         )
+        top = pyp.Edge(right.end, [w_diff + adj_waist, length + adj_crotch_depth])
+
+        crotch = pyp.CurveEdge(
+            top.end,
+            [hips + crotch_extention, length],   # TODO Placement?
+            [[0.8, -0.3]]
+        )
+
+        left = pyp.CurveEdge(
+            crotch.end,
+            [hips - (hips - low_width) / 2, 0],   # TODO Placement?
+            [[0.2, -0.2]]
+        )
+
+        self.edges = pyp.EdgeSequence(right, top, crotch, left).close_loop()
+        bottom = self.edges[-1]
 
         # Default placement
         self.top_center_pivot()
@@ -62,25 +87,26 @@ class PantPanel(pyp.Panel):
 
         # Out interfaces (easier to define before adding a dart)
         self.interfaces = {
-            'outside': pyp.Interface(self, pyp.EdgeSequence(self.edges[-1], self.edges[0])),
-            'crotch': pyp.Interface(self, self.edges[2:4]),
-            'inside': pyp.Interface(self, self.edges[4:6]),
-            'bottom': pyp.Interface(self, self.edges[-2])
+            'outside': pyp.Interface(self, right),
+            'crotch': pyp.Interface(self, crotch),
+            'inside': pyp.Interface(self, left),
+            'bottom': pyp.Interface(self, bottom)
         }
 
+        # FIXME Version with ruffles
         # Add top dart 
         if not ruffle and dart_depth: 
             dart_width = w_diff - hw_shift
             dart_shape = pyp.esf.dart_shape(dart_width, dart_depth)
             top_edges, dart_edges, int_edges = pyp.ops.cut_into_edge(
-                dart_shape, self.edges[1], offset=(hw_shift + adj_waist - dart_position), right=True)
+                dart_shape, top, offset=(hw_shift + adj_waist - dart_position), right=True)
 
-            self.edges.substitute(1, top_edges)
+            self.edges.substitute(top, top_edges)
             self.stitching_rules.append((pyp.Interface(self, dart_edges[0]), pyp.Interface(self, dart_edges[1])))
 
             self.interfaces['top'] = pyp.Interface(self, int_edges)   
         else: 
-            self.interfaces['top'] = pyp.Interface(self, self.edges[1], ruffle=ruffle_rate)   
+            self.interfaces['top'] = pyp.Interface(self, top, ruffle=ruffle_rate)   
 
 class PantsHalf(pyp.Component):
     def __init__(self, tag, body, design) -> None:
