@@ -24,6 +24,7 @@ body:
 
   hips: 81  # 83 if including a "dip" 
   hips_line: 17.4    # From the waist
-  crotch_depth: 32  #
   bum_points: 13 
+  crotch_hip_diff: 7   # NOTE vertical projection of the level
+  leg_circ: 48.7
   
