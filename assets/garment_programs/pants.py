@@ -1,3 +1,5 @@
+import svgpathtools as svgpath
+
 # Custom
 import pypattern as pyp
 
@@ -23,7 +25,8 @@ class PantPanel(pyp.Panel):
         
         # adjust for a rise
         # FIXME rise is not workting now
-        rise = design['rise']['v']
+        # TODO Refactor with new rise calculations
+        rise = 1.   # DRAFT design['rise']['v']
         adj_hips_depth = rise * hips_depth
         adj_waist = pant_width - rise * (pant_width - waist)
         dart_depth = adj_hips_depth * 0.8 
@@ -56,7 +59,7 @@ class PantPanel(pyp.Panel):
 
         top = pyp.Edge(
             right.end, 
-            [w_diff + adj_waist, length + adj_hips_depth]  # small angle  # DRAFT -1
+            [w_diff + adj_waist, length + adj_hips_depth] 
         )
 
         crotch = pyp.CurveEdge(
@@ -64,6 +67,13 @@ class PantPanel(pyp.Panel):
             [pant_width + crotch_extention, length - crotch_depth_diff], 
             [[0.9, -0.3]]    # NOTE: relative contols allow adaptation to different bodies
         )
+
+        # Apply the rise
+        # NOTE applying rise here for correctly collecting the edges
+        rise = design['rise']['v']
+        if not pyp.utils.close_enough(rise, 1.):
+            new_level = top.end[1] - (1 - rise) * hips_depth
+            right, top, crotch = self.apply_rise(new_level, right, top, crotch)
 
         left = pyp.CurveEdge(
             crotch.end,
@@ -99,6 +109,30 @@ class PantPanel(pyp.Panel):
             self.interfaces['top'] = pyp.Interface(self, int_edges)   
         else: 
             self.interfaces['top'] = pyp.Interface(self, top, ruffle=ruffle_rate)   
+
+    def apply_rise(self, level, right, top, crotch):
+
+        # TODO This is an operator
+        right_c, crotch_c = right.as_curve(), crotch.as_curve()
+        cutout = svgpath.Line(0 + 1j*level, crotch.end[0] + 1j*level)
+
+        right_intersect = right_c.intersect(cutout)[0]
+        right_cut = right_c.cropped(0, right_intersect[0])
+        new_right = pyp.CurveEdge.from_svg_curve(right_cut)
+
+        c_intersect = crotch_c.intersect(cutout)[0]
+        c_cut = crotch_c.cropped(c_intersect[0], 1)
+        new_crotch = pyp.CurveEdge.from_svg_curve(c_cut)
+
+        # DEBUG
+        print(right_intersect)
+        print(c_intersect)
+
+        new_top = pyp.Edge(new_right.end, new_crotch.start)
+
+        return new_right, new_top, new_crotch
+
+
 
 class PantsHalf(pyp.Component):
     def __init__(self, tag, body, design) -> None:

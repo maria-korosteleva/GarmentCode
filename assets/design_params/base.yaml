@@ -455,7 +455,7 @@ design:
       range: [0.5, 1.5]   # 1 = same as hips
       type: float
     rise:
-      v: 1.
+      v: 0.8
       range: [0.5, 1]
       type: float
     ruffle_front:
