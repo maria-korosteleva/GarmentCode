@@ -27,7 +27,7 @@ design:
       type: float
     width: 
       v: 3
-      range: [3, 15]
+      range: [1, 15]
       type: float
 
   bodice: 
@@ -85,7 +85,7 @@ design:
       type: int
     width: 
       v: 16  # 18
-      range: [18, 30]   # TODO min is a neck width
+      range: [10, 30]   # TODO min is a neck width
       type: int
     style: 
       v: SimpleLapel
@@ -163,7 +163,7 @@ design:
       #  type: int
       b_depth: 
         v: 3
-        range: [3, 20]
+        range: [1, 20]
         type: int
       skirt_length: 
         v: 10
@@ -241,7 +241,7 @@ design:
         type: int
       width: 
         v: 10  # 18
-        range: [18, 30]   # TODO min is a neck width
+        range: [10, 30]   # TODO min is a neck width
         type: int
       
     sleeve:
@@ -313,7 +313,7 @@ design:
         #  type: int
         b_depth: 
           v: 3
-          range: [3, 20]
+          range: [1, 20]
           type: int
         skirt_length: 
           v: 10
@@ -331,7 +331,7 @@ design:
   skirt: 
     length:
       v: 30
-      range: [5, 100]
+      range: [5, 150]
       type: int
     ruffle: 
       v: 1.5
@@ -493,7 +493,7 @@ design:
         type: int
       b_depth: 
         v: 10
-        range: [3, 20]
+        range: [1, 20]
         type: int
       skirt_length: 
         v: 10
