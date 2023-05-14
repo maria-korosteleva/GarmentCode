@@ -13,7 +13,7 @@ class BaseComponent():
 
         # List or dictionary of the interfaces of this components
         # available for connectivity with other components
-        self.interfaces = []
+        self.interfaces = {}
 
         # Rules for connecting subcomponents
         self.stitching_rules = Stitches()

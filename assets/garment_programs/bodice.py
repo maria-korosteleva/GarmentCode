@@ -164,20 +164,39 @@ class BodiceHalf(pyp.Component):
         else:
             # Sleeves and collars 
             self.add_sleeves(name, body, design)
-            self.add_collars(body, design)
-            self.stitching_rules.append((self.ftorso.interfaces['shoulder'], self.btorso.interfaces['shoulder']))  # tops
+            self.add_collars(name, body, design)
+            self.stitching_rules.append((
+                self.ftorso.interfaces['shoulder'], 
+                self.btorso.interfaces['shoulder']))  # tops
 
         # Main connectivity
         self.stitching_rules.append((self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
 
-        self.interfaces = {
-            'front_in': self.ftorso.interfaces['inside'],
-            'back_in': self.btorso.interfaces['inside'],
-
+        # Interfaces
+        self.interfaces.update({
             'f_bottom': self.ftorso.interfaces['bottom_front'],
             'b_bottom': pyp.Interface.from_multiple(
                 self.btorso.interfaces['bottom'], self.ftorso.interfaces['bottom_back'])
-        }
+        })
+        # DRAFT 
+        #  self.interfaces = {
+        #     'front_in': self.ftorso.interfaces['inside'],
+        #     'back_in': self.btorso.interfaces['inside'],
+
+        if 'front_collar' in self.interfaces:
+            self.interfaces['front_in'] = pyp.Interface.from_multiple(
+                self.ftorso.interfaces['inside'], self.interfaces['front_collar']
+            )
+        else:
+            self.interfaces['front_in'] = self.ftorso.interfaces['inside']
+
+        if 'back_collar' in self.interfaces:
+            self.interfaces['back_in'] = pyp.Interface.from_multiple(
+                self.btorso.interfaces['inside'], self.interfaces['back_collar']
+            )
+        else:
+            self.interfaces['back_in'] = self.btorso.interfaces['inside']
+
 
     def add_sleeves(self, name, body, design):
 
@@ -209,7 +228,7 @@ class BodiceHalf(pyp.Component):
                 gap=7
             )
     
-    def add_collars(self, body, design):
+    def add_collars(self, name, body, design):
         # TODO collars with extra panels!
 
         # Collar depth is given w.r.t. length.
@@ -225,7 +244,7 @@ class BodiceHalf(pyp.Component):
             design['collar']['fc_depth']['v'] + f_depth_adj, 
             width, 
             angle=design['collar']['fc_angle']['v'])
-        pyp.ops.cut_corner(f_collar, self.ftorso.interfaces['collar_corner'])
+        fc_edges, fc_interface = pyp.ops.cut_corner(f_collar, self.ftorso.interfaces['collar_corner'])
 
         # Back
         collar_type = getattr(collars, design['collar']['b_collar']['v'])
@@ -233,7 +252,27 @@ class BodiceHalf(pyp.Component):
             design['collar']['bc_depth']['v'] + b_depth_adj, 
             width, 
             angle=design['collar']['bc_angle']['v'])
-        pyp.ops.cut_corner(b_collar, self.btorso.interfaces['collar_corner'])
+        bc_edges, bc_interface = pyp.ops.cut_corner(b_collar, self.btorso.interfaces['collar_corner'])
+
+        # Add some panels?
+        if design['collar']['style']['v'] is not None:
+            collar_style = getattr(collars, design['collar']['style']['v'])
+            self.collar_comp = collar_style(
+                name, body, fc_edges.length() + bc_edges.length()
+            )
+
+            # TODO What if it's strappless?
+            self.stitching_rules.append((
+                pyp.Interface.from_multiple(fc_interface, bc_interface), 
+                self.collar_comp.interfaces['bottom']
+            ))
+
+            # Additional interfaces
+            # TODO No front or back interface? 
+            self.interfaces.update({
+                'front_collar': self.collar_comp.interfaces['front'],
+                'back_collar': self.collar_comp.interfaces['back'],
+            })
 
     def make_strapless(self, design):
 
@@ -268,8 +307,11 @@ class Shirt(pyp.Component):
         super().__init__(name_with_params)
 
         self.right = BodiceHalf(f'right', body, design, fitted=fitted)
-        if design['left']['enable_asym']['v']:
-            self.left = BodiceHalf(f'left', body, design['left'], fitted=fitted).mirror()
+            
+        self.left = BodiceHalf(
+            f'left', body, 
+            design['left'] if design['left']['enable_asym']['v'] else design, 
+            fitted=fitted).mirror()
 
         self.stitching_rules.append((self.right.interfaces['front_in'], self.left.interfaces['front_in']))
         self.stitching_rules.append((self.right.interfaces['back_in'], self.left.interfaces['back_in']))

@@ -1,7 +1,12 @@
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 # Custom
 import pypattern as pyp
+
+# Other assets
+
+from .bands import BandPanel
 
 
 # Collar shapes withough extra panels
@@ -66,3 +71,72 @@ def CircleNeckHalf(depth, width, **kwargs):
     subdiv = circle.subdivide_len([0.5, 0.5])
 
     return pyp.EdgeSequence(subdiv[0])
+
+
+# # ------ Collars with panels ------
+
+class Turtle(pyp.Component):
+
+    def __init__(self, tag, body, length, depth=5) -> None:
+        super().__init__(f'Turtle_{tag}')
+
+        # TODO Depth is a parameter though!
+        self.panel = BandPanel(f'{tag}_turtle_p', length, depth)
+
+        self.interfaces = {
+            'bottom': self.panel.interfaces['bottom'],
+            'front': self.panel.interfaces['left'],
+            'back': self.panel.interfaces['right']
+        }
+
+        self.panel.top_center_pivot()
+        self.translate_to([-body['neck_w'] / 2, body['height'] - body['head_l'] + depth, 0])
+        self.rotate_by(R.from_euler('XYZ', [0, 90, 0], True))  # TODO rotation sign?
+
+
+# DRAFT
+# class TurtleNeckHalf(pyp.Component):
+#     """Classic Turtleneck"""
+
+#     def __init__(self, body, design) -> None:
+#         super().__init__('TurtleNeck')
+
+#         design = design['collar']
+
+#         # Collar depth is given w.r.t. length.
+#         # adjust for the shoulder inclination
+#         width = design['collar']['width']['v']
+#         tg = np.tan(np.deg2rad(body['shoulder_incl']))
+#         f_depth_adj = tg * (self.ftorso.width - width / 2)
+#         b_depth_adj = tg * (self.btorso.width - width / 2)
+
+#         # Front
+#         collar_type = globals()[design['collar']['f_collar']['v']]
+#         f_collar = collar_type(
+#             design['collar']['fc_depth']['v'] + f_depth_adj, 
+#             width, 
+#             angle=design['collar']['fc_angle']['v'])
+#         pyp.ops.cut_corner(f_collar, self.ftorso.interfaces['collar_corner'])
+
+#         # Back
+#         collar_type = getattr(collars, design['collar']['b_collar']['v'])
+#         b_collar = collar_type(
+#             design['collar']['bc_depth']['v'] + b_depth_adj, 
+#             width, 
+#             angle=design['collar']['bc_angle']['v'])
+#         pyp.ops.cut_corner(b_collar, self.btorso.interfaces['collar_corner'])
+
+#         # Panels
+#         self.panel = BandPanel()
+
+#         # Connect
+
+#         # Projected shape
+
+#         # TODO Use collars with panels in Bodice block
+
+#         # TODO Combine with strapless option for cool effect!
+
+
+
+

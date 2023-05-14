@@ -8,7 +8,7 @@
 design: 
   meta: 
     upper: 
-      v: False
+      v: Shirt
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
@@ -16,7 +16,7 @@ design:
       range: [True, False]
       type: bool
     bottom: 
-      v: Pants
+      v: null
       range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, SkirtLevels]
       type: select_null
 
@@ -36,7 +36,7 @@ design:
       range: [0, 3]
       type: float
     strapless:    # Both for fitted and non-fitted shirts
-      v: True
+      v: False
       range: [True, False]
       type: bool
 
@@ -60,15 +60,19 @@ design:
 
   collar:
     f_collar: 
-      v: CurvyNeckHalf
+      v: CircleNeckHalf
       range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf]
       type: select_null
     b_collar: 
       v: CircleNeckHalf
       range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf]
       type: select_null
+    style: 
+      v: Turtle
+      range: [Turtle]
+      type: select_null
     fc_depth:   # Front collar depth
-      v: 20
+      v: 10
       range: [3, 25]
       type: int
     bc_depth:   # back collar depth
@@ -90,7 +94,7 @@ design:
     
   sleeve:
     sleeveless: 
-      v: False
+      v: True
       range: [True, False]
       type: bool
     length: 
@@ -172,7 +176,7 @@ design:
 
   left:   # If this section is not defined, the garment will be symmetric by default
     enable_asym: 
-      v: True    # True == create asymmetric top
+      v: False    # True == create asymmetric top
       range: [True, False]
       type: bool
     bodice: 
@@ -210,6 +214,10 @@ design:
       b_collar: 
         v: VNeckHalf
         range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf]
+        type: select_null
+      style: 
+        v: Turtle
+        range: [Turtle]
         type: select_null
       fc_depth:   # Front collar depth
         v: 20
