@@ -87,14 +87,20 @@ design:
       v: 16  # 18
       range: [10, 30]   # TODO min is a neck width
       type: int
-    style: 
-      v: SimpleLapel
-      range: [Turtle, SimpleLapel]
-      type: select_null
-    style_depth: 
-      v: 7
-      range: [2, 8]
-      type: int
+    component:
+      style: 
+        v: SimpleLapel
+        range: [Turtle, SimpleLapel]
+        type: select_null
+      depth: 
+        v: 7
+        range: [2, 8]
+        type: int
+      lapel_standing:
+        v: False
+        range: [True, False]
+        type: bool
+    
     
   sleeve:
     sleeveless: 

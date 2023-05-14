@@ -255,8 +255,8 @@ class BodiceHalf(pyp.Component):
         # Add a collar component
         # NOTE: Here we are experimenting with an alternative to sleeve architecture
         # Collar projection and collar shape are defined independently
-        if design['collar']['style']['v'] is not None:
-            collar_style = getattr(collars, design['collar']['style']['v'])
+        if design['collar']['component']['style']['v'] is not None:
+            collar_style = getattr(collars, design['collar']['component']['style']['v'])
             self.collar_comp = collar_style(
                 name, body, design, fc_edges.length(), bc_edges.length()
             )

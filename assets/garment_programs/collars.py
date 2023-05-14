@@ -7,6 +7,7 @@ import pypattern as pyp
 # Other assets
 
 from .bands import BandPanel
+from .circle_skirt import CircleArcPanel
 
 
 # Collar shapes withough extra panels
@@ -80,7 +81,7 @@ class Turtle(pyp.Component):
     def __init__(self, tag, body, design, length_f, length_b) -> None:
         super().__init__(f'Turtle_{tag}')
 
-        depth = design['collar']['style_depth']['v']
+        depth = design['collar']['component']['depth']['v']
 
         height_p = body['height'] - body['head_l'] + depth
         self.front = BandPanel(
@@ -131,14 +132,26 @@ class SimpleLapel(pyp.Component):
     def __init__(self, tag, body, design, length_f, length_b) -> None:
         super().__init__(f'Turtle_{tag}')
 
-        depth = design['collar']['style_depth']['v']
+        depth = design['collar']['component']['depth']['v']
+        standing = design['collar']['component']['lapel_standing']['v']
 
         # TODO Place correctly on a side
         height_p = body['height'] - body['head_l'] + depth * 2
+        
         self.front = SimpleLapelPanel(
             f'{tag}_lapel_front', length_f, depth).translate_by([-length_f / 2, height_p, 30])
-        self.back = BandPanel(
-            f'{tag}_lapel_back', length_b, depth).translate_by([-length_b / 2, height_p, -10])
+
+        if standing:
+            self.back = BandPanel(
+                f'{tag}_lapel_back', length_b, depth).translate_by([-length_b / 2, height_p, -10])
+        else:
+            # TODO Add a curved back panel
+            rad = length_f / (np.pi / 2)
+            self.back = CircleArcPanel(
+                f'{tag}_lapel_back', rad, depth, np.pi / 2
+            ).translate_by([-length_b, height_p, -10])
+            self.back.rotate_by(R.from_euler('XYZ', [90, 45, 0], degrees=True))
+
 
         self.stitching_rules.append((
             self.front.interfaces['to_collar'], 
