@@ -80,25 +80,25 @@ class Turtle(pyp.Component):
     def __init__(self, tag, body, design, length_f, length_b) -> None:
         super().__init__(f'Turtle_{tag}')
 
-        depth = design['style_depth']['v']
+        depth = design['collar']['style_depth']['v']
 
-        height_p = body['height'] - body['head_l'] + depth * 2
+        height_p = body['height'] - body['head_l'] + depth
         self.front = BandPanel(
             f'{tag}_turtle_front', length_f, depth).translate_by([-length_f / 2, height_p, 10])
         self.back = BandPanel(
             f'{tag}_turtle_back', length_b, depth).translate_by([-length_b / 2, height_p, -10])
 
         self.stitching_rules.append((
-            self.front.interfaces['left'], 
-            self.back.interfaces['left']
+            self.front.interfaces['right'], 
+            self.back.interfaces['right']
         ))
 
         self.interfaces = {
-            'front': self.front.interfaces['right'],
-            'back': self.back.interfaces['right'],
+            'front': self.front.interfaces['left'],
+            'back': self.back.interfaces['left'],
             'bottom': pyp.Interface.from_multiple(
                 self.front.interfaces['bottom'],
-                self.back.interfaces['bottom'],
+                self.back.interfaces['bottom']
             )
         }
 

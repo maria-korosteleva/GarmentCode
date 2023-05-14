@@ -72,7 +72,7 @@ design:
       range: [3, 25]
       type: int
     bc_depth:   # back collar depth
-      v: 2
+      v: 0
       range: [3, 25]
       type: int
     fc_angle:    # Used in Trapesoid and CircleArc collars (differently)
@@ -92,8 +92,8 @@ design:
       range: [Turtle]
       type: select_null
     style_depth: 
-      v: 10
-      range: [2, 10]
+      v: 7
+      range: [2, 8]
       type: int
     
   sleeve:

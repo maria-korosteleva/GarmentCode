@@ -269,9 +269,9 @@ class BodiceHalf(pyp.Component):
 
             # Additional interfaces
             if 'front' in self.collar_comp.interfaces:
-                self.interfaces['front_collar'] = self.collar_comp.interfaces['front'],
+                self.interfaces['front_collar'] = self.collar_comp.interfaces['front']
             if 'back' in self.collar_comp.interfaces:
-                self.interfaces['back_collar'] = self.collar_comp.interfaces['back'],
+                self.interfaces['back_collar'] = self.collar_comp.interfaces['back']
 
     def make_strapless(self, design):
 
