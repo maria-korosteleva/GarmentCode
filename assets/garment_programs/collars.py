@@ -111,10 +111,6 @@ class SimpleLapelPanel(pyp.Panel):
             [0, 0], [max_depth, 0], [max_depth, -length]
         )
 
-        # DEBUG
-        print(name)
-        print(self.edges)
-
         self.edges.append(
             pyp.CurveEdge(
                 self.edges[-1].end, 
@@ -140,9 +136,9 @@ class SimpleLapel(pyp.Component):
         # TODO Place correctly on a side
         height_p = body['height'] - body['head_l'] + depth * 2
         self.front = SimpleLapelPanel(
-            f'{tag}_turtle_front', length_f, depth).translate_by([-length_f / 2, height_p, 25])
+            f'{tag}_lapel_front', length_f, depth).translate_by([-length_f / 2, height_p, 25])
         self.back = BandPanel(
-            f'{tag}_turtle_back', length_b, depth).translate_by([-length_b / 2, height_p, -10])
+            f'{tag}_lapel_back', length_b, depth).translate_by([-length_b / 2, height_p, -10])
 
         self.stitching_rules.append((
             self.front.interfaces['to_collar'], 
