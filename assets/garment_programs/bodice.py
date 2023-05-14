@@ -167,7 +167,8 @@ class BodiceHalf(pyp.Component):
             self.add_collars(name, body, design)
             self.stitching_rules.append((
                 self.ftorso.interfaces['shoulder'], 
-                self.btorso.interfaces['shoulder']))  # tops
+                self.btorso.interfaces['shoulder']
+            ))  # tops
 
         # Main connectivity
         self.stitching_rules.append((self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
@@ -178,11 +179,8 @@ class BodiceHalf(pyp.Component):
             'b_bottom': pyp.Interface.from_multiple(
                 self.btorso.interfaces['bottom'], self.ftorso.interfaces['bottom_back'])
         })
-        # DRAFT 
-        #  self.interfaces = {
-        #     'front_in': self.ftorso.interfaces['inside'],
-        #     'back_in': self.btorso.interfaces['inside'],
 
+        # TODO Move to the add_collar function??
         if 'front_collar' in self.interfaces:
             self.interfaces['front_in'] = pyp.Interface.from_multiple(
                 self.ftorso.interfaces['inside'], self.interfaces['front_collar']
@@ -254,11 +252,13 @@ class BodiceHalf(pyp.Component):
             angle=design['collar']['bc_angle']['v'])
         bc_edges, bc_interface = pyp.ops.cut_corner(b_collar, self.btorso.interfaces['collar_corner'])
 
-        # Add some panels?
+        # Add a collar component
+        # NOTE: Here we are experimenting with an alternative to sleeve architecture
+        # Collar projection and collar shape are defined independently
         if design['collar']['style']['v'] is not None:
             collar_style = getattr(collars, design['collar']['style']['v'])
             self.collar_comp = collar_style(
-                name, body, fc_edges.length() + bc_edges.length()
+                name, body, design, fc_edges.length(), bc_edges.length()
             )
 
             # TODO What if it's strappless?
@@ -268,11 +268,10 @@ class BodiceHalf(pyp.Component):
             ))
 
             # Additional interfaces
-            # TODO No front or back interface? 
-            self.interfaces.update({
-                'front_collar': self.collar_comp.interfaces['front'],
-                'back_collar': self.collar_comp.interfaces['back'],
-            })
+            if 'front' in self.collar_comp.interfaces:
+                self.interfaces['front_collar'] = self.collar_comp.interfaces['front'],
+            if 'back' in self.collar_comp.interfaces:
+                self.interfaces['back_collar'] = self.collar_comp.interfaces['back'],
 
     def make_strapless(self, design):
 

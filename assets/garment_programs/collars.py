@@ -77,27 +77,40 @@ def CircleNeckHalf(depth, width, **kwargs):
 
 class Turtle(pyp.Component):
 
-    def __init__(self, tag, body, length, depth=5) -> None:
+    def __init__(self, tag, body, design, length_f, length_b) -> None:
         super().__init__(f'Turtle_{tag}')
 
-        # TODO Depth is a parameter though!
-        self.panel = BandPanel(f'{tag}_turtle_p', length, depth)
+        depth = design['style_depth']['v']
+
+        height_p = body['height'] - body['head_l'] + depth * 2
+        self.front = BandPanel(
+            f'{tag}_turtle_front', length_f, depth).translate_by([-length_f / 2, height_p, 10])
+        self.back = BandPanel(
+            f'{tag}_turtle_back', length_b, depth).translate_by([-length_b / 2, height_p, -10])
+
+        self.stitching_rules.append((
+            self.front.interfaces['left'], 
+            self.back.interfaces['left']
+        ))
 
         self.interfaces = {
-            'bottom': self.panel.interfaces['bottom'].reverse(True),
-            'front': self.panel.interfaces['left'],
-            'back': self.panel.interfaces['right']
+            'front': self.front.interfaces['right'],
+            'back': self.back.interfaces['right'],
+            'bottom': pyp.Interface.from_multiple(
+                self.front.interfaces['bottom'],
+                self.back.interfaces['bottom'],
+            )
         }
 
-        self.panel.top_center_pivot()
-        self.translate_to(
-            [
-                -body['neck_w'] / 2, 
-                body['height'] - body['head_l'] + depth * 2, 
-                0
-            ]
-        )
-        self.rotate_by(R.from_euler('XYZ', [0, 90, 0], True))  # TODO rotation sign?
+        # DRAFT self.panel.top_center_pivot()
+        # self.translate_to(
+        #     [
+        #         -body['neck_w'] / 2, 
+        #         body['height'] - body['head_l'] + depth * 2, 
+        #         0
+        #     ]
+        # )
+        # self.rotate_by(R.from_euler('XYZ', [0, 90, 0], True))  # TODO rotation sign?
 
 
 # DRAFT

@@ -67,10 +67,6 @@ design:
       v: CircleNeckHalf
       range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf]
       type: select_null
-    style: 
-      v: Turtle
-      range: [Turtle]
-      type: select_null
     fc_depth:   # Front collar depth
       v: 4
       range: [3, 25]
@@ -90,6 +86,14 @@ design:
     width: 
       v: 16  # 18
       range: [18, 30]   # TODO min is a neck width
+      type: int
+    style: 
+      v: Turtle
+      range: [Turtle]
+      type: select_null
+    style_depth: 
+      v: 10
+      range: [2, 10]
       type: int
     
   sleeve:
