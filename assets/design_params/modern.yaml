@@ -100,13 +100,13 @@ design:
       - null
       type: select_null
     fc_depth:
-      v: 6
+      v: 5
       range:
       - 3
       - 25
       type: int
     bc_depth:
-      v: 7
+      v: 6
       range:
       - 3
       - 25
@@ -124,10 +124,18 @@ design:
       - 180
       type: int
     width:
-      v: 25
+      v: 20  # DEBUG 25
       range:
       - 18
       - 30
+      type: int
+    style: 
+      v: null
+      range: [Turtle, SimpleLapel]
+      type: select_null
+    style_depth: 
+      v: 7
+      range: [2, 8]
       type: int
   sleeve:
     sleeveless:
@@ -143,9 +151,9 @@ design:
       - 80
       type: int
     connecting_width:
-      v: 20
+      v: 16  # DEBUG 20
       range:
-      - 20
+      - 13
       - 40
       type: int
     end_width:
@@ -306,13 +314,13 @@ design:
         - null
         type: select_null
       fc_depth:
-        v: 6
+        v: 5
         range:
         - 3
         - 25
         type: int
       bc_depth:
-        v: 7
+        v: 6
         range:
         - 3
         - 25
@@ -349,9 +357,9 @@ design:
         - 100
         type: int
       connecting_width:
-        v: 20
+        v: 16  # DEBUG 20
         range:
-        - 20
+        - 13
         - 40
         type: int
       end_width:
@@ -481,7 +489,7 @@ design:
       - 15
       type: int
     suns:
-      v: 0.25
+      v: 0.3 # DEBUG 0.25
       range:
       - 0.5
       - 1.95

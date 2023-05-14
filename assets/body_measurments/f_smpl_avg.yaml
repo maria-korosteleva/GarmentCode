@@ -6,7 +6,6 @@ body:
 
   neck_w: 18
   sholder_w: 38
-  arm_width: 40
   armscye_depth: 20  # Nape of the Neck to armscye depth on the back
   shoulder_incl: 10  # degrees
 

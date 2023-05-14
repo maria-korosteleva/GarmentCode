@@ -61,12 +61,10 @@ class SkirtCircle(pyp.Component):
         self.front = CircleArcPanel(
             f'front_{tag}' if tag else 'front', 
             waist_rad, length, arc / 2).translate_by([0, body['waist_level'], 15])
-        self.front.rotate_to(R.from_euler('XYZ', [-40, 0, 0], degrees=True))
 
         self.back = CircleArcPanel(
             f'back_{tag}'  if tag else 'back', 
             waist_rad, length, arc / 2).translate_by([0, body['waist_level'], -15])
-        self.back.rotate_to(R.from_euler('XYZ', [40, 0, 0], degrees=True))
 
         # Add a cut
         if design['cut']['add']['v']:
