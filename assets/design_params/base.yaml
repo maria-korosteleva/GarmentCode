@@ -60,7 +60,7 @@ design:
 
   collar:
     f_collar: 
-      v: CircleNeckHalf
+      v: VNeckHalf
       range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf]
       type: select_null
     b_collar: 
@@ -68,7 +68,7 @@ design:
       range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf]
       type: select_null
     fc_depth:   # Front collar depth
-      v: 15
+      v: 7
       range: [3, 25]
       type: int
     bc_depth:   # back collar depth
