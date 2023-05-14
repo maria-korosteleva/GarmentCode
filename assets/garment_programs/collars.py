@@ -84,13 +84,19 @@ class Turtle(pyp.Component):
         self.panel = BandPanel(f'{tag}_turtle_p', length, depth)
 
         self.interfaces = {
-            'bottom': self.panel.interfaces['bottom'],
+            'bottom': self.panel.interfaces['bottom'].reverse(True),
             'front': self.panel.interfaces['left'],
             'back': self.panel.interfaces['right']
         }
 
         self.panel.top_center_pivot()
-        self.translate_to([-body['neck_w'] / 2, body['height'] - body['head_l'] + depth, 0])
+        self.translate_to(
+            [
+                -body['neck_w'] / 2, 
+                body['height'] - body['head_l'] + depth * 2, 
+                0
+            ]
+        )
         self.rotate_by(R.from_euler('XYZ', [0, 90, 0], True))  # TODO rotation sign?
 
 
