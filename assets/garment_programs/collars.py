@@ -102,4 +102,60 @@ class Turtle(pyp.Component):
             )
         }
 
+class SimpleLapelPanel(pyp.Panel):
+    """A panel for the front part of simple Lapel"""
+    def __init__(self, name, length, max_depth) -> None:
+        super().__init__(name)
+
+        self.edges = pyp.esf.from_verts(
+            [0, 0], [max_depth, 0], [max_depth, -length]
+        )
+
+        # DEBUG
+        print(name)
+        print(self.edges)
+
+        self.edges.append(
+            pyp.CurveEdge(
+                self.edges[-1].end, 
+                self.edges[0].start, 
+                [[0.7, 0.2]]
+            )
+        )
+
+        self.interfaces = {
+            'to_collar': pyp.Interface(self, self.edges[0]),
+            'to_bodice': pyp.Interface(self, self.edges[1])
+        }
+
+
+
+class SimpleLapel(pyp.Component):
+
+    def __init__(self, tag, body, design, length_f, length_b) -> None:
+        super().__init__(f'Turtle_{tag}')
+
+        depth = design['collar']['style_depth']['v']
+
+        # TODO Place correctly on a side
+        height_p = body['height'] - body['head_l'] + depth * 2
+        self.front = SimpleLapelPanel(
+            f'{tag}_turtle_front', length_f, depth).translate_by([-length_f / 2, height_p, 25])
+        self.back = BandPanel(
+            f'{tag}_turtle_back', length_b, depth).translate_by([-length_b / 2, height_p, -10])
+
+        self.stitching_rules.append((
+            self.front.interfaces['to_collar'], 
+            self.back.interfaces['left']
+        ))
+
+        self.interfaces = {
+            #'front': NOTE: no front interface here
+            'back': self.back.interfaces['right'],
+            'bottom': pyp.Interface.from_multiple(
+                self.front.interfaces['to_bodice'],
+                self.back.interfaces['bottom'],
+            )
+        }
+
 
