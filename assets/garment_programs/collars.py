@@ -145,8 +145,8 @@ class SimpleLapel(pyp.Component):
             self.back = BandPanel(
                 f'{tag}_lapel_back', length_b, depth).translate_by([-length_b / 2, height_p, -10])
         else:
-            # TODO Add a curved back panel
-            rad = length_f / (np.pi / 2)
+            # A curved back panel
+            rad = length_b / (np.pi / 2)
             self.back = CircleArcPanel(
                 f'{tag}_lapel_back', rad, depth, np.pi / 2
             ).translate_by([-length_b, height_p, -10])

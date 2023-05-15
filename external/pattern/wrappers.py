@@ -345,7 +345,7 @@ class VisPattern(core.ParametrizedPattern):
         ax.set_aspect('equal')
         fig.savefig(png_filename, dpi=300, transparent=False)
         # DEBUG 
-        plt.show()
+        # plt.show()
 
 
 class RandomPattern(VisPattern):
