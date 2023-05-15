@@ -139,7 +139,7 @@ class SimpleLapel(pyp.Component):
         height_p = body['height'] - body['head_l'] + depth * 2
         
         self.front = SimpleLapelPanel(
-            f'{tag}_lapel_front', length_f, depth).translate_by([-length_f / 2, height_p, 30])
+            f'{tag}_lapel_front', length_f, depth).translate_by([-depth * 2, height_p, 30])
 
         if standing:
             self.back = BandPanel(

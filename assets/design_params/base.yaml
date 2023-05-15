@@ -68,12 +68,12 @@ design:
       range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf]
       type: select_null
     fc_depth:   # Front collar depth
-      v: 7
-      range: [3, 25]
+      v: 25
+      range: [0, 50]
       type: int
     bc_depth:   # back collar depth
-      v: 0
-      range: [3, 25]
+      v: 3
+      range: [0, 50]
       type: int
     fc_angle:    # Used in Trapesoid and CircleArc collars (differently)
       v: 90
@@ -230,12 +230,12 @@ design:
         range: [Turtle]
         type: select_null
       fc_depth:   # Front collar depth
-        v: 20
-        range: [3, 25]
+        v: 7
+        range: [0, 50]
         type: int
       bc_depth:   # back collar depth
         v: 4
-        range: [3, 25]
+        range: [0, 50]
         type: int
       fc_angle:    # Used in Trapesoid and CircleArc collars (differently)
         v: 90
