@@ -155,15 +155,15 @@ class SimpleLapel(pyp.Component):
 
         self.stitching_rules.append((
             self.front.interfaces['to_collar'], 
-            self.back.interfaces['right']
+            self.back.interfaces['right'] if standing else self.back.interfaces['left']
         ))
 
         self.interfaces = {
             #'front': NOTE: no front interface here
-            'back': self.back.interfaces['left'],
+            'back': self.back.interfaces['left'] if standing else self.back.interfaces['right'],
             'bottom': pyp.Interface.from_multiple(
                 self.front.interfaces['to_bodice'],
-                self.back.interfaces['bottom'],
+                self.back.interfaces['bottom'] if standing else self.back.interfaces['top'],
             )
         }
 
