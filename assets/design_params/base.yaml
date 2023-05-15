@@ -89,7 +89,7 @@ design:
       type: int
     component:
       style: 
-        v: SimpleLapel
+        v: null
         range: [Turtle, SimpleLapel]
         type: select_null
       depth: 
