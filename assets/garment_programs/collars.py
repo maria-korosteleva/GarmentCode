@@ -146,6 +146,9 @@ class SimpleLapel(pyp.Component):
                 f'{tag}_lapel_back', length_b, depth).translate_by([-length_b / 2, height_p, -10])
         else:
             # A curved back panel
+            # TODO Follow the collar properly
+            # TODO WE need similar architecture to sleeves -- defining projection
+            # within collars themselves
             rad = length_b / (np.pi / 2)
             self.back = CircleArcPanel(
                 f'{tag}_lapel_back', rad, depth, np.pi / 2
