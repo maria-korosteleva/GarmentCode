@@ -25,9 +25,7 @@ class PantPanel(pyp.Panel):
         dart_depth = hips_depth * 0.8 
 
         # Crotch cotrols
-        # TODO Debug for body tranfser
-        # DRAFT 14
-        crotch_depth_diff =  body['crotch_hip_diff']  * 2  # NOTE: 2 is a heristic 
+        crotch_depth_diff =  body['crotch_hip_diff']
         crotch_extention = body['leg_circ'] / 2 - body['hips'] / 4
 
         # eval pants shape

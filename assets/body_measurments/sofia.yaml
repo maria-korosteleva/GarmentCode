@@ -22,6 +22,9 @@ body:
 
   hips: 118.7  
   hips_line: 17.3   # From the waist
-  crotch_depth: 34.5   # 28 + 3.5 + 3 (in-between)
   bum_points: 16.2
+
+  # TODO Update the measurement!
+  crotch_hip_diff: 8   # NOTE vertical projection of the level
+  leg_circ: 49
   
