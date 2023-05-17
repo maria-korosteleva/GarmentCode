@@ -64,13 +64,13 @@ design:
       range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf]
       type: select_null
     fc_depth:   # Front collar depth
-      v: 7
-      range: [0, 50]
-      type: int
+      v: 0.5
+      range: [0, 1]   # 0 = min possible, 1 = bust line
+      type: float
     bc_depth:   # back collar depth
-      v: 3
-      range: [0, 50]
-      type: int
+      v: 0
+      range: [0, 1]   # 0 = min possible, 1 = bust line
+      type: float
     fc_angle:    # Used in Trapesoid and CircleArc collars (differently)
       v: 90
       range: [30, 180]
@@ -80,9 +80,9 @@ design:
       range: [30, 180]
       type: int
     width: 
-      v: 16  # 18
-      range: [10, 30]   # TODO min is a neck width
-      type: int
+      v: 0.5
+      range: [0, 1]   # 0 = a neck width, 1 = max possible width
+      type: float
     component:
       style: 
         v: null
@@ -117,7 +117,7 @@ design:
       type: float
     # Armhole
     armhole_shape: 
-      v: ArmholeCurve
+      v: ArmholeSquare
       range: [ArmholeSquare, ArmholeAngle, ArmholeCurve]
       type: select_null
     smoothing_coeff:
@@ -223,13 +223,13 @@ design:
         type: select_null
       
       fc_depth:   # Front collar depth
-        v: 7
-        range: [0, 50]
-        type: int
+        v: 0.2
+        range: [0, 1]   # 0 = min possible, 1 = bust line
+        type: float
       bc_depth:   # back collar depth
-        v: 4
-        range: [0, 50]
-        type: int
+        v: 0
+        range: [0, 1]   # 0 = min possible, 1 = bust line
+        type: float
       fc_angle:    # Used in Trapesoid and CircleArc collars (differently)
         v: 90
         range: [30, 180]
@@ -239,9 +239,9 @@ design:
         range: [30, 180]
         type: int
       width: 
-        v: 10  # 18
-        range: [10, 30]   # TODO min is a neck width
-        type: int
+        v: 0.5
+        range: [0, 1]   # 0 = a neck width, 1 = max possible width
+        type: float
       component:
         style: 
           v: null

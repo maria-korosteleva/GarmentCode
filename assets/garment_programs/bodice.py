@@ -29,7 +29,7 @@ class BodiceFrontHalf(pyp.Panel):
         shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
         bottom_d_width = (self.width - waist) * 2 / 3
 
-        # side length is adjusted due to shoulder inclanation
+        # side length is adjusted due to shoulder inclination
         # for the correct sleeve fitting
         fb_diff = (front_frac - (0.5 - front_frac)) * body['bust']
         side_len = body['waist_line'] - sh_tan * fb_diff
@@ -104,7 +104,7 @@ class BodiceBackHalf(pyp.Panel):
         
         self.width = back_fraction * m_bust
         waist = back_fraction * m_waist
-        waist_width = self.width - (self.width - waist) / 3   # slight inclanation on the side
+        waist_width = self.width - (self.width - waist) / 3   # slight inclination on the side
 
         shoulder_incl = np.tan(np.deg2rad(body['shoulder_incl'])) * self.width
 
@@ -114,7 +114,7 @@ class BodiceBackHalf(pyp.Panel):
             [-waist_width, 0],
             [-self.width, body['waist_line'] - body['bust_line']],  # from the bottom
             [-self.width, length],   
-            [0, length + shoulder_incl],   # Add some fabric for the neck (inclanation of shoulders)
+            [0, length + shoulder_incl],   # Add some fabric for the neck (inclination of shoulders)
             loop=True)
         
         self.interfaces = {
@@ -150,6 +150,8 @@ class BodiceHalf(pyp.Component):
 
     def __init__(self, name, body, design, fitted=True) -> None:
         super().__init__(name)
+
+        design = deepcopy(design)   # Recalculate freely!
 
         # Torso
         if fitted:
@@ -195,6 +197,15 @@ class BodiceHalf(pyp.Component):
         else:
             self.interfaces['back_in'] = self.btorso.interfaces['inside']
 
+    def eval_dep_params(self, body, design):
+
+        # Sleeves
+        max_cwidth = self.ftorso.interfaces['shoulder_corner'].edges[0].length() - 1  # cm
+        min_cwidth = body['armscye_depth']
+        v = design['sleeve']['connecting_width']['v']
+
+        design['connecting_width']['v'] = min_cwidth + v * (max_cwidth - min_cwidth)
+
 
     def add_sleeves(self, name, body, design):
 
@@ -237,34 +248,44 @@ class BodiceHalf(pyp.Component):
             )
     
     def add_collars(self, name, body, design):
-        # TODO collars with extra panels!
+        # Calc relative parameters
+        # NOTE: Assuming the first is the top edge
+        max_edge = self.ftorso.interfaces['collar_corner'].edges[0]
+        max_w = 2 * (abs(max_edge.start[0] - max_edge.end[0]) - design['sleeve']['inclination']['v'])
+        min_w = body['neck_w']
+
+        width = min_w + design['collar']['width']['v'] * (max_w - min_w)
 
         # Collar depth is given w.r.t. length.
         # adjust for the shoulder inclination
-        width = design['collar']['width']['v']
         tg = np.tan(np.deg2rad(body['shoulder_incl']))
         f_depth_adj = tg * (self.ftorso.width - width / 2)
         b_depth_adj = tg * (self.btorso.width - width / 2)
 
         # Front
         collar_type = getattr(collars, design['collar']['f_collar']['v'])
+        max_f_len = self.ftorso.interfaces['collar_corner'].edges[1].length() - tg * self.ftorso.width - 1  # cm
         f_collar = collar_type(
-            design['collar']['fc_depth']['v'] + f_depth_adj, 
+            design['collar']['fc_depth']['v'] * max_f_len + f_depth_adj, 
             width, 
             angle=design['collar']['fc_angle']['v'])
-        fc_edges, fc_interface = pyp.ops.cut_corner(f_collar, self.ftorso.interfaces['collar_corner'])
+        fc_edges, fc_interface = pyp.ops.cut_corner(
+            f_collar, self.ftorso.interfaces['collar_corner'])
 
         # Back
         collar_type = getattr(collars, design['collar']['b_collar']['v'])
+        max_b_len = self.btorso.interfaces['collar_corner'].edges[1].length() - tg * self.btorso.width - 1  # cm
         b_collar = collar_type(
-            design['collar']['bc_depth']['v'] + b_depth_adj, 
+            design['collar']['bc_depth']['v'] * max_b_len + b_depth_adj, 
             width, 
             angle=design['collar']['bc_angle']['v'])
-        bc_edges, bc_interface = pyp.ops.cut_corner(b_collar, self.btorso.interfaces['collar_corner'])
+        bc_edges, bc_interface = pyp.ops.cut_corner(
+            b_collar, self.btorso.interfaces['collar_corner'])
 
         # Add a collar component
         # NOTE: Here we are experimenting with an alternative to sleeve architecture
         # Collar projection and collar shape are defined independently
+        # TODO Adjust for relative parameters
         if design['collar']['component']['style']['v'] is not None:
             collar_style = getattr(collars, design['collar']['component']['style']['v'])
             self.collar_comp = collar_style(

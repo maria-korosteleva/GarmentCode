@@ -93,18 +93,26 @@ design:
       - CircleArcNeckHalf
       - null
       type: select_null
-    fc_depth:
-      v: 5
-      range:
-      - 3
-      - 25
-      type: int
-    bc_depth:
-      v: 6
-      range:
-      - 3
-      - 25
-      type: int
+    fc_depth:   # Front collar depth
+      v: 0.2
+      range: [0, 1]   # 0 = min possible, 1 = bust line
+      type: float
+    bc_depth:   # back collar depth
+      v: 0
+      range: [0, 1]   # 0 = min possible, 1 = bust line
+      type: float
+    # fc_depth:
+    #   v: 5
+    #   range:
+    #   - 3
+    #   - 25
+    #   type: int
+    # bc_depth:
+    #   v: 6
+    #   range:
+    #   - 3
+    #   - 25
+    #   type: int
     fc_angle:
       v: 90
       range:
@@ -117,12 +125,10 @@ design:
       - 30
       - 180
       type: int
-    width:
-      v: 20  # DEBUG 25
-      range:
-      - 18
-      - 30
-      type: int
+    width: 
+      v: 0.5
+      range: [0, 1]   # 0 = a neck width, 1 = max possible width
+      type: float
     component:
       style: 
         v: null
@@ -157,18 +163,6 @@ design:
       v: 1.
       range: [0.2, 2]   # 1 = same as arm opening
       type: float
-    # DRAFT connecting_width:
-    #   v: 16  # DEBUG 20
-    #   range:
-    #   - 13
-    #   - 40
-    #   type: int
-    # end_width:
-    #   v: 30
-    #   range:
-    #   - 20
-    #   - 70
-    #   type: int
     armhole_shape:
       v: ArmholeCurve
       range:
@@ -320,18 +314,14 @@ design:
         - CircleArcNeckHalf
         - null
         type: select_null
-      fc_depth:
-        v: 5
-        range:
-        - 3
-        - 25
-        type: int
-      bc_depth:
-        v: 6
-        range:
-        - 3
-        - 25
-        type: int
+      fc_depth:   # Front collar depth
+        v: 0.2
+        range: [0, 1]   # 0 = min possible, 1 = bust line
+        type: float
+      bc_depth:   # back collar depth
+        v: 0
+        range: [0, 1]   # 0 = min possible, 1 = bust line
+        type: float
       fc_angle:
         v: 90
         range:
@@ -344,12 +334,10 @@ design:
         - 30
         - 180
         type: int
-      width:
-        v: 20
-        range:
-        - 18
-        - 30
-        type: int
+      width: 
+        v: 0.5
+        range: [0, 1]   # 0 = a neck width, 1 = max possible width
+        type: float
       component:
         style: 
           v: null
@@ -377,7 +365,7 @@ design:
         - 100
         type: int
       connecting_width:
-        v: 0.1  
+        v: 1. 
         range: [0, 1]   # 0 = armscue_depth, 1 = as big as the shirt side
         type: float
       end_width:
