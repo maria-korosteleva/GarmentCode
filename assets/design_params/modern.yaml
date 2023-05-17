@@ -166,7 +166,7 @@ design:
       v: ArmholeCurve
       range:
       - ArmholeSquare
-      - ArmholeSmooth
+      - ArmholeAngle
       - ArmholeCurve
       - null
       type: select_null
@@ -369,10 +369,10 @@ design:
         - 40
         type: int
       armhole_shape:
-        v: ArmholeSmooth
+        v: ArmholeAngle
         range:
         - ArmholeSquare
-        - ArmholeSmooth
+        - ArmholeAngle
         - null
         type: select_null
       smoothing_coeff:

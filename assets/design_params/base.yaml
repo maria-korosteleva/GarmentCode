@@ -122,7 +122,7 @@ design:
     # Armhole
     armhole_shape: 
       v: ArmholeCurve
-      range: [ArmholeSquare, ArmholeSmooth, ArmholeCurve]
+      range: [ArmholeSquare, ArmholeAngle, ArmholeCurve]
       type: select_null
     smoothing_coeff:
       v: 0.25
@@ -271,7 +271,7 @@ design:
       # Armhole
       armhole_shape: 
         v: ArmholeCurve
-        range: [ArmholeSquare, ArmholeSmooth, ArmholeCurve]
+        range: [ArmholeSquare, ArmholeAngle, ArmholeCurve]
         type: select_null
       smoothing_coeff:
         v: 0.25

@@ -73,8 +73,8 @@ design:
       range: [True, False]
     # Armhole
     armhole_shape: 
-      v: ArmholeSmooth
-      range: [ArmholeSquare, ArmholeSmooth]
+      v: ArmholeAngle
+      range: [ArmholeSquare, ArmholeAngle]
     smoothing_coeff:
       v: 0.25
       range: [0.1, 0.4]

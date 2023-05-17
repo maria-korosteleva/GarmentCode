@@ -32,7 +32,7 @@ def ArmholeSquare(incl, width, angle, **kwargs):
     return edges, sleeve_edges
 
 
-def ArmholeSmooth(incl, width, angle, incl_coeff=0.2, w_coeff=0.2):
+def ArmholeAngle(incl, width, angle, incl_coeff=0.2, w_coeff=0.2):
     """Piece-wise smooth armhole shape"""
     diff_incl = incl * (1 - incl_coeff)
     edges = pyp.esf.from_verts([0, 0], [diff_incl, w_coeff * width],  [incl, width])
