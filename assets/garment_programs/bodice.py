@@ -267,47 +267,36 @@ class BodiceHalf(pyp.Component):
     
     def add_collars(self, name, body, design):
         # Front
-        collar_type = getattr(collars, design['collar']['f_collar']['v'])
-        
-        f_collar = collar_type(
-            design['collar']['fc_depth']['v'],
-            design['collar']['width']['v'], 
-            angle=design['collar']['fc_angle']['v'], 
-            flip=design['collar']['f_flip_curve']['v'])
-        fc_edges, fc_interface = pyp.ops.cut_corner(
-            f_collar, self.ftorso.interfaces['collar_corner'])
-
-        # Back
-        collar_type = getattr(collars, design['collar']['b_collar']['v'])
-        b_collar = collar_type(
-            design['collar']['bc_depth']['v'], 
-            design['collar']['width']['v'], 
-            angle=design['collar']['bc_angle']['v'],
-            flip=design['collar']['b_flip_curve']['v'])
-        bc_edges, bc_interface = pyp.ops.cut_corner(
-            b_collar, self.btorso.interfaces['collar_corner'])
-
-        # Add a collar component
-        # NOTE: Here we are experimenting with an alternative to sleeve architecture
-        # Collar projection and collar shape are defined independently
-        # TODO Adjust for relative parameters
-        if design['collar']['component']['style']['v'] is not None:
-            collar_style = getattr(collars, design['collar']['component']['style']['v'])
-            self.collar_comp = collar_style(
-                name, body, design, fc_edges.length(), bc_edges.length()
+        collar_type = getattr(
+            collars, 
+            str(design['collar']['component']['style']['v']), 
+            collars.NoPanelsCollar
             )
+        
+        self.collar_comp = collar_type(name, body, design)
+        
+        # Project shape
+        _, fc_interface = pyp.ops.cut_corner(
+            self.collar_comp.interfaces['front_proj'].edges, 
+            self.ftorso.interfaces['collar_corner']
+        )
+        _, bc_interface = pyp.ops.cut_corner(
+            self.collar_comp.interfaces['back_proj'].edges, 
+            self.btorso.interfaces['collar_corner']
+        )
 
-            # TODO What if it's strappless?
+        # Add stitches/interfaces
+        if 'bottom' in self.collar_comp.interfaces:
             self.stitching_rules.append((
                 pyp.Interface.from_multiple(fc_interface, bc_interface), 
                 self.collar_comp.interfaces['bottom']
             ))
 
-            # Additional interfaces
-            if 'front' in self.collar_comp.interfaces:
-                self.interfaces['front_collar'] = self.collar_comp.interfaces['front']
-            if 'back' in self.collar_comp.interfaces:
-                self.interfaces['back_collar'] = self.collar_comp.interfaces['back']
+        # Additional interfaces
+        if 'front' in self.collar_comp.interfaces:
+            self.interfaces['front_collar'] = self.collar_comp.interfaces['front']
+        if 'back' in self.collar_comp.interfaces:
+            self.interfaces['back_collar'] = self.collar_comp.interfaces['back']
 
     def make_strapless(self, design):
 
