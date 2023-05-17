@@ -112,6 +112,14 @@ design:
       - 30
       - 180
       type: int
+    f_flip_curve:
+      v: False
+      range: [True, False]
+      type: bool
+    b_flip_curve:
+      v: False
+      range: [True, False]
+      type: bool
     width: 
       v: 0.8
       range: [0, 1]   # 0 = a neck width, 1 = max possible width
@@ -260,7 +268,7 @@ design:
         v: 1.0
         range:
         - 0.5
-        - 10
+        - 4.5
         type: float
       width:
         v: 1.0
@@ -268,12 +276,6 @@ design:
         - 1.0
         - 2
         type: float
-      flare:
-        v: 4
-        range:
-        - -20
-        - 20
-        type: int
     collar:
       f_collar:
         v: CircleArcNeckHalf
@@ -317,6 +319,14 @@ design:
         - 30
         - 180
         type: int
+      f_flip_curve:
+        v: False
+        range: [True, False]
+        type: bool
+      b_flip_curve:
+        v: False
+        range: [True, False]
+        type: bool
       width: 
         v: 0.5
         range: [0, 1]   # 0 = a neck width, 1 = max possible width

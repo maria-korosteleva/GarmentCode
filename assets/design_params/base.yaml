@@ -63,6 +63,10 @@ design:
       v: CircleNeckHalf
       range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf]
       type: select_null
+    width: 
+      v: 0.5
+      range: [0, 1]   # 0 = a neck width, 1 = max possible width
+      type: float
     fc_depth:   # Front collar depth
       v: 0.5
       range: [0, 1]   # 0 = min possible, 1 = bust line
@@ -79,10 +83,14 @@ design:
       v: 90
       range: [30, 180]
       type: int
-    width: 
-      v: 0.5
-      range: [0, 1]   # 0 = a neck width, 1 = max possible width
-      type: float
+    f_flip_curve:
+      v: False
+      range: [True, False]
+      type: bool
+    b_flip_curve:
+      v: False
+      range: [True, False]
+      type: bool
     component:
       style: 
         v: null
@@ -198,16 +206,12 @@ design:
         type: float
       length: 
         v: 1.
-        range: [0.5, 10]   # 1 == waistline
+        range: [0.5, 4.5]   # 1 == waistline
         type: float
       width:   # Around the body 
         v: 1.
         range: [1., 2]    # 1 == bust size
         type: float
-      flare:   
-        v: 4
-        range: [-20, 20]
-        type: int
 
     collar:
       f_collar: 
@@ -218,7 +222,10 @@ design:
         v: VNeckHalf
         range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf]
         type: select_null
-      
+      width: 
+        v: 0.5
+        range: [0, 1]   # 0 = a neck width, 1 = max possible width
+        type: float
       fc_depth:   # Front collar depth
         v: 0.2
         range: [0, 1]   # 0 = min possible, 1 = bust line
@@ -235,10 +242,14 @@ design:
         v: 90
         range: [30, 180]
         type: int
-      width: 
-        v: 0.5
-        range: [0, 1]   # 0 = a neck width, 1 = max possible width
-        type: float
+      f_flip_curve:
+        v: False
+        range: [True, False]
+        type: bool
+      b_flip_curve:
+        v: False
+        range: [True, False]
+        type: bool
       component:
         style: 
           v: null

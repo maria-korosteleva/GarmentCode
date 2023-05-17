@@ -275,7 +275,8 @@ class BodiceHalf(pyp.Component):
         f_collar = collar_type(
             design['collar']['fc_depth']['v'],
             design['collar']['width']['v'], 
-            angle=design['collar']['fc_angle']['v'])
+            angle=design['collar']['fc_angle']['v'], 
+            flip=design['collar']['f_flip_curve']['v'])
         fc_edges, fc_interface = pyp.ops.cut_corner(
             f_collar, self.ftorso.interfaces['collar_corner'])
 
@@ -284,7 +285,8 @@ class BodiceHalf(pyp.Component):
         b_collar = collar_type(
             design['collar']['bc_depth']['v'], 
             design['collar']['width']['v'], 
-            angle=design['collar']['bc_angle']['v'])
+            angle=design['collar']['bc_angle']['v'],
+            flip=design['collar']['b_flip_curve']['v'])
         bc_edges, bc_interface = pyp.ops.cut_corner(
             b_collar, self.btorso.interfaces['collar_corner'])
 

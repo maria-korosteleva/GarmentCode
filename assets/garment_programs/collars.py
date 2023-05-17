@@ -43,22 +43,23 @@ def TrapezoidNeckHalf(depth, width, angle=90, **kwargs):
 
 
 # Collar shapes withough extra panels
-def CurvyNeckHalf(depth, width, **kwargs):
+def CurvyNeckHalf(depth, width, flip=False, **kwargs):
     """Testing Curvy Collar design"""
 
+    sign = -1 if flip else 1
     edges = pyp.EdgeSequence(pyp.CurveEdge(
         [0, 0], [width / 2,-depth], 
-        [[0.4, 0.3], [0.8, -0.5]]))
+        [[0.4, sign * 0.3], [0.8, sign * -0.3]]))
     
     return edges
 
 
-def CircleArcNeckHalf(depth, width, angle=90, **kwargs):
+def CircleArcNeckHalf(depth, width, angle=90, flip=False, **kwargs):
     """Collar with a side represented by a circle arc"""
     # 1/4 of a circle
     edges = pyp.EdgeSequence(pyp.CircleEdge.from_points_angle(
         [0, 0], [width / 2,-depth], arc_angle=np.deg2rad(angle),
-        right=True
+        right=(not flip)
     ))
 
     return edges
