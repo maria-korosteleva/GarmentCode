@@ -112,9 +112,6 @@ class GUIPattern():
 
         dic[param]['v'] = new_value
 
-        # DEBUG 
-        print(param)
-
         if 'enable_asym' in param_path and new_value == False:
             self.sync_left()
 
@@ -126,10 +123,6 @@ class GUIPattern():
             # https://stackoverflow.com/a/37704379
             for key in param_path[:-1]:
                 dic = dic.setdefault(key, {})
-            # DEBUG
-            print(
-                'left', param
-            )
 
             dic[param]['v'] = new_value
 
