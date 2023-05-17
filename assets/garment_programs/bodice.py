@@ -158,6 +158,15 @@ class BodiceHalf(pyp.Component):
             self.ftorso = tee.TorsoFrontHalfPanel(f'{name}_ftorso', body, design).translate_by([0, 0, 25])
             self.btorso = tee.TorsoBackHalfPanel(f'{name}_btorso', body, design).translate_by([0, 0, -20])
 
+        # Interfaces
+        self.interfaces.update({
+            'f_bottom': self.ftorso.interfaces['bottom_front'],
+            'b_bottom': pyp.Interface.from_multiple(
+                self.btorso.interfaces['bottom'], self.ftorso.interfaces['bottom_back']),
+            'front_in': self.ftorso.interfaces['inside'],
+            'back_in': self.btorso.interfaces['inside']
+        })
+
         # Sleeves/collar cuts
         self.eval_dep_params(body, design)
         if design['shirt']['strapless']['v']:
@@ -174,27 +183,6 @@ class BodiceHalf(pyp.Component):
         # Main connectivity
         self.stitching_rules.append((self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
 
-        # Interfaces
-        self.interfaces.update({
-            'f_bottom': self.ftorso.interfaces['bottom_front'],
-            'b_bottom': pyp.Interface.from_multiple(
-                self.btorso.interfaces['bottom'], self.ftorso.interfaces['bottom_back'])
-        })
-
-        # TODO Move to the add_collar function??
-        if 'front_collar' in self.interfaces:
-            self.interfaces['front_in'] = pyp.Interface.from_multiple(
-                self.ftorso.interfaces['inside'], self.interfaces['front_collar']
-            )
-        else:
-            self.interfaces['front_in'] = self.ftorso.interfaces['inside']
-
-        if 'back_collar' in self.interfaces:
-            self.interfaces['back_in'] = pyp.Interface.from_multiple(
-                self.btorso.interfaces['inside'], self.interfaces['back_collar']
-            )
-        else:
-            self.interfaces['back_in'] = self.btorso.interfaces['inside']
 
     def eval_dep_params(self, body, design):
 
@@ -292,11 +280,17 @@ class BodiceHalf(pyp.Component):
                 self.collar_comp.interfaces['bottom']
             ))
 
-        # Additional interfaces
+        # Upd front interfaces accordingly
         if 'front' in self.collar_comp.interfaces:
             self.interfaces['front_collar'] = self.collar_comp.interfaces['front']
+            self.interfaces['front_in'] = pyp.Interface.from_multiple(
+                self.ftorso.interfaces['inside'], self.interfaces['front_collar']
+            )
         if 'back' in self.collar_comp.interfaces:
             self.interfaces['back_collar'] = self.collar_comp.interfaces['back']
+            self.interfaces['back_in'] = pyp.Interface.from_multiple(
+                self.btorso.interfaces['inside'], self.interfaces['back_collar']
+            )
 
     def make_strapless(self, design):
 

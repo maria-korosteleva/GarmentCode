@@ -58,7 +58,7 @@ design:
       range: [0, 1]   # 0 = a neck width, 1 = max possible width
       type: float
     fc_depth:   # Front collar depth
-      v: 0.5
+      v: 0.2
       range: [0, 1]   # 0 = min possible, 1 = bust line
       type: float
     bc_depth:   # back collar depth

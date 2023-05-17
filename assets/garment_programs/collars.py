@@ -85,7 +85,6 @@ class NoPanelsCollar(pyp.Component):
 
         # Front
         collar_type = globals()[design['collar']['f_collar']['v']]
-        
         f_collar = collar_type(
             design['collar']['fc_depth']['v'],
             design['collar']['width']['v'], 
@@ -128,8 +127,8 @@ class Turtle(pyp.Component):
 
         # -- Panels --
         length_f, length_b = f_collar.length(), b_collar.length()
-
         height_p = body['height'] - body['head_l'] + depth
+        
         self.front = BandPanel(
             f'{tag}_turtle_front', length_f, depth).translate_by([-length_f / 2, height_p, 10])
         self.back = BandPanel(
