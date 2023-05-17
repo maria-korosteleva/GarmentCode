@@ -324,7 +324,7 @@ class VisPattern(core.ParametrizedPattern):
         ax = fig.add_subplot(projection='3d')
 
 
-        # TODO Support arcs / curves
+        # TODOLOW Support arcs / curves (use linearization)
         for panel in self.pattern['panels']:
             p = self.pattern['panels'][panel]
             rot = p['rotation']
