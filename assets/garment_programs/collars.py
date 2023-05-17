@@ -117,7 +117,7 @@ class Turtle(pyp.Component):
             design['collar']['fc_depth']['v'],
             design['collar']['width']['v'])
         b_collar = CircleNeckHalf(
-            design['collar']['fc_depth']['v'],
+            design['collar']['bc_depth']['v'],
             design['collar']['width']['v'])
         
         self.interfaces = {
@@ -128,7 +128,7 @@ class Turtle(pyp.Component):
         # -- Panels --
         length_f, length_b = f_collar.length(), b_collar.length()
         height_p = body['height'] - body['head_l'] + depth
-        
+
         self.front = BandPanel(
             f'{tag}_turtle_front', length_f, depth).translate_by([-length_f / 2, height_p, 10])
         self.back = BandPanel(
@@ -174,13 +174,32 @@ class SimpleLapelPanel(pyp.Panel):
 
 class SimpleLapel(pyp.Component):
 
-    def __init__(self, tag, body, design, length_f, length_b) -> None:
+    def __init__(self, tag, body, design) -> None:
         super().__init__(f'Turtle_{tag}')
 
         depth = design['collar']['component']['depth']['v']
         standing = design['collar']['component']['lapel_standing']['v']
 
-        # TODO Place correctly on a side
+        # --Projecting shapes--
+        # Any front one!
+        collar_type = globals()[design['collar']['f_collar']['v']]
+        f_collar = collar_type(
+            design['collar']['fc_depth']['v'],
+            design['collar']['width']['v'], 
+            angle=design['collar']['fc_angle']['v'], 
+            flip=design['collar']['f_flip_curve']['v'])
+        
+        b_collar = CircleNeckHalf(
+            design['collar']['bc_depth']['v'],
+            design['collar']['width']['v'])
+        
+        self.interfaces = {
+            'front_proj': pyp.Interface(self, f_collar),
+            'back_proj': pyp.Interface(self, b_collar)
+        }
+
+        # -- Panels --
+        length_f, length_b = f_collar.length(), b_collar.length()
         height_p = body['height'] - body['head_l'] + depth * 2
         
         self.front = SimpleLapelPanel(
@@ -190,13 +209,10 @@ class SimpleLapel(pyp.Component):
             self.back = BandPanel(
                 f'{tag}_lapel_back', length_b, depth).translate_by([-length_b / 2, height_p, -10])
         else:
-            # A curved back panel
-            # TODO Follow the collar properly
-            # TODO WE need similar architecture to sleeves -- defining projection
-            # within collars themselves
-            rad = length_b / (np.pi / 2)
+            # A curved back panel that follows the collar opening
+            rad, angle, _ = b_collar[0].as_radius_angle()
             self.back = CircleArcPanel(
-                f'{tag}_lapel_back', rad, depth, np.pi / 2
+                f'{tag}_lapel_back', rad, depth, angle  
             ).translate_by([-length_b, height_p, -10])
             self.back.rotate_by(R.from_euler('XYZ', [90, 45, 0], degrees=True))
 
@@ -206,13 +222,13 @@ class SimpleLapel(pyp.Component):
             self.back.interfaces['right'] if standing else self.back.interfaces['left']
         ))
 
-        self.interfaces = {
+        self.interfaces.update({
             #'front': NOTE: no front interface here
             'back': self.back.interfaces['left'] if standing else self.back.interfaces['right'],
             'bottom': pyp.Interface.from_multiple(
                 self.front.interfaces['to_bodice'],
                 self.back.interfaces['bottom'] if standing else self.back.interfaces['top'],
             )
-        }
+        })
 
 
