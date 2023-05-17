@@ -123,14 +123,19 @@ design:
       - 18
       - 30
       type: int
-    style: 
-      v: null
-      range: [Turtle, SimpleLapel]
-      type: select_null
-    style_depth: 
-      v: 7
-      range: [2, 8]
-      type: int
+    component:
+      style: 
+        v: null
+        range: [Turtle, SimpleLapel]
+        type: select_null
+      depth: 
+        v: 7
+        range: [2, 8]
+        type: int
+      lapel_standing:
+        v: False
+        range: [True, False]
+        type: bool
   sleeve:
     sleeveless:
       v: false
@@ -145,17 +150,25 @@ design:
       - 80
       type: int
     connecting_width:
-      v: 16  # DEBUG 20
-      range:
-      - 13
-      - 40
-      type: int
+      v: 0.1  
+      range: [0, 1]   # 0 = armscue_depth, 1 = as big as the shirt side
+      type: float
     end_width:
-      v: 30
-      range:
-      - 20
-      - 70
-      type: int
+      v: 1.
+      range: [0.2, 2]   # 1 = same as arm opening
+      type: float
+    # DRAFT connecting_width:
+    #   v: 16  # DEBUG 20
+    #   range:
+    #   - 13
+    #   - 40
+    #   type: int
+    # end_width:
+    #   v: 30
+    #   range:
+    #   - 20
+    #   - 70
+    #   type: int
     armhole_shape:
       v: ArmholeCurve
       range:
@@ -337,6 +350,19 @@ design:
         - 18
         - 30
         type: int
+      component:
+        style: 
+          v: null
+          range: [Turtle, SimpleLapel]
+          type: select_null
+        depth: 
+          v: 7
+          range: [2, 8]
+          type: int
+        lapel_standing:
+          v: False
+          range: [True, False]
+          type: bool
     sleeve:
       sleeveless:
         v: false
@@ -351,17 +377,13 @@ design:
         - 100
         type: int
       connecting_width:
-        v: 16  # DEBUG 20
-        range:
-        - 13
-        - 40
-        type: int
+        v: 0.1  
+        range: [0, 1]   # 0 = armscue_depth, 1 = as big as the shirt side
+        type: float
       end_width:
-        v: 20
-        range:
-        - 20
-        - 40
-        type: int
+        v: 1.
+        range: [0.2, 2]   # 1 = same as arm opening
+        type: float
       armhole_shape:
         v: ArmholeAngle
         range:

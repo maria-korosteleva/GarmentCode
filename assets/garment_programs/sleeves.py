@@ -101,13 +101,12 @@ class SleevePanel(pyp.Panel):
 
         length = design['length']['v']
 
-        # Sleeve width with accounting for ruffles
-        end_width = design['end_width']['v'] / 2 * design['end_ruffle']['v']
+        # Ruffles at opening
         if not pyp.utils.close_enough(design['connect_ruffle']['v'], 1):
             open_shape.extend(design['connect_ruffle']['v'])
 
-        # Correct sleeve width -- after aligning rotation
-        arm_width = abs(open_shape[0].start[1] - open_shape[-1].end[1])
+        arm_width = abs(open_shape[0].start[1] - open_shape[-1].end[1]) 
+        end_width = design['end_width']['v'] * arm_width
 
         # Main body of a sleeve 
         self.edges = pyp.esf.from_verts(
@@ -218,7 +217,8 @@ class Sleeve(pyp.Component):
             # Class
             # Copy to avoid editing original design dict
             cdesign = deepcopy(design)
-            cdesign['cuff']['b_width'] = design['end_width']
+            cdesign['cuff']['b_width'] = {}
+            cdesign['cuff']['b_width']['v'] = self.interfaces['out'].edges.length() / design['end_ruffle']['v']
 
             cuff_class = getattr(bands, cdesign['cuff']['type']['v'])
             self.cuff = cuff_class(f'sl_{tag}', cdesign)

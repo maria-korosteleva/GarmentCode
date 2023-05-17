@@ -109,12 +109,12 @@ design:
       type: int
     connecting_width:
       v: 0.2  
-      range: [0, 1]   # TODO min armscye_depth . And no more then that for Bodice
+      range: [0, 1]   # 0 = armscue_depth, 1 = as big as the shirt side
       type: float
     end_width:
-      v: 40
-      range: [20, 70]  
-      type: int
+      v: 0.8
+      range: [0.2, 2]   # 1 = same as arm opening
+      type: float
     # Armhole
     armhole_shape: 
       v: ArmholeCurve
@@ -221,10 +221,7 @@ design:
         v: VNeckHalf
         range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf]
         type: select_null
-      style: 
-        v: Turtle
-        range: [Turtle]
-        type: select_null
+      
       fc_depth:   # Front collar depth
         v: 7
         range: [0, 50]
@@ -245,6 +242,19 @@ design:
         v: 10  # 18
         range: [10, 30]   # TODO min is a neck width
         type: int
+      component:
+        style: 
+          v: null
+          range: [Turtle, SimpleLapel]
+          type: select_null
+        depth: 
+          v: 7
+          range: [2, 8]
+          type: int
+        lapel_standing:
+          v: False
+          range: [True, False]
+          type: bool
       
     sleeve:
       sleeveless: 
@@ -256,13 +266,13 @@ design:
         range: [3, 100]
         type: int
       connecting_width:
-        v: 20
-        range: [13, 40]   # TODO min armscye_depth . And no more then that for Bodice
-        type: int
+        v: 0.2  
+        range: [0, 1]   # 0 = armscue_depth, 1 = as big as the shirt side
+        type: float
       end_width:
-        v: 20
-        range: [20, 40]  
-        type: int
+        v: 0.8
+        range: [0.2, 2]   # 1 = same as arm opening
+        type: float
 
       # Armhole
       armhole_shape: 
