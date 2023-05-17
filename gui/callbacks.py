@@ -8,7 +8,7 @@
 # TODO Window is too big on Win laptops
 
 import os.path
-from copy import copy
+from copy import copy, deepcopy
 from pathlib import Path
 from datetime import datetime
 import yaml
@@ -87,6 +87,7 @@ class GUIPattern():
         # FIXME Updating should allows loading partial design files
         # Need nested updates
         self.design_params.update(des)
+        self.sync_left()
         self.reload_garment()
 
     def set_design_param(self, param_path, new_value, reload=True):
@@ -111,6 +112,27 @@ class GUIPattern():
 
         dic[param]['v'] = new_value
 
+        # DEBUG 
+        print(param)
+
+        if 'enable_asym' in param_path and new_value == False:
+            self.sync_left()
+
+        if 'left' not in param_path and 'meta' not in param_path and not self.design_params['left']['enable_asym']['v']:
+            # Copy the fields to the left side
+
+            dic = self.design_params['left']
+            # Skip the top levels
+            # https://stackoverflow.com/a/37704379
+            for key in param_path[:-1]:
+                dic = dic.setdefault(key, {})
+            # DEBUG
+            print(
+                'left', param
+            )
+
+            dic[param]['v'] = new_value
+
         if reload:
             self.reload_garment()
 
@@ -119,6 +141,12 @@ class GUIPattern():
         if self.isReady():
             self.sew_pattern = MetaGarment('Configured_design', self.body_params, self.design_params)
             self._view_serialize()
+
+    def sync_left(self):
+        # Syncronize left and right
+        for k in self.design_params['left']:
+            if k != 'enable_asym':
+                self.design_params['left'][k] = deepcopy(self.design_params[k])
 
     def _view_serialize(self):
         """Save a sewing pattern svg/png representation to tmp folder be used for display"""
@@ -693,6 +721,7 @@ class GUIState():
                     self.pattern_state.set_design_param(
                         param_ids, new_value)
 
+                    self.upd_fields_design(self.pattern_state.design_params)
                     self.upd_pattern_visual()
 
 
