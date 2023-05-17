@@ -141,7 +141,7 @@ class SleevePanel(pyp.Panel):
         self.interfaces = {
             # NOTE: interface needs reversing because the open_shape was reversed for construction
             'in': pyp.Interface(self, open_shape, ruffle=design['connect_ruffle']['v']),
-            'out': pyp.Interface(self, self.edges[0], ruffle=design['end_ruffle']['v']),
+            'out': pyp.Interface(self, self.edges[0], ruffle=design['cuff']['top_ruffle']['v']),
             'top': pyp.Interface(self, self.edges[-2:] if standing else self.edges[-1]),  
             'bottom': pyp.Interface(self, self.edges[1])
         }
@@ -219,7 +219,7 @@ class Sleeve(pyp.Component):
             # Copy to avoid editing original design dict
             cdesign = deepcopy(design)
             cdesign['cuff']['b_width'] = {}
-            cdesign['cuff']['b_width']['v'] = self.interfaces['out'].edges.length() / design['end_ruffle']['v']
+            cdesign['cuff']['b_width']['v'] = self.interfaces['out'].edges.length() / design['cuff']['top_ruffle']['v']
 
             cuff_class = getattr(bands, cdesign['cuff']['type']['v'])
             self.cuff = cuff_class(f'sl_{tag}', cdesign)

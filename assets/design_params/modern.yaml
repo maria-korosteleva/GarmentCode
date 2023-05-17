@@ -210,6 +210,12 @@ design:
         - CuffBandSkirt
         - null
         type: select_null
+      top_ruffle:
+        v: 1
+        range:
+        - 1
+        - 2
+        type: float
       b_depth:
         v: 3
         range:
@@ -418,6 +424,12 @@ design:
           - CuffBandSkirt
           - null
           type: select_null
+        top_ruffle:
+          v: 1
+          range:
+          - 1
+          - 2
+          type: float
         b_depth:
           v: 3
           range:
