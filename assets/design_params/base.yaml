@@ -30,21 +30,11 @@ design:
       range: [1, 15]
       type: float
 
-  bodice: 
-    ease:
-      v: 0
-      range: [0, 3]
-      type: float
+  shirt: 
     strapless:    # Both for fitted and non-fitted shirts
       v: False
       range: [True, False]
       type: bool
-
-  shirt: 
-    ease:
-      v: 0
-      range: [0, 3]
-      type: float
     length: 
       v: 2.
       range: [0.5, 4.5]   # 1 == waistline
@@ -190,20 +180,11 @@ design:
       v: False    # True == create asymmetric top
       range: [True, False]
       type: bool
-    bodice: 
-      ease:
-        v: 0
-        range: [0, 3]
-        type: float
+    shirt: 
       strapless: 
         v: False
         range: [True, False]
         type: bool
-    shirt: 
-      ease:
-        v: 0
-        range: [0, 3]
-        type: float
       length: 
         v: 1.
         range: [0.5, 4.5]   # 1 == waistline

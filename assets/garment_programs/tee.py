@@ -20,7 +20,7 @@ class TorsoFrontHalfPanel(pyp.Panel):
 
         design = design['shirt']
         # account for ease in basic measurements
-        m_width = design['width']['v'] * body['bust'] + design['ease']['v']
+        m_width = design['width']['v'] * body['bust']
         b_width = m_width
 
         # sizes 
@@ -76,7 +76,7 @@ class TorsoBackHalfPanel(pyp.Panel):
 
         design = design['shirt']
         # account for ease in basic measurements
-        m_width = design['width']['v'] * body['bust'] + design['ease']['v']
+        m_width = design['width']['v'] * body['bust']
         b_width = m_width
 
         # sizes 

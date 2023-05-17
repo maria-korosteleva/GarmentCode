@@ -13,10 +13,9 @@ class BodiceFrontHalf(pyp.Panel):
     def __init__(self, name, body, design) -> None:
         super().__init__(name)
 
-        design = design['bodice']
         # account for ease in basic measurements
-        m_bust = body['bust'] + design['ease']['v']
-        m_waist = body['waist'] + design['ease']['v']
+        m_bust = body['bust']
+        m_waist = body['waist']
 
         # sizes   
         max_len = body['waist_over_bust_line']
@@ -92,11 +91,9 @@ class BodiceBackHalf(pyp.Panel):
     def __init__(self, name, body, design) -> None:
         super().__init__(name)
 
-        design = design['bodice']
-
         # account for ease in basic measurements
-        m_bust = body['bust'] + design['ease']['v']
-        m_waist = body['waist'] + design['ease']['v']
+        m_bust = body['bust']
+        m_waist = body['waist']
 
         # Overall measurements
         length = body['waist_line']
@@ -163,7 +160,7 @@ class BodiceHalf(pyp.Component):
 
         # Sleeves/collar cuts
         self.eval_dep_params(body, design)
-        if design['bodice']['strapless']['v']:
+        if design['shirt']['strapless']['v']:
             self.make_strapless(design)
         else:
             # Sleeves and collars 
@@ -348,7 +345,7 @@ class Shirt(pyp.Component):
         # requres further development
         # TODOLOW enable this one to work
         if design['left']['enable_asym']['v']:
-            if design['bodice']['strapless']['v'] != design['left']['bodice']['strapless']['v']:
+            if design['shirt']['strapless']['v'] != design['left']['shirt']['strapless']['v']:
                 # Force no collars
                 design = deepcopy(design)
                 design['collar']['component']['style']['v'] = None

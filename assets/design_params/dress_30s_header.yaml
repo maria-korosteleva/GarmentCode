@@ -38,25 +38,7 @@ design:
       - 3
       - 15
       type: float
-  bodice:
-    ease:
-      v: 0
-      range:
-      - 0
-      - 3
-      type: float
-    strapless:    # Both for fitted and non-fitted shirts
-      v: False
-      range: [True, False]
-      type: bool
-
   shirt:
-    ease:
-      v: 0
-      range:
-      - 0
-      - 3
-      type: float
     length:
       v: 1.0
       range:
@@ -69,6 +51,11 @@ design:
       - 1.0
       - 2
       type: float
+    strapless:    # Both for fitted and non-fitted shirts
+      v: False
+      range: [True, False]
+      type: bool
+
   collar:
     f_collar:
       v: CircleNeckHalf
@@ -250,20 +237,7 @@ design:
       - true
       - false
       type: bool
-    bodice:
-      ease:
-        v: 0
-        range:
-        - 0
-        - 3
-        type: float
     shirt:
-      ease:
-        v: 0
-        range:
-        - 0
-        - 3
-        type: float
       length:
         v: 1.0
         range:
@@ -276,6 +250,11 @@ design:
         - 1.0
         - 2
         type: float
+      strapless:    # Both for fitted and non-fitted shirts
+        v: False
+        range: [True, False]
+        type: bool
+
     collar:
       f_collar:
         v: CircleArcNeckHalf
