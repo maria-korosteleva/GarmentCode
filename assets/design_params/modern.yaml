@@ -183,7 +183,7 @@ design:
       - 0.1
       - 0.4
       type: float
-    inclanation:
+    inclination:
       v: 3
       range:
       - 2
@@ -397,7 +397,7 @@ design:
         - 0.1
         - 0.4
         type: float
-      inclanation:
+      inclination:
         v: 3
         range:
         - 2

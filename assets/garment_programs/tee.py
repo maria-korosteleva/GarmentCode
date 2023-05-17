@@ -33,7 +33,7 @@ class TorsoFrontHalfPanel(pyp.Panel):
         shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
         length = design['length']['v'] * body['waist_line']
 
-        # length in the front panel is adjusted due to shoulder inclanation
+        # length in the front panel is adjusted due to shoulder inclination
         # for the correct sleeve fitting
         fb_diff = (frac - (0.5 - frac)) * body['bust']
         length = length - sh_tan * fb_diff

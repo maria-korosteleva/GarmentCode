@@ -163,7 +163,7 @@ class Sleeve(pyp.Component):
     def __init__(self, tag, body, design, depth_diff=3) -> None: 
         super().__init__(f'{self.__class__.__name__}_{tag}')
 
-        inclanation = design['inclanation']['v']
+        inclination = design['inclination']['v']
 
         # TODOLOW Part of parameter processing
         rest_angle = max(np.deg2rad(design['sleeve_angle']['v']), np.deg2rad(body['shoulder_incl']))
@@ -174,11 +174,11 @@ class Sleeve(pyp.Component):
         # --- Define sleeve opening shapes ----
         armhole = globals()[design['armhole_shape']['v']]
         front_project, front_opening = armhole(
-            inclanation + depth_diff, connecting_width, 
+            inclination + depth_diff, connecting_width, 
             angle=rest_angle, incl_coeff=smoothing_coeff, w_coeff=smoothing_coeff)
         
         back_project, back_opening = armhole(
-            inclanation, connecting_width, 
+            inclination, connecting_width, 
             angle=rest_angle, incl_coeff=smoothing_coeff, w_coeff=smoothing_coeff)
 
         if depth_diff != 0: 
