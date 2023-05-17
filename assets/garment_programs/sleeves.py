@@ -9,7 +9,7 @@ import pypattern as pyp
 from . import bands
 
 # ------  Armhole shapes ------
-def ArmholeSquare(incl, width, angle, **kwargs):
+def ArmholeSquare(incl, width, angle,  invert=True, **kwargs):
     """Simple square armhole cut-out
         Not recommended to use for sleeves, stitching in 3D might be hard
 
@@ -19,7 +19,9 @@ def ArmholeSquare(incl, width, angle, **kwargs):
     """
 
     edges = pyp.esf.from_verts([0, 0], [incl, 0],  [incl, width])
-
+    if not invert:
+        return edges, None
+    
     sina, cosa = np.sin(angle), np.cos(angle)
     l = edges[0].length()
     sleeve_edges = pyp.esf.from_verts(
@@ -32,10 +34,12 @@ def ArmholeSquare(incl, width, angle, **kwargs):
     return edges, sleeve_edges
 
 
-def ArmholeAngle(incl, width, angle, incl_coeff=0.2, w_coeff=0.2):
+def ArmholeAngle(incl, width, angle, incl_coeff=0.2, w_coeff=0.2,  invert=True, **kwargs):
     """Piece-wise smooth armhole shape"""
     diff_incl = incl * (1 - incl_coeff)
     edges = pyp.esf.from_verts([0, 0], [diff_incl, w_coeff * width],  [incl, width])
+    if not invert:
+        return edges, None
 
     sina, cosa = np.sin(angle), np.cos(angle)
     l = edges[0].length()
@@ -48,13 +52,17 @@ def ArmholeAngle(incl, width, angle, incl_coeff=0.2, w_coeff=0.2):
     return edges, sleeve_edges
 
 
-def ArmholeCurve(incl, width, angle, **kwargs):
+def ArmholeCurve(incl, width, angle, invert=True, **kwargs):
     """ Classic sleeve opening on Cubic Bezier curves
     """
     # Curvature as parameters?
     cps = [[0.5, 0.2], [0.8, 0.35]]
     edge = pyp.CurveEdge([incl, width], [0, 0], cps)
+    edge_as_seq = pyp.EdgeSequence(edge.reverse())
 
+    if not invert:
+        return edge_as_seq, None
+    
     # Initialize inverse (initial guess)
     # Agle == 0
     down_direction = np.array([0, -1])  # Full opening is vertically aligned
@@ -82,7 +90,7 @@ def ArmholeCurve(incl, width, angle, **kwargs):
         return_as_edge=True
     )
 
-    return pyp.EdgeSequence(edge.reverse()), pyp.EdgeSequence(fin_inv_edge.reverse())
+    return edge_as_seq, pyp.EdgeSequence(fin_inv_edge.reverse())
 
 
 # -------- New sleeve definitions -------
@@ -166,7 +174,6 @@ class Sleeve(pyp.Component):
         design = design['sleeve']
         inclination = design['inclination']['v']
 
-        # TODOLOW Part of parameter processing
         rest_angle = max(np.deg2rad(design['sleeve_angle']['v']), np.deg2rad(body['shoulder_incl']))
 
         connecting_width = design['connecting_width']['v']
@@ -176,12 +183,29 @@ class Sleeve(pyp.Component):
         armhole = globals()[design['armhole_shape']['v']]
         front_project, front_opening = armhole(
             inclination + depth_diff, connecting_width, 
-            angle=rest_angle, incl_coeff=smoothing_coeff, w_coeff=smoothing_coeff)
+            angle=rest_angle, 
+            incl_coeff=smoothing_coeff, 
+            w_coeff=smoothing_coeff, 
+            invert=not design['sleeveless']['v']
+        )
         
         back_project, back_opening = armhole(
             inclination, connecting_width, 
-            angle=rest_angle, incl_coeff=smoothing_coeff, w_coeff=smoothing_coeff)
+            angle=rest_angle, 
+            incl_coeff=smoothing_coeff, 
+            w_coeff=smoothing_coeff,
+            invert=not design['sleeveless']['v']
+        )
+        
+        self.interfaces = {
+            'in_front_shape': pyp.Interface(self, front_project),
+            'in_back_shape': pyp.Interface(self, back_project)
+        }
 
+        if design['sleeveless']['v']:
+            # The rest is not needed!
+            return
+        
         if depth_diff != 0: 
             front_opening, back_opening = pyp.ops.even_armhole_openings(
                 front_opening, back_opening
@@ -200,9 +224,7 @@ class Sleeve(pyp.Component):
         )
 
         # Interfaces
-        self.interfaces = {
-            'in_front_shape': pyp.Interface(self.f_sleeve, front_project),
-            'in_back_shape': pyp.Interface(self.f_sleeve, back_project), 
+        self.interfaces.update({
             'in': pyp.Interface.from_multiple(
                 self.f_sleeve.interfaces['in'].reverse(),
                 self.b_sleeve.interfaces['in'].reverse()
@@ -211,7 +233,7 @@ class Sleeve(pyp.Component):
                     self.f_sleeve.interfaces['out'], 
                     self.b_sleeve.interfaces['out']
                 ),
-        }
+        })
 
         # Cuff
         if design['cuff']['type']['v']:

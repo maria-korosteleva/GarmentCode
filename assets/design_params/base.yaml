@@ -98,7 +98,7 @@ design:
     
   sleeve:
     sleeveless: 
-      v: False
+      v: True
       range: [True, False]
       type: bool
     length: 

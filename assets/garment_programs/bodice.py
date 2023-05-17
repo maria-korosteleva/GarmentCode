@@ -235,10 +235,7 @@ class BodiceHalf(pyp.Component):
             self.sleeve.interfaces['in_back_shape'].projecting_edges(), 
             self.btorso.interfaces['shoulder_corner'])
 
-        if design['sleeve']['sleeveless']['v']:  
-            # No sleeve component, only the cut remains
-            del self.sleeve
-        else:
+        if not design['sleeve']['sleeveless']['v']:  
             # Ordering
             bodice_sleeve_int = pyp.Interface.from_multiple(
                 f_sleeve_int.reverse(),
