@@ -98,21 +98,9 @@ design:
       range: [0, 1]   # 0 = min possible, 1 = bust line
       type: float
     bc_depth:   # back collar depth
-      v: 0
+      v: 0.25
       range: [0, 1]   # 0 = min possible, 1 = bust line
       type: float
-    # fc_depth:
-    #   v: 5
-    #   range:
-    #   - 3
-    #   - 25
-    #   type: int
-    # bc_depth:
-    #   v: 6
-    #   range:
-    #   - 3
-    #   - 25
-    #   type: int
     fc_angle:
       v: 90
       range:
@@ -126,7 +114,7 @@ design:
       - 180
       type: int
     width: 
-      v: 0.5
+      v: 1.
       range: [0, 1]   # 0 = a neck width, 1 = max possible width
       type: float
     component:
@@ -319,7 +307,7 @@ design:
         range: [0, 1]   # 0 = min possible, 1 = bust line
         type: float
       bc_depth:   # back collar depth
-        v: 0
+        v: 0.25
         range: [0, 1]   # 0 = min possible, 1 = bust line
         type: float
       fc_angle:

@@ -161,6 +161,8 @@ class BodiceHalf(pyp.Component):
             self.ftorso = tee.TorsoFrontHalfPanel(f'{name}_ftorso', body, design).translate_by([0, 0, 25])
             self.btorso = tee.TorsoBackHalfPanel(f'{name}_btorso', body, design).translate_by([0, 0, -20])
 
+        # Sleeves/collar cuts
+        self.eval_dep_params(body, design)
         if design['bodice']['strapless']['v']:
             self.make_strapless(design)
         else:
@@ -200,27 +202,46 @@ class BodiceHalf(pyp.Component):
     def eval_dep_params(self, body, design):
 
         # Sleeves
+        # NOTE assuming the vertical side is the first argument
         max_cwidth = self.ftorso.interfaces['shoulder_corner'].edges[0].length() - 1  # cm
         min_cwidth = body['armscye_depth']
         v = design['sleeve']['connecting_width']['v']
+        design['sleeve']['connecting_width']['v'] = min_cwidth + v * (max_cwidth - min_cwidth)
 
-        design['connecting_width']['v'] = min_cwidth + v * (max_cwidth - min_cwidth)
+        # Collars
+        # NOTE: Assuming the first is the top edge
+        # Width
+        max_edge = self.ftorso.interfaces['collar_corner'].edges[0]
+        # NOTE: Back panel is more narrow, so using it
+        max_w = 2 * (self.btorso.width - design['sleeve']['inclination']['v'] - 1)
+        min_w = body['neck_w']
 
+        design['collar']['width']['v'] = width = min_w + design['collar']['width']['v'] * (max_w - min_w)
+
+        # Depth
+        # Collar depth is given w.r.t. length.
+        # adjust for the shoulder inclination
+        tg = np.tan(np.deg2rad(body['shoulder_incl']))
+        f_depth_adj = tg * (self.ftorso.width - width / 2)
+        b_depth_adj = tg * (self.btorso.width - width / 2)
+
+        max_f_len = self.ftorso.interfaces['collar_corner'].edges[1].length() - tg * self.ftorso.width - 1  # cm
+        max_b_len = self.btorso.interfaces['collar_corner'].edges[1].length() - tg * self.btorso.width - 1  # cm
+
+        
+        design['collar']['f_strapless_depth'] = {}
+        design['collar']['f_strapless_depth']['v'] = design['collar']['fc_depth']['v'] * max_f_len
+        design['collar']['fc_depth']['v'] = design['collar']['f_strapless_depth']['v'] + f_depth_adj
+        
+        design['collar']['b_strapless_depth'] = {}
+        design['collar']['b_strapless_depth']['v'] = design['collar']['bc_depth']['v'] * max_b_len
+        design['collar']['bc_depth']['v'] = design['collar']['b_strapless_depth']['v'] + b_depth_adj 
 
     def add_sleeves(self, name, body, design):
 
         diff = self.ftorso.width - self.btorso.width
 
-        # TODO Restrict connecting width
-        # NOTE assuming the vertical side is the first argument
-        max_cwidth = self.ftorso.interfaces['shoulder_corner'].edges[0].length() - 1  # cm
-        min_cwidth = body['armscye_depth']
-        v = design['sleeve']['connecting_width']['v']
-
-        cdesign = deepcopy(design['sleeve'])  # change in the copy
-        cdesign['connecting_width']['v'] = min_cwidth + v * (max_cwidth - min_cwidth)
-        
-        self.sleeve = sleeves.Sleeve(name, body, cdesign, depth_diff=diff)
+        self.sleeve = sleeves.Sleeve(name, body, design, depth_diff=diff)
 
         _, f_sleeve_int = pyp.ops.cut_corner(
             self.sleeve.interfaces['in_front_shape'].projecting_edges(), 
@@ -248,36 +269,21 @@ class BodiceHalf(pyp.Component):
             )
     
     def add_collars(self, name, body, design):
-        # Calc relative parameters
-        # NOTE: Assuming the first is the top edge
-        max_edge = self.ftorso.interfaces['collar_corner'].edges[0]
-        max_w = 2 * (abs(max_edge.start[0] - max_edge.end[0]) - design['sleeve']['inclination']['v'])
-        min_w = body['neck_w']
-
-        width = min_w + design['collar']['width']['v'] * (max_w - min_w)
-
-        # Collar depth is given w.r.t. length.
-        # adjust for the shoulder inclination
-        tg = np.tan(np.deg2rad(body['shoulder_incl']))
-        f_depth_adj = tg * (self.ftorso.width - width / 2)
-        b_depth_adj = tg * (self.btorso.width - width / 2)
-
         # Front
         collar_type = getattr(collars, design['collar']['f_collar']['v'])
-        max_f_len = self.ftorso.interfaces['collar_corner'].edges[1].length() - tg * self.ftorso.width - 1  # cm
+        
         f_collar = collar_type(
-            design['collar']['fc_depth']['v'] * max_f_len + f_depth_adj, 
-            width, 
+            design['collar']['fc_depth']['v'],
+            design['collar']['width']['v'], 
             angle=design['collar']['fc_angle']['v'])
         fc_edges, fc_interface = pyp.ops.cut_corner(
             f_collar, self.ftorso.interfaces['collar_corner'])
 
         # Back
         collar_type = getattr(collars, design['collar']['b_collar']['v'])
-        max_b_len = self.btorso.interfaces['collar_corner'].edges[1].length() - tg * self.btorso.width - 1  # cm
         b_collar = collar_type(
-            design['collar']['bc_depth']['v'] * max_b_len + b_depth_adj, 
-            width, 
+            design['collar']['bc_depth']['v'], 
+            design['collar']['width']['v'], 
             angle=design['collar']['bc_angle']['v'])
         bc_edges, bc_interface = pyp.ops.cut_corner(
             b_collar, self.btorso.interfaces['collar_corner'])
@@ -307,8 +313,8 @@ class BodiceHalf(pyp.Component):
     def make_strapless(self, design):
 
         out_depth = design['sleeve']['connecting_width']['v']
-        f_in_depth = design['collar']['fc_depth']['v']
-        b_in_depth = design['collar']['bc_depth']['v']
+        f_in_depth = design['collar']['f_strapless_depth']['v']
+        b_in_depth = design['collar']['b_strapless_depth']['v']
         self._adjust_top_level(self.ftorso, out_depth, f_in_depth)
         self._adjust_top_level(self.btorso, out_depth, b_in_depth)
 
@@ -318,7 +324,7 @@ class BodiceHalf(pyp.Component):
         """
 
         panel_top = panel.interfaces['shoulder'].edges[0]
-        min_y = min(panel_top.start[1], panel_top.end[1])
+        min_y = min(panel_top.start[1], panel_top.end[1])  
 
         # Order vertices
         ins, out = panel_top.start, panel_top.end
@@ -337,7 +343,6 @@ class Shirt(pyp.Component):
         super().__init__(name_with_params)
 
         self.right = BodiceHalf(f'right', body, design, fitted=fitted)
-            
         self.left = BodiceHalf(
             f'left', body, 
             design['left'] if design['left']['enable_asym']['v'] else design, 

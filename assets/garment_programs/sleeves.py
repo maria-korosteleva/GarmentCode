@@ -163,6 +163,7 @@ class Sleeve(pyp.Component):
     def __init__(self, tag, body, design, depth_diff=3) -> None: 
         super().__init__(f'{self.__class__.__name__}_{tag}')
 
+        design = design['sleeve']
         inclination = design['inclination']['v']
 
         # TODOLOW Part of parameter processing
