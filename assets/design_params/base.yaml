@@ -4,11 +4,11 @@
 # May specify sampling range per parameter for automatic 
 # design sampling
 # Final designs might not use all the parameters specified
-# TODO Connecting some parameters?
+# TODO Rename Ruffle to Gather
 design: 
   meta: 
     upper: 
-      v: Shirt
+      v: null
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
@@ -16,7 +16,7 @@ design:
       range: [True, False]
       type: bool
     bottom: 
-      v: null
+      v: Pants
       range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, SkirtLevels]
       type: select_null
 
@@ -492,13 +492,13 @@ design:
       type: bool
     cuff: 
       type:
-        v: null
+        v: CuffBand
         range: [CuffBand, CuffSkirt, CuffBandSkirt]
         type: select_null
-      b_width:   # TODO naming convention with waistband
-        v: 40
-        range: [30, 40]   # TODO related with body measurements
-        type: int
+      top_ruffle: 
+        v: 1.5     # TODO Depend on body measurements?
+        range: [1, 2]
+        type: float
       b_depth: 
         v: 10
         range: [1, 20]

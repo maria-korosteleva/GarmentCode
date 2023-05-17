@@ -1,4 +1,5 @@
 import svgpathtools as svgpath
+from copy import deepcopy
 
 # Custom
 import pypattern as pyp
@@ -145,14 +146,21 @@ class PantsHalf(pyp.Component):
         )
 
         # add a cuff
+        # TODOLOW This process is the same for sleeves -- make a function?
         if design['cuff']['type']['v']:
-            cuff_class = getattr(bands, design['cuff']['type']['v'])
-            self.cuff = cuff_class(tag, design)
-
-            # TODO cuff width to match?
-
+            
             pant_bottom = pyp.Interface.from_multiple(
                     self.front.interfaces['bottom'], self.back.interfaces['bottom'])
+
+            # Copy to avoid editing original design dict
+            cdesign = deepcopy(design)
+            cdesign['cuff']['b_width'] = {}
+            cdesign['cuff']['b_width']['v'] = pant_bottom.edges.length() / design['cuff']['top_ruffle']['v']
+
+            # Init
+            cuff_class = getattr(bands, cdesign['cuff']['type']['v'])
+            self.cuff = cuff_class(tag, cdesign)
+
             # Position
             self.cuff.place_by_interface(
                 self.cuff.interfaces['top'],
