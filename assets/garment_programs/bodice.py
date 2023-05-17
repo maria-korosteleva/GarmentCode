@@ -1,4 +1,4 @@
-from copy import copy
+from copy import copy, deepcopy
 import numpy as np
 
 # Custom
@@ -199,7 +199,17 @@ class BodiceHalf(pyp.Component):
     def add_sleeves(self, name, body, design):
 
         diff = self.ftorso.width - self.btorso.width
-        self.sleeve = sleeves.Sleeve(name, body, design, depth_diff=diff)
+
+        # TODO Restrict connecting width
+        # NOTE assuming the vertical side is the first argument
+        max_cwidth = self.ftorso.interfaces['shoulder_corner'].edges[0].length() - 1  # cm
+        min_cwidth = body['armscye_depth']
+        v = design['sleeve']['connecting_width']['v']
+
+        cdesign = deepcopy(design['sleeve'])  # change in the copy
+        cdesign['connecting_width']['v'] = min_cwidth + v * (max_cwidth - min_cwidth)
+        
+        self.sleeve = sleeves.Sleeve(name, body, cdesign, depth_diff=diff)
 
         _, f_sleeve_int = pyp.ops.cut_corner(
             self.sleeve.interfaces['in_front_shape'].projecting_edges(), 

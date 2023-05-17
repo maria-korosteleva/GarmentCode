@@ -108,9 +108,9 @@ design:
       range: [3, 80]
       type: int
     connecting_width:
-      v: 25  # 25
-      range: [13, 40]   # TODO min armscye_depth . And no more then that for Bodice
-      type: int
+      v: 0.2  
+      range: [0, 1]   # TODO min armscye_depth . And no more then that for Bodice
+      type: float
     end_width:
       v: 40
       range: [20, 70]  
