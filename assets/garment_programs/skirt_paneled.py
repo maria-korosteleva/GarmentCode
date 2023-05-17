@@ -78,12 +78,6 @@ class FittedSkirtPanel(pyp.Panel):
         ruffle=False) -> None:
         # TODOLOW Only the parameters that differ between front/back panels?
         """
-            Basic pant panel with option to be fitted (with darts) or ruffled at waist area.
-            
-            * rise -- the pant rize. 1 = waistline, 0 = crotch line (I'd not recommend to go all the way to zero 😅)
-            * dart_position -- from the center of the body to the dart
-            * ruffle -- use ruffles instead of fitting with darts. If ruffle = False, the dart_position needs to be specified
-            * crotch_extention amount of exta fabric between legs
         """
         super().__init__(name)
 

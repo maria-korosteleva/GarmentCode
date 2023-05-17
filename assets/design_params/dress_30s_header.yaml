@@ -607,12 +607,6 @@ design:
       - true
       - false
       type: bool
-    crotch_extention:
-      v: 4
-      range:
-      - 3
-      - 7
-      type: float
     cuff:
       type:
         v: CuffBandSkirt

@@ -200,9 +200,6 @@ design:
     ruffle:
       v: [False, False]   
       range: [True, False]
-    crotch_extention:
-      v: 4   
-      range: None
     cuff: 
       type:
         v: CuffBandSkirt

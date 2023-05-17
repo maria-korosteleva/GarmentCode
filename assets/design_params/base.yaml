@@ -484,10 +484,6 @@ design:
       v: False   # TODO Can be True only if connected to a waist band
       range: [True, False]
       type: bool
-    crotch_extention:
-      v: 5  # 2.5   # TODO depends on measurements?
-      range: [3, 7]
-      type: float
     cuff: 
       type:
         v: null
