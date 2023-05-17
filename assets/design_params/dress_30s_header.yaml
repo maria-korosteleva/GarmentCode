@@ -64,12 +64,6 @@ design:
       - 1.0
       - 2
       type: float
-    flare:
-      v: 4
-      range:
-      - -10
-      - 20
-      type: int
   collar:
     f_collar:
       v: CircleNeckHalf

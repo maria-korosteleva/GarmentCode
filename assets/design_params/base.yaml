@@ -53,10 +53,6 @@ design:
       v: 1.
       range: [1., 2]    # 1 == bust size
       type: float
-    flare:   
-      v: 4
-      range: [-10, 20]
-      type: int
 
   collar:
     f_collar: 

@@ -74,6 +74,7 @@ def ArmholeCurve(incl, width, angle, **kwargs):
     rotated_direction = shortcut[-1] - shortcut[0]
     rotated_direction /= np.linalg.norm(rotated_direction)
 
+    # TODOLOW Remember relative curvature results and reuse them? (speed)
     fin_inv_edge = pyp.ops.curve_match_tangents(
         inv_edge.as_curve(), 
         down_direction, 
@@ -172,7 +173,7 @@ class Sleeve(pyp.Component):
         connecting_width = design['connecting_width']['v']
         smoothing_coeff = design['smoothing_coeff']['v']
 
-        # Define sleeve opening shapes
+        # --- Define sleeve opening shapes ----
         armhole = globals()[design['armhole_shape']['v']]
         front_project, front_opening = armhole(
             inclanation + depth_diff, connecting_width, 
@@ -187,7 +188,7 @@ class Sleeve(pyp.Component):
                 front_opening, back_opening
             )
 
-        # Get sleeve panels
+        # ----- Get sleeve panels -------
         self.f_sleeve = SleevePanel(
             f'{tag}_sleeve_f', body, design, front_opening).translate_by([0, 0, 15])
         self.b_sleeve = SleevePanel(
