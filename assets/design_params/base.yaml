@@ -16,7 +16,7 @@ design:
       range: [True, False]
       type: bool
     bottom: 
-      v: null
+      v: Skirt2
       range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, SkirtLevels]
       type: select_null
 
@@ -101,6 +101,10 @@ design:
       v: True
       range: [True, False]
       type: bool
+    armhole_shape: 
+      v: ArmholeSquare
+      range: [ArmholeSquare, ArmholeAngle, ArmholeCurve]
+      type: select_null
     length: 
       v: 30
       range: [3, 80]
@@ -112,19 +116,6 @@ design:
     end_width:
       v: 0.8
       range: [0.2, 2]   # 1 = same as arm opening
-      type: float
-    # Armhole
-    armhole_shape: 
-      v: ArmholeSquare
-      range: [ArmholeSquare, ArmholeAngle, ArmholeCurve]
-      type: select_null
-    smoothing_coeff:
-      v: 0.25
-      range: [0.1, 0.4]
-      type: float
-    inclination:   # How much intro the shoulder the sleeve will cut
-      v: 3
-      range: [2, 6]
       type: float
 
     sleeve_angle:  # the rest angle of a sleeve, created at connected point
@@ -148,6 +139,16 @@ design:
       range: [1, 2]
       type: float
     
+    # Armhole
+    smoothing_coeff:
+      v: 0.25
+      range: [0.1, 0.4]
+      type: float
+    inclination:   # How much intro the shoulder the sleeve will cut
+      v: 3
+      range: [2, 6]
+      type: float
+
     # Cuff
     cuff: 
       type:
@@ -250,6 +251,11 @@ design:
         v: False
         range: [True, False]
         type: bool
+      armhole_shape: 
+        v: ArmholeCurve
+        range: [ArmholeSquare, ArmholeAngle, ArmholeCurve]
+        type: select_null
+
       length: 
         v: 30
         range: [3, 100]
@@ -262,21 +268,7 @@ design:
         v: 0.8
         range: [0.2, 2]   # 1 = same as arm opening
         type: float
-
-      # Armhole
-      armhole_shape: 
-        v: ArmholeCurve
-        range: [ArmholeSquare, ArmholeAngle, ArmholeCurve]
-        type: select_null
-      smoothing_coeff:
-        v: 0.25
-        range: [0.1, 0.4]
-        type: float
-      inclination:   # How much intro the shoulder the sleeve will cut
-        v: 3
-        range: [2, 6]
-        type: float
-      
+  
       sleeve_angle:  # the rest angle of a sleeve, created at connected point
         v: 30  # deg   
         range: [10, 50]
@@ -296,6 +288,16 @@ design:
       connect_ruffle:
         v: 1
         range: [1, 2]
+        type: float
+
+      # Armhole
+      smoothing_coeff:
+        v: 0.25
+        range: [0.1, 0.4]
+        type: float
+      inclination:   # How much intro the shoulder the sleeve will cut
+        v: 3
+        range: [2, 6]
         type: float
 
       # Cuff
