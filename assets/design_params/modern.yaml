@@ -575,14 +575,6 @@ design:
       - 0
       - 20
       type: int
-    ruffle:
-      v:
-      - false
-      - false
-      range:
-      - true
-      - false
-      type: bool
   levels-skirt:
     base:
       v: PencilSkirt

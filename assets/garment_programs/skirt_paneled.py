@@ -74,8 +74,7 @@ class FittedSkirtPanel(pyp.Panel):
         low_angle=0,
         dart_position=None,  dart_frac=0.5,
         cut=0,
-        side_cut=None,
-        ruffle=False) -> None:
+        side_cut=None) -> None:
         # TODOLOW Only the parameters that differ between front/back panels?
         """
         """
@@ -86,14 +85,6 @@ class FittedSkirtPanel(pyp.Panel):
         adj_waist = hips - rise * (hips - waist)
         dart_depth = hips_depth * dart_frac
         dart_depth = max(dart_depth - (hips_depth - adj_hips_depth), 0)
-
-        # eval shape
-        # Check for ruffle
-        if ruffle:
-            ruffle_rate = hips / adj_waist
-            adj_waist = hips 
-        else:
-            ruffle_rate = 1
 
         # amount of extra fabric
         w_diff = hips - adj_waist   # Assume its positive since waist is smaller then hips
@@ -150,13 +141,10 @@ class FittedSkirtPanel(pyp.Panel):
             'left': pyp.Interface(self, left),  
         }
 
-        # Add top dart 
-        if not ruffle and dart_depth: 
-            dart_width = w_diff - hw_shift
-            self.add_darts(top, dart_width, dart_depth, dart_position)
+        # Add top darts
+        dart_width = w_diff - hw_shift
+        self.add_darts(top, dart_width, dart_depth, dart_position)
 
-        else: 
-            self.interfaces['top'] = pyp.Interface(self, self.edges[1], ruffle=ruffle_rate)  
 
     def add_darts(self, top, dart_width, dart_depth, dart_position):
         
@@ -204,7 +192,7 @@ class PencilSkirt(pyp.Component):
             + design['length']['v'] * body['leg_length']
         )
 
-        # TODO condition
+        # condition
         if design['style_side_cut']['v']:
             depth = 0.7 * (body['hips'] / 4 - body['bust_points'] / 2)
             style_shape = Sun(depth * 2, depth, n_rays=6, d_rays=depth*0.2)
@@ -222,7 +210,6 @@ class PencilSkirt(pyp.Component):
             low_angle=design['low_angle']['v'],
             dart_position=body['bust_points'] / 2,
             dart_frac=1.7,  # Diff for front and back
-            ruffle=design['ruffle']['v'][0], 
             cut=design['front_cut']['v'], 
             side_cut=style_shape
         ).translate_to([0, body['waist_level'], 25])
@@ -237,7 +224,6 @@ class PencilSkirt(pyp.Component):
             low_angle=design['low_angle']['v'],
             dart_position=body['bum_points'] / 2,
             dart_frac=1.1,   
-            ruffle=design['ruffle']['v'][1],
             cut=design['back_cut']['v'], 
             side_cut=style_shape
         ).translate_to([0, body['waist_level'], -20])

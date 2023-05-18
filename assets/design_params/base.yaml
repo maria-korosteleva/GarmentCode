@@ -428,10 +428,6 @@ design:
       v: False
       range: [True, False]
       type: bool
-    ruffle:  # FIXME Ruffle front/back!!
-      v: [False, False]   # TODO Can be True only if connected to a waist band
-      range: [True, False]
-      type: bool
 
   levels-skirt:
     base:    # NOTE Takes parameters from corresponding sections
