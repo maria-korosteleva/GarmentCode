@@ -109,15 +109,16 @@ class GUIPattern():
         elif dic[param]['type'] == 'float':
             new_value = float(new_value)
         # Otherwise stays as is
-
         dic[param]['v'] = new_value
 
         if 'enable_asym' in param_path and new_value == False:
             self.sync_left()
 
-        if 'left' not in param_path and 'meta' not in param_path and not self.design_params['left']['enable_asym']['v']:
+        if ('left' not in param_path 
+                and 'meta' not in param_path 
+                and not self.design_params['left']['enable_asym']['v']
+                and param_path[0] in self.design_params['left']):
             # Copy the fields to the left side
-
             dic = self.design_params['left']
             # Skip the top levels
             # https://stackoverflow.com/a/37704379
@@ -713,7 +714,6 @@ class GUIState():
 
                     self.pattern_state.set_design_param(
                         param_ids, new_value)
-
                     self.upd_fields_design(self.pattern_state.design_params)
                     self.upd_pattern_visual()
 
