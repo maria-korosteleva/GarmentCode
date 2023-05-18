@@ -146,8 +146,10 @@ class State(object):
     def serialize(self, directory):
         """Serialize text-like objects"""
         self.config.serialize(os.path.join(directory, 'sim_props.json'))
-        self.garment.view_ids = False
-        self.garment.serialize(directory, to_subfolder=False)
+        self.garment.serialize(
+            directory, 
+            to_subfolder=False, 
+            with_3d=False, with_text=False, view_ids=False)
 
     def save_scene(self, directory):
         """Save scene objects"""
