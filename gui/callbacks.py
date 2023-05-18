@@ -64,7 +64,7 @@ class GUIPattern():
             Path.cwd() / 'assets/body_measurments/f_smpl_avg.yaml'
         )
         self.new_design_file(
-            Path.cwd() / 'assets/design_params/base.yaml'
+            Path.cwd() / 'assets/design_params/default.yaml'
         )
 
     # Info
