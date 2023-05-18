@@ -602,14 +602,14 @@ design:
       v: 0
       range:
       - 0
-      - 20
-      type: int
+      - 0.9
+      type: float
     back_cut:
       v: 0
       range:
       - 0
-      - 20
-      type: int
+      - 0.9
+      type: float
     style_side_cut:
       v: false
       range:

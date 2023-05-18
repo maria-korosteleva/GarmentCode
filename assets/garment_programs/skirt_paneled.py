@@ -111,7 +111,7 @@ class FittedSkirtPanel(pyp.Panel):
         if cut:  # add a cut
             # Use long and thin disconnected dart for a cutout
             new_edges, _, int_edges = pyp.ops.cut_into_edge(
-                pyp.esf.dart_shape(1, cut),    # 1 cm  # TODOLOW width could also be a parameter?
+                pyp.esf.dart_shape(2, cut * length),    # 1 cm  # TODOLOW width could also be a parameter?
                 bottom, 
                 offset= bottom.length() / 2,
                 right=True)
@@ -209,7 +209,7 @@ class PencilSkirt(pyp.Component):
             rise=design['rise']['v'],
             low_angle=design['low_angle']['v'],
             dart_position=body['bust_points'] / 2,
-            dart_frac=1.7,  # Diff for front and back
+            dart_frac=0.9,  # Diff for front and back
             cut=design['front_cut']['v'], 
             side_cut=style_shape
         ).translate_to([0, body['waist_level'], 25])

@@ -418,12 +418,12 @@ design:
       type: int
     front_cut: # TODO Not to be used with low_angle!
       v: 0
-      range: [0, 20]   # TODO Max = length
-      type: int
+      range: [0, 0.9]   # 1 = length
+      type: float
     back_cut: 
       v: 0
-      range: [0, 20]   # TODO Max = length
-      type: int
+      range: [0, 0.9]   # 1 = length
+      type: float
     style_side_cut:
       v: False
       range: [True, False]
