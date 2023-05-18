@@ -73,7 +73,7 @@ class PantPanel(pyp.Panel):
             [
                 min(pant_width, pant_width - (pant_width - low_width) / 2), 
                 min(0, length - crotch_depth_diff)], 
-            [[0.2, -0.2]]
+            [[0.2, -0.1]]
         )
 
         self.edges = pyp.EdgeSequence(right, top, crotch, left).close_loop()

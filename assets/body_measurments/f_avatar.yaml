@@ -12,7 +12,7 @@ body:
 
   arm_pose_angle: 40  # Degrees
 
-  waist: 56.2  # 
+  waist: 53  # 
   waist_line:  33.3  # 31.3    # Nape of the Neck to waist (on the back)
   waist_over_bust_line: 37.5   # -- measurement + addition for the shoulder
 
