@@ -126,7 +126,7 @@ class VisPattern(core.ParametrizedPattern):
             the lower-right vertex coordinate for the convenice of future offsetting.
         """
         attributes = {
-            'fill': 'rgb(216,214,236)',
+            'fill':  'rgb(227,175,186)',  
             'stroke': 'rgb(51,51,51)', 
             'stroke-width': '0.75'
         }
