@@ -46,7 +46,7 @@ design:
       - false
       type: bool
     length:
-      v: 1.0
+      v: 1.2
       range:
       - 0.5
       - 4.5
@@ -59,7 +59,7 @@ design:
       type: float
   collar:
     f_collar:
-      v: VNeckHalf
+      v: CircleNeckHalf
       range:
       - CircleNeckHalf
       - CurvyNeckHalf
@@ -87,7 +87,7 @@ design:
       - 1
       type: float
     fc_depth:
-      v: 0.1
+      v: 0.15
       range:
       - 0
       - 1
@@ -265,7 +265,7 @@ design:
         - false
         type: bool
       length:
-        v: 1.0
+        v: 1.2
         range:
         - 0.5
         - 4.5
@@ -278,7 +278,7 @@ design:
         type: float
     collar:
       f_collar:
-        v: VNeckHalf
+        v: CircleNeckHalf
         range:
         - CircleNeckHalf
         - CurvyNeckHalf
@@ -306,7 +306,7 @@ design:
         - 1
         type: float
       fc_depth:
-        v: 0.1
+        v: 0.15
         range:
         - 0
         - 1

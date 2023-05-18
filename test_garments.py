@@ -34,7 +34,8 @@ if __name__ == '__main__':
     body = BodyParameters(body_file)
 
     design_files = {
-        'base': './assets/design_params/base.yaml',
+        # 'base': './assets/design_params/base.yaml',
+        'default': './assets/design_params/default.yaml',
         # 'modern': './assets/design_params/modern.yaml',
         # 'Dress_20s': './assets/design_params/dress_20s.yaml',
         # 'Dress_30s': './assets/design_params/dress_30s_header.yaml',
