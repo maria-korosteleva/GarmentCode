@@ -222,7 +222,7 @@ class GUIState():
         self.body_img_margins = copy(self.default_body_img_margins)
         self.body_img_id = None
         self.back_img_id = None
-        self.def_canvas_size = (1315, 670) 
+        self.def_canvas_size = (1315, 670)   # 
         self.body_img_size = (None, None)  # NOTE updated in subroutines
 
         # Last option needed to finalize GUI initialization and allow modifications
@@ -339,7 +339,7 @@ class GUIState():
                     expand_y=True, 
                     tab_border_width=0, 
                     border_width=0,
-                    size=(550, 1100) 
+                    size=(550, 1150)    # 1100
                 ),
                 sg.Column(viewer_column),
             ]

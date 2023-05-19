@@ -209,7 +209,7 @@ class PencilSkirt(pyp.Component):
             rise=design['rise']['v'],
             low_angle=design['low_angle']['v'],
             dart_position=body['bust_points'] / 2,
-            dart_frac=0.9,  # Diff for front and back
+            dart_frac=1.35,  # Diff for front and back
             cut=design['front_cut']['v'], 
             side_cut=style_shape
         ).translate_to([0, body['waist_level'], 25])

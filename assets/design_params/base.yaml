@@ -55,7 +55,7 @@ design:
       type: select_null
     width: 
       v: 0.5
-      range: [0, 1]   # 0 = a neck width, 1 = max possible width
+      range: [-0.5, 1]   # 0 = a neck width, 1 = max possible width
       type: float
     fc_depth:   # Front collar depth
       v: 0.2

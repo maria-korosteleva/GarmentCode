@@ -83,7 +83,7 @@ design:
     width:
       v: 0.5
       range:
-      - 0
+      - -0.5
       - 1
       type: float
     fc_depth:

@@ -21,7 +21,7 @@ body:
   underbust: 83
   back_width:  40  # 32 + 2 * between-size
 
-  hips: 110  
+  hips: 107  
   hips_line: 18    # From the waist
   bum_points: 18.5
   crotch_hip_diff: 14   # NOTE vertical projection of the level
