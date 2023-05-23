@@ -21,57 +21,42 @@ from assets.garment_programs.bands import *
 from assets.body_measurments.body_params import BodyParameters
 
 if __name__ == '__main__':
+    bodies_measurements = {
+        'avg': './assets/body_measurments/f_smpl_avg.yaml',
+        'thin': './assets/body_measurments/f_smpl_model.yaml',
+        'fluffy': './assets/body_measurments/f_smpl_model_fluffy.yaml',
+        'man': './assets/body_measurments/m_smpl_avg.yaml'
+    }
+    body_to_use = 'thin'   # CHANGE HERE to use different set of body measurements
 
-    body_file = './assets/body_measurments/f_smpl_avg.yaml'
-    # body_file = './assets/body_measurments/f_avatar.yaml'
-    # body_file = './assets/body_measurments/f_smpl_model.yaml'
-    # body_file = './assets/body_measurments/f_smpl_model_fluffy.yaml'
-    # body_file = './assets/body_measurments/m_smpl_avg.yaml'
-
-    body = BodyParameters(body_file)
+    body = BodyParameters(bodies_measurements[body_to_use])
 
     design_files = {
-        # 'base': './assets/design_params/base.yaml',
-        'default': './assets/design_params/default.yaml',
-        # 'modern': './assets/design_params/modern.yaml',
-        # 'Dress_20s': './assets/design_params/dress_20s.yaml',
-        # 'Dress_30s': './assets/design_params/dress_30s_header.yaml',
-        # 'Dress_40s': './assets/design_params/dress_40s.yaml',
-        # 'Dress_50s': './assets/design_params/dress_50s.yaml',
-        # 'Dress_regency': './assets/design_params/dress_regency.yaml',
-        # 'sweatshirt': './assets/design_params/sweatshirt.yaml',
-        # # 'pants': './assets/design_params/pants.yaml',
-        # 'jumpsuit': './assets/design_params/jumpsuit.yaml',
+        'default': './assets/design_params/default.yaml',    
+        # Add paths HERE to load other parameters
     }
     designs = {}
     for df in design_files:
         with open(design_files[df], 'r') as f:
             designs[df] = yaml.safe_load(f)['design']
     
-    test_garments = [
-        # WB(),
-        # CuffBand('test', design['pants']),
-        # CuffSkirt('test', design['pants']),
-        # CuffBandSkirt('test', design['pants'])
-    ]
-    for df in designs:
-        test_garments.append(MetaGarment(df, body, designs[df]))
-
+    test_garments = [MetaGarment(df, body, designs[df]) for df in designs]
+    outpath = Path('./Logs')
+    outpath.mkdir(parents=True, exist_ok=True)
     for piece in test_garments:
         pattern = piece()
 
         # Save as json file
-        sys_props = Properties('./system.json')
         folder = pattern.serialize(
-            Path(sys_props['output']), 
-            tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
-            to_subfolder=False, 
+            outpath, 
+            tag=datetime.now().strftime("%y%m%d-%H-%M-%S"), 
+            to_subfolder=True, 
             with_3d=True, with_text=False, view_ids=False)
 
         body.save(folder)
         if piece.name in design_files:
             shutil.copy(design_files[piece.name], folder)
         else:
-            shutil.copy(design_files['base'], folder)
+            shutil.copy(design_files['default'], folder)
 
         print(f'Success! {piece.name} saved to {folder}')
