@@ -1,8 +1,4 @@
-"""A Python library for building sewing patterns procedurally
-
-    # TODO Usage
-    # TODO Applications/limitaitons
-
+"""A Python library for building sewing patterns
 """
 
 # Building blocks
