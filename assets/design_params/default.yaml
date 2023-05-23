@@ -668,18 +668,6 @@ design:
       - 0.5
       - 1
       type: float
-    ruffle_front:
-      v: false
-      range:
-      - true
-      - false
-      type: bool
-    ruffle_back:
-      v: false
-      range:
-      - true
-      - false
-      type: bool
     cuff:
       type:
         v: null

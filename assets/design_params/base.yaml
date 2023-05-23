@@ -465,14 +465,6 @@ design:
       v: 0.8
       range: [0.5, 1]
       type: float
-    ruffle_front:
-      v: False   # TODO Can be True only if connected to a waist band
-      range: [True, False]
-      type: bool
-    ruffle_back:
-      v: False   # TODO Can be True only if connected to a waist band
-      range: [True, False]
-      type: bool
     cuff: 
       type:
         v: CuffBand
