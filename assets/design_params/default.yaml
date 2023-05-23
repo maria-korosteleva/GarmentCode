@@ -224,7 +224,7 @@ design:
         v: 1
         range:
         - 1
-        - 2
+        - 3
         type: float
       b_depth:
         v: 3
@@ -498,7 +498,7 @@ design:
     length:
       v: 0.2
       range:
-      - 0.1
+      - -0.2
       - 1
       type: float
     n_panels:
@@ -577,7 +577,7 @@ design:
     length:
       v: 0.4
       range:
-      - 0.1
+      - -0.2
       - 1
       type: float
     rise:
@@ -705,7 +705,7 @@ design:
         v: 10
         range:
         - 5
-        - 20
+        - 50
         type: int
       skirt_flare:
         v: 1.2

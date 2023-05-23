@@ -157,7 +157,7 @@ design:
         type: select_null
       top_ruffle: 
         v: 1
-        range: [1, 2]
+        range: [1, 3]
         type: float
       b_depth: 
         v: 3
@@ -308,7 +308,7 @@ design:
           type: select_null
         top_ruffle: 
           v: 1
-          range: [1, 2]
+          range: [1, 3s]
           type: float
         b_depth: 
           v: 3
@@ -348,7 +348,7 @@ design:
   flare-skirt:
     length:
       v: 0.2
-      range: [0.1, 1]
+      range: [-0.2, 1]
       type: float 
     n_panels:
       v: 8
@@ -402,7 +402,7 @@ design:
   pencil-skirt: 
     length:
       v: 0.5
-      range: [0.1, 1]
+      range: [-0.2, 1]
       type: float 
     rise:
       v: 1
