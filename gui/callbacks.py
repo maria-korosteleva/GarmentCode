@@ -86,7 +86,9 @@ class GUIPattern():
         # FIXME Updating should allows loading partial design files
         # Need nested updates
         self.design_params.update(des)
-        self.sync_left()
+
+        if 'left' in self.design_params and not self.design_params['left']['enable_asym']:
+            self.sync_left()
         self.reload_garment()
 
     def set_design_param(self, param_path, new_value, reload=True):
