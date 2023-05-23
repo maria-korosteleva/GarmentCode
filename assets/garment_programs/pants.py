@@ -18,7 +18,6 @@ class PantPanel(pyp.Panel):
         pant_width = design['width']['v'] * body['hips'] / 4
         low_width = pant_width * design['flare']['v']  
         length = body['hips_line'] + design['length']['v'] * body['leg_length']
-        ruffle = design['ruffle_front']['v']
 
         waist = body['waist'] / 4
         hips_depth = body['hips_line']
@@ -30,12 +29,7 @@ class PantPanel(pyp.Panel):
         crotch_extention = body['leg_circ'] / 2 - body['hips'] / 4
 
         # eval pants shape
-        # Check for ruffle
-        if ruffle: 
-            ruffle_rate = pant_width / waist
-            waist = pant_width 
-        else:
-            ruffle_rate = 1
+        # TODO Return ruffle opportunity?
 
         # amount of extra fabric at waist
         w_diff = pant_width - waist   # Assume its positive since waist is smaller then hips
@@ -92,18 +86,15 @@ class PantPanel(pyp.Panel):
         }
 
         # Add top dart 
-        if not ruffle and dart_depth: 
-            dart_width = w_diff - hw_shift
-            dart_shape = pyp.esf.dart_shape(dart_width, dart_depth)
-            top_edges, dart_edges, int_edges = pyp.ops.cut_into_edge(
-                dart_shape, top, offset=(hw_shift + waist - dart_position), right=True)
+        dart_width = w_diff - hw_shift
+        dart_shape = pyp.esf.dart_shape(dart_width, dart_depth)
+        top_edges, dart_edges, int_edges = pyp.ops.cut_into_edge(
+            dart_shape, top, offset=(hw_shift + waist - dart_position), right=True)
 
-            self.edges.substitute(top, top_edges)
-            self.stitching_rules.append((pyp.Interface(self, dart_edges[0]), pyp.Interface(self, dart_edges[1])))
+        self.edges.substitute(top, top_edges)
+        self.stitching_rules.append((pyp.Interface(self, dart_edges[0]), pyp.Interface(self, dart_edges[1])))
 
-            self.interfaces['top'] = pyp.Interface(self, int_edges)   
-        else: 
-            self.interfaces['top'] = pyp.Interface(self, top, ruffle=ruffle_rate)   
+        self.interfaces['top'] = pyp.Interface(self, int_edges)   
 
     def apply_rise(self, level, right, top, crotch):
 
@@ -133,11 +124,9 @@ class PantsHalf(pyp.Component):
         # TODO assymmetric front/back
         self.front = PantPanel(
             f'pant_f_{tag}', body, design
-            # crotch_angle_adj=2
             ).translate_by([0, body['waist_level'] - 5, 25])
         self.back = PantPanel(
             f'pant_b_{tag}', body, design
-            # crotch_angle_adj=1.5
             ).translate_by([0, body['waist_level'] - 5, -20])
 
         self.stitching_rules = pyp.Stitches(

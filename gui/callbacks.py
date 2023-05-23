@@ -609,8 +609,13 @@ class GUIState():
             if they were loaded from a file
         """
         for param in design_params:
+            # skip unknown parameters
+            
             if 'v' in design_params[param]:
-                self.window[f'{pre_key}#{param}'].update(design_params[param]['v'])
+                if f'{pre_key}#{param}' in self.window.AllKeysDict:
+                    self.window[f'{pre_key}#{param}'].update(design_params[param]['v'])
+                else:
+                    print(f'Warning::{pre_key}#{param}: unknown element. Skipped')
             else:
                 self.upd_fields_design(
                     design_params[param], 
