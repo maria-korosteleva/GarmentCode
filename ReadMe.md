@@ -23,14 +23,14 @@ All python dependencies can be installed with `pip install` / `conda install`
 => The code is ready to run
 
 NOTE: 
-* The dependency on [Pattern Generator](https://github.com/maria-korosteleva/Garment-Pattern-Generator)in included in the repo (`./external`), and will be loaded automatically by test script
+* The dependency on [Pattern Generator](https://github.com/maria-korosteleva/Garment-Pattern-Generator) is included in the repo (`./external`), and will be loaded automatically by test script
 * The environemtal variables needed for correct lib loading are set up in the test script
 
 ### Configuration of local paths
 
 Same as here: https://github.com/maria-korosteleva/Garment-Pattern-Generator/blob/master/docs/Installation.md#local-paths-setup
 
-NOTE: ATM only the 'output' path is actually used, so setting only that one is enough
+NOTE: Currently, only the 'output' path is actually used, so it is enough to set up only 'output' parameter
 
 
 ## How to run (command line)

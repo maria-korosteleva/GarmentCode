@@ -1,8 +1,3 @@
 {
-  "output": "",
-  "datasets_path": "",
-  "templates_path": "./assets/Patterns",
-  "bodies_path": "./assets/Bodies",
-  "scenes_path": "./assets/Scenes",
-  "sim_configs_path": "./assets/Sim_props"
+  "output": ""
 }
