@@ -21,6 +21,8 @@ import PySimpleGUI as sg
 from assets.garment_programs.meta_garment import MetaGarment
 from assets.body_measurments.body_params import BodyParameters
 
+verbose = False
+
 # GUI Elements
 def Collapsible(layout, key, title='', arrows=(sg.SYMBOL_DOWN, sg.SYMBOL_RIGHT), collapsed=True):
     """
@@ -550,7 +552,8 @@ class GUIState():
             # Don't do anything if the size didn't actually change
             return
         
-        print(f'GUI::Info::Resizing::{upd_canvas_size} from {self.window["CANVAS"].get_size()}')
+        if verbose:
+            print(f'GUI::Info::Resizing::{upd_canvas_size} from {self.window["CANVAS"].get_size()}')
 
         # UPD canvas
         self.window['CANVAS'].set_size(upd_canvas_size)
@@ -614,8 +617,8 @@ class GUIState():
             if 'v' in design_params[param]:
                 if f'{pre_key}#{param}' in self.window.AllKeysDict:
                     self.window[f'{pre_key}#{param}'].update(design_params[param]['v'])
-                else:
-                    print(f'Warning::{pre_key}#{param}: unknown element. Skipped')
+                elif verbose:
+                    print(f'Info::{pre_key}#{param}: unknown element. Skipped')
             else:
                 self.upd_fields_design(
                     design_params[param], 
@@ -716,7 +719,8 @@ class GUIState():
                     event_name = event.removesuffix('#ENTER')
                     param_ids = event_name.split('#')[1:]
                     new_value = values[event_name]
-                    print(f'GUI::Info::New Design Event: {event} = {new_value} of {type(new_value)}')
+                    if verbose:
+                        print(f'GUI::Info::New Design Event: {event} = {new_value} of {type(new_value)}')
 
                     self.pattern_state.set_design_param(
                         param_ids, new_value)
@@ -737,9 +741,10 @@ class GUIState():
                 elif event == 'FOLDER-OUT':
                     self.pattern_state.save_path = Path(values['FOLDER-OUT'])
 
-                    print(
-                        'PatternConfigurator::INFO::New output path: ', 
-                        self.pattern_state.save_path)
+                    if verbose:
+                        print(
+                            'PatternConfigurator::INFO::New output path: ', 
+                            self.pattern_state.save_path)
             
             except BaseException as e:
                 sg.popup_error_with_traceback(
