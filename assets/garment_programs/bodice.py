@@ -321,9 +321,6 @@ class Shirt(pyp.Component):
         name_with_params = f"{self.__class__.__name__}"
         super().__init__(name_with_params)
 
-        # NOTE: Support for full collars with partially strapless top
-        # requres further development
-        # TODOLOW enable this one to work
         if design['left']['enable_asym']['v']:
             if design['shirt']['strapless']['v'] != design['left']['shirt']['strapless']['v']:
                 # Force no collars

@@ -79,7 +79,6 @@ class SkirtCircle(pyp.Component):
         )
 
         # Interfaces
-        # TODO Update after cut
         self.interfaces = {
             'top': pyp.Interface.from_multiple(self.front.interfaces['top'], self.back.interfaces['top']),
             'bottom': pyp.Interface.from_multiple(self.front.interfaces['bottom'], self.back.interfaces['bottom'])

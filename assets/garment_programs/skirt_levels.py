@@ -7,7 +7,6 @@ import pypattern as pyp
 from .skirt_paneled import *
 from .circle_skirt import *
 
-# TODO Test geometry with different settings
 class SkirtLevels(pyp.Component):
     """Skirt constiting of multuple stitched skirts"""
 
@@ -34,8 +33,6 @@ class SkirtLevels(pyp.Component):
         for i in range(n_levels):
             top_width = self.subs[-1].interfaces['bottom'].edges.length()
             top_width *= ruffle
-
-            # TODO Warnings for the subs with the same names!
 
             # Adjust the mesurement to trick skirts into producing correct width
             lbody['waist'] = top_width

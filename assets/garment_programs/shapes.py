@@ -1,7 +1,5 @@
 """A decorative shapes"""
 
-import numpy as np
-import matplotlib.pyplot as plt  # DEBUG
 
 # Custom
 import pypattern as pyp

@@ -28,7 +28,6 @@ def ArmholeSquare(incl, width, angle,  invert=True, **kwargs):
         [incl + l*sina, - l*cosa], 
         [incl, 0],  [incl, width])
     
-    # TODOLOW Bend instead of rotating to avoid sharp connection
     sleeve_edges.rotate(angle=-angle) 
 
     return edges, sleeve_edges
@@ -46,7 +45,6 @@ def ArmholeAngle(incl, width, angle, incl_coeff=0.2, w_coeff=0.2,  invert=True, 
     sleeve_edges = pyp.esf.from_verts(
         [diff_incl + l*sina, w_coeff * width - l*cosa], 
         [diff_incl, w_coeff * width],  [incl, width])
-    # TODOLOW Bend instead of rotating to avoid sharp connection
     sleeve_edges.rotate(angle=-angle) 
 
     return edges, sleeve_edges
@@ -82,7 +80,6 @@ def ArmholeCurve(incl, width, angle, invert=True, **kwargs):
     rotated_direction = shortcut[-1] - shortcut[0]
     rotated_direction /= np.linalg.norm(rotated_direction)
 
-    # TODOLOW Remember relative curvature results and reuse them? (speed)
     fin_inv_edge = pyp.ops.curve_match_tangents(
         inv_edge.as_curve(), 
         down_direction, 
@@ -100,8 +97,6 @@ class SleevePanel(pyp.Panel):
 
     def __init__(self, name, body, design, open_shape):
         super().__init__(name)
-
-        # TODO end_width to be not less then the width of the arm??
 
         shoulder_angle = np.deg2rad(body['shoulder_incl'])
         rest_angle = max(np.deg2rad(design['sleeve_angle']['v']), shoulder_angle)

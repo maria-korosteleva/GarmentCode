@@ -64,18 +64,16 @@ class ThinSkirtPanel(pyp.Panel):
             'left': pyp.Interface(self, self.edges[2])
         }
 
-# TODOLOW front more narrow then the back
 class FittedSkirtPanel(pyp.Panel):
     """Fitted panel for a pencil skirt
     """
     def __init__(
-        self, name, waist, hips,   # TODO Half measurement instead of a quarter
+        self, name, waist, hips,  
         hips_depth, length, low_width, rise=1,
         low_angle=0,
         dart_position=None,  dart_frac=0.5,
         cut=0,
         side_cut=None) -> None:
-        # TODOLOW Only the parameters that differ between front/back panels?
         """
         """
         super().__init__(name)
@@ -111,7 +109,7 @@ class FittedSkirtPanel(pyp.Panel):
         if cut:  # add a cut
             # Use long and thin disconnected dart for a cutout
             new_edges, _, int_edges = pyp.ops.cut_into_edge(
-                pyp.esf.dart_shape(2, cut * length),    # 1 cm  # TODOLOW width could also be a parameter?
+                pyp.esf.dart_shape(2, cut * length),    # 1 cm 
                 bottom, 
                 offset= bottom.length() / 2,
                 right=True)
@@ -124,7 +122,7 @@ class FittedSkirtPanel(pyp.Panel):
             new_edges, _, int_edges = pyp.ops.cut_into_edge(
                 side_cut,    
                 left, 
-                offset=left.length() / 2,   # TODO define
+                offset=left.length() / 2,   
                 right=True)
 
             self.edges.substitute(left, new_edges)
@@ -148,8 +146,6 @@ class FittedSkirtPanel(pyp.Panel):
 
     def add_darts(self, top, dart_width, dart_depth, dart_position):
         
-        # TODO: routine for multiple darts
-        # FIXME front/back darts don't appear to be located at the same position
         dart_shape = pyp.esf.dart_shape(dart_width, dart_depth)
         top_edge_len = top.length()
         top_edges, dart_edges, int_edges = pyp.ops.cut_into_edge(

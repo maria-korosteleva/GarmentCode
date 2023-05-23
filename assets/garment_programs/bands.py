@@ -33,7 +33,6 @@ class WB(pyp.Component):
         self.waist = design['waistband']['waist']['v'] * body['waist']
         self.width = design['waistband']['width']['v']
 
-        # TODO flexible fractions of the waist
         self.front = BandPanel('wb_front', self.waist / 2, self.width)
         self.front.translate_by([0, body['waist_level'], 20])  
         self.back = BandPanel('wb_back', self.waist / 2, self.width)
@@ -67,7 +66,6 @@ class CuffBand(pyp.Component):
 
         design = design['cuff']
 
-        # TODO flexible fractions of the width
         self.front = BandPanel(
             f'{tag}_cuff_f', design['b_width']['v'] / 2, design['b_depth']['v'])
         self.front.translate_by([0, 0, 15])  

@@ -29,8 +29,6 @@ class PantPanel(pyp.Panel):
         crotch_extention = body['leg_circ'] / 2 - body['hips'] / 4
 
         # eval pants shape
-        # TODO Return ruffle opportunity?
-
         # amount of extra fabric at waist
         w_diff = pant_width - waist   # Assume its positive since waist is smaller then hips
         # We distribute w_diff among the side angle and a dart 
@@ -98,7 +96,6 @@ class PantPanel(pyp.Panel):
 
     def apply_rise(self, level, right, top, crotch):
 
-        # TODOLOW This could be an operator or edge function
         right_c, crotch_c = right.as_curve(), crotch.as_curve()
         cutout = svgpath.Line(0 + 1j*level, crotch.end[0] + 1j*level)
 
@@ -121,7 +118,6 @@ class PantsHalf(pyp.Component):
         super().__init__(tag)
         design = design['pants']
 
-        # TODO assymmetric front/back
         self.front = PantPanel(
             f'pant_f_{tag}', body, design
             ).translate_by([0, body['waist_level'] - 5, 25])
@@ -135,7 +131,6 @@ class PantsHalf(pyp.Component):
         )
 
         # add a cuff
-        # TODOLOW This process is the same for sleeves -- make a function?
         if design['cuff']['type']['v']:
             
             pant_bottom = pyp.Interface.from_multiple(
