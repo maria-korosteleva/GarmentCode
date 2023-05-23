@@ -495,7 +495,8 @@ class BasicPattern(object):
                 curv_abs = self._control_to_abs_coord(edge_coords[0], edge_coords[1], edge['curvature'])
                 # view curvy edge as two segments
                 # NOTE this aproximation might lead to False positives in intersection tests
-                # TODO Use linearization (same as in GarmentCode) for better approximation
+                # FIXME Use linearization (same as in GarmentCode) for better approximation
+                # And fixing the "self-intersection" of circle skirts
                 edge_list.append([edge_coords[0], curv_abs])
                 edge_list.append([curv_abs, edge_coords[1]])
             else:

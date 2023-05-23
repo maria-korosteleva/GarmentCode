@@ -142,7 +142,7 @@ class Panel(BaseComponent):
         return self
 
     def rotate_align(self, vector):
-        """Set panel rotation s.t. it's norm is aligned with a given 3D vetor"""
+        """Set panel rotation s.t. it's norm is aligned with a given 3D vector"""
 
         vector = np.asarray(vector)
         vector = vector / np.linalg.norm(vector)

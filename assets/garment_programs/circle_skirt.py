@@ -61,12 +61,16 @@ class SkirtCircle(pyp.Component):
         self.front = CircleArcPanel(
             f'front_{tag}' if tag else 'front', 
             waist_rad, length, arc / 2).translate_by([0, body['waist_level'], 15])
-        self.front.rotate_to(R.from_euler('XYZ', [-40, 0, 0], degrees=True))
 
         self.back = CircleArcPanel(
             f'back_{tag}'  if tag else 'back', 
             waist_rad, length, arc / 2).translate_by([0, body['waist_level'], -15])
-        self.back.rotate_to(R.from_euler('XYZ', [40, 0, 0], degrees=True))
+
+        # Add a cut
+        if design['cut']['add']['v']:
+            self.add_cut(
+                self.front if design['cut']['place']['v'] > 0 else self.back, 
+                design, length)
 
         # Stitches
         self.stitching_rules = pyp.Stitches(
@@ -75,8 +79,34 @@ class SkirtCircle(pyp.Component):
         )
 
         # Interfaces
+        # TODO Update after cut
         self.interfaces = {
             'top': pyp.Interface.from_multiple(self.front.interfaces['top'], self.back.interfaces['top']),
             'bottom': pyp.Interface.from_multiple(self.front.interfaces['bottom'], self.back.interfaces['bottom'])
         }
         
+    def add_cut(self, panel, design, sk_length):
+        """Add a cut to the skirt"""
+        width, depth = design['cut']['width']['v'] * sk_length, design['cut']['depth']['v'] * sk_length
+
+        target_edge = panel.interfaces['bottom'].edges[0]
+        t_len = target_edge.length()
+        offset = abs(design['cut']['place']['v'] * t_len)
+
+        # Respect the placement boundaries
+        offset = max(offset, width / 2)
+        offset = min(offset, t_len - width / 2)
+
+        # NOTE: heuristic is specific for the panels that we use
+        right = target_edge.start[0] > target_edge.end[0]
+
+        # Make a cut
+        cut_shape = pyp.esf.dart_shape(width, depth)
+        new_edges, _, interf_edges = pyp.ops.cut_into_edge(
+            cut_shape, target_edge, 
+            offset=offset, 
+            right=right
+        )
+
+        panel.edges.substitute(target_edge, new_edges)
+        panel.interfaces['bottom'].edges.substitute(target_edge, interf_edges)

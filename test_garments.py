@@ -24,17 +24,17 @@ from assets.body_measurments.body_params import BodyParameters
 if __name__ == '__main__':
 
     body_file = './assets/body_measurments/f_smpl_avg.yaml'
-    body_file = './assets/body_measurments/f_avatar.yaml'
+    # body_file = './assets/body_measurments/f_avatar.yaml'
     # body_file = './assets/body_measurments/f_smpl_model.yaml'
     # body_file = './assets/body_measurments/f_smpl_model_fluffy.yaml'
     # body_file = './assets/body_measurments/m_smpl_avg.yaml'
-    # body_file = './assets/body_measurments/sofia.yaml'  
-    # body_file = './assets/body_measurments/ikea_toy.yaml'
 
     body = BodyParameters(body_file)
 
     design_files = {
-        'base': './assets/design_params/base.yaml',
+        # 'base': './assets/design_params/base.yaml',
+        'default': './assets/design_params/default.yaml',
+        # 'modern': './assets/design_params/modern.yaml',
         # 'Dress_20s': './assets/design_params/dress_20s.yaml',
         # 'Dress_30s': './assets/design_params/dress_30s_header.yaml',
         # 'Dress_40s': './assets/design_params/dress_40s.yaml',

@@ -336,6 +336,32 @@ class CircleEdge(Edge):
             list_to_c(self.end)
         )
   
+    def as_radius_flag(self):
+        """Return circle representation as radius and arc flags"""
+
+        return (self._rel_radius() * self._straight_len(), 
+                self._is_large_arc(),
+                self.control_y < 0)   # left/right orientation 
+  
+    def as_radius_angle(self):
+        """Return circle representation as radius and an angle"""
+
+        return (
+            self._rel_radius() * self._straight_len(),
+            self._arc_angle(),
+            self.control_y < 0
+        )
+
+    def linearize(self):
+        """Return a linear approximation of an edge using the same vertex objects
+        
+            # NOTE: Add extra vertex at an extremum of the edge
+        """
+        midpoint = self.midpoint()
+        edges = [Edge(self.start, midpoint), Edge(midpoint, self.end)]
+
+        return EdgeSequence(*edges)
+
     # NOTE: The following values are calculated at runtime to allow 
     # changes to control point after the edge definition
     def _rel_radius(self, abs_radius=None):
@@ -372,22 +398,6 @@ class CircleEdge(Edge):
         """Indicate if the arc sweeps the large or small angle"""
         return abs(self.control_y) > self._rel_radius()
     
-    def as_radius_flag(self):
-        """Return circle representation as radius and arc flags"""
-
-        return (self._rel_radius() * self._straight_len(), 
-                self._is_large_arc(),
-                self.control_y < 0)   # left/right orientation 
-  
-    def linearize(self):
-        """Return a linear approximation of an edge using the same vertex objects
-        
-            # NOTE: Add extra vertex at an extremum of the edge
-        """
-        midpoint = self.midpoint()
-        edges = [Edge(self.start, midpoint), Edge(midpoint, self.end)]
-
-        return EdgeSequence(*edges)
 
     # Factories
     @staticmethod

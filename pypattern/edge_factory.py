@@ -288,6 +288,10 @@ class EdgeSeqFactory:
 
         return CurveEdge(start, end, control_points=[cp], relative=True)
 
+    @staticmethod
+    def curve_from_len_tangents(start, end, cp, target_len, target_tan0, target_tan1):
+        """Find a curve with given relative curvature parameters"""
+
 # Utils
 # TODOLOW Move to generic_utils
 def _rel_to_abs_coords(start, end, vrel):

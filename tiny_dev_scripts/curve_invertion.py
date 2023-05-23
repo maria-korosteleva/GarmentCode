@@ -105,8 +105,8 @@ def bend_extend_2_tangent(shift, cp, target_len, direction, target_tangent_start
 
     control = np.array([
         cp[0], 
-        [cp[1][0] + shift[0], cp[1][0] + shift[1]], 
-        [cp[2][0] + shift[2], cp[2][0] + shift[3]],
+        [cp[1][0] + shift[0], cp[1][1] + shift[1]], 
+        [cp[2][0] + shift[2], cp[2][1] + shift[3]],
         cp[-1] + direction * shift[4]
     ])
 

@@ -126,7 +126,7 @@ class VisPattern(core.ParametrizedPattern):
             the lower-right vertex coordinate for the convenice of future offsetting.
         """
         attributes = {
-            'fill': 'rgb(216,214,236)',
+            'fill':  'rgb(227,175,186)',  
             'stroke': 'rgb(51,51,51)', 
             'stroke-width': '0.75'
         }
@@ -324,7 +324,7 @@ class VisPattern(core.ParametrizedPattern):
         ax = fig.add_subplot(projection='3d')
 
 
-        # TODO Support arcs / curves
+        # TODOLOW Support arcs / curves (use linearization)
         for panel in self.pattern['panels']:
             p = self.pattern['panels'][panel]
             rot = p['rotation']
@@ -344,7 +344,8 @@ class VisPattern(core.ParametrizedPattern):
         ax.view_init(elev=115, azim=-59, roll=30)
         ax.set_aspect('equal')
         fig.savefig(png_filename, dpi=300, transparent=False)
-        # DEBUG plt.show()
+        # DEBUG 
+        # plt.show()
 
 
 class RandomPattern(VisPattern):

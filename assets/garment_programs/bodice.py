@@ -1,4 +1,4 @@
-from copy import copy
+from copy import copy, deepcopy
 import numpy as np
 
 # Custom
@@ -13,10 +13,9 @@ class BodiceFrontHalf(pyp.Panel):
     def __init__(self, name, body, design) -> None:
         super().__init__(name)
 
-        design = design['bodice']
         # account for ease in basic measurements
-        m_bust = body['bust'] + design['ease']['v']
-        m_waist = body['waist'] + design['ease']['v']
+        m_bust = body['bust']
+        m_waist = body['waist']
 
         # sizes   
         max_len = body['waist_over_bust_line']
@@ -29,7 +28,7 @@ class BodiceFrontHalf(pyp.Panel):
         shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
         bottom_d_width = (self.width - waist) * 2 / 3
 
-        # side length is adjusted due to shoulder inclanation
+        # side length is adjusted due to shoulder inclination
         # for the correct sleeve fitting
         fb_diff = (front_frac - (0.5 - front_frac)) * body['bust']
         side_len = body['waist_line'] - sh_tan * fb_diff
@@ -92,11 +91,9 @@ class BodiceBackHalf(pyp.Panel):
     def __init__(self, name, body, design) -> None:
         super().__init__(name)
 
-        design = design['bodice']
-
         # account for ease in basic measurements
-        m_bust = body['bust'] + design['ease']['v']
-        m_waist = body['waist'] + design['ease']['v']
+        m_bust = body['bust']
+        m_waist = body['waist']
 
         # Overall measurements
         length = body['waist_line']
@@ -104,7 +101,7 @@ class BodiceBackHalf(pyp.Panel):
         
         self.width = back_fraction * m_bust
         waist = back_fraction * m_waist
-        waist_width = self.width - (self.width - waist) / 3   # slight inclanation on the side
+        waist_width = self.width - (self.width - waist) / 3   # slight inclination on the side
 
         shoulder_incl = np.tan(np.deg2rad(body['shoulder_incl'])) * self.width
 
@@ -114,7 +111,7 @@ class BodiceBackHalf(pyp.Panel):
             [-waist_width, 0],
             [-self.width, body['waist_line'] - body['bust_line']],  # from the bottom
             [-self.width, length],   
-            [0, length + shoulder_incl],   # Add some fabric for the neck (inclanation of shoulders)
+            [0, length + shoulder_incl],   # Add some fabric for the neck (inclination of shoulders)
             loop=True)
         
         self.interfaces = {
@@ -146,10 +143,12 @@ class BodiceBackHalf(pyp.Panel):
 
 
 class BodiceHalf(pyp.Component):
-    """Definition of a fitted upper garment with sleeves and collars"""
+    """Definition of a half of an upper garment with sleeves and collars"""
 
     def __init__(self, name, body, design, fitted=True) -> None:
         super().__init__(name)
+
+        design = deepcopy(design)   # Recalculate freely!
 
         # Torso
         if fitted:
@@ -159,23 +158,84 @@ class BodiceHalf(pyp.Component):
             self.ftorso = tee.TorsoFrontHalfPanel(f'{name}_ftorso', body, design).translate_by([0, 0, 25])
             self.btorso = tee.TorsoBackHalfPanel(f'{name}_btorso', body, design).translate_by([0, 0, -20])
 
-        # Sleeves    
+        # Interfaces
+        self.interfaces.update({
+            'f_bottom': self.ftorso.interfaces['bottom_front'],
+            'b_bottom': pyp.Interface.from_multiple(
+                self.btorso.interfaces['bottom'], self.ftorso.interfaces['bottom_back']),
+            'front_in': self.ftorso.interfaces['inside'],
+            'back_in': self.btorso.interfaces['inside']
+        })
+
+        # Sleeves/collar cuts
+        self.eval_dep_params(body, design)
+        if design['shirt']['strapless']['v']:
+            self.make_strapless(design)
+        else:
+            # Sleeves and collars 
+            self.add_sleeves(name, body, design)
+            self.add_collars(name, body, design)
+            self.stitching_rules.append((
+                self.ftorso.interfaces['shoulder'], 
+                self.btorso.interfaces['shoulder']
+            ))  # tops
+
+        # Main connectivity
+        self.stitching_rules.append((self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
+
+
+    def eval_dep_params(self, body, design):
+
+        # Sleeves
+        # NOTE assuming the vertical side is the first argument
+        max_cwidth = self.ftorso.interfaces['shoulder_corner'].edges[0].length() - 1  # cm
+        min_cwidth = body['armscye_depth']
+        v = design['sleeve']['connecting_width']['v']
+        design['sleeve']['connecting_width']['v'] = min_cwidth + v * (max_cwidth - min_cwidth)
+
+        # Collars
+        # NOTE: Assuming the first is the top edge
+        # Width
+        max_edge = self.ftorso.interfaces['collar_corner'].edges[0]
+        # NOTE: Back panel is more narrow, so using it
+        max_w = 2 * (self.btorso.width - design['sleeve']['inclination']['v'] - 1)
+        min_w = body['neck_w']
+
+        design['collar']['width']['v'] = width = min_w + design['collar']['width']['v'] * (max_w - min_w)
+
+        # Depth
+        # Collar depth is given w.r.t. length.
+        # adjust for the shoulder inclination
+        tg = np.tan(np.deg2rad(body['shoulder_incl']))
+        f_depth_adj = tg * (self.ftorso.width - width / 2)
+        b_depth_adj = tg * (self.btorso.width - width / 2)
+
+        max_f_len = self.ftorso.interfaces['collar_corner'].edges[1].length() - tg * self.ftorso.width - 1  # cm
+        max_b_len = self.btorso.interfaces['collar_corner'].edges[1].length() - tg * self.btorso.width - 1  # cm
+
+        
+        design['collar']['f_strapless_depth'] = {}
+        design['collar']['f_strapless_depth']['v'] = design['collar']['fc_depth']['v'] * max_f_len
+        design['collar']['fc_depth']['v'] = design['collar']['f_strapless_depth']['v'] + f_depth_adj
+        
+        design['collar']['b_strapless_depth'] = {}
+        design['collar']['b_strapless_depth']['v'] = design['collar']['bc_depth']['v'] * max_b_len
+        design['collar']['bc_depth']['v'] = design['collar']['b_strapless_depth']['v'] + b_depth_adj 
+
+    def add_sleeves(self, name, body, design):
+
         diff = self.ftorso.width - self.btorso.width
+
         self.sleeve = sleeves.Sleeve(name, body, design, depth_diff=diff)
 
-        print('FRONT SLEEVE')  # DEBUG
         _, f_sleeve_int = pyp.ops.cut_corner(
             self.sleeve.interfaces['in_front_shape'].projecting_edges(), 
             self.ftorso.interfaces['shoulder_corner'])
-        print('BACK SLEEVE')  # DEBUG
         _, b_sleeve_int = pyp.ops.cut_corner(
             self.sleeve.interfaces['in_back_shape'].projecting_edges(), 
             self.btorso.interfaces['shoulder_corner'])
 
-        if design['sleeve']['sleeveless']['v']:  
-            # No sleeve component, only the cut remains
-            del self.sleeve
-        else:
+        if not design['sleeve']['sleeveless']['v']:  
             # Ordering
             bodice_sleeve_int = pyp.Interface.from_multiple(
                 f_sleeve_int.reverse(),
@@ -189,56 +249,101 @@ class BodiceHalf(pyp.Component):
                 bodice_sleeve_int, 
                 gap=7
             )
-
-        # Collars
-        # TODO collars with extra panels!
+    
+    def add_collars(self, name, body, design):
         # Front
-        print('FRONT COLLAR')  # DEBUG
-        collar_type = getattr(collars, design['collar']['f_collar']['v'])
-        f_collar = collar_type(
-            design['collar']['fc_depth']['v'], design['collar']['width']['v'], 
-            angle=design['collar']['fc_angle']['v'])
-        pyp.ops.cut_corner(f_collar, self.ftorso.interfaces['collar_corner'])
-        # Back
-        print('BACK COLLAR')  # DEBUG
-        collar_type = getattr(collars, design['collar']['b_collar']['v'])
-        b_collar = collar_type(
-            design['collar']['bc_depth']['v'], design['collar']['width']['v'], 
-            angle=design['collar']['bc_angle']['v'])
-        pyp.ops.cut_corner(b_collar, self.btorso.interfaces['collar_corner'])
+        collar_type = getattr(
+            collars, 
+            str(design['collar']['component']['style']['v']), 
+            collars.NoPanelsCollar
+            )
+        
+        self.collar_comp = collar_type(name, body, design)
+        
+        # Project shape
+        _, fc_interface = pyp.ops.cut_corner(
+            self.collar_comp.interfaces['front_proj'].edges, 
+            self.ftorso.interfaces['collar_corner']
+        )
+        _, bc_interface = pyp.ops.cut_corner(
+            self.collar_comp.interfaces['back_proj'].edges, 
+            self.btorso.interfaces['collar_corner']
+        )
 
-        self.stitching_rules.append((self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
-        self.stitching_rules.append((self.ftorso.interfaces['shoulder'], self.btorso.interfaces['shoulder']))  # tops
+        # Add stitches/interfaces
+        if 'bottom' in self.collar_comp.interfaces:
+            self.stitching_rules.append((
+                pyp.Interface.from_multiple(fc_interface, bc_interface), 
+                self.collar_comp.interfaces['bottom']
+            ))
 
-        self.interfaces = {
-            'front_in': self.ftorso.interfaces['inside'],
-            'back_in': self.btorso.interfaces['inside'],
+        # Upd front interfaces accordingly
+        if 'front' in self.collar_comp.interfaces:
+            self.interfaces['front_collar'] = self.collar_comp.interfaces['front']
+            self.interfaces['front_in'] = pyp.Interface.from_multiple(
+                self.ftorso.interfaces['inside'], self.interfaces['front_collar']
+            )
+        if 'back' in self.collar_comp.interfaces:
+            self.interfaces['back_collar'] = self.collar_comp.interfaces['back']
+            self.interfaces['back_in'] = pyp.Interface.from_multiple(
+                self.btorso.interfaces['inside'], self.interfaces['back_collar']
+            )
 
-            'f_bottom': self.ftorso.interfaces['bottom_front'],
-            'b_bottom': pyp.Interface.from_multiple(
-                self.btorso.interfaces['bottom'], self.ftorso.interfaces['bottom_back'])
-        }
+    def make_strapless(self, design):
+
+        out_depth = design['sleeve']['connecting_width']['v']
+        f_in_depth = design['collar']['f_strapless_depth']['v']
+        b_in_depth = design['collar']['b_strapless_depth']['v']
+        self._adjust_top_level(self.ftorso, out_depth, f_in_depth)
+        self._adjust_top_level(self.btorso, out_depth, b_in_depth)
+
+    def _adjust_top_level(self, panel, out_level, in_level):
+        """NOTE: Assumes the top of the panel is a single edge
+            and adjustment can be made vertically
+        """
+
+        panel_top = panel.interfaces['shoulder'].edges[0]
+        min_y = min(panel_top.start[1], panel_top.end[1])  
+
+        # Order vertices
+        ins, out = panel_top.start, panel_top.end
+        if panel_top.start[1] < panel_top.end[1]:
+            ins, out = out, ins
+  
+        ins[1] = min_y - in_level
+        out[1] = min_y - out_level
 
 
-class FittedShirt(pyp.Component):
+class Shirt(pyp.Component):
     """Panel for the front of upper garments with darts to properly fit it to the shape"""
 
-    def __init__(self, body, design) -> None:
+    def __init__(self, body, design, fitted=False) -> None:
         name_with_params = f"{self.__class__.__name__}"
         super().__init__(name_with_params)
 
-        self.right = BodiceHalf(f'right', body, design)
-        if 'left' in design and design['left']['enable_asym']['v']:
-            self.left = BodiceHalf(f'left', body, design['left']).mirror()
-        else: 
-            self.left = BodiceHalf(f'left', body, design).mirror()
+        # NOTE: Support for full collars with partially strapless top
+        # requres further development
+        # TODOLOW enable this one to work
+        if design['left']['enable_asym']['v']:
+            if design['shirt']['strapless']['v'] != design['left']['shirt']['strapless']['v']:
+                # Force no collars
+                design = deepcopy(design)
+                design['collar']['component']['style']['v'] = None
+                design['left']['collar']['component']['style']['v'] = None
+
+        self.right = BodiceHalf(f'right', body, design, fitted=fitted)
+        self.left = BodiceHalf(
+            f'left', body, 
+            design['left'] if design['left']['enable_asym']['v'] else design, 
+            fitted=fitted).mirror()
 
         self.stitching_rules.append((self.right.interfaces['front_in'], self.left.interfaces['front_in']))
         self.stitching_rules.append((self.right.interfaces['back_in'], self.left.interfaces['back_in']))
 
         # Adjust interface ordering for correct connectivity
-        self.right.interfaces['f_bottom'].reorder([0, 1], [1, 0])
         self.left.interfaces['b_bottom'].reverse()
+        if fitted: 
+            self.right.interfaces['f_bottom'].reorder([0, 1], [1, 0])
 
         self.interfaces = {   # Bottom connection
             'bottom': pyp.Interface.from_multiple(
@@ -248,33 +353,14 @@ class FittedShirt(pyp.Component):
                 self.right.interfaces['b_bottom'],)
         }
 
-class Shirt(pyp.Component):
-    """Panel for the front of upper garments with darts to properly fit it to the shape"""
-
+class FittedShirt(Shirt):
+    """Creates fitted shirt
+    
+        NOTE: Separate class is used for selection convenience.
+        Even though most of the processing is the same 
+        (hence implemented with the same components except for panels), 
+        design parametrization differs significantly. 
+        With that, we decided to separate the top level names
+    """
     def __init__(self, body, design) -> None:
-        name_with_params = f"{self.__class__.__name__}"
-        super().__init__(name_with_params)
-
-        # DEBUG
-        print('RIGHT!!')
-        self.right = BodiceHalf(f'right', body, design, fitted=False)
-
-        # DEBUG
-        print('LEFT!!')
-        if 'left' in design and design['left']['enable_asym']['v']:
-            self.left = BodiceHalf(f'left', body, design['left'], fitted=False).mirror()
-        else: 
-            self.left = BodiceHalf(f'left', body, design, fitted=False).mirror()
-
-        self.stitching_rules.append((self.right.interfaces['front_in'], self.left.interfaces['front_in']))
-        self.stitching_rules.append((self.right.interfaces['back_in'], self.left.interfaces['back_in']))
-
-        self.left.interfaces['b_bottom'].reverse()
-
-        self.interfaces = {   # Bottom connection
-            'bottom': pyp.Interface.from_multiple(
-                self.right.interfaces['f_bottom'],
-                self.left.interfaces['f_bottom'],
-                self.left.interfaces['b_bottom'],
-                self.right.interfaces['b_bottom'],)
-        }
+        super().__init__(body, design, fitted=True)
