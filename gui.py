@@ -1,4 +1,9 @@
 import os
+import sys
+
+sys.path.insert(0, './external/')
+sys.path.insert(1, './')
+
 # Custom
 from gui.callbacks import GUIState
 
