@@ -123,12 +123,12 @@ class FittedSkirtPanel(pyp.Panel):
             # Add a stylistic cutout to the skirt
             new_edges, _, int_edges = pyp.ops.cut_into_edge(
                 side_cut,    
-                right, 
-                offset=right.length() / 2,   # TODO define
+                left, 
+                offset=left.length() / 2,   # TODO define
                 right=True)
 
-            self.edges.substitute(right, new_edges)
-            right = int_edges
+            self.edges.substitute(left, new_edges)
+            left = int_edges
 
         # Default placement
         self.top_center_pivot()
