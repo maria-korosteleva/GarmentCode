@@ -10,8 +10,6 @@ from .interface import Interface
 class Component(BaseComponent):
     """Garment element (or whole piece) composed of simpler connected garment elements"""
 
-    # TODO Overload copy -- respecting edge sequences
-
     def __init__(self, name) -> None:
         super().__init__(name)
 
@@ -57,8 +55,6 @@ class Component(BaseComponent):
         return self
     
     def rotate_to(self, new_rot):
-        # TODOLOW Implement with correct preservation of relative placement
-        # of subcomponents
         raise NotImplementedError(
             f'Component::Error::rotate_to is not supported on component level.'
             'Use relative <rotate_by()> method instead')
@@ -99,9 +95,6 @@ class Component(BaseComponent):
         # for the alignment of 2D panels, where they are likely
         # to be in one line or in a panel plane instead of 
         # the interface place -- so I'm not using norms for gap esitmation
-
-        # TODO Estimate rotation
-        # TODO not just placement by the midpoint of the interfaces?
 
         return self
 

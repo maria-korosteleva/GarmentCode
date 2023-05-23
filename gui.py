@@ -8,11 +8,6 @@ if 'Windows' in os.environ.get('OS',''):
     from ctypes import windll
     windll.shcore.SetProcessDpiAwareness(1)
 
-# TODO Instructions
-
-# TODO Post screenshots here: https://github.com/PySimpleGUI/PySimpleGUI/issues/10
-# after publication =)
-
 if __name__ == '__main__':
 
     state = GUIState()

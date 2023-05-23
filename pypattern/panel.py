@@ -29,32 +29,6 @@ class Panel(BaseComponent):
         self.edges =  EdgeSequence() 
 
     # Info
-    # DRAFT 
-    def is_right_inside_edge(self, edge:Edge):
-        """ Check if the inside of the panel is on the right side
-            of an edge
-        """
-        # FIXME This one is not working reliably =(
-        norm = self.norm()
-
-        test_edge = edge.linearize()
-        if isinstance(test_edge, EdgeSequence): 
-            # NOTE: side is the same for all edges in linearized sequence
-            # so it's enough to chech just one
-            test_edge = test_edge[0]
-
-        test_edge_3d = [self.point_to_3D(test_edge.start), self.point_to_3D(test_edge.end)]
-        test_vec_3d = test_edge_3d[1] - test_edge_3d[0]
-
-        center_of_mass = self.point_to_3D(self._center_2D())
-
-        # We can determine the side based on relationship between the norm and 
-        # the edge
-        # Knowing that the norm is defined by counterclockwise direction of edges
-        cross = np.cross(test_vec_3d, center_of_mass - test_edge_3d[0])
-
-        return np.dot(cross, norm) < 0
-
     def pivot_3D(self):
         """Pivot point of a panel in 3D"""
         return self.point_to_3D([0, 0])
@@ -109,7 +83,6 @@ class Panel(BaseComponent):
     def translate_by(self, delta_vector):
         """Translate panel by a vector"""
         self.translation = self.translation + np.array(delta_vector)
-        # TODO Autonorm only on the assembly?
         self.autonorm()
 
         return self
@@ -200,7 +173,6 @@ class Panel(BaseComponent):
             # Fix right/wrong side
             self.autonorm()
         else:
-            # TODO Any other axis
             raise NotImplementedError(f'{self.name}::Error::Mirrowing over arbitrary axis is not implemented')
 
         return self
@@ -287,7 +259,6 @@ class Panel(BaseComponent):
 
         # center of mass
         verts = lin_edges.verts()
-
         center = np.mean(verts, axis=0)
         center_3d = self.point_to_3D(center)
 
@@ -298,10 +269,6 @@ class Panel(BaseComponent):
         for e in lin_edges:
             vert_0 = self.point_to_3D(e.start)
             vert_1 = self.point_to_3D(e.end)
-
-            # TODO Use subpoints for curvy edges (they can be very long)
-            # Maybe just the midpoint would give a general idea. 
-            # Otherwise, use "peak" points of a curvy edge
 
             # Pylance + NP error for unreachanble code -- see https://github.com/numpy/numpy/issues/22146
             # Works ok for numpy 1.23.4+

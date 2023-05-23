@@ -78,7 +78,6 @@ class VisPattern(core.ParametrizedPattern):
         if len(self.pattern['panels']) == 0:  # empty pattern
             return None
         
-        # TODO Make the scale controllable from outside?
         avg_box_x = []
         for panel in self.pattern['panels'].values():
             vertices = np.asarray(panel['vertices'])
@@ -144,7 +143,8 @@ class VisPattern(core.ParametrizedPattern):
             start = vertices[edge['endpoints'][0]]
             end = vertices[edge['endpoints'][1]]
             if ('curvature' in edge):
-                if isinstance(edge['curvature'], list) or edge['curvature']['type'] == 'quadratic':  # FIXME placeholder for old curves
+                if isinstance(edge['curvature'], list) or edge['curvature']['type'] == 'quadratic':  
+                    # NOTE: placeholder for old curves
                     control_scale = self._flip_y(edge['curvature'] if isinstance(edge['curvature'], list) else edge['curvature']['params'][0])
                     control_point = self._control_to_abs_coord(
                         start, end, control_scale)
@@ -163,7 +163,6 @@ class VisPattern(core.ParametrizedPattern):
                         end=list_to_c(end)
                     ))
 
-                    # TODO Support full circle separately (?)
                 elif edge['curvature']['type'] == 'cubic':
                     cps = []
                     for p in edge['curvature']['params']:
@@ -198,9 +197,6 @@ class VisPattern(core.ParametrizedPattern):
             origin=list_to_c(vertices[0])
         )
         path = path.translated(list_to_c(translation))  # NOTE: rot/transl order is important!
-
-        # TODO Collisions of non-2D panels when drawn together? 
-        # Just overlap correctly, I guess
 
         return path, attributes, panel['translation'][-1] >= 0
 
@@ -257,7 +253,6 @@ class VisPattern(core.ParametrizedPattern):
 
         # Get svg representation per panel
         # Order by depth (=> most front panels render in front)
-        # TODOLOW Even smarter way is needed for prettier allignment
         panel_order = self.panel_order()
         panel_z = [self.pattern['panels'][pn]['translation'][-1] for pn in panel_order]
         z_sorted_panels = [p for _, p in sorted(zip(panel_z, panel_order))]
@@ -323,8 +318,6 @@ class VisPattern(core.ParametrizedPattern):
         fig = plt.figure(figsize=(30 / 2.54, 30 / 2.54))
         ax = fig.add_subplot(projection='3d')
 
-
-        # TODOLOW Support arcs / curves (use linearization)
         for panel in self.pattern['panels']:
             p = self.pattern['panels'][panel]
             rot = p['rotation']
@@ -344,8 +337,6 @@ class VisPattern(core.ParametrizedPattern):
         ax.view_init(elev=115, azim=-59, roll=30)
         ax.set_aspect('equal')
         fig.savefig(png_filename, dpi=300, transparent=False)
-        # DEBUG 
-        # plt.show()
 
 
 class RandomPattern(VisPattern):

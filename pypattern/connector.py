@@ -22,7 +22,6 @@ class StitchingRule():
             2) The interfaces' edges are matched based on the provided order in the interface. 
             The order can be controlled at the moment of interface creation
         """
-        # TODO Explicitely support 3+way stitches
         self.int1 = int1
         self.int2 = int2
 
@@ -58,7 +57,6 @@ class StitchingRule():
         
             Serializable format does not natively support t-stitches, 
             so the longer edges needs to be broken down into matching segments
-            # SIM specific
         """
 
         # Eval the fractions corresponding to every segments in the interfaces
@@ -142,7 +140,6 @@ class StitchingRule():
                     if it['sec'][1] > in_id:
                         it['sec'][1] += 1
 
-                # TODO what if these edges are used in other interfaces? Do they need to be updated as well?
                 # next step
                 # By the size of new edge
                 covered_init += inter.projecting_edges()[in_id].length() / total_len 
@@ -186,7 +183,7 @@ class Stitches():
 
         self.rules = [StitchingRule(int1, int2) for int1, int2 in rules]
 
-    def append(self, pair):  # TODO two parameters explicitely rather then "pair" object?
+    def append(self, pair): 
         self.rules.append(StitchingRule(*pair))
 
     def __getitem__(self, id):

@@ -491,12 +491,10 @@ class BasicPattern(object):
             edge_ids = edge['endpoints']
             edge_coords = vertices[edge_ids]
             if 'curvature' in edge and isinstance(edge['curvature'], list):
-                # FIXME Legacy curvature representation
+                # NOTE: Legacy curvature representation
                 curv_abs = self._control_to_abs_coord(edge_coords[0], edge_coords[1], edge['curvature'])
                 # view curvy edge as two segments
                 # NOTE this aproximation might lead to False positives in intersection tests
-                # FIXME Use linearization (same as in GarmentCode) for better approximation
-                # And fixing the "self-intersection" of circle skirts
                 edge_list.append([edge_coords[0], curv_abs])
                 edge_list.append([curv_abs, edge_coords[1]])
             else:
@@ -521,8 +519,6 @@ class BasicPattern(object):
             0 if collinear"""
             return (end[0] - start[0]) * (point[1] - start[1]) - (point[0] - start[0]) * (end[1] - start[1])
 
-        # FIXME allow some tolerance ? Godet skirts fail sometimes
-        # == 0 for edges sharing a vertex
         if (ccw(segment1[0], segment1[1], segment2[0]) * ccw(segment1[0], segment1[1], segment2[1]) >= 0
                 or ccw(segment2[0], segment2[1], segment1[0]) * ccw(segment2[0], segment2[1], segment1[1]) >= 0):
             return False
@@ -822,7 +818,6 @@ class ParametrizedPattern(BasicPattern):
                 target_len = []
                 for panel_influence in constraint['influence']:
                     for edge in panel_influence['edge_list']:
-                        # TODO constraints along a custom vector are not well tested
                         _, _, _, length = self._meta_edge(panel_influence['panel'], edge)
                         edge['length'] = length
                         target_len.append(length)

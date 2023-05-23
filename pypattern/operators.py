@@ -39,12 +39,9 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
             * Newly inserted edges
             * New interface object corresponding to new edges
     """
-    # TODO specifying desired 2D rotation of target_shape?
-    # TODO Support any number of edges in the target corner edges
-
     # ---- Evaluate optimal projection of the target shape onto the corner
     corner_shape = target_shape.copy()
-    panel = target_interface.panel[0]   # TODO Support multiple panels???
+    panel = target_interface.panel[0]   
     target_edges = target_interface.edges
     
     # Get rid of directions by working on vertices
@@ -133,7 +130,7 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
     if isinstance(panel.interfaces, list):
         panel.interfaces.append(new_int)
     else:
-        panel.interfaces[f'int_{len(panel.interfaces)}'] = new_int   # TODO Uniqueness of the name?
+        panel.interfaces[f'int_{len(panel.interfaces)}'] = new_int   
 
     return corner_shape[1:-1], new_int
 
@@ -154,8 +151,6 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
         * Edges corresponding to the target shape
         * Edges that lie on the original base edge 
     """
-    # TODO offset in the final cut? vs offset of the middle of the target_shape?
-
     target_shape = EdgeSequence(target_shape)
     new_edges = target_shape.copy().snap_to([0, 0])  # copy and normalize translation of vertices
 
@@ -169,7 +164,7 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
 
     # find starting vertex for insertion & place edges there
     curve = base_edge.as_curve()
-    rel_offset = curve.ilength(offset)   # TODO methods of an Edge class? 
+    rel_offset = curve.ilength(offset)   
 
     # ----- OPTIMIZATION --- 
     start = [0, 0]
@@ -211,7 +206,6 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
     start_id, end_id = 0, len(new_edges)
 
     if offset > target_shape_w / 2 + tol:  
-        # TODO more elegant subroutine
         start_part = base_edge.subdivide_param([rel_offset - shift[1], 1 - (rel_offset - shift[1])])[0]
         start_part.end = new_edges[0].start
         new_edges.insert(0, start_part)
@@ -235,16 +229,6 @@ def _fit_location_corner(l, diff_target, curve1, curve2):
     point2 = c_to_np(curve2.point(l[1]))
     diff_curr = point2 - point1
 
-    # DEBUG
-    # points = np.vstack((point1, point2))
-    # points = points.transpose()
-    # ax1 = curve1.plot(40)
-    # _ = curve2.plot(40, ax=ax1)
-    # lines = ax1.plot(  
-    #     points[0, :], points[1, :],
-    #     marker="o", linestyle="None", color="black")
-    # plt.show()
-
     if flags.VERBOSE:
         print('Location Progression: ', (diff_curr[0] - diff_target[0])**2, (diff_curr[1] - diff_target[1])**2)
 
@@ -255,19 +239,10 @@ def _fit_location_edge(shift, location, width_target, curve):
     """Find the points on two curves s.t. vector between them is the same as shortcut"""
 
     # Current points on curves
-    pointc = c_to_np(curve.point(location))   # TODO this is constant
+    pointc = c_to_np(curve.point(location))   
     point1 = c_to_np(curve.point(location + shift[0]))
     point2 = c_to_np(curve.point(location - shift[1]))
-    diff_curr = point2 - point1
 
-    # DEBUG
-    # points = np.vstack((point1, point2))
-    # points = points.transpose()
-    # ax1 = curve.plot(40)
-    # lines = ax1.plot(  
-    #     points[0, :], points[1, :],
-    #     marker="o", linestyle="None", color="black")
-    # plt.show()
 
     if flags.VERBOSE:
         print('Location Progression: ', (_dist(point1, point2) - width_target)**2)
@@ -307,7 +282,6 @@ def distribute_horisontally(component, n_copies, stride=20, name_tag='panel'):
 
     if isinstance(component, BaseComponent):
         translation_dir = component.rotation.apply([0, 0, 1])   # Horisontally along the panel
-        # FIXME What if it's looking up?
         translation_dir = np.cross(translation_dir, [0, 1, 0])   # perpendicular to Y
         translation_dir = translation_dir / norm(translation_dir)
         delta_translation = translation_dir * stride
@@ -315,7 +289,7 @@ def distribute_horisontally(component, n_copies, stride=20, name_tag='panel'):
         translation_dir = [1, 0, 0] 
 
     for i in range(n_copies - 1):
-        new_component = deepcopy(copies[-1])   # TODO proper copy
+        new_component = deepcopy(copies[-1])  
         new_component.name = f'{name_tag}_{i + 1}'   # Unique
         new_component.translate_by(delta_translation)
 
@@ -367,7 +341,7 @@ def even_armhole_openings(front_opening, back_opening):
 
         # Move this part to the back opening
         subdiv[1].start, subdiv[1].end = copy(subdiv[1].start), copy(subdiv[1].end)  # Disconnect vertices in subdivided version
-        subdiv.pop(0)   # TODOLOW No reflect in the edge class??
+        subdiv.pop(0) 
         subdiv.reflect([0, 0], [1, 0]).reverse().snap_to(back_opening[-1].end)
         subdiv[0].start = back_opening[-1].end
         
@@ -382,15 +356,6 @@ def even_armhole_openings(front_opening, back_opening):
     return front_opening, back_opening
 
 # ANCHOR ----- Curve tools -----
-def _avg_curvature(curve, points_estimates=100):
-    """Average curvature in a curve"""
-    # NOTE: this work slow, but direct evaluation seems
-    # infeasible
-    # Some hints here:
-    # https://math.stackexchange.com/questions/220900/bezier-curvature
-    t_space = np.linspace(0, 1, points_estimates)
-    return sum([curve.curvature(t) for t in t_space]) / points_estimates
-
 def _max_curvature(curve, points_estimates=100):
     """Average curvature in a curve"""
     # NOTE: this work slow, but direct evaluation seems
@@ -500,16 +465,3 @@ def curve_match_tangents(curve, target_tan0, target_tan1, return_as_edge=False):
 
 def _dist(v1, v2):
     return norm(v2-v1)
-
-
-def _fit_scale(s, shortcut, v1, v2, vc, d_v1, d_v2):
-    """Evaluate how good a shortcut fits the corner if the vertices are shifted 
-        a little along the line"""
-    # Shortcut can be used as 2D vector, not a set of 2D points, e.g.
-    shifted = deepcopy(shortcut)
-    shifted[0] += (shortcut[0] - shortcut[1]) * s[0]  # this only changes the end vertex though
-    shifted[1] += (shortcut[1] - shortcut[0]) * s[1]  # this only changes the end vertex though
-
-    return ((d_v1 - _dist(shifted[0], v1) - _dist(shifted[0], vc))**2
-            + (d_v2 - _dist(shifted[1], v2) - _dist(shifted[1], vc))**2
-            )

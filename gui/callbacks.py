@@ -2,11 +2,6 @@
 
 # NOTE: PySimpleGUI reference: https://github.com/PySimpleGUI/PySimpleGUI/blob/master/docs/call%20reference.md
 
-# TODOLOW LOW-Priority allow changing window size? https://stackoverflow.com/questions/66379808/how-do-i-respond-to-window-resize-in-pysimplegui
-# https://stackoverflow.com/questions/63686020/pysimplegui-how-to-achieve-elements-frames-columns-to-align-to-the-right-and-r
-# TODOLOW Low-Priority Colorscheme
-# TODO Window is too big on Win laptops
-
 import os.path
 from copy import copy, deepcopy
 from pathlib import Path
@@ -76,7 +71,6 @@ class GUIPattern():
     # Updates
     def new_body_file(self, path):
         self.body_file = path
-        # FIXME Update instead of re-writing
         self.body_params = BodyParameters(path)
         self.reload_garment()
 
@@ -85,8 +79,6 @@ class GUIPattern():
         with open(path, 'r') as f:
             des = yaml.safe_load(f)['design']
 
-        # FIXME Updating should allows loading partial design files
-        # Need nested updates
         self.design_params.update(des)
 
         if 'left' in self.design_params and not self.design_params['left']['enable_asym']:
@@ -393,8 +385,6 @@ class GUIState():
     def def_flat_design_layout(self, design_params, pre_key='DESIGN', use_collapsible=False):
         """Add fields to control design parameters"""
 
-        # TODOLOW Unused/non-relevant fields  
-
         text_size = max([len(param) for param in design_params])
 
         fields = []
@@ -431,7 +421,7 @@ class GUIState():
                         relief=sg.RELIEF_FLAT, 
                         resolution=1 if p_type == 'int' else 0.05, 
                         key=f'{pre_key}#{param}', 
-                        # DRAFT enable_events=True # comment to only send events when slider is released
+                        # enable_events=True # comment to only send events when slider is released
                     )
                 else:
                     print(f'GUI::WARNING::Unknown parameter type: {p_type}')
@@ -648,9 +638,7 @@ class GUIState():
         for key in slider_keys:
             window[key].Widget.config(sliderlength=10)
             window[key].Widget.config(sliderrelief=sg.RELIEF_FLAT)
-            window[key].bind('<ButtonRelease-1>', '')  # DRAFT  uncomment to only send events when slider is released
-            # window[key].Widget.config(background='#000000') # slider button
-            # window[key].Widget.config(troughcolor='#FFFFFF')  
+            window[key].bind('<ButtonRelease-1>', '')  #  uncomment to only send events when slider is released
 
     # Utils
     def get_keys_by_instance(self, instance_type):

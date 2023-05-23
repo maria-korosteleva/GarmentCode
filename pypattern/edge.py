@@ -18,8 +18,6 @@ class Edge():
         """ Simple edge inititalization.
         Parameters: 
             * start, end: from/to vertcies that the edge connectes, describing the _interface_ of an edge
-
-            # TODOLOW Add support for fold schemes to allow guided folds at the edge (e.g. pleats)
         """
 
         assert not all(close_enough(s, e) for s, e in zip(start, end)), 'Start and end of an edge should differ'
@@ -191,18 +189,6 @@ class Edge():
         
         return self._subdivide(fractions, by_length=False)
 
-    # DRAFT This will not work for curves though
-    #  def subdivide_point(self, point:list):
-    #     """Subdivide the edge into two at the given point
-    #     """
-    #     # NOTE: works for children classes as well
-    #     curve = self.as_curve()
-    #     param = curve.point_to_t(list_to_c(point))
-
-    #     curve = svgpath.CubicBezier(0+0j, 0.3+0.5j, 0.6+0.2j, 1+0j)
-
-    #     return self._subdivide([param, 1-param], False)
-
     def _subdivide(self, fractions: list, by_length=True):
         """Subdivide edge by length or curve parametrization
 
@@ -301,7 +287,6 @@ class CircleEdge(Edge):
         """
         # NOTE: subdivide_param() is the same as subdivide_len()
         # So parent implementation is ok
-        # TODOLOW Implementation is very similar to CurveEdge param-based subdivision
         frac = [abs(f) for f in fractions]
         if not close_enough(fsum:=sum(frac), 1, 1e-4):
             raise RuntimeError(f'Edge Subdivision::Error::fraction is incorrect. The sum {fsum} is not 1')
@@ -489,10 +474,6 @@ class CircleEdge(Edge):
             compatible with core -> BasePattern JSON (dict) 
         """
 
-        # TODOLOW Try the 3-point representation in JSON? Might be more compact + more continious
-        # How much human readible this one should be?
-        # Even one number (Y axis) could be enough 
-
         rad, large_arc, right = self.as_radius_flag()
         return (
             [self.start, self.end], 
@@ -521,8 +502,6 @@ class CurveEdge(Edge):
 
         """
         super().__init__(start, end)
-
-        # FIXME Self-intersections tests
 
         self.control_points = control_points
 
@@ -633,8 +612,6 @@ class CurveEdge(Edge):
         
             # NOTE: Add extra vertex at an extremum of the edge
         """
-        # TODO Use linearization for more correct 3D visualization 
-        # and self-intersection estimation
         extreme_points = self._extreme_points()
 
         if len(extreme_points):
@@ -690,15 +667,13 @@ class CurveEdge(Edge):
             [self.start, self.end], 
             {
                 "endpoints": [0, 1], 
-                "curvature": {   # TODOLOW Remove this level? The the 'type' is always present? 
-                                 # Will break backwards compatibility though..
+                "curvature": {  
                     "type": 'quadratic' if len(self.control_points) == 1 else 'cubic',
                     "params": self.control_points
                 }
             })
 
     
-# TODO as svgpath path object (?)
 class EdgeSequence():
     """Represents a sequence of (possibly chained) edges (e.g. every next edge starts from the same vertex that the previous edge ends with
         and allows building some typical edge sequences
@@ -887,12 +862,6 @@ class EdgeSequence():
         """Extend or shrink the edges along the line from start of the first edge to the 
         end of the last edge in sequence
         """
-        # TODOLOW Version With preservation of total length?
-        # TODOLOW Base extention factor on change in total length of edges rather
-        # than on the shortcut length
-
-        # FIXME extending by negative factor should be predictable (e.g. opposite direction of extention)
-
         # Need to take the target line from the chained order
         if not self.isChained():  
             chained_edges = self.chained_order()
