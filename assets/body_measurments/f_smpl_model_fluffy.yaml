@@ -1,28 +1,21 @@
-
-# Measurments of the body
-body: 
-  height: 162.5 
-  head_l: 24.3    # nape of the neck to the top -- ok to use some average value
-
-  sholder_w: 35   
-  armscye_depth: 14.5  # Nape of the Neck to armscye depth on the back
-  shoulder_incl: 10  # degrees 
-
-  arm_pose_angle: 40  # Degrees
-
-  waist:  105  #
-  waist_line:  37.3  #     # Nape of the Neck to waist (on the back)
-  waist_over_bust_line: 44 #  -- measurement + addition for the shoulder
-
-  bust_line: 22.1
-  bust: 118.3
-  bust_points:  20.2 
-  underbust: 103
-  back_width: 46    # 36.5 + 2 * between-size
-
-  hips: 119  
-  hips_line: 14.6    # From the waist
+body:
+  arm_pose_angle: 50.0
+  armscye_depth: 14.5
+  back_width: 46
   bum_points: 19
-  crotch_hip_diff: 9   # NOTE vertical projection of the level
-  leg_circ: 76
-  
+  bust: 118.3
+  bust_line: 22.1
+  bust_points: 20.2
+  crotch_hip_diff: 13.0
+  head_l: 24.3
+  height: 162.5
+  hips: 122.0
+  hips_line: 19.0
+  leg_circ: 78.0
+  neck_w: 16
+  sholder_w: 35
+  shoulder_incl: 10
+  underbust: 103
+  waist: 100.0
+  waist_line: 37.3
+  waist_over_bust_line: 44
