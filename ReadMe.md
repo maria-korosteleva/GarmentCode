@@ -49,7 +49,7 @@ python gui.py
 ```
 
 It can load body and design parameter files and display the corresponding sewing pattern right away.
-Design files should be compatible with `MetaGarment` object (all examples provided in our supplementary materials are compatible).
+Design files should be compatible with `MetaGarment` object (all examples provided in our supplementary materials are compatible, you can load `design_params.yaml` files).
 
 ### GUI: Notes on use
 
