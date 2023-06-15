@@ -78,6 +78,7 @@ class EdgeSeqFactory:
 
         return edges
 
+    # ------ Darts ------
     #DRAFT
     @staticmethod
     def side_with_dart_by_width(start=(0,0), end=(100,0), width=5, depth=10, dart_position=50, opening_angle=180, right=True, modify='both', panel=None):
@@ -265,6 +266,37 @@ class EdgeSeqFactory:
 
         return EdgeSeqFactory.from_verts([0, 0], [width / 2, -depth_perp], [width, 0])
 
+    # --- SVG ----
+    @staticmethod
+    def halfs_from_svg(svg_filepath, target_height=None):
+        """Load a shape from an SVG and split it in half (vertically)
+
+        * 
+        
+        Shapes restrictions: 
+            1) every path in the provided SVG is assumed to form a closed loop that has 
+            exactly 2 intersection points with a vetrical line passing though the middle of the shape
+            2) The paths should not be nested (inside each other) or intersect
+                as to not create disconnected pieces of the edge when used in shape projection
+        """
+        paths, _ = svgpath.svg2paths(svg_filepath)
+
+        # Scaling
+        if target_height is not None:
+            bbox = bbox_paths(paths)
+            scale = target_height / (bbox[-1] - bbox[-2])
+            paths = [p.scaled(scale) for p in paths]
+
+        # Get the half-shapes
+        left, right = split_half_svg_paths(paths)
+
+        # Turn into Edge Sequences
+        left_seqs = [EdgeSequence.from_svg_path(p) for p in left]
+        right_seqs = [EdgeSequence.from_svg_path(p) for p in right]
+
+        return left_seqs, right_seqs
+
+    # --- Curve fittings ---- 
     @staticmethod
     def curve_from_extreme(start, end, target_extreme):
         """Create (Quadratic) curve edge that 
@@ -356,6 +388,7 @@ def _fit_dart(coords, v0, v1, d0, d1, depth, theta=90):
 
     return sum(error.values())
 
+# --- For Curves ---
 def _softsign(x):
     return x / (abs(x) + 1)
 
@@ -411,3 +444,56 @@ def _fit_y_extremum(cp_y, target_location):
     diff = np.linalg.norm(extremum - target_location)
 
     return diff**2 
+
+# ---- For SVG Loading ----
+def bbox_paths(paths):
+    """Bounding box of a set of paths"""
+
+    bboxes = np.array([p.bbox() for p in paths])
+    return (min(bboxes[:, 0]), max(bboxes[:, 1]), min(bboxes[:, 2]), max(bboxes[:, 3]))
+
+def split_half_svg_paths(paths):
+    """Sepate SVG paths in half over the vertical line -- for insertion into a edge side
+    
+        Paths shapes restrictions: 
+        1) every path in the provided list is assumed to form a closed loop that has 
+        exactly 2 intersection points with a vetrical line passing though the middle of the shape
+        2) The paths geometry should not be nested
+            as to not create disconnected pieces of the edge when used in shape projection
+
+    """
+    # Shape Bbox
+    bbox = bbox_paths(paths)
+    center_x = (bbox[0] + bbox[1]) / 2
+
+    # Mid-Intersection 
+    inter_segment = svgpath.Line(
+            center_x + 1j * bbox[2],
+            center_x + 1j * bbox[3]
+        )
+
+    right, left = [], []
+    for p in paths:
+        # Intersect points
+        intersect_t = p.intersect(inter_segment)
+
+        if len(intersect_t) != 2: 
+            raise ValueError(f'SplitSVGHole::ERROR::Each Provided Svg path should cross vertical like exactly 2 times')
+
+        # Split
+        from_T, to_T = intersect_t[0][0][0], intersect_t[1][0][0]
+        if to_T < from_T:
+            from_T, to_T = to_T, from_T
+
+        side_1 = p.cropped(from_T, to_T)
+        # This order should preserve continuity
+        side_2 = svgpath.Path(*p.cropped(to_T, 1)._segments, *p.cropped(0, from_T)._segments)
+
+        # Collect correctly
+        if side_1.bbox()[2] > center_x:
+            side_1, side_2 = side_2, side_1
+        
+        right.append(side_1)
+        left.append(side_2)
+
+    return left, right
