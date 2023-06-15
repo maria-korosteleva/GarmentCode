@@ -5,6 +5,13 @@ from pypattern.generic_utils import vector_angle, close_enough, c_to_list, c_to_
 
 import pypattern as pyp
 
+def bbox_paths(paths):
+    """Bounding box of a set of paths"""
+
+    bboxes = np.array([p.bbox() for p in paths])
+    return (min(bboxes[:, 0]), max(bboxes[:, 1]), min(bboxes[:, 2]), max(bboxes[:, 3]))
+
+
 def split_half_svg_paths(paths):
     """Sepate SVG paths in half over the vertical line -- for insertion into a edge side
     
@@ -16,8 +23,7 @@ def split_half_svg_paths(paths):
 
     """
     # Shape Bbox
-    bboxes = np.array([p.bbox() for p in paths])
-    bbox = (min(bboxes[:, 0]), max(bboxes[:, 1]), min(bboxes[:, 2]), max(bboxes[:, 3]))
+    bbox = bbox_paths(paths)
     center_x = (bbox[0] + bbox[1]) / 2
 
     # Mid-Intersection 
@@ -55,7 +61,13 @@ def split_half_svg_paths(paths):
 
 paths, attributes = svgpath.svg2paths('./assets/img/Logo_adjusted.svg')
 
-# Get the shapes
+# TODO Scaling
+target_height = 15  # cm
+bbox = bbox_paths(paths)
+scale = target_height / (bbox[-1] - bbox[-2])
+paths = [p.scaled(scale) for p in paths]
+
+# Get the half-shapes
 left, right = split_half_svg_paths(paths)
 
 # Turn into Edge Sequences
@@ -65,16 +77,29 @@ right_seqs = [pyp.EdgeSequence.from_svg_path(p) for p in right]
 # DEBUG
 print(len(left_seqs), len(right_seqs))
 
-# TODO Scaling
+# --------
+# TODO Routine for multi-shape projection
+# TODO Calculate relative offsets to place the whole shape at the target offset
+offset = 15 
 
-# TODO multi-sides projection
+shortcuts = np.asarray([e.shortcut() for e in left_seqs])
+median_y = (max(shortcuts[:, 1]) + min(shortcuts[:, 1])) / 2
+rel_offsets = [(s[0][1] + s[1][1]) / 2 - median_y for s in shortcuts]
+
+per_seq_offsets = [offset + r for r in rel_offsets]  # TODO depends on the side though 
+
 
 # TODO Put into the main library
+
+# TODO Test projection of semi-siggraph 
+
+# TODO Front/back shape on skirt
+
 
 
 # DEBUG
 print(len(right), len(left))
 # Vis
-svgpath.wsvg(right, stroke_widths=[1] * len(right), filename='tmp/output_right.svg')
-#svgpath.disvg(right, stroke_widths=[1] * len(right))
-#svgpath.disvg(left, stroke_widths=[1] * len(left))
+#svgpath.wsvg(right, stroke_widths=[1] * len(right), filename='tmp/output_right.svg')
+#svgpath.disvg(right, stroke_widths=[0.05] * len(right))
+#svgpath.disvg(left, stroke_widths=[0.05] * len(left))
