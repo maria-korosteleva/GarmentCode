@@ -3,6 +3,7 @@ import svgpathtools as svgpath
 
 from pypattern.generic_utils import vector_angle, close_enough, c_to_list, c_to_np, list_to_c
 
+import pypattern as pyp
 
 def split_half_svg_paths(paths):
     """Sepate SVG paths in half over the vertical line -- for insertion into a edge side
@@ -14,8 +15,6 @@ def split_half_svg_paths(paths):
             as to not create disconnected pieces of the edge when used in shape projection
 
     """
-    print(len(paths))  # DEBUG
-
     # Shape Bbox
     bboxes = np.array([p.bbox() for p in paths])
     bbox = (min(bboxes[:, 0]), max(bboxes[:, 1]), min(bboxes[:, 2]), max(bboxes[:, 3]))
@@ -26,7 +25,6 @@ def split_half_svg_paths(paths):
             center_x + 1j * bbox[2],
             center_x + 1j * bbox[3]
         )
-    print(inter_segment)  # DEBUG
 
     right, left = [], []
     for p in paths:
@@ -42,7 +40,8 @@ def split_half_svg_paths(paths):
             from_T, to_T = to_T, from_T
 
         side_1 = p.cropped(from_T, to_T)
-        side_2 = svgpath.Path(*p.cropped(0, from_T)._segments, *p.cropped(to_T, 1)._segments)
+        # This order should preserve continuity
+        side_2 = svgpath.Path(*p.cropped(to_T, 1)._segments, *p.cropped(0, from_T)._segments)
 
         # Collect correctly
         if side_1.bbox()[2] > center_x:
@@ -56,11 +55,26 @@ def split_half_svg_paths(paths):
 
 paths, attributes = svgpath.svg2paths('./assets/img/Logo_adjusted.svg')
 
+# Get the shapes
 left, right = split_half_svg_paths(paths)
+
+# Turn into Edge Sequences
+left_seqs = [pyp.EdgeSequence.from_svg_path(p) for p in left]
+right_seqs = [pyp.EdgeSequence.from_svg_path(p) for p in right]
+
+# DEBUG
+print(len(left_seqs), len(right_seqs))
+
+# TODO Scaling
+
+# TODO multi-sides projection
+
+# TODO Put into the main library
 
 
 # DEBUG
 print(len(right), len(left))
 # Vis
-svgpath.disvg(right, stroke_widths=[1] * len(right))
-svgpath.disvg(left, stroke_widths=[1] * len(left))
+svgpath.wsvg(right, stroke_widths=[1] * len(right), filename='tmp/output_right.svg')
+#svgpath.disvg(right, stroke_widths=[1] * len(right))
+#svgpath.disvg(left, stroke_widths=[1] * len(left))

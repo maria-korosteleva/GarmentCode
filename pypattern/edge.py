@@ -698,7 +698,6 @@ class CurveEdge(Edge):
             })
 
     
-# TODO as svgpath path object (?)
 class EdgeSequence():
     """Represents a sequence of (possibly chained) edges (e.g. every next edge starts from the same vertex that the previous edge ends with
         and allows building some typical edge sequences
@@ -707,6 +706,41 @@ class EdgeSequence():
         self.edges = []
         for arg in args:
             self.append(arg)
+
+    @staticmethod
+    def from_svg_path(path:svgpath.Path, dist_tol=0.05):
+        """Convert SVG path given as svgpathtool Path object to an EdgeSequence
+            
+        * dist_tol: tolerance for vertex closeness to be considered the same vertex
+            NOTE: Assumes that the path can be chained
+        """
+        # Convert as is
+        edges = []
+        for seg in path._segments:
+            # skip segments of length zero
+            if close_enough(seg.length(), tol=dist_tol):
+                if VERBOSE:
+                    print('Skipped: ', seg)  
+                continue
+            if isinstance(seg, svgpath.Line):
+                edges.append(Edge(
+                    c_to_list(seg.start), c_to_list(seg.end)))
+            elif isinstance(seg, svgpath.Arc):
+                edges.append(CircleEdge.from_svg_curve(seg))
+            else:
+                edges.append(CurveEdge.from_svg_curve(seg))
+
+        # Chain the edges
+        if len(edges) > 1: 
+            for i in range(1, len(edges)):
+
+                if not all(close_enough(s, e, tol=dist_tol) for s, e in zip(edges[i].start, edges[i - 1].end)):
+                    raise ValueError('EdgeSequence::from_svg_path::input path is not chained')
+
+                edges[i].start = edges[i - 1].end
+
+
+        return EdgeSequence(*edges)
 
     # ANCHOR Properties
     def __getitem__(self, i):
