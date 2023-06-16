@@ -5,7 +5,7 @@ import numpy as np
 
 # other assets
 from .bands import WB
-from .shapes import Sun
+from .shapes import Sun, SIGGRAPH_logo
 
 # Panels
 class SkirtPanel(pyp.Panel):
@@ -74,7 +74,7 @@ class FittedSkirtPanel(pyp.Panel):
         low_angle=0,
         dart_position=None,  dart_frac=0.5,
         cut=0,
-        side_cut=None) -> None:
+        side_cut=None, flip_side_cut=False) -> None:
         # TODOLOW Only the parameters that differ between front/back panels?
         """
         """
@@ -122,10 +122,9 @@ class FittedSkirtPanel(pyp.Panel):
         if side_cut is not None:
             # Add a stylistic cutout to the skirt
             new_edges, _, int_edges = pyp.ops.cut_into_edge(
-                side_cut,    
-                left, 
+                side_cut, left, 
                 offset=left.length() / 2,   # TODO define
-                right=True)
+                right=True, flip_target=flip_side_cut)
 
             self.edges.substitute(left, new_edges)
             left = int_edges
@@ -195,7 +194,9 @@ class PencilSkirt(pyp.Component):
         # condition
         if design['style_side_cut']['v']:
             depth = 0.7 * (body['hips'] / 4 - body['bust_points'] / 2)
-            style_shape = Sun(depth * 2, depth, n_rays=6, d_rays=depth*0.2)
+            # TODO cut type choice
+            # DRAFT style_shape = Sun(depth * 2, depth, n_rays=6, d_rays=depth*0.2)
+            style_shape = SIGGRAPH_logo(depth * 1.5, depth)
         else:
             style_shape = None
 
@@ -225,7 +226,8 @@ class PencilSkirt(pyp.Component):
             dart_position=body['bum_points'] / 2,
             dart_frac=1.1,   
             cut=design['back_cut']['v'], 
-            side_cut=style_shape
+            side_cut=style_shape, 
+            flip_side_cut=True,
         ).translate_to([0, body['waist_level'], -20])
 
         self.stitching_rules = pyp.Stitches(

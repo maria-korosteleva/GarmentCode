@@ -77,28 +77,28 @@ class StraightPanel(pyp.Panel):
 
         # Routine for multi-shape projection
         base_edge = self.edges[-1]
-        new_edge, in_edges, new_interface = pyp.ops.cut_into_edge_multi(
+        new_edge, in_edges, new_interface = pyp.ops.cut_into_edge(
                 left_seq, base_edge, 
                 offset=base_edge.length() / 2, right=False, flip_target=True)
 
         self.edges.substitute(base_edge, new_edge)
 
         base_edge = self.edges[2]
-        new_edge, in_edges, new_interface = pyp.ops.cut_into_edge_multi(
+        new_edge, in_edges, new_interface = pyp.ops.cut_into_edge(
                 left_seq, base_edge, 
                 offset=base_edge.length() / 2, right=True, flip_target=True)
 
         self.edges.substitute(base_edge, new_edge)
 
         base_edge = self.edges[1]
-        new_edge, in_edges, new_interface = pyp.ops.cut_into_edge_multi(
+        new_edge, in_edges, new_interface = pyp.ops.cut_into_edge(
                 right_seq, base_edge, 
                 offset=base_edge.length() / 2, right=False)
 
         self.edges.substitute(base_edge, new_edge)
 
         base_edge = self.edges[0]
-        new_edge, in_edges, new_interface = pyp.ops.cut_into_edge_multi(
+        new_edge, in_edges, new_interface = pyp.ops.cut_into_edge(
                 right_seq, base_edge, 
                 offset=base_edge.length() / 2, right=True)
 

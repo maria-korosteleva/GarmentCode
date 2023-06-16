@@ -8,7 +8,7 @@
 design: 
   meta: 
     upper: 
-      v: CurvyProjection
+      v: null
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
@@ -16,7 +16,7 @@ design:
       range: [True, False]
       type: bool
     bottom: 
-      v: False
+      v: PencilSkirt
       range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, SkirtLevels]
       type: select_null
 
@@ -401,7 +401,7 @@ design:
 
   pencil-skirt: 
     length:
-      v: 0.5
+      v: 0.3
       range: [-0.2, 1]
       type: float 
     rise:
@@ -409,11 +409,11 @@ design:
       range: [0.5, 1]
       type: float
     flare:   # coefficient may depend on length
-      v: 0.8
+      v: 0.7
       range: [0.3, 1]   
       type: float
     low_angle: 
-      v: 30
+      v: 0
       range: [-50, 50]
       type: int
     front_cut: # TODO Not to be used with low_angle!
@@ -425,7 +425,7 @@ design:
       range: [0, 0.9]   # 1 = length
       type: float
     style_side_cut:
-      v: False
+      v: True
       range: [True, False]
       type: bool
 

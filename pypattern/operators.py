@@ -137,7 +137,7 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
 
     return corner_shape[1:-1], new_int
 
-def cut_into_edge_multi(target_shape, base_edge:Edge, offset=0, right=True, flip_target=False, tol=1e-4):
+def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, flip_target=False, tol=1e-4):
     """ Insert edges of the target_shape into the given base_edge, starting from offset
         edges in target shape are rotated s.t. start -> end vertex vector is aligned with the edge 
 
@@ -160,6 +160,10 @@ def cut_into_edge_multi(target_shape, base_edge:Edge, offset=0, right=True, flip
     """
 
     # TODO Not only for Y-aligned shapes
+
+    if isinstance(target_shape, EdgeSequence):
+        return cut_into_edge_single(
+            target_shape, base_edge, offset, right, flip_target, tol)
 
     # center of the shape
     shortcuts = np.asarray([e.shortcut() for e in target_shape])
@@ -195,7 +199,7 @@ def cut_into_edge_multi(target_shape, base_edge:Edge, offset=0, right=True, flip
     return all_new_edges, new_in_edges, int_edges
 
     
-def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
+def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True, flip_target=False, tol=1e-4):
     """ Insert edges of the target_shape into the given base_edge, starting from offset
         edges in target shape are rotated s.t. start -> end vertex vector is aligned with the edge 
 
@@ -212,7 +216,8 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
         * Edges corresponding to the target shape
         * Edges that lie on the original base edge 
     """
-    # TODO offset in the final cut? vs offset of the middle of the target_shape?
+
+    # TODO shape flipping 
 
     target_shape = EdgeSequence(target_shape)
     new_edges = target_shape.copy().snap_to([0, 0])  # copy and normalize translation of vertices
