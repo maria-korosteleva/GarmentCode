@@ -7,7 +7,7 @@ from scipy.optimize import minimize
 
 # Custom
 from .edge import EdgeSequence, Edge, CurveEdge
-from .generic_utils import vector_angle, close_enough, c_to_list, list_to_c
+from .generic_utils import vector_angle, close_enough, c_to_list, list_to_c, bbox_paths
 from .interface import Interface
 from . import flags
 
@@ -462,11 +462,6 @@ def _fit_y_extremum(cp_y, target_location):
     return diff**2 
 
 # ---- For SVG Loading ----
-def bbox_paths(paths):
-    """Bounding box of a set of paths"""
-
-    bboxes = np.array([p.bbox() for p in paths])
-    return (min(bboxes[:, 0]), max(bboxes[:, 1]), min(bboxes[:, 2]), max(bboxes[:, 3]))
 
 def split_half_svg_paths(paths):
     """Sepate SVG paths in half over the vertical line -- for insertion into a edge side

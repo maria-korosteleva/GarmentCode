@@ -11,7 +11,7 @@ import svgpathtools as svgpath
 # Custom 
 from .edge import Edge, CurveEdge, CircleEdge, EdgeSequence
 from .interface import Interface
-from .generic_utils import vector_angle, close_enough, c_to_list, c_to_np, list_to_c
+from .generic_utils import vector_angle, close_enough, c_to_list, c_to_np, list_to_c, bbox_paths
 from .base import BaseComponent
 from . import flags
 
@@ -160,27 +160,22 @@ def cut_into_edge_multi(target_shape, base_edge:Edge, offset=0, right=True, flip
 
     # TODO Not only for Y-aligned shapes
 
+    # center of the shape
+    shortcuts = np.asarray([e.shortcut() for e in target_shape])
+    median_y = (shortcuts[:, :, 1].max() + shortcuts[:, :, 1].min()) / 2
+
     # Flip the shapes if requested
     if flip_target:
         target_shape = [s.copy() for s in target_shape]
-        bboxes = np.array([s.bbox() for s in target_shape])
-        bbox = (min(bboxes[:, 0]), max(bboxes[:, 1]), min(bboxes[:, 2]), max(bboxes[:, 3]))
-        center_y = (bbox[2] + bbox[3]) / 2
         # Flip
-        target_shape = [s.reflect([bbox[0], center_y], [bbox[1], center_y]) for s in target_shape] 
-        # Flip the order as well 
+        target_shape = [s.reflect([0, median_y], [1, median_y]) for s in target_shape] 
+        # Flip the order as well to reflect orientation change
         target_shape = [s.reverse() for s in target_shape] 
 
     # Calculate relative offsets to place the whole shape at the target offset
     shortcuts = np.asarray([e.shortcut() for e in target_shape])
-    median_y = (shortcuts[:, 1].max() + shortcuts[:, 1].min()) / 2
     rel_offsets = [(s[0][1] + s[1][1]) / 2 - median_y for s in shortcuts]
-
     per_seq_offsets = [offset + r for r in rel_offsets] 
-
-    # DEBUG
-    print('Rel Offsets ', rel_offsets)
-    print('Offsets ', per_seq_offsets)
 
     # Project from farthest to closest 
     sorted_tup = sorted(zip(per_seq_offsets, target_shape), reverse=True)

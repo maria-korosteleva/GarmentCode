@@ -72,7 +72,7 @@ class StraightPanel(pyp.Panel):
         print('SHAPE')  # DEBUG
 
         left_seq, right_seq = pyp.esf.halfs_from_svg(
-            './assets/img/Logo_adjusted.svg',   #'./assets/img/test_shape.svg', './assets/img/logo_cropped.svg',  # './assets/img/Logo_adjusted.svg', 
+            './assets/img/logo_cropped.svg',   #'./assets/img/test_shape.svg', './assets/img/logo_cropped.svg',  # './assets/img/Logo_adjusted.svg', 
             target_height=size / 2)
 
         # Routine for multi-shape projection

@@ -52,10 +52,15 @@ def vector_align_3D(v1, v2):
 
     return Rotation.from_rotvec(cross * angle)
 
-
 def close_enough(f1, f2=0, tol=1e-4):
     """Compare two floats correctly """
     return abs(f1 - f2) < tol
+
+def bbox_paths(paths):
+    """Bounding box of a list of paths/Edge Sequences"""
+
+    bboxes = np.array([p.bbox() for p in paths])
+    return (min(bboxes[:, 0]), max(bboxes[:, 1]), min(bboxes[:, 2]), max(bboxes[:, 3]))
 
 # ---- Complex numbers converters ----- 
 def c_to_list(num):
