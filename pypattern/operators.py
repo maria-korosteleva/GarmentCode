@@ -165,7 +165,7 @@ def cut_into_edge_multi(target_shape, base_edge:Edge, offset=0, right=True, tol=
     median_y = (shortcuts[:, 1].max() + shortcuts[:, 1].min()) / 2
     rel_offsets = [(s[0][1] + s[1][1]) / 2 - median_y for s in shortcuts]
 
-    per_seq_offsets = [offset - r for r in rel_offsets]   # TODO sign depends on left/right part of SVG 🤔
+    per_seq_offsets = [offset + r for r in rel_offsets] 
 
     # DEBUG
     print('Rel Offsets ', rel_offsets)

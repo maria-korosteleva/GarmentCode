@@ -282,6 +282,7 @@ class EdgeSeqFactory:
         paths, _ = svgpath.svg2paths(svg_filepath)
 
         # Scaling
+        
         if target_height is not None:
             bbox = bbox_paths(paths)
             scale = target_height / (bbox[-1] - bbox[-2])
@@ -291,8 +292,17 @@ class EdgeSeqFactory:
         left, right = split_half_svg_paths(paths)
 
         # Turn into Edge Sequences
-        left_seqs = [EdgeSequence.from_svg_path(p) for p in left]
+        left_seqs = [EdgeSequence.from_svg_path(p) for p in left]  
         right_seqs = [EdgeSequence.from_svg_path(p) for p in right]
+
+        # Edge orientation s.t. the shortcut directions align with OY
+        # It preserves the correct relative placement of the shapes later
+        for p in left_seqs:
+            if (p.shortcut()[1][1] - p.shortcut()[0][1]) < 0:
+                p.reverse()
+        for p in right_seqs:
+            if (p.shortcut()[1][1] - p.shortcut()[0][1]) < 0:
+                p.reverse()
 
         return left_seqs, right_seqs
 
@@ -493,7 +503,7 @@ def split_half_svg_paths(paths):
         if side_1.bbox()[2] > center_x:
             side_1, side_2 = side_2, side_1
         
-        right.append(side_1)
-        left.append(side_2)
+        right.append(side_2)  
+        left.append(side_1)  
 
     return left, right
