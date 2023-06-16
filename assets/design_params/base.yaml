@@ -8,7 +8,7 @@
 design: 
   meta: 
     upper: 
-      v: Shirt
+      v: CurvyProjection
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
@@ -16,7 +16,7 @@ design:
       range: [True, False]
       type: bool
     bottom: 
-      v: Skirt2
+      v: False
       range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, SkirtLevels]
       type: select_null
 

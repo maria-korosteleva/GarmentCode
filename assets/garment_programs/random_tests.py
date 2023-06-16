@@ -75,34 +75,34 @@ class StraightPanel(pyp.Panel):
             './assets/img/Logo_adjusted.svg', 
             target_height=size / 2)
 
-        # TODO Routine for multi-shape projection
-        # Calculate relative offsets to place the whole shape at the target offset
-        offset = self.edges[0].length() / 2 
+        # Routine for multi-shape projection
+        base_edge = self.edges[-1]
+        new_edge, in_edges, new_interface = pyp.ops.cut_into_edge_multi(
+                left_seq, base_edge, 
+                offset=base_edge.length() / 2, right=True)
 
-        shortcuts = np.asarray([e.shortcut() for e in right_seq])
-        median_y = (shortcuts[:, 1].max() + shortcuts[:, 1].min()) / 2
-        rel_offsets = [(s[0][1] + s[1][1]) / 2 - median_y for s in shortcuts]
+        self.edges.substitute(base_edge, new_edge)
 
-        per_seq_offsets = [offset - r for r in rel_offsets]  # TODO depends on the side direction though 
+        base_edge = self.edges[2]
+        new_edge, in_edges, new_interface = pyp.ops.cut_into_edge_multi(
+                right_seq, base_edge, 
+                offset=base_edge.length() / 2, right=True)
 
-        # DEBUG
-        print('Rel Offsets ', rel_offsets)
-        print('Offsets ', per_seq_offsets)
+        self.edges.substitute(base_edge, new_edge)
 
-        # Project from farthest to closest 
-        sorted_tup = sorted(zip(per_seq_offsets, right_seq), reverse=True)
-        base_edge, int_edges = self.edges[0], self.edges[0]
-        new_in_edges = pyp.EdgeSequence()
-        for off, shape in sorted_tup:
-            new_edge, in_edges, new_interface = pyp.ops.cut_into_edge(
-                shape, base_edge, 
-                offset=off, right=True)
-            
-            self.edges.substitute(base_edge, new_edge)
-            int_edges.substitute(base_edge, new_interface)
-            new_in_edges.append(in_edges)
-            base_edge = new_edge[0] 
+        base_edge = self.edges[1]
+        new_edge, in_edges, new_interface = pyp.ops.cut_into_edge_multi(
+                right_seq, base_edge, 
+                offset=base_edge.length() / 2, right=True)
 
+        self.edges.substitute(base_edge, new_edge)
+
+        base_edge = self.edges[0]
+        new_edge, in_edges, new_interface = pyp.ops.cut_into_edge_multi(
+                left_seq, base_edge, 
+                offset=base_edge.length() / 2, right=True)
+
+        self.edges.substitute(base_edge, new_edge)
 
         # DEBUG
         #print(self.edges)

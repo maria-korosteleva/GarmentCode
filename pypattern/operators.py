@@ -137,6 +137,58 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
 
     return corner_shape[1:-1], new_int
 
+# TODO Seamless switch with "single" vertions? 
+def cut_into_edge_multi(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
+    """ Insert edges of the target_shape into the given base_edge, starting from offset
+        edges in target shape are rotated s.t. start -> end vertex vector is aligned with the edge 
+
+        NOTE: Supports making multiple cuts in one go maintaining the relative distances between cuts
+            provided that they are all specified in the same coordinate system  
+
+        Parameters:
+        * target_shape -- list of single edge, chained edges, or mutiple chaindes EdgeSequences to be inserted in the edge. 
+        * base_edge -- edge object, defining the border
+        * right -- which direction the cut should be oriented w.r.t. the direction of base edge
+        * Offset -- position of the center of the target shape along the edge.  
+
+        Returns:
+        * Newly created edges that accomodate the cut
+        * Edges corresponding to the target shape
+        * Edges that lie on the original base edge 
+    """
+
+    # TODO Not only for Y-aligned shapes
+    # TODO backward edge direction
+
+    # Calculate relative offsets to place the whole shape at the target offset
+    shortcuts = np.asarray([e.shortcut() for e in target_shape])
+    median_y = (shortcuts[:, 1].max() + shortcuts[:, 1].min()) / 2
+    rel_offsets = [(s[0][1] + s[1][1]) / 2 - median_y for s in shortcuts]
+
+    per_seq_offsets = [offset - r for r in rel_offsets]   # TODO sign depends on left/right part of SVG 🤔
+
+    # DEBUG
+    print('Rel Offsets ', rel_offsets)
+    print('Offsets ', per_seq_offsets)
+
+    # Project from farthest to closest 
+    sorted_tup = sorted(zip(per_seq_offsets, target_shape), reverse=True)
+    proj_edge, int_edges = base_edge, EdgeSequence(base_edge)
+    new_in_edges = EdgeSequence()
+    all_new_edges = EdgeSequence(base_edge)
+    for off, shape in sorted_tup:
+        new_edge, in_edges, new_interface = cut_into_edge(
+            shape, proj_edge, offset=off, right=right, tol=tol)
+        
+        all_new_edges.substitute(proj_edge, new_edge)
+        int_edges.substitute(proj_edge, new_interface)
+        new_in_edges.append(in_edges)
+        proj_edge = new_edge[0] 
+    
+    return all_new_edges, new_in_edges, int_edges
+
+    
+
 def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
     """ Insert edges of the target_shape into the given base_edge, starting from offset
         edges in target shape are rotated s.t. start -> end vertex vector is aligned with the edge 
