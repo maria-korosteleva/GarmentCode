@@ -138,7 +138,7 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
     return corner_shape[1:-1], new_int
 
 # TODO Seamless switch with "single" vertions? 
-def cut_into_edge_multi(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
+def cut_into_edge_multi(target_shape, base_edge:Edge, offset=0, right=True, flip_target=False, tol=1e-4):
     """ Insert edges of the target_shape into the given base_edge, starting from offset
         edges in target shape are rotated s.t. start -> end vertex vector is aligned with the edge 
 
@@ -148,8 +148,9 @@ def cut_into_edge_multi(target_shape, base_edge:Edge, offset=0, right=True, tol=
         Parameters:
         * target_shape -- list of single edge, chained edges, or mutiple chaindes EdgeSequences to be inserted in the edge. 
         * base_edge -- edge object, defining the border
-        * right -- which direction the cut should be oriented w.r.t. the direction of base edge
         * Offset -- position of the center of the target shape along the edge.  
+        * right -- which direction the cut should be oriented w.r.t. the direction of base edge
+        * flip_target -- reflect the shape w.r.t its central perpendicular (default=False, no action taken)
 
         Returns:
         * Newly created edges that accomodate the cut
@@ -158,7 +159,17 @@ def cut_into_edge_multi(target_shape, base_edge:Edge, offset=0, right=True, tol=
     """
 
     # TODO Not only for Y-aligned shapes
-    # TODO backward edge direction
+
+    # Flip the shapes if requested
+    if flip_target:
+        target_shape = [s.copy() for s in target_shape]
+        bboxes = np.array([s.bbox() for s in target_shape])
+        bbox = (min(bboxes[:, 0]), max(bboxes[:, 1]), min(bboxes[:, 2]), max(bboxes[:, 3]))
+        center_y = (bbox[2] + bbox[3]) / 2
+        # Flip
+        target_shape = [s.reflect([bbox[0], center_y], [bbox[1], center_y]) for s in target_shape] 
+        # Flip the order as well 
+        target_shape = [s.reverse() for s in target_shape] 
 
     # Calculate relative offsets to place the whole shape at the target offset
     shortcuts = np.asarray([e.shortcut() for e in target_shape])

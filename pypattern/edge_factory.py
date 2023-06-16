@@ -271,7 +271,7 @@ class EdgeSeqFactory:
     def halfs_from_svg(svg_filepath, target_height=None):
         """Load a shape from an SVG and split it in half (vertically)
 
-        * 
+        * target_height -- scales the shape s.t. it's hight matches the given number
         
         Shapes restrictions: 
             1) every path in the provided SVG is assumed to form a closed loop that has 
@@ -282,7 +282,6 @@ class EdgeSeqFactory:
         paths, _ = svgpath.svg2paths(svg_filepath)
 
         # Scaling
-        
         if target_height is not None:
             bbox = bbox_paths(paths)
             scale = target_height / (bbox[-1] - bbox[-2])
@@ -294,6 +293,13 @@ class EdgeSeqFactory:
         # Turn into Edge Sequences
         left_seqs = [EdgeSequence.from_svg_path(p) for p in left]  
         right_seqs = [EdgeSequence.from_svg_path(p) for p in right]
+
+        # In SVG OY is looking downward, we are using OY looking upward
+        # Flip the shape to align
+        bbox = bbox_paths(paths)
+        center_y = (bbox[2] + bbox[3]) / 2
+        left_seqs = [p.reflect([bbox[0], center_y], [bbox[1], center_y]) for p in left_seqs]  
+        right_seqs = [p.reflect([bbox[0], center_y], [bbox[1], center_y]) for p in right_seqs]  
 
         # Edge orientation s.t. the shortcut directions align with OY
         # It preserves the correct relative placement of the shapes later

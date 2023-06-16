@@ -72,40 +72,37 @@ class StraightPanel(pyp.Panel):
         print('SHAPE')  # DEBUG
 
         left_seq, right_seq = pyp.esf.halfs_from_svg(
-            './assets/img/Logo_adjusted.svg', 
+            './assets/img/Logo_adjusted.svg',   #'./assets/img/test_shape.svg', './assets/img/logo_cropped.svg',  # './assets/img/Logo_adjusted.svg', 
             target_height=size / 2)
 
         # Routine for multi-shape projection
         base_edge = self.edges[-1]
         new_edge, in_edges, new_interface = pyp.ops.cut_into_edge_multi(
                 left_seq, base_edge, 
-                offset=base_edge.length() / 2, right=True)
+                offset=base_edge.length() / 2, right=False, flip_target=True)
 
         self.edges.substitute(base_edge, new_edge)
 
         base_edge = self.edges[2]
         new_edge, in_edges, new_interface = pyp.ops.cut_into_edge_multi(
-                right_seq, base_edge, 
-                offset=base_edge.length() / 2, right=True)
+                left_seq, base_edge, 
+                offset=base_edge.length() / 2, right=True, flip_target=True)
 
         self.edges.substitute(base_edge, new_edge)
 
         base_edge = self.edges[1]
         new_edge, in_edges, new_interface = pyp.ops.cut_into_edge_multi(
                 right_seq, base_edge, 
-                offset=base_edge.length() / 2, right=True)
+                offset=base_edge.length() / 2, right=False)
 
         self.edges.substitute(base_edge, new_edge)
 
         base_edge = self.edges[0]
         new_edge, in_edges, new_interface = pyp.ops.cut_into_edge_multi(
-                left_seq, base_edge, 
+                right_seq, base_edge, 
                 offset=base_edge.length() / 2, right=True)
 
         self.edges.substitute(base_edge, new_edge)
-
-        # DEBUG
-        #print(self.edges)
 
 
 

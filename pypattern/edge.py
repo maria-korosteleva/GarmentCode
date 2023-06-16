@@ -821,6 +821,17 @@ class EdgeSequence():
         """
         return np.array([self[0].start, self[-1].end]) 
 
+    def bbox(self):
+        """Evaluate 3D bounding box of the current panel"""
+
+        # Using curve linearization for more accurate approximation of bbox
+        lin_edges = EdgeSequence([e.linearize() for e in self.edges])
+        verts_2d = np.asarray(lin_edges.verts())
+
+        bbox = (verts_2d.min(axis=0), verts_2d.max(axis=0))
+
+        return bbox[0][0], bbox[1][0], bbox[0][1], bbox[1][1]
+
     # ANCHOR Modifiers
     # All modifiers return self object to allow chaining
     # Wrappers around python's list
