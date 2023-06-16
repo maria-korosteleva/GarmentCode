@@ -137,13 +137,14 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
 
     return corner_shape[1:-1], new_int
 
-# TODO Seamless switch with "single" vertions? 
 def cut_into_edge_multi(target_shape, base_edge:Edge, offset=0, right=True, flip_target=False, tol=1e-4):
     """ Insert edges of the target_shape into the given base_edge, starting from offset
         edges in target shape are rotated s.t. start -> end vertex vector is aligned with the edge 
 
         NOTE: Supports making multiple cuts in one go maintaining the relative distances between cuts
-            provided that they are all specified in the same coordinate system  
+            provided that 
+            * they are all specified in the same coordinate system  
+            * (for now) the openings (shortcuts) of each cut are aligned with OY direction
 
         Parameters:
         * target_shape -- list of single edge, chained edges, or mutiple chaindes EdgeSequences to be inserted in the edge. 
@@ -194,7 +195,6 @@ def cut_into_edge_multi(target_shape, base_edge:Edge, offset=0, right=True, flip
     return all_new_edges, new_in_edges, int_edges
 
     
-
 def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
     """ Insert edges of the target_shape into the given base_edge, starting from offset
         edges in target shape are rotated s.t. start -> end vertex vector is aligned with the edge 
