@@ -5,7 +5,10 @@ from svgpathtools import QuadraticBezier, CubicBezier
 import svgpathtools as svgpath
 from scipy.optimize import minimize
 from copy import copy
+import sys
 
+sys.path.insert(0, './external/')
+sys.path.insert(1, './')
 
 from pypattern.generic_utils import c_to_list, list_to_c, c_to_np
 
@@ -114,7 +117,7 @@ def _extreme_points(curve, on_x=False, on_y=True):
 
     return extreme_points
 
-def _fit_quadratic(cp, ends, target_location):
+def _fit_quadratic_y_extrema(cp, ends, target_location):
 
     control_bezier = np.array([
         ends[0], 
@@ -147,7 +150,7 @@ def _fit_quadratic(cp, ends, target_location):
     return diff**2 + 0.01 * (tan0_diff**2 + tan1_diff**2)
 
 
-def _fit_pass_quadratic(cp, ends, target_location):
+def _fit_extrema_quadratic(cp, ends, target_location):
 
     control_bezier = np.array([
         ends[0], 
@@ -177,7 +180,70 @@ def _fit_pass_quadratic(cp, ends, target_location):
     #DEBUG 
     print('Inter: ', diff, extreme)
 
-    return diff**2 + 0.01 * (tan0_diff**2 + tan1_diff**2)
+    return diff**2   #  + 0.01 * (tan0_diff**2 + tan1_diff**2)
+
+def _fit_quadratic_y_pass(cp, ends, target_location):
+
+    # NOTE: Only relarive expectation!
+    control_bezier = np.array([
+        ends[0], 
+        [target_location[0], cp[1]], 
+        ends[-1]
+    ])
+
+    # TODO the point directly below the control point is at the target location
+
+    inter_segment = svgpath.Line(
+            target_location[0] + 1j * cp[1],
+            target_location[0] + 1j * 0
+        )
+
+    params = list_to_c(control_bezier)
+    curve = svgpath.QuadraticBezier(*params)
+
+    intersect_t = curve.intersect(inter_segment)
+    point = curve.point(intersect_t[0][0])
+
+    diff = abs(point - list_to_c(target_location))
+    
+
+    #DEBUG 
+    print('Inter: ', diff, intersect_t, point, list_to_c(target_location))
+
+    return diff**2
+
+
+def _fit_quadratic_pass(cp, ends, target_location):
+
+    # NOTE: Only relarive expectation!
+    control_bezier = np.array([
+        ends[0], 
+        cp, 
+        ends[-1]
+    ])
+
+    # TODO the point directly below the control point is at the target location
+
+    inter_segment = svgpath.Line(
+            target_location[0] + 1j * 1,
+            target_location[0] + 1j * 0
+        )
+
+    params = list_to_c(control_bezier)
+    curve = svgpath.QuadraticBezier(*params)
+
+    intersect_t = curve.intersect(inter_segment)
+    point = curve.point(intersect_t[0][0])
+
+    diff = abs(point - list_to_c(target_location))
+
+    #DEBUG 
+    print('Inter: ', diff, intersect_t, point, list_to_c(target_location))
+    print('Cp[0]: ', abs(cp[0] - target_location[0]))
+    # print('Reg Y ', reg_y)
+
+    return diff**2
+
 
 bshift, top_shift, length, crotch = 10, 5, 30, 15
 ends = np.array([[bshift, 0], [top_shift, length + crotch]])
@@ -203,7 +269,7 @@ print(_extreme_points(curve_init))
 
 start = copy(rel_target)
 out = minimize(
-    _fit_quadratic, 
+    _fit_quadratic_pass,  #_fit_extrema_quadratic, #  _fit_quadratic_direct, 
     start,
     args=(
         [[0, 0], [1, 0]],

@@ -313,13 +313,15 @@ class EdgeSeqFactory:
         return left_seqs, right_seqs
 
     # --- Curve fittings ---- 
+    # DRAFT: previous fitting strategy 
+    # TODO remove if all works!
     @staticmethod
-    def curve_from_extreme(start, end, target_extreme):
+    def curve_from_extreme(start, end, target):
         """Create (Quadratic) curve edge that 
             has an extreme point as close as possible to target_extreme
             with extreme point aligned with it
         """
-        rel_target = _abs_to_rel_2d(start, end, target_extreme)
+        rel_target = _abs_to_rel_2d(start, end, target)
 
         out = minimize(
             _fit_y_extremum, 
@@ -333,6 +335,30 @@ class EdgeSeqFactory:
                 print(out)
 
         cp = [rel_target[0], out.x.item()]
+
+        return CurveEdge(start, end, control_points=[cp], relative=True)
+    
+    @staticmethod
+    def curve_3_points(start, end, target):
+        """Create (Quadratic) curve edge between start and end that
+            passes through the target point 
+        """
+        rel_target = _abs_to_rel_2d(start, end, target)
+
+        # Initialization with a target point as control point
+        # Ensures very smooth, minimal solution
+        out = minimize(
+            _fit_pass_point, 
+            rel_target,    
+            args=(rel_target)
+        )
+
+        if not out.success:
+            print('Curve From Extreme::Warning::Optimization not successful')
+            if flags.VERBOSE:
+                print(out)
+
+        cp = out.x.tolist()
 
         return CurveEdge(start, end, control_points=[cp], relative=True)
 
@@ -459,7 +485,44 @@ def _fit_y_extremum(cp_y, target_location):
 
     diff = np.linalg.norm(extremum - target_location)
 
+    # DEBUG
+    print('Extreme: ', diff)
+
     return diff**2 
+
+def _fit_pass_point(cp, target_location):
+    """ Fit the control point of basic [[0, 0] -> [1, 0]] Quadratic Bezier s.t. 
+        it's expremum is close to target location.
+
+        * cp_y - initial guess for Quadratic Bezier control point y coordinate
+            (relative to the edge)
+        * target_location -- target to fit extremum to -- 
+            expressed in RELATIVE coordinates to your desired edge
+    """
+
+    control_bezier = np.array([
+        [0, 0], 
+        cp, 
+        [1, 0]
+    ])
+    params = list_to_c(control_bezier)
+    curve = svgpath.QuadraticBezier(*params)
+
+    inter_segment = svgpath.Line(
+            target_location[0] + 1j * 1,
+            target_location[0] + 1j * 0
+        )
+
+    intersect_t = curve.intersect(inter_segment)
+    point = curve.point(intersect_t[0][0])
+
+    diff = abs(point - list_to_c(target_location))
+
+    # DEBUG
+    print('Pass: ', diff)
+
+    return diff**2 
+
 
 # ---- For SVG Loading ----
 
