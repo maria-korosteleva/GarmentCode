@@ -195,10 +195,10 @@ class PencilSkirt(pyp.Component):
         if design['style_side_cut']['v']:
             depth = 0.7 * (body['hips'] / 4 - body['bust_points'] / 2)
             # TODO cut type choice
-            # DRAFT style_shape = Sun(depth * 2, depth, n_rays=6, d_rays=depth*0.2)
-            style_shape = SIGGRAPH_logo(depth * 1.5, depth)
+            # DRAFT style_shape_l, style_shape_r = Sun(depth * 2, depth, n_rays=6, d_rays=depth*0.2)
+            style_shape_l, style_shape_r = SIGGRAPH_logo(depth * 1.5)
         else:
-            style_shape = None
+            style_shape_l, style_shape_r = None, None
 
         self.front = FittedSkirtPanel(
             f'skirt_f',   
@@ -212,7 +212,7 @@ class PencilSkirt(pyp.Component):
             dart_position=body['bust_points'] / 2,
             dart_frac=1.35,  # Diff for front and back
             cut=design['front_cut']['v'], 
-            side_cut=style_shape
+            side_cut=style_shape_l
         ).translate_to([0, body['waist_level'], 25])
         self.back = FittedSkirtPanel(
             f'skirt_b', 
@@ -226,8 +226,8 @@ class PencilSkirt(pyp.Component):
             dart_position=body['bum_points'] / 2,
             dart_frac=1.1,   
             cut=design['back_cut']['v'], 
-            side_cut=style_shape, 
-            flip_side_cut=True,
+            side_cut=style_shape_r, 
+            flip_side_cut=False,
         ).translate_to([0, body['waist_level'], -20])
 
         self.stitching_rules = pyp.Stitches(

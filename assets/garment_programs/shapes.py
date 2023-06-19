@@ -40,17 +40,17 @@ def Sun(width, depth, n_rays=8, d_rays=5):
     for i in range(len(in_verts)):
         verts.insert(i*2, in_verts[i])
 
-    return pyp.esf.from_verts(*verts)
+    shape = pyp.esf.from_verts(*verts)
+    return shape, shape
 
-def SIGGRAPH_logo(width, depth, filename='./assets/img/Logo_adjusted.svg'):
+def SIGGRAPH_logo(width, depth=None, filename='./assets/img/Logo_adjusted.svg'):
     """Shape of SIGGRAPH Logo (half, split vertically)"""
 
     # TODO foolproofing the path
 
     left_seq, right_seq = pyp.esf.halfs_from_svg(filename, target_height=width)
 
-    return right_seq
-
+    return left_seq, right_seq
 
 
 if __name__ == '__main__':
