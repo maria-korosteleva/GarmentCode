@@ -94,8 +94,7 @@ design:
         v: False
         range: [True, False]
         type: bool
-    
-    
+     
   sleeve:
     sleeveless: 
       v: True
@@ -424,10 +423,19 @@ design:
       v: 0
       range: [0, 0.9]   # 1 = length
       type: float
+    # style_side_cut:
+    #   v: True
+    #   range: [True, False]
+    #   type: bool
     style_side_cut:
-      v: True
-      range: [True, False]
-      type: bool
+      v: SVGFile
+      range: [Sun, SIGGRAPH_logo, SVGFile]
+      type: select_null
+
+    style_side_file:
+      v: assets\img\test_shape.svg
+      range: [assets\img\Logo_adjusted.svg, assets\img\test_shape.svg]  # NOTE: Only for sampling
+      type: file_svg
 
   levels-skirt:
     base:    # NOTE Takes parameters from corresponding sections

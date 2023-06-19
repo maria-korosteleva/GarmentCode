@@ -5,7 +5,7 @@ import numpy as np
 
 # other assets
 from .bands import WB
-from .shapes import Sun, SIGGRAPH_logo
+from . import shapes
 
 # Panels
 class SkirtPanel(pyp.Panel):
@@ -192,11 +192,19 @@ class PencilSkirt(pyp.Component):
         )
 
         # condition
-        if design['style_side_cut']['v']:
+        if design['style_side_cut']['v'] is not None:
             depth = 0.7 * (body['hips'] / 4 - body['bust_points'] / 2)
             # TODO cut type choice
             # DRAFT style_shape_l, style_shape_r = Sun(depth * 2, depth, n_rays=6, d_rays=depth*0.2)
-            style_shape_l, style_shape_r = SIGGRAPH_logo(depth * 1.5)
+            # style_shape_l, style_shape_r = SIGGRAPH_logo(depth * 1.5)
+
+            shape_class = getattr(shapes, design['style_side_cut']['v'])
+            style_shape_l, style_shape_r = shape_class(
+                width=depth * 1.5, 
+                depth=depth, n_rays=6, d_rays=depth*0.2,
+                filename=design['style_side_file']['v']
+            )
+
         else:
             style_shape_l, style_shape_r = None, None
 
