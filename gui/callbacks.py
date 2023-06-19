@@ -205,7 +205,7 @@ class GUIPattern():
 
         print(f'Success! {self.sew_pattern.name} saved to {folder}')
 
-
+# FIXME Direct editing of file fields should not result in crashes (= don't send event at each edit)
 class GUIState():
     """State of GUI-related objects
     
@@ -409,7 +409,6 @@ class GUIState():
                     values = design_params[param]['range']
                     if 'null' in p_type and not None in values:
                         values.append(None)
-
                     in_field = sg.Combo(
                         values=design_params[param]['range'], 
                         default_value=design_params[param]['v'],
@@ -432,6 +431,26 @@ class GUIState():
                         resolution=1 if p_type == 'int' else 0.05, 
                         key=f'{pre_key}#{param}', 
                         # DRAFT enable_events=True # comment to only send events when slider is released
+                    )
+                elif 'file' in p_type:
+                    default_path = Path(design_params[param]['v'])
+                    ftype = p_type.split('_')[-1]
+                    in_field = sg.Column(
+                        [
+                            [
+                                sg.In(
+                                    default_text=default_path,
+                                    size=(15, 1), 
+                                    enable_events=True, 
+                                    key=f'{pre_key}#{param}',
+                                    readonly=True  # FIXME this is a patch to avoid crashes when the field is edited directly
+                                ),
+                                sg.FileBrowse(
+                                    initial_folder=default_path.parent,
+                                    file_types=((f'{ftype.upper()} Files', f'*.{ftype}'),)
+                                )
+                            ]
+                        ]
                     )
                 else:
                     print(f'GUI::WARNING::Unknown parameter type: {p_type}')

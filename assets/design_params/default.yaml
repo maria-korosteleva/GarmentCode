@@ -615,7 +615,7 @@ design:
       range: 
       - Sun
       - SIGGRAPH_logo
-      - SVGFile]
+      - SVGFile
       type: select_null
     style_side_file:
       v: assets\img\test_shape.svg
