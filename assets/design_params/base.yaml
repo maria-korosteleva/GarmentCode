@@ -408,7 +408,7 @@ design:
       range: [0.5, 1]
       type: float
     flare:   # coefficient may depend on length
-      v: 0.7
+      v: 0.9
       range: [0.3, 1]   
       type: float
     low_angle: 
@@ -423,17 +423,13 @@ design:
       v: 0
       range: [0, 0.9]   # 1 = length
       type: float
-    # style_side_cut:
-    #   v: True
-    #   range: [True, False]
-    #   type: bool
     style_side_cut:
       v: SVGFile
       range: [Sun, SIGGRAPH_logo, SVGFile]
       type: select_null
 
     style_side_file:
-      v: assets\img\test_shape.svg
+      v: assets\img\logo_thick_connection.svg
       range: [assets\img\Logo_adjusted.svg, assets\img\test_shape.svg]  # NOTE: Only for sampling
       type: file_svg
 
