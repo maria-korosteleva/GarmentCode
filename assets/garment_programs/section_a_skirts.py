@@ -50,14 +50,6 @@ class SidePanel(pyp.Panel):
             'top': pyp.Interface(self, top)
         }
 
-
-# TODO
-class YokeShort(pyp.Panel):
-
-    def __init__(self, name) -> None:
-        super().__init__(name)
-
-
 class YokeFlareSection(pyp.Component):
     """Front/back design for Burda 6880 skirt with flared insert"""
 
@@ -68,8 +60,8 @@ class YokeFlareSection(pyp.Component):
         hips = body['hips'] / 2
         hip_line = body['hips_line']
         # DRAFT low_width=design['flare']['v'] * body['hips'] / 4
-
         # DRAFT rise=design['rise']['v']   # TODO Add rise control? 
+
         length = (
             body['hips_line'] * design['rise']['v'] 
             + design['length']['v'] * body['leg_length']
@@ -81,15 +73,13 @@ class YokeFlareSection(pyp.Component):
         self.side_right = SidePanel(
             f'{name}_r_side',
             body, length, side_width
-        ).translate_by([- dart_position - side_width * 1.3, 0, 0])
+        ).translate_by([- dart_position * 2 - side_width, 0, 0])
         self.side_left = SidePanel(
             f'{name}_l_side',
             body, length, side_width
-        ).translate_by([- dart_position - side_width * 1.3, 0, 0]).mirror()
+        ).translate_by([- dart_position * 2 - side_width, 0, 0]).mirror()
 
         # --- One Yoke in-between ---
-        # TODO Circle arc section with given top width, bottom width, and length
-
         # DEBUG Flat section (for testing)
         # NOTE: the differentce is by the desired "dart" angle in a way
         dart_w = (hips - waist) / 2 * 5 / 6
@@ -99,12 +89,9 @@ class YokeFlareSection(pyp.Component):
         y_top_width = dart_position * 2  # Taken up by the section side
         y_b_width = y_top_width + 2 * dart_w  # TODO length between the dart bottoms
 
-        self.yoke = SkirtPanel(
-            f'{name}_yoke',
-            waist_length=y_top_width * 2, 
-            length= np.sqrt(y_side_length**2 - dart_w**2),
-            flare=dart_w
-        )
+        self.yoke = CircleArcPanel.from_all_length(
+            f'{name}_yoke', y_side_length, y_top_width, y_b_width
+            )
 
         # --- One panel for insert (Circle?) ---
         suns = 0.5  # TODO parameter
@@ -120,7 +107,7 @@ class YokeFlareSection(pyp.Component):
 
         right_interface = pyp.Interface.from_multiple(
             self.yoke.interfaces['right'], 
-            self.insert.interfaces['left']
+            self.insert.interfaces['right']
         )
         self.stitching_rules.append((
             self.side_right.interfaces['inside'], right_interface
@@ -128,7 +115,7 @@ class YokeFlareSection(pyp.Component):
 
         left_interface = pyp.Interface.from_multiple(
             self.yoke.interfaces['left'], 
-            self.insert.interfaces['right']
+            self.insert.interfaces['left']
         )
         self.stitching_rules.append((
             self.side_left.interfaces['inside'], left_interface
@@ -138,7 +125,17 @@ class YokeFlareSection(pyp.Component):
         # --- Interface --- 
         self.interfaces = { # TODO Add top and bottom
             'right': self.side_right.interfaces['outside'],
-            'left': self.side_left.interfaces['outside']
+            'left': self.side_left.interfaces['outside'],
+            'top': pyp.Interface.from_multiple(
+                self.side_right.interfaces['top'], 
+                self.yoke.interfaces['top'],
+                self.side_left.interfaces['top'], 
+            ),
+            'bottom': pyp.Interface.from_multiple(
+                self.side_right.interfaces['bottom'], 
+                self.insert.interfaces['bottom'],
+                self.side_left.interfaces['bottom'], 
+            )
         }
 
 
@@ -176,13 +173,13 @@ class SectionALineSkirt(pyp.Component):
         )
 
         # Reusing interfaces of sub-panels as interfaces of this component
-        # TODO self.interfaces = {
-        #     'top_f': self.front.interfaces['top'],
-        #     'top_b': self.back.interfaces['top'],
-        #     'top': pyp.Interface.from_multiple(
-        #         self.front.interfaces['top'], self.back.interfaces['top'].reverse()
-        #     ),
-        #     'bottom': pyp.Interface.from_multiple(
-        #         self.front.interfaces['bottom'], self.back.interfaces['bottom']
-        #     )
-        # }
+        self.interfaces = {
+            'top_f': self.front.interfaces['top'],
+            'top_b': self.back.interfaces['top'],
+            'top': pyp.Interface.from_multiple(
+                self.front.interfaces['top'], self.back.interfaces['top'].reverse()
+            ),
+            'bottom': pyp.Interface.from_multiple(
+                self.front.interfaces['bottom'], self.back.interfaces['bottom']
+            )
+        }

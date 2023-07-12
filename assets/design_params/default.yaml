@@ -23,6 +23,7 @@ design:
       - SkirtManyPanels
       - PencilSkirt
       - SkirtLevels
+      - SectionALineSkirt
       - null
       type: select_null
   waistband:
