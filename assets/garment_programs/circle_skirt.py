@@ -36,16 +36,25 @@ class CircleArcPanel(pyp.Panel):
         self.interfaces = {
             'top': pyp.Interface(self, self.edges[0]).reverse(True),
             'bottom': pyp.Interface(self, self.edges[2]),
-            'right': pyp.Interface(self, self.edges[1]),
-            'left': pyp.Interface(self, self.edges[3])
+            'left': pyp.Interface(self, self.edges[1]),
+            'right': pyp.Interface(self, self.edges[3])
         }
     
     @staticmethod
-    def from_w_length_suns(name, length, top_length, sun_fraction):
+    def from_w_length_suns(name, length, top_width, sun_fraction):
         arc = sun_fraction * 2 * np.pi
-        rad = top_length / arc
+        rad = top_width / arc
 
         return CircleArcPanel(name, rad, length, arc)
+    
+    def from_all_length(name, length, top_width, bottom_width):
+
+        diff = bottom_width - top_width
+        arc = diff / length
+        rad = top_width / arc
+
+        return CircleArcPanel(name, rad, length, arc)
+
 
 class SkirtCircle(pyp.Component):
     """Simple circle skirt"""
