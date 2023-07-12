@@ -518,9 +518,6 @@ def _fit_pass_point(cp, target_location):
 
     diff = abs(point - list_to_c(target_location))
 
-    # DEBUG
-    print('Pass: ', diff)
-
     return diff**2 
 
 

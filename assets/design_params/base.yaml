@@ -16,8 +16,8 @@ design:
       range: [True, False]
       type: bool
     bottom: 
-      v: PencilSkirt
-      range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, SkirtLevels]
+      v: SectionALineSkirt
+      range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, SkirtLevels, SectionALineSkirt]
       type: select_null
 
   waistband:
@@ -359,7 +359,7 @@ design:
       type: float 
     cut:
       add: 
-        v: True
+        v: False
         range: [True, False]
         type: bool
       depth:
