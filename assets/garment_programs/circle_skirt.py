@@ -39,6 +39,13 @@ class CircleArcPanel(pyp.Panel):
             'right': pyp.Interface(self, self.edges[1]),
             'left': pyp.Interface(self, self.edges[3])
         }
+    
+    @staticmethod
+    def from_w_length_suns(name, length, top_length, sun_fraction):
+        arc = sun_fraction * 2 * np.pi
+        rad = top_length / arc
+
+        return CircleArcPanel(name, rad, length, arc)
 
 class SkirtCircle(pyp.Component):
     """Simple circle skirt"""
@@ -54,17 +61,14 @@ class SkirtCircle(pyp.Component):
         # Depends on leg length
         length = body['hips_line'] + design['length']['v'] * body['leg_length']
 
-        waist_rad = waist / (suns * 2 * np.pi)
-        arc = suns * 2 * np.pi
-
         # panels
-        self.front = CircleArcPanel(
+        self.front = CircleArcPanel.from_w_length_suns(
             f'front_{tag}' if tag else 'front', 
-            waist_rad, length, arc / 2).translate_by([0, body['waist_level'], 15])
+            length, waist / 2, suns / 2).translate_by([0, body['waist_level'], 15])
 
-        self.back = CircleArcPanel(
+        self.back = CircleArcPanel.from_w_length_suns(
             f'back_{tag}'  if tag else 'back', 
-            waist_rad, length, arc / 2).translate_by([0, body['waist_level'], -15])
+            length, waist / 2, suns / 2).translate_by([0, body['waist_level'], -15])
 
         # Add a cut
         if design['cut']['add']['v']:

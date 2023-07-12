@@ -1,7 +1,8 @@
-# Custom
-import pypattern as pyp
 from scipy.spatial.transform import Rotation as R
 import numpy as np
+
+# Custom
+import pypattern as pyp
 
 # other assets
 from .bands import WB
@@ -76,8 +77,6 @@ class FittedSkirtPanel(pyp.Panel):
         cut=0,
         side_cut=None, flip_side_cut=False) -> None:
         # TODOLOW Only the parameters that differ between front/back panels?
-        """
-        """
         super().__init__(name)
 
         # adjust for a rise
