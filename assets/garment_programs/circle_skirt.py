@@ -54,6 +54,12 @@ class CircleArcPanel(pyp.Panel):
         rad = top_width / arc
 
         return CircleArcPanel(name, rad, length, arc)
+    
+    def from_length_rad(name, length, top_width, rad):
+        
+        arc = top_width / rad
+
+        return CircleArcPanel(name, rad, length, arc)
 
 
 class SkirtCircle(pyp.Component):

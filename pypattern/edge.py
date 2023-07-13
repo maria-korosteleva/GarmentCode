@@ -444,6 +444,36 @@ class CircleEdge(Edge):
         return CircleEdge(start, end, cy=control_y)
 
     @staticmethod
+    def from_rad_length(rad, length, right=True, start=None):
+        """NOTE: if start vertex is not provided, both vertices will be created
+            to match desired radius and length
+        """
+        max_len = 2 * np.pi * rad
+
+        if length > max_len:
+            raise ValueError(f'CircleEdge::ERROR::Incorrect length for specified radius')
+
+        large_arc = length > max_len / 2
+        if large_arc:
+            length = max_len - length
+
+        w_half = rad * np.sin(length / rad / 2)
+
+        edge = CircleEdge.from_points_radius(
+            [-w_half, 0], [w_half, 0], 
+            radius=rad, 
+            large_arc=large_arc,
+            right=right
+        )
+
+        if start: 
+            edge.snap_to(start)
+            edge.start = start
+
+        return edge
+
+
+    @staticmethod
     def from_svg_curve(seg:svgpath.Arc):
         """Create object from svgpath arc"""
         start, end = c_to_list(seg.start), c_to_list(seg.end)

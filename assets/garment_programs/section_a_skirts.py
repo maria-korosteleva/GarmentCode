@@ -16,7 +16,7 @@ from .skirt_paneled import SkirtPanel
 # TODO
 class SidePanel(pyp.Panel):
 
-    def __init__(self, name, body, length, side_width) -> None:
+    def __init__(self, name, body, length, side_width, rad) -> None:
         super().__init__(name)
 
         waist = body['waist'] / 4 
@@ -27,26 +27,53 @@ class SidePanel(pyp.Panel):
         wdiff = hips - waist
         hw_shift = wdiff / 6   # NOTE would be less
 
-        low_width = hips * 1.1  # TODO TBD
+        low_shift = hw_shift * (length + adj_hips_depth) / hip_line   # just elongation from the hip to the bottom with the same angle
+        low_width = side_width + low_shift
 
-        right = pyp.esf.curve_3_points(
-            [hips - low_width, 0],    
-            [hw_shift, length + adj_hips_depth],
-            target=[0, length]
+        # DEBUG
+        print('Bottom width: ', low_shift, length, side_width, hips)
+        # print('Bottom angle: ', np.rad2deg(np.arctan(tan)), low_w2)
+
+        # DRAFT right = pyp.Edge(
+        #     [-low_shift, 0],    
+        #     [0, length + adj_hips_depth]  # would ~pass through [hip point, length]
+        # )
+
+        # # TODO curve!
+        # top = pyp.Edge(right.end, [side_width, length + adj_hips_depth])
+        
+        top = pyp.CircleEdge.from_rad_length(
+            rad=rad, length=side_width
         )
-        top = pyp.Edge(right.end, [hw_shift + side_width, length + adj_hips_depth])
-        self.edges = pyp.EdgeSequence(
-            right, 
-            top, 
-            pyp.Edge(top.end, [hw_shift + side_width, 0])
-        ).close_loop()
 
-        self.translate_by([0, - length - adj_hips_depth, 0])
+        vert_len = np.sqrt((length + adj_hips_depth)**2 - (low_width / 2 - top.end[0]))
+        left = pyp.Edge(top.end, [low_width / 2, -vert_len])
+        
+        # Bottom with a little curve
+        bottom = pyp.CircleEdge(
+            left.end, [- low_width / 2, -vert_len], 
+            cy=0.05)
+
+        self.edges = pyp.EdgeSequence(
+            top, 
+            left, 
+            bottom
+        ).close_loop() 
+
+        # DRAFT self.edges = pyp.EdgeSequence(
+        #     right, 
+        #     top, 
+        #     pyp.Edge(top.end, [side_width, 0])
+        # ).close_loop()  # TODO curve the bottom a little
+
+        
+
+        #DRAFT self.translate_by([0, - length - adj_hips_depth, 0])
 
         self.interfaces = {
-            'bottom': pyp.Interface(self, self.edges[-1]),
-            'outside': pyp.Interface(self, right), 
-            'inside': pyp.Interface(self, self.edges[-2]),  
+            'bottom': pyp.Interface(self, self.edges[-2]),
+            'outside': pyp.Interface(self, self.edges[-1]), 
+            'inside': pyp.Interface(self, self.edges[-3]),  
             'top': pyp.Interface(self, top)
         }
 
@@ -59,6 +86,7 @@ class YokeFlareSection(pyp.Component):
         waist = body['waist'] / 2 
         hips = body['hips'] / 2
         hip_line = body['hips_line']
+        adj_hips_depth = hip_line  # Before rise calculations
         # DRAFT low_width=design['flare']['v'] * body['hips'] / 4
         # DRAFT rise=design['rise']['v']   # TODO Add rise control? 
 
@@ -66,18 +94,6 @@ class YokeFlareSection(pyp.Component):
             body['hips_line'] * design['rise']['v'] 
             + design['length']['v'] * body['leg_length']
         )
-
-        # --- Two side panels ---
-        # ~Section of a panel skirt up to a dart
-        side_width = (waist - dart_position * 2) / 2
-        self.side_right = SidePanel(
-            f'{name}_r_side',
-            body, length, side_width
-        ).translate_by([- dart_position * 2 - side_width, 0, 0])
-        self.side_left = SidePanel(
-            f'{name}_l_side',
-            body, length, side_width
-        ).translate_by([- dart_position * 2 - side_width, 0, 0]).mirror()
 
         # --- One Yoke in-between ---
         # DEBUG Flat section (for testing)
@@ -93,8 +109,31 @@ class YokeFlareSection(pyp.Component):
             f'{name}_yoke', y_side_length, y_top_width, y_b_width
             )
 
+        # --- Two side panels ---
+        # ~Section of a panel skirt up to a dart
+        side_width = (waist - dart_position * 2) / 2
+        top_rad, _, _ = self.yoke.interfaces['top'].edges[0].as_radius_angle()
+        self.side_right = SidePanel(
+            f'{name}_r_side',
+            body, length, side_width, top_rad
+        ).translate_by([- dart_position * 2 - side_width, 0, 0])
+        self.side_left = SidePanel(
+            f'{name}_l_side',
+            body, length, side_width, top_rad
+        ).translate_by([- dart_position * 2 - side_width, 0, 0]).mirror()
+
+        # self.side_right = CircleArcPanel.from_length_rad(
+        #     f'{name}_r_side',
+        #     length + adj_hips_depth, side_width, top_rad
+        # ).translate_by([- dart_position * 2 - side_width, 0, 0])
+        # self.side_left = CircleArcPanel.from_length_rad(
+        #     f'{name}_l_side',
+        #     length + adj_hips_depth, side_width, top_rad
+        # ).translate_by([- dart_position * 2 - side_width, 0, 0]).mirror()
+
+
         # --- One panel for insert (Circle?) ---
-        suns = 0.5  # TODO parameter
+        suns = 0.3  # TODO parameter -- use flare parameter instead, s.t no flare == classic A-line skirt?
         in_length = self.side_right.interfaces['inside'].edges.length() - y_side_length  # from the length of the inside of side panel
         self.insert = CircleArcPanel.from_w_length_suns(
             f'{name}_insert',
