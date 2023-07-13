@@ -16,7 +16,7 @@ design:
       range: [True, False]
       type: bool
     bottom: 
-      v:  MinimalALine  #  SectionALineSkirt
+      v: SectionALineSkirt  
       range: 
         - SkirtCircle
         - GodetSkirt

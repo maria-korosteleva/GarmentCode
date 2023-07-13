@@ -62,6 +62,7 @@ class CircleArcPanel(pyp.Panel):
         return CircleArcPanel(name, rad, length, arc)
 
 
+# DEBUG This is a test garment!
 class MinimalALine(pyp.Component):
     """Simple circle skirt"""
     def __init__(self, body, design, tag='') -> None:
@@ -91,6 +92,20 @@ class MinimalALine(pyp.Component):
             top_width=waist / 2, 
             bottom_width=hips / 2
         ).translate_by([0, body['waist_level'], -15])
+
+        # DEBUG
+        print('Length: ', self.front.interfaces['right'].edges.length(), body['hips_line'])
+        print('waist: ', 
+              self.front.interfaces['top'].edges.length() + self.back.interfaces['top'].edges.length(), 
+              body['waist'])
+        print('hips: ', 
+              self.front.interfaces['bottom'].edges.length() + self.back.interfaces['bottom'].edges.length(), 
+              body['hips'])
+        print('Radius: ', 
+              self.front.interfaces['top'].edges[0].as_radius_angle(),
+              self.front.interfaces['bottom'].edges[0].as_radius_angle(),
+              self.back.interfaces['top'].edges[0].as_radius_angle(),
+              self.back.interfaces['bottom'].edges[0].as_radius_angle())
 
         # Stitches
         self.stitching_rules = pyp.Stitches(

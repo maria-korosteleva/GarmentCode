@@ -102,6 +102,14 @@ class YokeFlareSection(pyp.Component):
             + design['length']['v'] * body['leg_length']
         )
 
+        # Radius evaluation
+        diff = hips - waist
+        arc = diff / hip_line
+        waist_radius = waist / arc   # Radius to be used in all elements
+
+        # DEBUG
+        print('Rad eval: ', waist_radius, arc)
+
         # --- One Yoke in-between ---
         # DEBUG Flat section (for testing)
         # NOTE: the differentce is by the desired "dart" angle in a way
@@ -110,28 +118,46 @@ class YokeFlareSection(pyp.Component):
         # DRAFT for the adjustible rise dart_depth = max(dart_depth - (hip_line - adj_hips_depth), 0)
         y_side_length = dart_depth  # TODO it's not exacly the length of dart sides, but ok
         y_top_width = dart_position * 2  # Taken up by the section side
-        y_b_width = y_top_width + 2 * dart_w  # TODO length between the dart bottoms
+        
+        # DRAFT y_b_width = y_top_width + 2 * dart_w  # TODO length between the dart bottoms
 
-        self.yoke = CircleArcPanel.from_all_length(
-            f'{name}_yoke', y_side_length, y_top_width, y_b_width
-            )
+        # DRAFT  self.yoke = CircleArcPanel.from_all_length(
+        #     f'{name}_yoke', y_side_length, y_top_width, y_b_width
+        #     )
+
+        self.yoke = CircleArcPanel.from_length_rad(
+            f'{name}_yoke', 
+            y_side_length, y_top_width, waist_radius
+        )
 
         # --- Two side panels ---
         # ~Section of a panel skirt up to a dart
         side_width = (waist - dart_position * 2) / 2
-        top_rad, _, _ = self.yoke.interfaces['top'].edges[0].as_radius_angle()
-        self.side_right = SidePanel(
+        # DRAFT top_rad, _, _ = self.yoke.interfaces['top'].edges[0].as_radius_angle()
+        # self.side_right = SidePanel(
+        #     f'{name}_r_side',
+        #     body, length, side_width, waist_radius, 
+        #     circle_arc=True
+        # ).translate_by([- dart_position * 2 - side_width, 0, 0])
+        # self.side_left = SidePanel(
+        #     f'{name}_l_side',
+        #     body, length, side_width, waist_radius, 
+        #     circle_arc=True
+        # ).translate_by([- dart_position * 2 - side_width, 0, 0]).mirror()
+
+        self.side_right = CircleArcPanel.from_length_rad(
             f'{name}_r_side',
-            body, length, side_width, top_rad
+            length + adj_hips_depth, side_width, waist_radius
         ).translate_by([- dart_position * 2 - side_width, 0, 0])
-        self.side_left = SidePanel(
+        self.side_left = CircleArcPanel.from_length_rad(
             f'{name}_l_side',
-            body, length, side_width, top_rad
+            length + adj_hips_depth, side_width, waist_radius
         ).translate_by([- dart_position * 2 - side_width, 0, 0]).mirror()
 
         # --- One panel for insert (Circle?) ---
         suns = 0.3  # TODO parameter -- use flare parameter instead, s.t no flare == classic A-line skirt?
-        in_length = self.side_right.interfaces['inside'].edges.length() - y_side_length  # from the length of the inside of side panel
+        in_length = self.side_right.interfaces['left'].edges.length() - y_side_length  # from the length of the inside of side panel
+        y_b_width = self.yoke.interfaces['bottom'].edges.length()
         self.insert = CircleArcPanel.from_w_length_suns(
             f'{name}_insert',
             in_length, y_b_width, suns / 2).translate_by([0, 0, insert_place_shift])
@@ -146,7 +172,8 @@ class YokeFlareSection(pyp.Component):
             self.insert.interfaces['right']
         )
         self.stitching_rules.append((
-            self.side_right.interfaces['inside'], right_interface
+            # DRAFT self.side_right.interfaces['inside'], right_interface
+            self.side_right.interfaces['left'], right_interface
         ))
 
         left_interface = pyp.Interface.from_multiple(
@@ -154,14 +181,15 @@ class YokeFlareSection(pyp.Component):
             self.insert.interfaces['left']
         )
         self.stitching_rules.append((
-            self.side_left.interfaces['inside'], left_interface
+            # DRAFT self.side_left.interfaces['inside'], left_interface
+            self.side_left.interfaces['left'], left_interface
         ))
         
 
         # --- Interface --- 
-        self.interfaces = { # TODO Add top and bottom
-            'right': self.side_right.interfaces['outside'],
-            'left': self.side_left.interfaces['outside'],
+        self.interfaces = { 
+            'right': self.side_right.interfaces['right'],
+            'left': self.side_left.interfaces['right'],
             'top': pyp.Interface.from_multiple(
                 self.side_right.interfaces['top'], 
                 self.yoke.interfaces['top'],
