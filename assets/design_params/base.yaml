@@ -353,6 +353,16 @@ design:
       range: [0, 20]
       type: int
 
+  section-skirt: 
+    length:
+      v: 0.2
+      range: [-0.2, 1]
+      type: float 
+    insert_flare: 
+      v: 1.
+      range: [1, 4]
+      type: float
+
   flare-skirt:
     length:
       v: 0.2
@@ -384,7 +394,6 @@ design:
         range: [-1, 1]   # Fraction of the edge length
         type: float
       
-
   godet-skirt: 
     base: 
       v: PencilSkirt
@@ -460,7 +469,6 @@ design:
       range: [1, 2]
       type: float
     
-
   pants: 
     length: 
       v: 0.4

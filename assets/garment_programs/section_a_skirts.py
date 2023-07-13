@@ -84,6 +84,7 @@ class SidePanel(pyp.Panel):
                 'top': pyp.Interface(self, top)
             }
 
+# TODO Can we do it as an A-line skirt with insert and additional cut?
 class YokeFlareSection(pyp.Component):
     """Front/back design for Burda 6880 skirt with flared insert"""
 
@@ -98,32 +99,22 @@ class YokeFlareSection(pyp.Component):
         # DRAFT rise=design['rise']['v']   # TODO Add rise control? 
 
         length = (
-            body['hips_line'] * design['rise']['v'] 
+            body['hips_line']  # DRAFT * design['rise']['v'] 
             + design['length']['v'] * body['leg_length']
         )
 
-        # Radius evaluation
+        # Radius evaluation -- to be used in all elements
         diff = hips - waist
         arc = diff / hip_line
-        waist_radius = waist / arc   # Radius to be used in all elements
-
-        # DEBUG
-        print('Rad eval: ', waist_radius, arc)
+        waist_radius = waist / arc
 
         # --- One Yoke in-between ---
-        # DEBUG Flat section (for testing)
-        # NOTE: the differentce is by the desired "dart" angle in a way
+        # NOTE: the panel is designed to follow the "minimal A-line" skirt
         dart_w = (hips - waist) / 2 * 5 / 6
         dart_depth = hip_line * dart_frac
         # DRAFT for the adjustible rise dart_depth = max(dart_depth - (hip_line - adj_hips_depth), 0)
-        y_side_length = dart_depth  # TODO it's not exacly the length of dart sides, but ok
+        y_side_length = dart_depth  # it's not exacly the length of dart sides, but ok
         y_top_width = dart_position * 2  # Taken up by the section side
-        
-        # DRAFT y_b_width = y_top_width + 2 * dart_w  # TODO length between the dart bottoms
-
-        # DRAFT  self.yoke = CircleArcPanel.from_all_length(
-        #     f'{name}_yoke', y_side_length, y_top_width, y_b_width
-        #     )
 
         self.yoke = CircleArcPanel.from_length_rad(
             f'{name}_yoke', 
@@ -155,12 +146,16 @@ class YokeFlareSection(pyp.Component):
         ).translate_by([- dart_position * 2 - side_width, 0, 0]).mirror()
 
         # --- One panel for insert (Circle?) ---
-        suns = 0.3  # TODO parameter -- use flare parameter instead, s.t no flare == classic A-line skirt?
+        flare = design['insert_flare']['v']
+
         in_length = self.side_right.interfaces['left'].edges.length() - y_side_length  # from the length of the inside of side panel
         y_b_width = self.yoke.interfaces['bottom'].edges.length()
-        self.insert = CircleArcPanel.from_w_length_suns(
+        b_rad, _, _ = self.yoke.interfaces['bottom'].edges[0].as_radius_angle()
+        b_rad = b_rad / flare
+
+        self.insert = CircleArcPanel.from_length_rad(
             f'{name}_insert',
-            in_length, y_b_width, suns / 2).translate_by([0, 0, insert_place_shift])
+            in_length, y_b_width, b_rad).translate_by([0, 0, insert_place_shift])
         
         # --- Connect ---
         self.stitching_rules.append((
@@ -210,7 +205,7 @@ class SectionALineSkirt(pyp.Component):
     def __init__(self, body, design) -> None:
         super().__init__(self.__class__.__name__)
 
-        design = design['pencil-skirt']
+        design = design['section-skirt']
         self.design = design  # Make accessible from outside
 
         # Depends on leg length
