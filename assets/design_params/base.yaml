@@ -16,8 +16,17 @@ design:
       range: [True, False]
       type: bool
     bottom: 
-      v: SectionALineSkirt
-      range: [SkirtCircle, GodetSkirt, Pants, Skirt2, SkirtManyPanels, PencilSkirt, SkirtLevels, SectionALineSkirt]
+      v:  MinimalALine  #  SectionALineSkirt
+      range: 
+        - SkirtCircle
+        - GodetSkirt
+        - Pants
+        - Skirt2
+        - SkirtManyPanels
+        - PencilSkirt
+        - SkirtLevels
+        - SectionALineSkirt  
+        - MinimalALine   # For testing only
       type: select_null
 
   waistband:

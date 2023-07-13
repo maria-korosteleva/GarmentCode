@@ -56,10 +56,53 @@ class CircleArcPanel(pyp.Panel):
         return CircleArcPanel(name, rad, length, arc)
     
     def from_length_rad(name, length, top_width, rad):
-        
+
         arc = top_width / rad
 
         return CircleArcPanel(name, rad, length, arc)
+
+
+class MinimalALine(pyp.Component):
+    """Simple circle skirt"""
+    def __init__(self, body, design, tag='') -> None:
+        super().__init__(
+            self.__class__.__name__ if not tag else f'{self.__class__.__name__}_{tag}')
+
+        design = design['flare-skirt']
+
+        waist = body['waist']
+        hips = body['hips']
+        suns = design['suns']['v']
+
+        # Depends on leg length
+        length = body['hips_line'] + design['length']['v'] * body['leg_length']
+
+        # panels
+        self.front = CircleArcPanel.from_all_length(
+            f'front_{tag}' if tag else 'front', 
+            length=body['hips_line'], 
+            top_width=waist / 2, 
+            bottom_width=hips / 2
+        ).translate_by([0, body['waist_level'], 15])
+
+        self.back = CircleArcPanel.from_all_length(
+            f'back_{tag}'  if tag else 'back', 
+            length=body['hips_line'], 
+            top_width=waist / 2, 
+            bottom_width=hips / 2
+        ).translate_by([0, body['waist_level'], -15])
+
+        # Stitches
+        self.stitching_rules = pyp.Stitches(
+            (self.front.interfaces['right'], self.back.interfaces['right']),
+            (self.front.interfaces['left'], self.back.interfaces['left'])
+        )
+
+        # Interfaces
+        self.interfaces = {
+            'top': pyp.Interface.from_multiple(self.front.interfaces['top'], self.back.interfaces['top']),
+            'bottom': pyp.Interface.from_multiple(self.front.interfaces['bottom'], self.back.interfaces['bottom'])
+        }
 
 
 class SkirtCircle(pyp.Component):
@@ -98,7 +141,6 @@ class SkirtCircle(pyp.Component):
         )
 
         # Interfaces
-        # TODO Update after cut
         self.interfaces = {
             'top': pyp.Interface.from_multiple(self.front.interfaces['top'], self.back.interfaces['top']),
             'bottom': pyp.Interface.from_multiple(self.front.interfaces['bottom'], self.back.interfaces['bottom'])
