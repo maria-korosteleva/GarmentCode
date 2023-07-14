@@ -199,7 +199,7 @@ class CutsSections(pyp.Component):
             body['hips_line']  # DRAFT * design['rise']['v'] 
             + design['length']['v'] * body['leg_length']
         )
-        cut_depth = design['cut_depth']   # TODO Handle zero cuts
+        cut_depth = design['cut_depth']['v']   # TODO Handle zero cuts
 
         # Radius evaluation -- to be used in all elements
         diff = hips - waist
@@ -226,7 +226,11 @@ class CutsSections(pyp.Component):
             length + adj_hips_depth, waist * center_frac, waist_radius
         ).translate_by([0, 0, 0])
 
-        # TODO Insert the cuts
+        # -- Insert the cuts -- 
+        self.insert_cut(self.side_right.interfaces['left'], cut_size=cut_depth)
+        self.insert_cut(self.center.interfaces['left'], cut_size=cut_depth)
+        self.insert_cut(self.center.interfaces['right'], cut_size=cut_depth)
+        self.insert_cut(self.side_left.interfaces['left'], cut_size=cut_depth)
 
         # --- Connect ---
         self.stitching_rules.append((
@@ -252,11 +256,17 @@ class CutsSections(pyp.Component):
             )
         }
 
-    def insert_cut(self, interface, cut_size):
+    def insert_cut(self, interface:pyp.Interface, cut_size):
         """Update the edge to have a cut with appropriate interface and panel updates"""
+        edge = interface.edges[0]
+        panel = interface.panel[0]
 
-        # NOTE: Careful with edge directions
-        pass
+        # Correct for edge directions
+        flip = edge.start[1] > edge.end[1]  # NOTE: Assumes vertical orientation
+
+        new_edges = edge.subdivide_len([1 - cut_size, cut_size] if flip else [cut_size, 1 - cut_size])
+        panel.edges.substitute(edge, new_edges)
+        interface.edges.substitute(edge, new_edges[0])
 
 
 # TODO Merge the styles
