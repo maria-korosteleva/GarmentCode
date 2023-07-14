@@ -184,7 +184,7 @@ class YokeFlareSection(pyp.Component):
 class CutsSections(pyp.Component):
     """A-line skirt with sections and bottom cuts"""
     def __init__(self, 
-                 name, body, design):
+                 name, body, design, n_central=1):
         super().__init__(name)
 
         waist = body['waist'] / 2 
@@ -207,7 +207,7 @@ class CutsSections(pyp.Component):
         waist_radius = waist / arc
 
         side_frac = 1/6
-        center_frac = 1 - 2 * side_frac
+        center_frac = (1 - 2 * side_frac) / n_central
 
         # ~Sections on the sides
         side_width = waist * side_frac 
@@ -215,40 +215,50 @@ class CutsSections(pyp.Component):
             f'{name}_r_side',
             length + adj_hips_depth, side_width, waist_radius
         )
+        self.insert_cut(self.side_right.interfaces['left'], cut_size=cut_depth)
+
+        # TODO Use copy instead
         self.side_left = CircleArcPanel.from_length_rad(
             f'{name}_l_side',
             length + adj_hips_depth, side_width, waist_radius
         ).mirror() 
+        self.insert_cut(self.side_left.interfaces['left'], cut_size=cut_depth)
 
         # Central panels
-        self.center = CircleArcPanel.from_length_rad(
+        self.subs = []
+        self.subs.append(CircleArcPanel.from_length_rad(
             f'{name}_center',
             length + adj_hips_depth, waist * center_frac, waist_radius
-        ).translate_by([0, 0, 0])
+        ))
+        self.insert_cut(self.subs[0].interfaces['right'], cut_size=cut_depth)
+        self.insert_cut(self.subs[0].interfaces['left'], cut_size=cut_depth)
+        # MOREE
+        if n_central > 1:
+            self.subs = pyp.ops.distribute_horisontally(
+                self.subs[0], 
+                n_copies=n_central, 
+                stride=self.subs[0].interfaces['bottom'].edges.length())  # TODO Should be in the lib..
 
         # Placements
+        # TODOLOW It should be handled better in the lib
+        side_gap = self.side_right.interfaces['bottom'].edges.length() - side_width
+        sub_gap = self.subs[0].interfaces['bottom'].edges.length() - self.subs[0].interfaces['top'].edges.length()
         self.side_right.place_by_interface(
             self.side_right.interfaces['left'], 
-            self.center.interfaces['right'], 
-            gap=10)   # TODO Gap ~= bottom width difference 
+            self.subs[-1].interfaces['right'], 
+            gap=(side_gap + sub_gap) / 4 + 3) 
         self.side_left.place_by_interface(
             self.side_left.interfaces['left'], 
-            self.center.interfaces['left'], 
-            gap=10)
-
-        # -- Insert the cuts -- 
-        self.insert_cut(self.side_right.interfaces['left'], cut_size=cut_depth)
-        self.insert_cut(self.center.interfaces['left'], cut_size=cut_depth)
-        self.insert_cut(self.center.interfaces['right'], cut_size=cut_depth)
-        self.insert_cut(self.side_left.interfaces['left'], cut_size=cut_depth)
+            self.subs[0].interfaces['left'], 
+            gap=(side_gap + sub_gap) / 4 + 3)
 
         # --- Connect ---
         self.stitching_rules.append((
-            self.side_right.interfaces['left'], self.center.interfaces['right']
+            self.side_right.interfaces['left'], self.subs[0].interfaces['right']
         ))
         
         self.stitching_rules.append((
-            self.side_left.interfaces['left'], self.center.interfaces['left']
+            self.side_left.interfaces['left'], self.subs[-1].interfaces['left']
         ))
 
         # --- Interface --- 
@@ -257,12 +267,12 @@ class CutsSections(pyp.Component):
             'left': self.side_left.interfaces['right'],
             'top': pyp.Interface.from_multiple(
                 self.side_right.interfaces['top'], 
-                self.center.interfaces['top'],
+                *[s.interfaces['top'] for s in self.subs],
                 self.side_left.interfaces['top'], 
             ),
             'bottom': pyp.Interface.from_multiple(
                 self.side_right.interfaces['bottom'], 
-                self.center.interfaces['bottom'],
+                *[s.interfaces['bottom'] for s in self.subs],
                 self.side_left.interfaces['bottom'], 
             )
         }
@@ -296,11 +306,12 @@ class SectionALineSkirt(pyp.Component):
         # to avoid introducing side stitch
         self.front = CutsSections(
             f'{self.name}_f', body, design,
+            n_central=design['front_cuts']['v']
             
         ).translate_to([0, body['waist_level'], 25])
         self.back = CutsSections(
             f'{self.name}_b', body, design,
-            
+            n_central=design['back_cuts']['v']
         ).translate_to([0, body['waist_level'], -20])
 
         self.stitching_rules = pyp.Stitches(

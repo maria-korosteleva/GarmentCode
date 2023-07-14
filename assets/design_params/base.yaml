@@ -366,6 +366,15 @@ design:
       v: 0.1
       range: [0, 0.9]
       type: float
+    
+    front_cuts:
+      v: 1
+      range: [1, 5]
+      type: int
+    back_cuts:
+      v: 2
+      range: [1, 5]
+      type: int
 
   flare-skirt:
     length:

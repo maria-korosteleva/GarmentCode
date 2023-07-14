@@ -510,6 +510,18 @@ design:
       - 1
       - 3
       type: float
+    front_cuts:
+      v: 1
+      range: 
+      - 1
+      - 5
+      type: int
+    back_cuts:
+      v: 2
+      range: 
+      - 1
+      - 5
+      type: int
   flare-skirt:
     length:
       v: 0.2
@@ -639,7 +651,6 @@ design:
       - assets\img\Logo_adjusted.svg
       - assets\img\test_shape.svg  
       type: file_svg
-
   levels-skirt:
     base:
       v: PencilSkirt
