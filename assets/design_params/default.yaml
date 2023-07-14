@@ -25,6 +25,7 @@ design:
       - PencilSkirt
       - SkirtLevels
       - SectionALineSkirt
+      - SectionALineSkirtFlare
       - null
       type: select_null
   waistband:

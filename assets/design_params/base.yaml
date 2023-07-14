@@ -12,11 +12,11 @@ design:
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
-      v: FittedWB
+      v: null
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
-      v: Skirt2  
+      v: SectionALineSkirt  
       range: 
         - SkirtCircle
         - GodetSkirt
@@ -361,6 +361,10 @@ design:
     insert_flare: 
       v: 1.
       range: [1, 4]
+      type: float
+    cut_depth:
+      v: 0.1
+      range: [0, 0.9]
       type: float
 
   flare-skirt:

@@ -84,7 +84,8 @@ class SidePanel(pyp.Panel):
 class YokeFlareSection(pyp.Component):
     """Front/back design for Burda 6880 skirt with flared insert"""
 
-    def __init__(self, name, body, design, dart_position, dart_frac=1., insert_place_shift=0):
+    def __init__(self, 
+                 name, body, design, dart_position, dart_frac=1., insert_place_shift=0):
         super().__init__(name)
 
         waist = body['waist'] / 2 
@@ -93,7 +94,7 @@ class YokeFlareSection(pyp.Component):
         adj_hips_depth = hip_line  # Before rise calculations
         # TODO Add rise control? 
         # DRAFT low_width=design['flare']['v'] * body['hips'] / 4
-        # DRAFT rise=design['rise']['v']   
+        # DRAFT rise=design['rise']['v']
 
         length = (
             body['hips_line']  # DRAFT * design['rise']['v'] 
@@ -178,10 +179,128 @@ class YokeFlareSection(pyp.Component):
             )
         }
 
+# TODO Can I make this skirt with the flare paneled skirt instead?
+# TODO Is there a nicer way to add the cuts/stitches?
+class CutsSections(pyp.Component):
+    """A-line skirt with sections and bottom cuts"""
+    def __init__(self, 
+                 name, body, design):
+        super().__init__(name)
+
+        waist = body['waist'] / 2 
+        hips = body['hips'] / 2
+        hip_line = body['hips_line']
+        adj_hips_depth = hip_line  # Before rise calculations
+        # TODO Add rise control? 
+        # DRAFT low_width=design['flare']['v'] * body['hips'] / 4
+        # DRAFT rise=design['rise']['v']
+
+        length = (
+            body['hips_line']  # DRAFT * design['rise']['v'] 
+            + design['length']['v'] * body['leg_length']
+        )
+        cut_depth = design['cut_depth']   # TODO Handle zero cuts
+
+        # Radius evaluation -- to be used in all elements
+        diff = hips - waist
+        arc = diff / hip_line
+        waist_radius = waist / arc
+
+        side_frac = 1/6
+        center_frac = 1 - 2 * side_frac
+
+        # ~Sections on the sides
+        side_width = waist * side_frac 
+        self.side_right = CircleArcPanel.from_length_rad(
+            f'{name}_r_side',
+            length + adj_hips_depth, side_width, waist_radius
+        ).translate_by([- waist / 2 - side_width, 0, 0])
+        self.side_left = CircleArcPanel.from_length_rad(
+            f'{name}_l_side',
+            length + adj_hips_depth, side_width, waist_radius
+        ).translate_by([- waist / 2 - side_width, 0, 0]).mirror()
+
+        # Central panels
+        self.center = CircleArcPanel.from_length_rad(
+            f'{name}_center',
+            length + adj_hips_depth, waist * center_frac, waist_radius
+        ).translate_by([0, 0, 0])
+
+        # TODO Insert the cuts
+
+        # --- Connect ---
+        self.stitching_rules.append((
+            self.side_right.interfaces['left'], self.center.interfaces['right']
+        ))
+        self.stitching_rules.append((
+            self.side_left.interfaces['left'], self.center.interfaces['left']
+        ))
+
+        # --- Interface --- 
+        self.interfaces = { 
+            'right': self.side_right.interfaces['right'],
+            'left': self.side_left.interfaces['right'],
+            'top': pyp.Interface.from_multiple(
+                self.side_right.interfaces['top'], 
+                self.center.interfaces['top'],
+                self.side_left.interfaces['top'], 
+            ),
+            'bottom': pyp.Interface.from_multiple(
+                self.side_right.interfaces['bottom'], 
+                self.center.interfaces['bottom'],
+                self.side_left.interfaces['bottom'], 
+            )
+        }
+
+    def insert_cut(self, interface, cut_size):
+        """Update the edge to have a cut with appropriate interface and panel updates"""
+
+        # NOTE: Careful with edge directions
+        pass
 
 
-
+# TODO Merge the styles
 class SectionALineSkirt(pyp.Component):
+    """Based on Burda 6880 style (A-line version with cuts)"""
+    def __init__(self, body, design) -> None:
+        super().__init__(self.__class__.__name__)
+
+        design = design['section-skirt']
+        self.design = design  # Make accessible from outside
+
+        # TODO Waistband
+        # TODO front-back different cuts
+
+        # NOTE: side panels of front and back can be cut together 
+        # to avoid introducing side stitch
+        self.front = CutsSections(
+            f'{self.name}_f', body, design,
+            
+        ).translate_to([0, body['waist_level'], 25])
+        self.back = CutsSections(
+            f'{self.name}_b', body, design,
+            
+        ).translate_to([0, body['waist_level'], -20])
+
+        self.stitching_rules = pyp.Stitches(
+            (self.front.interfaces['right'], self.back.interfaces['right']),
+            (self.front.interfaces['left'], self.back.interfaces['left'])
+        )
+
+        # Reusing interfaces of sub-panels as interfaces of this component
+        self.interfaces = {
+            'top_f': self.front.interfaces['top'],
+            'top_b': self.back.interfaces['top'],
+            'top': pyp.Interface.from_multiple(
+                self.front.interfaces['top'], self.back.interfaces['top'].reverse()
+            ),
+            'bottom': pyp.Interface.from_multiple(
+                self.front.interfaces['bottom'], self.back.interfaces['bottom']
+            )
+        }
+
+class SectionALineSkirtFlared(pyp.Component):
+    """Based on Burda 6880 style (flare version)"""
 
     def __init__(self, body, design) -> None:
         super().__init__(self.__class__.__name__)
