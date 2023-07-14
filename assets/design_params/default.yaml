@@ -8,11 +8,12 @@ design:
       - null
       type: select_null
     wb:
-      v: false
+      v: null
       range:
-      - true
-      - false
-      type: bool
+      - StraightWB
+      - FittedWB
+      - null
+      type: select_null
     bottom:
       v: null
       range:
