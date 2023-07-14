@@ -1,19 +1,15 @@
 """3-section A line skirts: by commertial patterns"""
 
-from scipy.spatial.transform import Rotation as R
 import numpy as np
 
 # Custom
 import pypattern as pyp
 
 # other assets
-from .bands import WB
-from . import shapes
 from .circle_skirt import CircleArcPanel
-from .skirt_paneled import SkirtPanel
 
 
-# TODO
+# DRAFT
 class SidePanel(pyp.Panel):
 
     def __init__(self, name, body, length, side_width, rad, circle_arc=False) -> None:
@@ -84,7 +80,6 @@ class SidePanel(pyp.Panel):
                 'top': pyp.Interface(self, top)
             }
 
-# TODO Can we do it as an A-line skirt with insert and additional cut?
 class YokeFlareSection(pyp.Component):
     """Front/back design for Burda 6880 skirt with flared insert"""
 
@@ -95,8 +90,9 @@ class YokeFlareSection(pyp.Component):
         hips = body['hips'] / 2
         hip_line = body['hips_line']
         adj_hips_depth = hip_line  # Before rise calculations
+        # TODO Add rise control? 
         # DRAFT low_width=design['flare']['v'] * body['hips'] / 4
-        # DRAFT rise=design['rise']['v']   # TODO Add rise control? 
+        # DRAFT rise=design['rise']['v']   
 
         length = (
             body['hips_line']  # DRAFT * design['rise']['v'] 
@@ -110,9 +106,7 @@ class YokeFlareSection(pyp.Component):
 
         # --- One Yoke in-between ---
         # NOTE: the panel is designed to follow the "minimal A-line" skirt
-        dart_w = (hips - waist) / 2 * 5 / 6
         dart_depth = hip_line * dart_frac
-        # DRAFT for the adjustible rise dart_depth = max(dart_depth - (hip_line - adj_hips_depth), 0)
         y_side_length = dart_depth  # it's not exacly the length of dart sides, but ok
         y_top_width = dart_position * 2  # Taken up by the section side
 
@@ -124,18 +118,6 @@ class YokeFlareSection(pyp.Component):
         # --- Two side panels ---
         # ~Section of a panel skirt up to a dart
         side_width = (waist - dart_position * 2) / 2
-        # DRAFT top_rad, _, _ = self.yoke.interfaces['top'].edges[0].as_radius_angle()
-        # self.side_right = SidePanel(
-        #     f'{name}_r_side',
-        #     body, length, side_width, waist_radius, 
-        #     circle_arc=True
-        # ).translate_by([- dart_position * 2 - side_width, 0, 0])
-        # self.side_left = SidePanel(
-        #     f'{name}_l_side',
-        #     body, length, side_width, waist_radius, 
-        #     circle_arc=True
-        # ).translate_by([- dart_position * 2 - side_width, 0, 0]).mirror()
-
         self.side_right = CircleArcPanel.from_length_rad(
             f'{name}_r_side',
             length + adj_hips_depth, side_width, waist_radius
@@ -167,7 +149,6 @@ class YokeFlareSection(pyp.Component):
             self.insert.interfaces['right']
         )
         self.stitching_rules.append((
-            # DRAFT self.side_right.interfaces['inside'], right_interface
             self.side_right.interfaces['left'], right_interface
         ))
 
@@ -176,7 +157,6 @@ class YokeFlareSection(pyp.Component):
             self.insert.interfaces['left']
         )
         self.stitching_rules.append((
-            # DRAFT self.side_left.interfaces['inside'], left_interface
             self.side_left.interfaces['left'], left_interface
         ))
         
@@ -211,8 +191,8 @@ class SectionALineSkirt(pyp.Component):
         # Depends on leg length
         # condition
 
-        # TODO Side panels are one panel??
-
+        # NOTE: side panels of front and back can be cut together 
+        # to avoid introducing side stitch
         self.front = YokeFlareSection(
             f'{self.name}_f', body, design,
             dart_position=body['bust_points'] / 2,
