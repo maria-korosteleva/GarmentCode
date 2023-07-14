@@ -236,6 +236,7 @@ class CutsSections(pyp.Component):
         self.stitching_rules.append((
             self.side_right.interfaces['left'], self.center.interfaces['right']
         ))
+        self.side_right.
         self.stitching_rules.append((
             self.side_left.interfaces['left'], self.center.interfaces['left']
         ))
@@ -266,7 +267,7 @@ class CutsSections(pyp.Component):
 
         new_edges = edge.subdivide_len([1 - cut_size, cut_size] if flip else [cut_size, 1 - cut_size])
         panel.edges.substitute(edge, new_edges)
-        interface.edges.substitute(edge, new_edges[0])
+        interface.edges.substitute(edge, new_edges[0] if flip else new_edges[1])
 
 
 # TODO Merge the styles
