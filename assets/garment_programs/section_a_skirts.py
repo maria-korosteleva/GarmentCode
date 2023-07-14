@@ -138,7 +138,7 @@ class YokeFlareSection(pyp.Component):
 
         self.insert = CircleArcPanel.from_length_rad(
             f'{name}_insert',
-            in_length, y_b_width, b_rad).translate_by([0, 0, insert_place_shift])
+            in_length, y_b_width, b_rad).translate_by([0, - y_side_length - 2, insert_place_shift])
         
         # --- Connect ---
         self.stitching_rules.append((
