@@ -214,17 +214,27 @@ class CutsSections(pyp.Component):
         self.side_right = CircleArcPanel.from_length_rad(
             f'{name}_r_side',
             length + adj_hips_depth, side_width, waist_radius
-        ).translate_by([- waist / 2 - side_width, 0, 0])
+        )
         self.side_left = CircleArcPanel.from_length_rad(
             f'{name}_l_side',
             length + adj_hips_depth, side_width, waist_radius
-        ).translate_by([- waist / 2 - side_width, 0, 0]).mirror()
+        ).mirror() 
 
         # Central panels
         self.center = CircleArcPanel.from_length_rad(
             f'{name}_center',
             length + adj_hips_depth, waist * center_frac, waist_radius
         ).translate_by([0, 0, 0])
+
+        # Placements
+        self.side_right.place_by_interface(
+            self.side_right.interfaces['left'], 
+            self.center.interfaces['right'], 
+            gap=10)   # TODO Gap ~= bottom width difference 
+        self.side_left.place_by_interface(
+            self.side_left.interfaces['left'], 
+            self.center.interfaces['left'], 
+            gap=10)
 
         # -- Insert the cuts -- 
         self.insert_cut(self.side_right.interfaces['left'], cut_size=cut_depth)
@@ -236,7 +246,7 @@ class CutsSections(pyp.Component):
         self.stitching_rules.append((
             self.side_right.interfaces['left'], self.center.interfaces['right']
         ))
-        self.side_right.
+        
         self.stitching_rules.append((
             self.side_left.interfaces['left'], self.center.interfaces['left']
         ))

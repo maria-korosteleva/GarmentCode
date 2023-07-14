@@ -1,5 +1,7 @@
 
 from typing import Any
+import numpy as np
+
 from .connector import Stitches
 
 class BaseComponent():
@@ -24,7 +26,11 @@ class BaseComponent():
         return [0, 0, 0]
     
     def bbox(seld):
-        """Bounding box"""
+        """Bounding box -- in 2D"""
+        return 0, 0, 0, 0, 0, 0
+    
+    def bbox3D(seld):
+        """Bounding box in 3D space"""
         return 0, 0, 0, 0, 0, 0
 
     # Operations
@@ -46,3 +52,48 @@ class BaseComponent():
 
     def __call__(self, *args: Any, **kwds: Any) -> Any:
         return self.assembly(*args,**kwds)
+    
+
+    # ----- Placement routines: these are the same for panels and components
+    def place_below(self, comp, gap=2):
+        """Place below the provided component"""
+        other_bbox = comp.bbox3D()
+        curr_bbox = self.bbox3D()
+
+        self.translate_by([0, other_bbox[0][1] - curr_bbox[1][1] - gap, 0])
+
+        return self
+
+    def place_by_interface(self, 
+                            self_interface, 
+                            out_interface, 
+                            gap=2):
+        """Adjust the placement of component acconding to the connectivity instuction        
+        """
+        
+        # Alight translation
+        self_bbox = self_interface.bbox_3d()
+        out_bbox = out_interface.bbox_3d()
+        mid_out = (out_bbox[1] + out_bbox[0]) / 2
+        mid_self = (self_bbox[1] + self_bbox[0]) / 2
+
+        # Add a gap outside of the current 
+        full_bbox = self.bbox3D()
+        center = (full_bbox[0] + full_bbox[1]) / 2
+        gap_dir = mid_self - center
+        gap_dir = gap * gap_dir / np.linalg.norm(gap_dir)
+        
+        diff = mid_out - (mid_self + gap_dir)
+        
+        self.translate_by(diff)
+
+        # NOTE: Norm evaluation of vertex set will fail 
+        # for the alignment of 2D panels, where they are likely
+        # to be in one line or in a panel plane instead of 
+        # the interface place -- so I'm not using norms for gap esitmation
+
+        # TODO Estimate rotation
+        # TODO not just placement by the midpoint of the interfaces?
+        # It created a little overlap when both interfaces are angled a little differently 
+
+        return self
