@@ -206,7 +206,7 @@ class WBPants(pyp.Component):
         wb_len = (self.pants.interfaces['top_b'].projecting_edges().length() + 
                     self.pants.interfaces['top_f'].projecting_edges().length())
 
-        self.wb = bands.WB(body, design)
+        self.wb = bands.StraightWB(body, design)
         self.wb.translate_by([0, self.wb.width + 2, 0])
 
         self.stitching_rules = pyp.Stitches(

@@ -3,7 +3,7 @@ import pypattern as pyp
 from . import skirt_paneled
 
 
-class BandPanel(pyp.Panel):
+class StraightBandPanel(pyp.Panel):
     """One panel for a panel skirt"""
 
     def __init__(self, name, width, depth=10) -> None:
@@ -25,7 +25,7 @@ class BandPanel(pyp.Panel):
         self.center_x()
 
 
-class WB(pyp.Component):
+class StraightWB(pyp.Component):
     """Simple 2 panel waistband"""
     def __init__(self, body, design) -> None:
         super().__init__(self.__class__.__name__)
@@ -34,9 +34,9 @@ class WB(pyp.Component):
         self.width = design['waistband']['width']['v']
 
         # TODO flexible fractions of the waist
-        self.front = BandPanel('wb_front', self.waist / 2, self.width)
+        self.front = StraightBandPanel('wb_front', self.waist / 2, self.width)
         self.front.translate_by([0, body['waist_level'], 20])  
-        self.back = BandPanel('wb_back', self.waist / 2, self.width)
+        self.back = StraightBandPanel('wb_back', self.waist / 2, self.width)
         self.back.translate_by([0, body['waist_level'], -15])  
 
         self.stitching_rules = pyp.Stitches(
@@ -68,10 +68,10 @@ class CuffBand(pyp.Component):
         design = design['cuff']
 
         # TODO flexible fractions of the width
-        self.front = BandPanel(
+        self.front = StraightBandPanel(
             f'{tag}_cuff_f', design['b_width']['v'] / 2, design['b_depth']['v'])
         self.front.translate_by([0, 0, 15])  
-        self.back = BandPanel(
+        self.back = StraightBandPanel(
             f'{tag}_cuff_b', design['b_width']['v'] / 2, design['b_depth']['v'])
         self.back.translate_by([0, 0, -15])  
 

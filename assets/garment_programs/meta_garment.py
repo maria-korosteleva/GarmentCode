@@ -32,7 +32,7 @@ class MetaGarment(pyp.Component):
 
         # Belt (or not)
         if design['meta']['wb']['v']:
-            self.subs.append(WB(body, design))
+            self.subs.append(StraightWB(body, design))
 
             # Place below the upper garment 
             if len(self.subs) > 1:

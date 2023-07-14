@@ -5,7 +5,7 @@ import numpy as np
 import pypattern as pyp
 
 # other assets
-from .bands import WB
+from .bands import StraightWB
 from . import shapes
 
 # Panels
@@ -299,7 +299,7 @@ class SkirtWB(pyp.Component):
     def __init__(self, body, design) -> None:
         super().__init__(f'{self.__class__.__name__}')
 
-        self.wb = WB(body, design)
+        self.wb = StraightWB(body, design)
         self.skirt = Skirt2(body, design)
         self.skirt.place_below(self.wb)
 
@@ -356,7 +356,7 @@ class SkirtManyPanelsWB(pyp.Component):
 
         wb_width = 5
         self.skirt = SkirtManyPanels(body, design).translate_by([0, -wb_width, 0])
-        self.wb = WB(body, design).translate_by([0, wb_width, 0])
+        self.wb = StraightWB(body, design).translate_by([0, wb_width, 0])
 
         self.stitching_rules.append(
             (self.skirt.interfaces['top'], self.wb.interfaces['bottom']))

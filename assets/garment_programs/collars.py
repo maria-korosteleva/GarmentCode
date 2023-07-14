@@ -6,7 +6,7 @@ import pypattern as pyp
 
 # Other assets
 
-from .bands import BandPanel
+from .bands import StraightBandPanel
 from .circle_skirt import CircleArcPanel
 
 
@@ -129,9 +129,9 @@ class Turtle(pyp.Component):
         length_f, length_b = f_collar.length(), b_collar.length()
         height_p = body['height'] - body['head_l'] + depth
 
-        self.front = BandPanel(
+        self.front = StraightBandPanel(
             f'{tag}_turtle_front', length_f, depth).translate_by([-length_f / 2, height_p, 10])
-        self.back = BandPanel(
+        self.back = StraightBandPanel(
             f'{tag}_turtle_back', length_b, depth).translate_by([-length_b / 2, height_p, -10])
 
         self.stitching_rules.append((
@@ -206,7 +206,7 @@ class SimpleLapel(pyp.Component):
             f'{tag}_lapel_front', length_f, depth).translate_by([-depth * 2, height_p, 30])
 
         if standing:
-            self.back = BandPanel(
+            self.back = StraightBandPanel(
                 f'{tag}_lapel_back', length_b, depth).translate_by([-length_b / 2, height_p, -10])
         else:
             # A curved back panel that follows the collar opening

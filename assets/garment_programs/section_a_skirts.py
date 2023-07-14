@@ -80,6 +80,7 @@ class SidePanel(pyp.Panel):
                 'top': pyp.Interface(self, top)
             }
 
+# TODOLOW More general version of this skirt?
 class YokeFlareSection(pyp.Component):
     """Front/back design for Burda 6880 skirt with flared insert"""
 
