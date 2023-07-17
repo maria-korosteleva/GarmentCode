@@ -206,7 +206,7 @@ class CutsSections(pyp.Component):
         arc = diff / hip_line
         waist_radius = waist / arc
 
-        side_frac = 1/6
+        side_frac = design['side_panel_width']['v']
         center_frac = (1 - 2 * side_frac) / n_central
 
         # ~Sections on the sides

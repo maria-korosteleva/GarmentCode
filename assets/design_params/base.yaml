@@ -376,6 +376,11 @@ design:
       range: [1, 5]
       type: int
 
+    side_panel_width: 
+      v: 0.15
+      range: [0.1, 0.3]
+      type: float
+
   flare-skirt:
     length:
       v: 0.2
