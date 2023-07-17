@@ -237,7 +237,13 @@ class CutsSections(pyp.Component):
             self.subs = pyp.ops.distribute_horisontally(
                 self.subs[0], 
                 n_copies=n_central, 
-                stride=self.subs[0].interfaces['bottom'].edges.length())  # TODO Should be in the lib..
+                stride=self.subs[0].interfaces['bottom'].edges.length(), 
+                name_tag=f'{name}_ins')  # TODO Should be in the lib..
+            # Connect
+            for i in range(1, len(self.subs)):
+                self.stitching_rules.append((
+                    self.subs[i - 1].interfaces['right'], self.subs[i].interfaces['left']
+                ))
 
         # Placements
         # TODOLOW It should be handled better in the lib
@@ -254,11 +260,11 @@ class CutsSections(pyp.Component):
 
         # --- Connect ---
         self.stitching_rules.append((
-            self.side_right.interfaces['left'], self.subs[0].interfaces['right']
+            self.side_right.interfaces['left'], self.subs[-1].interfaces['right']
         ))
         
         self.stitching_rules.append((
-            self.side_left.interfaces['left'], self.subs[-1].interfaces['left']
+            self.side_left.interfaces['left'], self.subs[0].interfaces['left']
         ))
 
         # --- Interface --- 
