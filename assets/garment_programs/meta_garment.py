@@ -10,7 +10,6 @@ import pypattern as pyp
 from assets.garment_programs.skirt_paneled import *
 from assets.garment_programs.circle_skirt import *
 from assets.garment_programs.skirt_levels import *
-from assets.garment_programs.section_a_skirts import * 
 from assets.garment_programs.tee import *
 from assets.garment_programs.godet import *
 from assets.garment_programs.bodice import *

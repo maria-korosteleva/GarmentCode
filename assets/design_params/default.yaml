@@ -24,8 +24,6 @@ design:
       - SkirtManyPanels
       - PencilSkirt
       - SkirtLevels
-      - SectionALineSkirt
-      - SectionALineSkirtFlare
       - null
       type: select_null
   waistband:
@@ -496,31 +494,6 @@ design:
       range:
       - 0
       - 20
-      type: int
-  section-skirt: 
-    length:
-      v: 0.2
-      range: 
-      - -0.2
-      - 1
-      type: float 
-    insert_flare: 
-      v: 1.
-      range: 
-      - 1
-      - 3
-      type: float
-    front_cuts:
-      v: 1
-      range: 
-      - 1
-      - 5
-      type: int
-    back_cuts:
-      v: 2
-      range: 
-      - 1
-      - 5
       type: int
   flare-skirt:
     length:

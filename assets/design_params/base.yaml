@@ -16,7 +16,7 @@ design:
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
-      v: SectionALineSkirt  
+      v: SkirtCircle  
       range: 
         - SkirtCircle
         - GodetSkirt
@@ -25,7 +25,6 @@ design:
         - SkirtManyPanels
         - PencilSkirt
         - SkirtLevels
-        - SectionALineSkirt  
         - MinimalALine   # For testing only
       type: select_null
 
@@ -352,34 +351,6 @@ design:
       v: 0
       range: [0, 20]
       type: int
-
-  section-skirt: 
-    length:
-      v: 0.2
-      range: [-0.2, 1]
-      type: float 
-    insert_flare: 
-      v: 1.
-      range: [1, 4]
-      type: float
-    cut_depth:
-      v: 0.1
-      range: [0, 0.9]
-      type: float
-    
-    front_cuts:
-      v: 1
-      range: [1, 5]
-      type: int
-    back_cuts:
-      v: 3
-      range: [1, 5]
-      type: int
-
-    side_panel_width: 
-      v: 0.15
-      range: [0.1, 0.3]
-      type: float
 
   flare-skirt:
     length:
