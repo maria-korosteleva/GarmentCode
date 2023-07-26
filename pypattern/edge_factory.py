@@ -499,7 +499,6 @@ def _fit_pass_point(cp, target_location):
         * target_location -- target to fit extremum to -- 
             expressed in RELATIVE coordinates to your desired edge
     """
-
     control_bezier = np.array([
         [0, 0], 
         cp, 
@@ -509,8 +508,8 @@ def _fit_pass_point(cp, target_location):
     curve = svgpath.QuadraticBezier(*params)
 
     inter_segment = svgpath.Line(
-            target_location[0] + 1j * 1,
-            target_location[0] + 1j * 0
+            target_location[0] + 1j * target_location[1] * 2,
+            target_location[0] + 1j * (- target_location[1] * 2)
         )
 
     intersect_t = curve.intersect(inter_segment)
