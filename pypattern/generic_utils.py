@@ -62,6 +62,18 @@ def bbox_paths(paths):
     bboxes = np.array([p.bbox() for p in paths])
     return (min(bboxes[:, 0]), max(bboxes[:, 1]), min(bboxes[:, 2]), max(bboxes[:, 3]))
 
+def lin_interpolation(val1, val2, factor):
+    """Linear interpolation between val1 and val2 with factor [0, 1]
+
+    with factor == 0, output is val1
+    with factor == 1, output is val2
+    """
+    if factor < 0 or factor > 1:
+        raise ValueError(f'lin_interpolation::Error::Expected a factor \in [0, 1], got {factor}')
+
+    return (1 - factor) * val1 + factor * val2
+
+
 # ---- Complex numbers converters ----- 
 def c_to_list(num):
     """Convert complex number to a list of 2 elements
@@ -72,7 +84,6 @@ def c_to_list(num):
         return [c_to_list(n) for n in num]
     else: 
         return [num.real, num.imag]
-
 
 def c_to_np(num):
     """Convert complex number to a numpy array of 2 elements

@@ -74,7 +74,7 @@ class FittedWB(pyp.Component):
         hips = body['hips'] * design['waistband']['waist']['v']
         hip_line = body['hips_line']
 
-        bottom_width = self.waist + (hips - self.waist) * self.width / hip_line
+        bottom_width = pyp.utils.lin_interpolation(self.waist, hips, self.width / hip_line)
 
         self.front = CircleArcPanel.from_all_length(
             'wb_front', 
