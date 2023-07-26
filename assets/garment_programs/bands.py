@@ -64,6 +64,10 @@ class FittedWB(pyp.Component):
     def __init__(self, body, design) -> None:
         super().__init__(self.__class__.__name__)
 
+        # FIXME the linear interpolation does not appear to fix the body curves that well
+        # TODO Assymetric front-back panels! (back has stronger curvature change)
+
+
         self.waist = design['waistband']['waist']['v'] * body['waist']
         self.width = design['waistband']['width']['v']
 
