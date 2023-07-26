@@ -17,7 +17,7 @@ class PantPanel(pyp.Panel):
 
         pant_width = design['width']['v'] * body['hips'] / 4
         low_width = pant_width * design['flare']['v']  
-        length = body['hips_line'] + design['length']['v'] * body['leg_length']
+        length = design['length']['v'] * body['leg_length']
 
         waist = body['waist'] / 4
         hips_depth = body['hips_line']
@@ -36,11 +36,16 @@ class PantPanel(pyp.Panel):
         # We distribute w_diff among the side angle and a dart 
         hw_shift = w_diff / 3
 
+        # FIXME Pants flare values cause crashes
         right = pyp.esf.curve_3_points(
             [
                 min(- (low_width - pant_width), (pant_width - low_width) / 2),   # extend wide pants out
-                0],    
-            [hw_shift, length + hips_depth],
+                0
+            ],    
+            [
+                hw_shift, 
+                length + hips_depth
+            ],
             target=[0, length]
         )
 

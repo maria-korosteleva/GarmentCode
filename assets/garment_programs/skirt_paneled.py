@@ -185,10 +185,7 @@ class PencilSkirt(pyp.Component):
         self.design = design  # Make accessible from outside
 
         # Depends on leg length
-        length = (
-            body['hips_line'] * design['rise']['v'] 
-            + design['length']['v'] * body['leg_length']
-        )
+        length = design['length']['v'] * body['leg_length']
 
         # condition
         if design['style_side_cut']['v'] is not None:
