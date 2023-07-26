@@ -205,3 +205,32 @@ def _fit_y_extremum(cp_y, target_location):
     diff = np.linalg.norm(extremum - target_location)
 
     return diff**2 
+
+def _fit_pass_point(cp, target_location):
+    """ Fit the control point of basic [[0, 0] -> [1, 0]] Quadratic Bezier s.t. 
+        it's expremum is close to target location.
+
+        * cp_y - initial guess for Quadratic Bezier control point y coordinate
+            (relative to the edge)
+        * target_location -- target to fit extremum to -- 
+            expressed in RELATIVE coordinates to your desired edge
+    """
+    control_bezier = np.array([
+        [0, 0], 
+        cp, 
+        [1, 0]
+    ])
+    params = list_to_c(control_bezier)
+    curve = svgpath.QuadraticBezier(*params)
+
+    inter_segment = svgpath.Line(
+            target_location[0] + 1j * target_location[1] * 2,
+            target_location[0] + 1j * (- target_location[1] * 2)
+        )
+
+    intersect_t = curve.intersect(inter_segment)
+    point = curve.point(intersect_t[0][0])
+
+    diff = abs(point - list_to_c(target_location))
+
+    return diff**2 

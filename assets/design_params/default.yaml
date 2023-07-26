@@ -572,7 +572,7 @@ design:
       v: 0.4
       range:
       - 0.2
-      - 1
+      - 1.1
       type: float
     rise:
       v: 1
@@ -654,7 +654,7 @@ design:
       v: 1.0
       range:
       - 0.5
-      - 1.5
+      - 1.2
       type: float
     rise:
       v: 1.0
