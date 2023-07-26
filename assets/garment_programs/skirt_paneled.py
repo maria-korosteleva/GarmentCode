@@ -80,7 +80,7 @@ class FittedSkirtPanel(pyp.Panel):
 
         # adjust for a rise
         adj_hips_depth = rise * hips_depth
-        adj_waist = hips - rise * (hips - waist)
+        adj_waist = pyp.utils.lin_interpolation(hips, waist, rise)
         dart_depth = hips_depth * dart_frac
         dart_depth = max(dart_depth - (hips_depth - adj_hips_depth), 0)
 

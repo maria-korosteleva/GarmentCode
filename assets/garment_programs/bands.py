@@ -56,7 +56,6 @@ class WB(pyp.Component):
         }
 
 
-
 class CuffBand(pyp.Component):
     """ Cuff class for sleeves or pants
         band-like piece of fabric with optional "skirt"
