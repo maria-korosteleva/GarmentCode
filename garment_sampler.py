@@ -107,7 +107,18 @@ def generate(path, props):
     gen_stats['generation_time'] = f'{elapsed:.3f} s'
 
     # log properties
-    props.serialize(data_folder / 'dataset_properties.yaml')  # TODO Support YAML
+    props.serialize(data_folder / 'dataset_properties.yaml') 
+
+def gather_visuals(path):
+    vis_path = Path(path) / 'patterns_vis'
+    vis_path.mkdir(parents=True, exist_ok=True)
+
+    for p in path.rglob("*.png"):
+        try: 
+            shutil.copy(p, vis_path)
+        except shutil.SameFileError:
+            print('File {} already exists'.format(p.name))
+            pass
 
 if __name__ == '__main__':
 
@@ -131,9 +142,10 @@ if __name__ == '__main__':
     # Generator
     generate(system_props['datasets_path'], props)
 
-    # TODO Gather the pattern images separately
+    # Gather the pattern images separately
+    gather_visuals(Path(system_props['datasets_path']) / props['data_folder'], props)
 
     # At the end -- it takes some time to gather the info
-    props.add_sys_info()  # update this info regardless of the basic config    
+    # DRAFT props.add_sys_info()  # update this info regardless of the basic config    
 
     print('Data generation completed!')
