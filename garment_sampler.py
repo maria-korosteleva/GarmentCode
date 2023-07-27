@@ -9,6 +9,7 @@ import sys
 import shutil 
 import time
 import random
+import string
 
 sys.path.insert(0, './external/')
 sys.path.insert(1, './')
@@ -46,6 +47,13 @@ def _create_data_folder(path='', props=''):
 
     return path_with_dataset
 
+def _id_generator(size=10,
+                  chars=string.ascii_uppercase + string.digits):
+        """Generate a random string of a given size, see
+        https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits
+        """
+        return ''.join(random.choices(chars, k=size))
+
 def generate(path, props):
     """Generates a synthetic dataset of patterns with given properties
         Params:
@@ -76,7 +84,7 @@ def generate(path, props):
         new_design = sampler.randomize()
 
         try:
-            piece = MetaGarment(f'Random_{i}', body, new_design)  # TODO Naming
+            piece = MetaGarment(f'rand_{_id_generator()}', body, new_design) 
             pattern = piece()
 
             # TODO Quality checks (!!!) -- probably best if they are internal to the sampler?
