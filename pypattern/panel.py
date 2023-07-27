@@ -59,6 +59,29 @@ class Panel(BaseComponent):
         """Pivot point of a panel in 3D"""
         return self.point_to_3D([0, 0])
 
+    def is_self_intersecting(self):
+        """Check whether the panel has self-intersection"""
+
+        edge_curves = [e.as_curve() for e in self.edges]
+
+        # TODOLOW Edge vs. the rest of the path -- could be faster!
+        # simple pairwise checks of edges
+        for i1 in range(0, len(edge_curves)):
+           for i2 in range(i1 + 1, len(edge_curves)):
+                intersect_t = edge_curves[i1].intersect(edge_curves[i2])
+
+                if len(intersect_t) == 1: # Check exeption -- intersection at the vertex
+                    t1, t2 = intersect_t[0]
+                    if t2 < t1:
+                        t1, t2 = t2, t1
+                    if close_enough(t1, 0) and close_enough(t2, 1):
+                        continue
+
+                if intersect_t:  # Any other case of intersections
+                    return True      
+                
+        return False
+
     # ANCHOR - Operations -- update object in-place 
     def set_pivot(self, point_2d, replicate_placement=False):
         """Specify 2D point w.r.t. panel local space

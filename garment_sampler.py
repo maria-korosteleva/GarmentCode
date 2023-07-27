@@ -28,6 +28,8 @@ from assets.body_measurments.body_params import BodyParameters
 
 import pypattern as pyp
 
+# TODO Logging formatting
+
 def _create_data_folder(path='', props=''):
     """ Create a new directory to put dataset in 
         & generate appropriate name & update dataset properties
@@ -88,8 +90,12 @@ def generate(path, props):
                 piece = MetaGarment(f'rand_{_id_generator()}', body, new_design) 
                 pattern = piece()
 
-                # TODO Self-intersection checks (!!!) 
-                # Or how will I do that?
+                if piece.is_self_intersecting():
+                    # FIXME Why does it still saves the empty file if self_interting check failed?
+                    # (problem encountered before checking the exeption at vertices)
+                    print('Self-intersecting!!') 
+                    continue  # Redo the randomization
+
                 # Save as json file
                 folder = pattern.serialize(
                     samples_folder, 
@@ -120,7 +126,7 @@ def generate(path, props):
     # log properties
     props.serialize(data_folder / 'dataset_properties.yaml') 
 
-def gather_visuals(path):
+def gather_visuals(path, verbose=False):
     vis_path = Path(path) / 'patterns_vis'
     vis_path.mkdir(parents=True, exist_ok=True)
 
@@ -128,7 +134,8 @@ def gather_visuals(path):
         try: 
             shutil.copy(p, vis_path)
         except shutil.SameFileError:
-            print('File {} already exists'.format(p.name))
+            if verbose:
+                print('File {} already exists'.format(p.name))
             pass
 
 if __name__ == '__main__':

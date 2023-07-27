@@ -25,13 +25,17 @@ class BaseComponent():
         """Pivot location of a component in 3D"""
         return [0, 0, 0]
     
-    def bbox(seld):
+    def bbox(self):
         """Bounding box -- in 2D"""
         return 0, 0, 0, 0, 0, 0
     
-    def bbox3D(seld):
+    def bbox3D(self):
         """Bounding box in 3D space"""
         return 0, 0, 0, 0, 0, 0
+    
+    def is_self_intersecting(self):
+        """Check whether the component have self-intersections"""
+        return False
 
     # Operations
     def translate_by(self, delta_translation):
