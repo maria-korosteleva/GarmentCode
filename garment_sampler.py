@@ -107,7 +107,7 @@ def generate(path, props):
     gen_stats['generation_time'] = f'{elapsed:.3f} s'
 
     # log properties
-    props.serialize(data_folder / 'dataset_properties.json')  # TODO Support YAML
+    props.serialize(data_folder / 'dataset_properties.yaml')  # TODO Support YAML
 
 if __name__ == '__main__':
 
@@ -125,7 +125,7 @@ if __name__ == '__main__':
         props.set_section_config('generator')
     else:
         props = Properties(
-            Path(system_props['datasets_path']) / 'data_5_230727-17-00-31/dataset_properties.json', 
+            Path(system_props['datasets_path']) / 'data_5_230727-17-30-03/dataset_properties.json', 
             True)
 
     # Generator
@@ -135,3 +135,5 @@ if __name__ == '__main__':
 
     # At the end -- it takes some time to gather the info
     props.add_sys_info()  # update this info regardless of the basic config    
+
+    print('Data generation completed!')
