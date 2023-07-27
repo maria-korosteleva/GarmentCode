@@ -226,7 +226,7 @@ class Sleeve(pyp.Component):
         # Interfaces
         self.interfaces.update({
             'in': pyp.Interface.from_multiple(
-                self.f_sleeve.interfaces['in'].reverse(),
+                self.f_sleeve.interfaces['in'],
                 self.b_sleeve.interfaces['in'].reverse()
             ),
             'out': pyp.Interface.from_multiple(
