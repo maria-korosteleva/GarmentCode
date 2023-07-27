@@ -59,6 +59,7 @@ def generate(path, props):
 
     # create data folder
     data_folder = _create_data_folder(path, props)
+    samples_folder = data_folder / 'data'
 
     # init random seed
     if 'random_seed' not in gen_config or gen_config['random_seed'] is None:
@@ -82,7 +83,7 @@ def generate(path, props):
             # Or how will I do that?
             # Save as json file
             folder = pattern.serialize(
-                data_folder, 
+                samples_folder, 
                 tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
                 to_subfolder=True, 
                 with_3d=True, with_text=False, view_ids=False)
@@ -143,7 +144,7 @@ if __name__ == '__main__':
     generate(system_props['datasets_path'], props)
 
     # Gather the pattern images separately
-    gather_visuals(Path(system_props['datasets_path']) / props['data_folder'], props)
+    gather_visuals(Path(system_props['datasets_path']) / props['data_folder'])
 
     # At the end -- it takes some time to gather the info
     # DRAFT props.add_sys_info()  # update this info regardless of the basic config    
