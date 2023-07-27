@@ -81,36 +81,38 @@ def generate(path, props):
     body = BodyParameters(props['body_file'])
     sampler = pyp.params.DesignSampler(props['design_file'])
     for i in range(props['size']):
-        new_design = sampler.randomize()
+        # Redo sampling untill success
+        for _ in range(100):  # Putting a limit on re-tries to avoid infinite loops
+            new_design = sampler.randomize()
+            try:
+                piece = MetaGarment(f'rand_{_id_generator()}', body, new_design) 
+                pattern = piece()
 
-        try:
-            piece = MetaGarment(f'rand_{_id_generator()}', body, new_design) 
-            pattern = piece()
+                # TODO Self-intersection checks (!!!) 
+                # Or how will I do that?
+                # Save as json file
+                folder = pattern.serialize(
+                    samples_folder, 
+                    tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
+                    to_subfolder=True, 
+                    with_3d=True, with_text=False, view_ids=False)
 
-            # TODO Quality checks (!!!) -- probably best if they are internal to the sampler?
-            # Or how will I do that?
-            # Save as json file
-            folder = pattern.serialize(
-                samples_folder, 
-                tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
-                to_subfolder=True, 
-                with_3d=True, with_text=False, view_ids=False)
-
-            body.save(folder)
-            with open(Path(folder) / 'design_params.yaml', 'w') as f:
-                yaml.dump(
-                    {'design': new_design}, 
-                    f,
-                    default_flow_style=False,
-                    sort_keys=False
-                )
-            print(f'Success! {piece.name} saved to {folder}')
-        except BaseException as e:
-            print(f'{i} failed')
-            print(e)
-            # TODO redo sampling untill success
-            # TODO Examine the errors
-            continue
+                body.save(folder)
+                with open(Path(folder) / 'design_params.yaml', 'w') as f:
+                    yaml.dump(
+                        {'design': new_design}, 
+                        f,
+                        default_flow_style=False,
+                        sort_keys=False
+                    )
+                print(f'Success! {piece.name} saved to {folder}')
+                break  # Stop generation
+            except BaseException as e:
+                print(f'{i} failed')
+                print(e)
+                
+                # TODO Examine the errors -- probably there is something there
+                continue
 
     elapsed = time.time() - start_time
     gen_stats['generation_time'] = f'{elapsed:.3f} s'
