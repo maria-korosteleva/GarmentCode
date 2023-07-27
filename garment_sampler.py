@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     pattern = piece()
 
-    # TODO Quality checks
+    # TODO Quality checks (!!!)
 
     # Save as json file
     sys_props = Properties('./system.json')

@@ -20,6 +20,7 @@ import PySimpleGUI as sg
 # Custom 
 from assets.garment_programs.meta_garment import MetaGarment
 from assets.body_measurments.body_params import BodyParameters
+import pypattern as pyp
 
 verbose = False
 
@@ -59,6 +60,8 @@ class GUIPattern():
         self.ui_id = None   # ID of current object in the interface
         self.body_bottom = None   # Location of body center in the current png representation of a garment
 
+        self.design_sampler = pyp.params.DesignSampler()
+
         self.body_file = None
         self.design_file = None
         self.design_params = {}
@@ -83,15 +86,21 @@ class GUIPattern():
 
     def new_design_file(self, path):
         self.design_file = path
+
+        # Update values
         with open(path, 'r') as f:
             des = yaml.safe_load(f)['design']
-
         # FIXME Updating should allows loading partial design files
         # Need nested updates
         self.design_params.update(des)
 
         if 'left' in self.design_params and not self.design_params['left']['enable_asym']:
             self.sync_left()
+
+        # Update param sampler
+        self.design_sampler.load(path)
+
+        # Reload
         self.reload_garment()
 
     def set_design_param(self, param_path, new_value, reload=True):
@@ -133,6 +142,18 @@ class GUIPattern():
 
         if reload:
             self.reload_garment()
+
+    def sample_design(self):
+        """Random design parameters"""
+        new_design = self.design_sampler.randomize()
+        self.design_params.update(new_design)
+        self.reload_garment()
+
+    def restore_design(self):
+        """Restore design values to match the current loaded file"""
+        new_design = self.design_sampler.default()
+        self.design_params.update(new_design)
+        self.reload_garment()
 
     def reload_garment(self):
         """Reload sewing pattern with current body and design parameters"""
@@ -294,6 +315,18 @@ class GUIState():
                     key='DESIGNFILE'
                 ),
                 sg.FileBrowse(initial_folder=self.pattern_state.design_file.parent)
+            ],
+            [
+                sg.Button(   # TODO Add some color
+                    'Randomize',
+                    enable_events=True, 
+                    key='DESIGNRANDOMIZE'
+                ),
+                sg.Button(   # TODO Add some color
+                    'Restore Default',
+                    enable_events=True, 
+                    key='DESIGNRESTORE'
+                )
             ],
             [
                 sg.Column(self.def_design_tabs())
@@ -751,6 +784,18 @@ class GUIState():
                 elif event == 'DESIGNFILE':  # A file was chosen from the listbox
                     file = values['DESIGNFILE']
                     self.pattern_state.new_design_file(file)
+
+                    self.upd_fields_design(self.pattern_state.design_params)
+                    self.upd_pattern_visual()
+                
+                elif event == 'DESIGNRANDOMIZE':  # A file was chosen from the listbox
+                    self.pattern_state.sample_design()
+
+                    self.upd_fields_design(self.pattern_state.design_params)
+                    self.upd_pattern_visual()
+                
+                elif event == 'DESIGNRESTORE':  # A file was chosen from the listbox
+                    self.pattern_state.restore_design()
 
                     self.upd_fields_design(self.pattern_state.design_params)
                     self.upd_pattern_visual()
