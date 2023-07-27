@@ -31,7 +31,7 @@ class StraightWB(pyp.Component):
         super().__init__(self.__class__.__name__)
 
         self.waist = design['waistband']['waist']['v'] * body['waist']
-        self.width = design['waistband']['width']['v']
+        self.width = design['waistband']['width']['v'] * body['hips_line']
 
         # TODO flexible fractions of the waist
         self.front = StraightBandPanel('wb_front', self.waist / 2, self.width)
@@ -69,7 +69,7 @@ class FittedWB(pyp.Component):
 
 
         self.waist = design['waistband']['waist']['v'] * body['waist']
-        self.width = design['waistband']['width']['v']
+        self.width = design['waistband']['width']['v'] * body['hips_line']
 
         hips = body['hips'] * design['waistband']['waist']['v']
         hip_line = body['hips_line']

@@ -34,10 +34,10 @@ design:
       - 2
       type: float
     width:
-      v: 3
+      v: 0.2
       range:
-      - 1
-      - 15
+      - 0.1
+      - 1.
       type: float
   shirt:
     strapless:
