@@ -11,8 +11,8 @@ import sys
 # for system info
 import platform
 import psutil
-if 'win' in platform.system() or 'Win' in platform.system():
-    import wmi  # pip install wmi
+# if 'win' in platform.system() or 'Win' in platform.system():
+#     import wmi  # pip install wmi
 
 
 class Properties():

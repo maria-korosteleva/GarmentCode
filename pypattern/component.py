@@ -2,8 +2,8 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 # Custom
-from pattern.core import BasicPattern
-from pattern.wrappers import VisPattern
+from external.pattern.core import BasicPattern
+from external.pattern.wrappers import VisPattern
 from .base import BaseComponent
 from .interface import Interface
 
