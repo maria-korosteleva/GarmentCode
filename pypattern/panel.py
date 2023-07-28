@@ -273,11 +273,17 @@ class Panel(BaseComponent):
             # Pylance + NP error for unreachanble code -- see https://github.com/numpy/numpy/issues/22146
             # Works ok for numpy 1.23.4+
             norm = np.cross(vert_1 - vert_0, center_3d - vert_0)
-            norm /= np.linalg.norm(norm)
+            norm /= np.linalg.norm(norm)  # TODOLOW -- what if we don't add normalization? 
             norms.append(norm)
 
         # Current norm direction
         avg_norm = sum(norms) / len(norms)
+
+        if close_enough(np.linalg.norm(avg_norm), 0):
+            # Indecisive averaging, so using just one of the norms
+            # NOTE: sometimes happens on thin arcs
+            avg_norm = norms[0]   
+            print(f'{self.__class__.__name__}::{self.name}::WARNING::Norm evaluation failed, assigning norm based on the first edge')
         return avg_norm / np.linalg.norm(avg_norm)
 
     def bbox3D(self):
