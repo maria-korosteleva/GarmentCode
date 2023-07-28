@@ -1,4 +1,4 @@
-name: test_garment
+name: garment
 channels:
   - conda-forge
   - defaults
