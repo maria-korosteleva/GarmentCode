@@ -111,7 +111,7 @@ design:
     armhole_shape: 
       v: ArmholeSquare
       range: [ArmholeSquare, ArmholeAngle, ArmholeCurve]
-      type: select_null
+      type: select
     length: 
       v: 30
       range: [3, 80]
@@ -261,7 +261,7 @@ design:
       armhole_shape: 
         v: ArmholeCurve
         range: [ArmholeSquare, ArmholeAngle, ArmholeCurve]
-        type: select_null
+        type: select
 
       length: 
         v: 30
