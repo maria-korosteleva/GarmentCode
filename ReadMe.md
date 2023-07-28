@@ -7,7 +7,7 @@ Implementation of GarmentCode architecture and garment programs.
 
 ### Install python with dependencies:
 
-* Python 3.9
+* Python 3.9 or 3.11
 * numpy
 * scipy
 * [svgwrite](https://pypi.org/project/svgwrite/)
@@ -18,12 +18,19 @@ Implementation of GarmentCode architecture and garment programs.
     NOTE: this lib has some quirks on Windows, which we relove with including needed dlls in `./patttern/cairo_dlls` and adding the ditrectory to PATH in runtime
 * [PySimpleGUI](https://github.com/PySimpleGUI/PySimpleGUI) to run GUI script
 
-All python dependencies can be installed with `pip install` / `conda install`
+All python dependencies can be installed with 
 
-=> The code is ready to run
+```
+conda env create -f environment.yml
+```
+or 
+
+```
+pip install -r requirements.txt
+```
 
 NOTE: 
-* The dependency on [Pattern Generator](https://github.com/maria-korosteleva/Garment-Pattern-Generator)in included in the repo (`./external`), and will be loaded automatically by test script
+* The dependency on [Pattern Generator](https://github.com/maria-korosteleva/Garment-Pattern-Generator) is included in the repo (`./external`), and will be loaded automatically by test script
 * The environemtal variables needed for correct lib loading are set up in the test script
 
 ### Configuration of local paths
