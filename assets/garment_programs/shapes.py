@@ -1,10 +1,6 @@
 """A decorative shapes"""
-
-import numpy as np
-import matplotlib.pyplot as plt  # DEBUG
-
-# Custom
 import pypattern as pyp
+
 
 def sample_arc(curve, length, stride, n_points, shift=0):
     ts = [(shift + i*stride) / length for i in range(n_points)]
@@ -14,6 +10,7 @@ def sample_arc(curve, length, stride, n_points, shift=0):
         verts[i] = [verts[i].real, verts[i].imag]
 
     return verts
+
 
 def Sun(width, depth, n_rays=8, d_rays=5, **kwargs):
     """Sun-like mark"""
@@ -32,7 +29,8 @@ def Sun(width, depth, n_rays=8, d_rays=5, **kwargs):
     out_stride = out_arc.length() / n_rays
     in_stride = in_arc.length() / n_rays
     
-    out_verts = sample_arc(out_curve, out_arc.length(), out_stride, n_rays, out_stride / 2)
+    out_verts = sample_arc(out_curve, out_arc.length(),
+                           out_stride, n_rays, out_stride / 2)
     in_verts = sample_arc(in_curve, in_arc.length(), in_stride, n_rays + 1, 0)
 
     # Mix the vertices in the right order
@@ -42,6 +40,7 @@ def Sun(width, depth, n_rays=8, d_rays=5, **kwargs):
 
     shape = pyp.esf.from_verts(*verts)
     return shape, shape
+
 
 def SIGGRAPH_logo(width, depth=None, **kwargs):
     """Shape of SIGGRAPH Logo (split vertically)"""
@@ -64,5 +63,6 @@ def SVGFile(width, filename, depth=None, **kwargs):
     return left_seq, right_seq
 
 
+# TODO: ami - is this necesasry anymore?
 if __name__ == '__main__':
     Sun(30, 15)

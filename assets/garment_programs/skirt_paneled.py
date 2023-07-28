@@ -1,18 +1,18 @@
-from scipy.spatial.transform import Rotation as R
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 
-# Custom
+
 import pypattern as pyp
 
-# other assets
 from .bands import StraightWB
-from . import shapes
+from . import shapes  # TODO: - ami - any more explicit way of using this?
 
-# Panels
+
 class SkirtPanel(pyp.Panel):
     """One panel of a panel skirt with ruffles on the waist"""
 
-    def __init__(self, name, waist_length=70, length=70, ruffles=1, bottom_cut=0, flare=0) -> None:
+    def __init__(self, name, waist_length=70, length=70, ruffles=1,
+                 bottom_cut=0, flare=0) -> None:
         super().__init__(name)
 
         base_width = waist_length / 2
@@ -65,10 +65,11 @@ class ThinSkirtPanel(pyp.Panel):
             'left': pyp.Interface(self, self.edges[2])
         }
 
+
 # TODOLOW front more narrow then the back
 class FittedSkirtPanel(pyp.Panel):
-    """Fitted panel for a pencil skirt
-    """
+    """Fitted panel for a pencil skirt"""
+
     def __init__(
         self, name, waist, hips,   # TODO Half measurement instead of a quarter
         hips_depth, length, low_width, rise=1,
@@ -143,11 +144,11 @@ class FittedSkirtPanel(pyp.Panel):
         dart_width = w_diff - hw_shift
         self.add_darts(top, dart_width, dart_depth, dart_position)
 
-
     def add_darts(self, top, dart_width, dart_depth, dart_position):
         
         # TODO: routine for multiple darts
-        # FIXME front/back darts don't appear to be located at the same position
+        # FIXME front/back darts don't appear to be located at the same
+        #  position
         dart_shape = pyp.esf.dart_shape(dart_width, dart_depth)
         top_edge_len = top.length()
         top_edges, dart_edges, int_edges = pyp.ops.cut_into_edge(
@@ -294,8 +295,10 @@ class Skirt2(pyp.Component):
             )
         }
 
-# With waistband
+
 class SkirtWB(pyp.Component):
+    """With waistband"""
+
     def __init__(self, body, design) -> None:
         super().__init__(f'{self.__class__.__name__}')
 
@@ -341,14 +344,18 @@ class SkirtManyPanels(pyp.Component):
 
         # Stitch new components
         for i in range(1, n_panels):
-            self.stitching_rules.append((self.subs[i - 1].interfaces['left'], self.subs[i].interfaces['right']))
+            self.stitching_rules.append((self.subs[i - 1].interfaces['left'],
+                                         self.subs[i].interfaces['right']))
             
-        self.stitching_rules.append((self.subs[-1].interfaces['left'], self.subs[0].interfaces['right']))
+        self.stitching_rules.append((self.subs[-1].interfaces['left'],
+                                     self.subs[0].interfaces['right']))
 
         # Define the interface
         self.interfaces = {
-            'top': pyp.Interface.from_multiple(*[sub.interfaces['top'] for sub in self.subs])
+            'top': pyp.Interface.from_multiple(*[sub.interfaces['top']
+                                                 for sub in self.subs])
         }
+
 
 class SkirtManyPanelsWB(pyp.Component):
     def __init__(self, body, design) -> None:

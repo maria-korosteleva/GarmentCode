@@ -1,14 +1,13 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-# Custom
-from external.pattern.core import BasicPattern
 from external.pattern.wrappers import VisPattern
 from .base import BaseComponent
-from .interface import Interface
+
 
 class Component(BaseComponent):
-    """Garment element (or whole piece) composed of simpler connected garment elements"""
+    """Garment element (or whole piece) composed of simpler connected garment
+    elements"""
 
     # TODO Overload copy -- respecting edge sequences
 
@@ -63,10 +62,9 @@ class Component(BaseComponent):
             f'Component::Error::rotate_to is not supported on component level.'
             'Use relative <rotate_by()> method instead')
 
-
-    # Mirror
     def mirror(self, axis=[0, 1]):
-        """Swap this component with it's mirror image by recursively mirroring sub-components
+        """Swap this component with it's mirror image by recursively mirroring
+        sub-components
         
             Axis specifies 2D axis to swap around: Y axis by default
         """
@@ -74,10 +72,10 @@ class Component(BaseComponent):
             subs.mirror(axis)
         return self
 
-    # Build the component -- get serializable representation
     def assembly(self):
         """Construction process of the garment component
-        
+
+        get serializable representation
         Returns: simulator friendly description of component sewing pattern
         """
         spattern = VisPattern()
@@ -92,7 +90,8 @@ class Component(BaseComponent):
             sub_raw = sub().pattern
 
             # simple merge of panels
-            spattern.pattern['panels'] = {**spattern.pattern['panels'], **sub_raw['panels']}
+            spattern.pattern['panels'] = {**spattern.pattern['panels'],
+                                          **sub_raw['panels']}
 
             # of stitches
             spattern.pattern['stitches'] += sub_raw['stitches']
@@ -101,7 +100,6 @@ class Component(BaseComponent):
 
         return spattern   
 
-    # Utilities
     def bbox3D(self):
         """Evaluate 3D bounding box of the current component"""
         
@@ -113,9 +111,9 @@ class Component(BaseComponent):
 
         return mins.min(axis=0), maxes.max(axis=0)
 
-    # Subcomponents
     def _get_subcomponents(self):
-        """Unique set of subcomponents defined in the self.subs list or as attributes of the object"""
+        """Unique set of subcomponents defined in the self.subs list or as
+        attributes of the object"""
 
         all_attrs = [getattr(self, name) for name in dir(self) if name[:2] != '__' and name[-2:] != '__']
         return list(set([att for att in all_attrs if isinstance(att, BaseComponent)] + self.subs))

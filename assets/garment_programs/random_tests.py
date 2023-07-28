@@ -1,18 +1,10 @@
-
-""" Sample panels/components without a role to test stuff
-"""
-
-from copy import copy
-import numpy as np
-
-# Custom
+""" Sample panels/components without a role to test stuff"""
 import pypattern as pyp
-from . import sleeves
-from . import collars
 
-# Curvy shape to try projections on
 
 class CurvyPanel(pyp.Panel):
+    """Curvy shape to try projections on"""
+
     def __init__(self, name, size=40) -> None:
         super().__init__(name)
 
@@ -54,6 +46,7 @@ class CurvyPanel(pyp.Panel):
 
         # DEBUG
         print(self.edges)
+
 
 class StraightPanel(pyp.Panel):
     def __init__(self, name, size=40) -> None:
@@ -103,7 +96,6 @@ class StraightPanel(pyp.Panel):
                 offset=base_edge.length() / 2, right=True)
 
         self.edges.substitute(base_edge, new_edge)
-
 
 
 class CurvyProjection(pyp.Component):

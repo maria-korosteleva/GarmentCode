@@ -1,4 +1,3 @@
-
 import numpy as np
 from copy import copy
 from argparse import Namespace
@@ -6,11 +5,10 @@ from scipy.spatial.transform import Rotation as R
 
 # Custom
 from external.pattern.core import BasicPattern
-from external.pattern.wrappers import VisPattern
 from .base import BaseComponent
 from .edge import Edge, EdgeSequence
-from .connector import Stitches
 from .generic_utils import close_enough, vector_align_3D
+
 
 class Panel(BaseComponent):
     """ A Base class for defining a Garment component corresponding to a single flat fiece of fabric

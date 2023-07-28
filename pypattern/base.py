@@ -1,13 +1,17 @@
-
 from typing import Any
 import numpy as np
 
 from .connector import Stitches
 
-class BaseComponent():
+
+# TODO: ami - should we make them abstract?
+# TODO: ami - can't we avoid returning self in methods below ?
+
+class BaseComponent:
     """Basic interface for garment-related components
     
-        NOTE: modifier methods return self object to allow chaining of the operations
+        NOTE: modifier methods return self object to allow chaining of the
+        operations
     """
 
     def __init__(self, name) -> None:
@@ -24,12 +28,12 @@ class BaseComponent():
     def pivot_3D(self):
         """Pivot location of a component in 3D"""
         return [0, 0, 0]
-    
-    def bbox(seld):
+
+    def bbox(self):
         """Bounding box -- in 2D"""
         return 0, 0, 0, 0, 0, 0
-    
-    def bbox3D(seld):
+
+    def bbox3D(self):
         """Bounding box in 3D space"""
         return 0, 0, 0, 0, 0, 0
 
@@ -52,7 +56,6 @@ class BaseComponent():
 
     def __call__(self, *args: Any, **kwds: Any) -> Any:
         return self.assembly(*args,**kwds)
-    
 
     # ----- Placement routines: these are the same for panels and components
     def place_below(self, comp, gap=2):
@@ -64,11 +67,9 @@ class BaseComponent():
 
         return self
 
-    def place_by_interface(self, 
-                            self_interface, 
-                            out_interface, 
-                            gap=2):
-        """Adjust the placement of component acconding to the connectivity instuction        
+    def place_by_interface(self, self_interface, out_interface, gap=2):
+        """Adjust the placement of component acconding to the connectivity
+        instuction
         """
         
         # Alight translation

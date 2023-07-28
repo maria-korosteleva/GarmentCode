@@ -1,24 +1,10 @@
-
 from datetime import datetime
+import shutil
 from pathlib import Path
 import yaml
-import sys
-import shutil 
 
-sys.path.insert(0, './external/')
-sys.path.insert(1, './')
-
-# Custom
 from external.customconfig import Properties
-from assets.garment_programs.skirt_paneled import *
-from assets.garment_programs.tee import *
-from assets.garment_programs.godet import *
-from assets.garment_programs.bodice import *
-from assets.garment_programs.pants import *
-from assets.garment_programs.meta_garment import *
-from assets.garment_programs.bands import *
-from assets.garment_programs.random_tests import *   # DEBUG
-
+from assets.garment_programs.meta_garment import MetaGarment
 from assets.body_measurments.body_params import BodyParameters
 
 if __name__ == '__main__':
@@ -59,7 +45,7 @@ if __name__ == '__main__':
         test_garments.append(MetaGarment(df, body, designs[df]))
 
     for piece in test_garments:
-        pattern = piece()
+        pattern = piece()  # TODO: ami - is this necessary?
 
         # Save as json file
         sys_props = Properties('./system.json')
