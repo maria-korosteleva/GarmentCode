@@ -3,7 +3,7 @@ from numpy.linalg import norm
 import numpy as np
 
 # Custom
-from .edge import EdgeSequence
+from .edge import Edge, EdgeSequence
 from .generic_utils import close_enough
 
 # TODO as EdgeSequence wrapper??
@@ -46,7 +46,6 @@ class Interface():
     def needsFlipping(self, i):
         """ Check if particular edge should be re-oriented to follow the general direction of the interface
         """
-
         if self.edges_flipping[i]:
             return True
         
@@ -87,6 +86,7 @@ class Interface():
 
         return flipped_order_dist < forward_order_dist
 
+    # ANCHOR --- Info ----
     def oriented_edges(self):
         """ Orient the edges withing the interface sequence along the general direction of the interface
 
@@ -144,6 +144,8 @@ class Interface():
     def __repr__(self) -> str:
         return self.__str__()
 
+    # ANCHOR --- Interface Updates -----
+
     def reverse(self, with_edge_dir_reverse=False):
         """Reverse the order of edges in the interface
             (without updating the edge objects)
@@ -196,7 +198,45 @@ class Interface():
         self.panel = new_panel_list
         self.edges_flipping = new_flipping_info
 
+    def substitute(self, orig, new_edges, new_panels):
+        """Update the interface edges with correct correction of panels
+            * orig -- could be an edge object or the id of edges that need substitution
+            * new_edges -- new edges to insert in place of orig
+            * new_panels -- per-edge panel objects indicating where each of new_edges belong to
+        
+        NOTE: the ruffle indicator for the new_edges is expected to be the same as for orig edge
+        Specifying new indicators is not yet supported
 
+        """
+        if isinstance(orig, Edge):
+            orig = self.edges.index(orig)
+        if orig < 0: 
+            orig = len(self.edges) + orig 
+        self.edges.substitute(orig, new_edges)
+
+        # Update panels & flip info
+        self.panel.pop(orig)
+        self.edges_flipping.pop(orig)
+        if isinstance(new_panels, list) or isinstance(new_panels, tuple):
+            for j in range(len(new_panels)):
+                self.panel.insert(orig + j, new_panels[j])
+                self.edges_flipping.insert(orig + j, False)
+        else: 
+            self.panel.insert(orig, new_panels)
+            self.edges_flipping.insert(orig, False)
+
+        # Propagate ruffle indicators
+        ins_len = 1 if isinstance(new_edges, Edge) else len(new_edges)
+        if ins_len > 1:
+            for it in self.ruffle:  # UPD ruffle indicators
+                if it['sec'][0] > orig:
+                    it['sec'][0] += ins_len - 1
+                if it['sec'][1] > orig:
+                    it['sec'][1] += ins_len - 1
+
+        return self
+
+    # ANCHOR ----- Statics ----
     @staticmethod
     def from_multiple(*ints):
         """Create interface from other interfaces: 
