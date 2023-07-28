@@ -131,14 +131,7 @@ class StitchingRule():
                     subdiv.edges.reverse()
                     
                 # Update interface accordingly
-                inter.edges.substitute(base_edge, subdiv)  
-                inter.panel.insert(in_id, inter.panel[in_id]) 
-                inter.edges_flipping.insert(in_id, inter.edges_flipping[in_id]) 
-                for it in inter.ruffle:  # UPD ruffle indicators
-                    if it['sec'][0] > in_id:
-                        it['sec'][0] += 1
-                    if it['sec'][1] > in_id:
-                        it['sec'][1] += 1
+                inter.substitute(base_edge, subdiv, [inter.panel[in_id] for _ in range(len(subdiv))])
 
                 # next step
                 # By the size of new edge

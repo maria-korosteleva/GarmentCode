@@ -108,4 +108,4 @@ class SkirtCircle(pyp.Component):
         )
 
         panel.edges.substitute(target_edge, new_edges)
-        panel.interfaces['bottom'].edges.substitute(target_edge, interf_edges)
+        panel.interfaces['bottom'].substitute(target_edge, interf_edges, [panel for _ in range(len(interf_edges))])
