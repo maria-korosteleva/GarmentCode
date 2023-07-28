@@ -171,15 +171,23 @@ class Edge():
 
         return self
         
-    def subdivide_len(self, fractions: list):
+    def subdivide_len(self, fractions: list, connect_internal_verts=True):
         """Add intermediate vertices to an edge, 
             splitting it's length according to fractions
             while preserving the overall shape
+
+            * merge_internal -- if False, the newly inserted vertices would be defined
+                as independent objects for each edge. If True, vertex objects will be shared
         """
         # Parametrized by length
-        return self._subdivide(fractions, by_length=True)
+        new_edges = self._subdivide(fractions, by_length=True)
+
+        if connect_internal_verts:
+            self._merge_subdiv_vertices(new_edges)
+        
+        return new_edges
     
-    def subdivide_param(self, fractions: list):
+    def subdivide_param(self, fractions: list, connect_internal_verts=True):
         """Add intermediate vertices to an edge, 
             splitting its curve parametrization according to fractions
             while preserving the overall shape
@@ -187,7 +195,13 @@ class Edge():
             NOTE: for line, it's the same as subdivision by length
         """
         
-        return self._subdivide(fractions, by_length=False)
+        new_edges = self._subdivide(fractions, by_length=False)
+
+        if connect_internal_verts:
+            self._merge_subdiv_vertices(new_edges)
+        
+        return new_edges
+
 
     def _subdivide(self, fractions: list, by_length=True):
         """Subdivide edge by length or curve parametrization
@@ -212,6 +226,13 @@ class Edge():
         seq.append(Edge(verts[-2], verts[-1]))
         
         return seq
+
+    def _merge_subdiv_vertices(self, subdivision):
+        """Merge the vertices from cosecutive edges in the given edge subdivision"""
+
+        for i in range(1, len(subdivision)):
+            subdivision[i].start = subdivision[i-1].end
+        return subdivision
 
     # Assembly into serializable object
     def assembly(self):
