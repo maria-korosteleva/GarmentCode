@@ -8,6 +8,10 @@ import platform
 import psutil
 
 
+if 'windows' in platform.system() or 'Windows' in platform.system():
+    import wmi  # pip install wmi
+
+
 class Properties:
     """Keeps, loads, and saves configuration & statistic information
         Supports gets&sets as a dictionary
