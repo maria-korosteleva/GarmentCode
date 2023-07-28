@@ -63,21 +63,13 @@ class StitchingRule():
 
         # Eval the fractions corresponding to every segments in the interfaces
         # Using projecting edges to match desired gather patterns
-
-        # Remember the state of interfaces before projection (for later)
-        edges1 = self.int1.edges.copy()
-        panels1 = copy(self.int1.panel) 
         frac1 = self.int1.projecting_edges(on_oriented=True).fractions()
-
-        edges2 = self.int2.edges.copy()
-        panels2 = copy(self.int2.panel) 
         frac2 = self.int2.projecting_edges(on_oriented=True).fractions()
+        self._match_to_fractions(self.int1, frac2)
+        self._match_to_fractions(self.int2, frac1)
 
-        self._match_to_fractions(self.int1, frac2, edges2, panels2)
-        self._match_to_fractions(self.int2, frac1, edges1, panels1)
 
-
-    def _match_to_fractions(self, inter:Interface, to_add, edges, panels, tol=1e-3):
+    def _match_to_fractions(self, inter:Interface, to_add, tol=1e-3):
         """Add the vertices at given location to the edge sequence in a given interface
 
         Parameters:
@@ -123,7 +115,7 @@ class StitchingRule():
                     if verbose:
                         print(f'{self.__class__.__name__}::INFO::{base_edge} from {base_panel.name} reoriented in interface')
 
-                # Split the base edge accrordingly
+                # Split the base edge accordingly
                 subdiv = base_edge.subdivide_len([split_frac, 1 - split_frac])
 
                 inter.panel[in_id].edges.substitute(base_edge, subdiv)  # Update the panel
