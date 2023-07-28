@@ -28,7 +28,7 @@ class Panel(BaseComponent):
 
     # Info
     # DRAFT 
-    def is_right_inside_edge(self, edge:Edge):
+    def is_right_inside_edge(self, edge: Edge):
         """ Check if the inside of the panel is on the right side
             of an edge
         """
