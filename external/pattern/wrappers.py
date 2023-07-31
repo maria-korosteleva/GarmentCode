@@ -265,16 +265,18 @@ class VisPattern(core.ParametrizedPattern):
         # Get panel paths
         paths_front, paths_back = [], []
         attributes_f, attributes_b = [], []
-        #FIXME correct name assignment -- sort panel names according to final sorting of panels names_f, names_b = [], []
+        names_f, names_b = [], []
         for panel in z_sorted_panels:
             if panel is not None:
                 path, attr, front = self._draw_a_panel(panel)
                 if front:
                     paths_front.append(path) 
                     attributes_f.append(attr) 
+                    names_f.append(panel)
                 else:
                     paths_back.append(path)
                     attributes_b.append(attr)
+                    names_b.append(panel)
 
         # Shift back panels if both front and back exist
         if len(paths_front) > 0 and len(paths_back) > 0:
@@ -307,8 +309,9 @@ class VisPattern(core.ParametrizedPattern):
             filename=svg_filename, viewbox=viewbox, paths2Drawing=True)
 
         # text annotations
+        panel_names = names_f + names_b
         if with_text or view_ids:
-            for i, panel in enumerate(panel_order):
+            for i, panel in enumerate(panel_names):
                 if panel is not None:
                     self._add_panel_annotations(
                         dwg, panel, paths[i], with_text, view_ids)
