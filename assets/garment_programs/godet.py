@@ -58,10 +58,12 @@ class GodetSkirt(pyp.Component):
 
         cut_width = (bottom_len - cuts_dist * num_inserts) / num_inserts 
         if cut_width < 1:
-            print(f'{self.__class__.__name__}::Warning:: Cannot place {num_inserts} cuts '
-                  'with requested distance between cuts {cuts_dist}. Using the maximum possible distance')
             cut_width = 1  # 1 cm 
+            cuts_dist_req = cuts_dist
             cuts_dist = (bottom_len - cut_width * num_inserts) / num_inserts
+            print(f'{self.__class__.__name__}::Warning:: Cannot place {num_inserts} cuts '
+                  f'with requested distance between cuts ({cuts_dist_req}). '
+                  f'Using the maximum possible distance ({cuts_dist})')
 
         # Insert panels
         insert = Insert(0, width=ins_w, depth=ins_depth).translate_by([
