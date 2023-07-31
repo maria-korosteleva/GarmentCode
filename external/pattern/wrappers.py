@@ -265,6 +265,7 @@ class VisPattern(core.ParametrizedPattern):
         # Get panel paths
         paths_front, paths_back = [], []
         attributes_f, attributes_b = [], []
+        #FIXME correct name assignment -- sort panel names according to final sorting of panels names_f, names_b = [], []
         for panel in z_sorted_panels:
             if panel is not None:
                 path, attr, front = self._draw_a_panel(panel)
