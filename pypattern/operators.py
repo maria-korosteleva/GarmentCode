@@ -228,6 +228,7 @@ def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True, fli
     edge_len = base_edge.length()
 
     if offset < target_shape_w / 2  - tol or offset > (edge_len - target_shape_w / 2) + tol:   
+        # NOTE: This is not a definitive check, and the cut might still not fit, depending on the base_edge curvature
         raise ValueError(f'Operators-CutingIntoEdge::Error::offset value is not within the base_edge length')
 
     # find starting vertex for insertion & place edges there
@@ -235,19 +236,20 @@ def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True, fli
     rel_offset = curve.ilength(offset)   # TODO methods of an Edge class? 
 
     # ----- OPTIMIZATION --- 
-    start = [0, 0]
+    start = [0.1, 0.1]
     out = minimize(
        _fit_location_edge, start, 
        args=(rel_offset, target_shape_w, curve),
        bounds=[(0, 1)])
 
     if flags.VERBOSE and not out.success:
-        print(f'Cut_corner::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
+        print(f'Cut_edge::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
 
-    if flags.VERBOSE and not close_enough(out.fun):
-        print(f'Cut_corner::Warning::projection on {base_edge} finished with fun={out.fun}')
-        print(out) 
-
+    if not close_enough(out.fun, tol=0.01):
+        if flags.VERBOSE:
+            print(out) 
+        raise RuntimeError(f'Cut_edge::ERROR::projection on {base_edge} finished with fun={out.fun}')
+        
     shift = out.x   
     ins_point = c_to_np(curve.point(rel_offset - shift[1])) if (rel_offset - shift[1]) > tol else base_edge.start
     fin_point = c_to_np(curve.point(rel_offset + shift[0])) if (rel_offset + shift[0]) < edge_len - tol else base_edge.end
@@ -273,7 +275,7 @@ def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True, fli
     base_edge_leftovers = EdgeSequence()
     start_id, end_id = 0, len(new_edges)
 
-    if offset > target_shape_w / 2 + tol:  
+    if (rel_offset - shift[1]) > tol:  
         # TODO more elegant subroutine
         start_part = base_edge.subdivide_param([rel_offset - shift[1], 1 - (rel_offset - shift[1])])[0]
         start_part.end = new_edges[0].start
@@ -281,7 +283,7 @@ def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True, fli
         base_edge_leftovers.append(new_edges[0])
         start_id = 1 
     
-    if offset < (edge_len - target_shape_w / 2) - tol:
+    if (rel_offset + shift[0]) < edge_len - tol:
         end_part = base_edge.subdivide_param([rel_offset + shift[0], 1 - (rel_offset + shift[0])])[-1]
         end_part.start = new_edges[-1].end
         new_edges.append(end_part)
@@ -336,9 +338,9 @@ def _fit_location_edge(shift, location, width_target, curve):
         print('Location Progression: ', (_dist(point1, point2) - width_target)**2)
 
     # regularize points to be at the same distance from center
-    reg = (_dist(point1, pointc) - _dist(point2, pointc))**2
+    reg_symmetry = (_dist(point1, pointc) - _dist(point2, pointc))**2
 
-    return (_dist(point1, point2) - width_target)**2 + reg
+    return (_dist(point1, point2) - width_target)**2 + reg_symmetry
 
 
 # ANCHOR ----- Panel operations ------
