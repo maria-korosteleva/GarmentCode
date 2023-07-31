@@ -149,7 +149,8 @@ class State(object):
         self.garment.serialize(
             directory, 
             to_subfolder=False, 
-            with_3d=False, with_text=False, view_ids=False)
+            with_3d=False, with_text=False, view_ids=False, 
+            empty_ok=True)
 
     def save_scene(self, directory):
         """Save scene objects"""
