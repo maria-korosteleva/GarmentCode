@@ -54,9 +54,12 @@ class VisPattern(core.ParametrizedPattern):
 
     def serialize(
             self, path, to_subfolder=True, tag='', 
-            with_3d=True, with_text=True, view_ids=True):
+            with_3d=True, with_text=True, view_ids=True, empty_ok=False):
 
-        log_dir = super().serialize(path, to_subfolder, tag=tag)
+        log_dir = super().serialize(path, to_subfolder, tag=tag, empty_ok=empty_ok)
+        if len(self.panel_order()) == 0:  # If we are still here, but pattern is empty, don't generate an image
+            return log_dir
+        
         svg_file = os.path.join(log_dir, (self.name + tag + '_pattern.svg'))
         png_file = os.path.join(log_dir, (self.name + tag + '_pattern.png'))
         png_3d_file = os.path.join(log_dir, (self.name + tag + '_3d_pattern.png'))

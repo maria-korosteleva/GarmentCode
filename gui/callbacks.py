@@ -183,7 +183,8 @@ class GUIPattern():
             self.save_path, 
             tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
             to_subfolder=True, 
-            with_3d=True, with_text=False, view_ids=False)
+            with_3d=True, with_text=False, view_ids=False, 
+            empty_ok=True)
 
         self.body_params.save(folder)
 
