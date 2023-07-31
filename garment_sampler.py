@@ -10,6 +10,7 @@ import shutil
 import time
 import random
 import string
+import traceback
 
 sys.path.insert(0, './external/')
 sys.path.insert(1, './')
@@ -56,7 +57,7 @@ def _id_generator(size=10,
         """
         return ''.join(random.choices(chars, k=size))
 
-def generate(path, props):
+def generate(path, props, verbose=False):
     """Generates a synthetic dataset of patterns with given properties
         Params:
             path : path to folder to put a new dataset into
@@ -87,13 +88,24 @@ def generate(path, props):
         for _ in range(100):  # Putting a limit on re-tries to avoid infinite loops
             new_design = sampler.randomize()
             try:
-                piece = MetaGarment(f'rand_{_id_generator()}', body, new_design) 
+                name = f'rand_{_id_generator()}'
+                
+                # DEBUG
+                print(f'{name} saving design params for debug')
+                with open(Path('./Logs') / f'{name}_design_params.yaml', 'w') as f:
+                    yaml.dump(
+                        {'design': new_design}, 
+                        f,
+                        default_flow_style=False,
+                        sort_keys=False
+                    )
+
+                piece = MetaGarment(name, body, new_design) 
                 pattern = piece()
 
                 if piece.is_self_intersecting():
-                    # FIXME Why does it still saves the empty file if self_interting check failed?
-                    # (problem encountered before checking the exeption at vertices)
-                    print('Self-intersecting!!') 
+                    if verbose:
+                        print(f'{piece.name} is self-intersecting!!') 
                     continue  # Redo the randomization
 
                 # Save as json file
@@ -111,10 +123,11 @@ def generate(path, props):
                         default_flow_style=False,
                         sort_keys=False
                     )
-                print(f'Success! {piece.name} saved to {folder}')
+                print(f'Saved {piece.name}')
                 break  # Stop generation
             except BaseException as e:
                 print(f'{i} failed')
+                traceback.print_exc()
                 print(e)
                 
                 # TODO Examine the errors -- probably there is something there
@@ -154,7 +167,7 @@ if __name__ == '__main__':
         props.set_section_config('generator')
     else:
         props = Properties(
-            Path(system_props['datasets_path']) / 'data_5_230727-17-30-03/dataset_properties.json', 
+            Path(system_props['datasets_path']) / 'data_5_230728-19-05-21/dataset_properties.yaml', 
             True)
 
     # Generator
