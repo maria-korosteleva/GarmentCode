@@ -73,11 +73,25 @@ class EdgeSeqFactory:
         return edges
 
     @staticmethod
-    def dart_shape(width, depth):
-        """Shape of simple triangular dart"""
-        depth_perp = np.sqrt((depth**2 - (width / 2)**2))
+    def dart_shape(width, side_len=None, depth=None):
+        """Shape of simple triangular dart: 
+            specified by desired width and either the dart side length or depth
+        """
 
-        return EdgeSeqFactory.from_verts([0, 0], [width / 2, -depth_perp], [width, 0])
+        if side_len is None and depth is None:
+            raise ValueError(
+                'EdgeFactory::Error::dart shape is not fully specified.'
+                ' Add dart side length or dart perpendicular'
+            )
+
+        if depth is None:
+            if width / 2 > side_len: 
+                raise ValueError(
+                    f'EdgeFactory::Error::Requested dart shape (w={width}, side={side_len}) '
+                    'does not form a valid triangle')
+            depth = np.sqrt((side_len**2 - (width / 2)**2))
+
+        return EdgeSeqFactory.from_verts([0, 0], [width / 2, -depth], [width, 0])
 
     @staticmethod
     def curve_from_extreme(start, end, target):

@@ -109,7 +109,7 @@ class FittedSkirtPanel(pyp.Panel):
         if cut:  # add a cut
             # Use long and thin disconnected dart for a cutout
             new_edges, _, int_edges = pyp.ops.cut_into_edge(
-                pyp.esf.dart_shape(2, cut * length),    # 1 cm 
+                pyp.esf.dart_shape(2, depth=cut * length),    # 1 cm 
                 bottom, 
                 offset= bottom.length() / 2,
                 right=True)
