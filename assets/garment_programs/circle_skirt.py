@@ -177,7 +177,7 @@ class SkirtCircle(pyp.Component):
         right = target_edge.start[0] > target_edge.end[0]
 
         # Make a cut
-        cut_shape = pyp.esf.dart_shape(width, depth)
+        cut_shape = pyp.esf.dart_shape(width, depth=depth)
         new_edges, _, interf_edges = pyp.ops.cut_into_edge(
             cut_shape, target_edge, 
             offset=offset, 
