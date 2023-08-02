@@ -345,8 +345,8 @@ design:
       type: float 
     bottom_cut: 
       v: 0
-      range: [0, 20]  # TODO Untill length
-      type: int
+      range: [0, 0.9]  
+      type: float
     flare: 
       v: 0
       range: [0, 20]

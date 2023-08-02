@@ -477,12 +477,12 @@ design:
       - 1
       - 2
       type: float
-    bottom_cut:
+    bottom_cut: 
       v: 0
-      range:
+      range: 
       - 0
-      - 20
-      type: int
+      - 0.9  
+      type: float
     flare:
       v: 10
       range:
