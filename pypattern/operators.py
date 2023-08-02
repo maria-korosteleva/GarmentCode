@@ -137,7 +137,7 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
 
     return corner_shape[1:-1], new_int
 
-def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, flip_target=False, tol=1e-4):
+def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, flip_target=False, tol=1e-2):
     """ Insert edges of the target_shape into the given base_edge, starting from offset
         edges in target shape are rotated s.t. start -> end vertex vector is aligned with the edge 
 
@@ -199,7 +199,7 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, flip_targe
     return all_new_edges, new_in_edges, int_edges
 
     
-def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True, flip_target=False, tol=1e-4):
+def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True, flip_target=False, tol=1e-2):
     """ Insert edges of the target_shape into the given base_edge, starting from offset
         edges in target shape are rotated s.t. start -> end vertex vector is aligned with the edge 
 
@@ -241,7 +241,9 @@ def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True, fli
        _fit_location_edge, start, 
        args=(rel_offset, target_shape_w, curve),
        bounds=[(0, 1)])
+    shift = out.x  
 
+    # Error checks
     if flags.VERBOSE and not out.success:
         print(f'Cut_edge::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
 
@@ -249,10 +251,17 @@ def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True, fli
         if flags.VERBOSE:
             print(out) 
         raise RuntimeError(f'Cut_edge::ERROR::projection on {base_edge} finished with fun={out.fun}')
-        
-    shift = out.x   
+    
+    if rel_offset + shift[0] > 1 + tol or (rel_offset - shift[1]) < 0 - tol:
+        # TODO Adjust offset if projection is breaking?
+        raise RuntimeError(
+            f'Cut_edge::ERROR::projection on {base_edge} is out of edge bounds: '
+            f'[{rel_offset - shift[1], rel_offset + shift[0]}].'
+            ' Check the offset value')
+
+    # All good -- integrate the target shape
     ins_point = c_to_np(curve.point(rel_offset - shift[1])) if (rel_offset - shift[1]) > tol else base_edge.start
-    fin_point = c_to_np(curve.point(rel_offset + shift[0])) if (rel_offset + shift[0]) < edge_len - tol else base_edge.end
+    fin_point = c_to_np(curve.point(rel_offset + shift[0])) if (rel_offset + shift[0]) < 1 - tol else base_edge.end
 
     # Align the shape with an edge
     # find rotation to apply on target shape 
@@ -270,26 +279,30 @@ def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True, fli
         # flip shape to match the requested direction
         new_edges.reflect(new_edges[0].start, new_edges[-1].end)  
 
-    # re-create edges and return 
+    # Integrate edges
     # NOTE: no need to create extra edges if the the shape is incerted right at the beggining or end of the edge
     base_edge_leftovers = EdgeSequence()
     start_id, end_id = 0, len(new_edges)
 
-    if (rel_offset - shift[1]) > tol:  
+    if ins_point is base_edge.start:
+        new_edges[0].start = base_edge.start   # Connect into the original edge
+    else:
         # TODO more elegant subroutine
         start_part = base_edge.subdivide_param([rel_offset - shift[1], 1 - (rel_offset - shift[1])])[0]
         start_part.end = new_edges[0].start
         new_edges.insert(0, start_part)
         base_edge_leftovers.append(new_edges[0])
         start_id = 1 
-    
-    if (rel_offset + shift[0]) < edge_len - tol:
+
+    if fin_point is base_edge.end:
+        new_edges[-1].end = base_edge.end  # Connect into the original edge
+    else:
         end_part = base_edge.subdivide_param([rel_offset + shift[0], 1 - (rel_offset + shift[0])])[-1]
         end_part.start = new_edges[-1].end
         new_edges.append(end_part)
         base_edge_leftovers.append(new_edges[-1])
         end_id = -1
-    
+        
     return new_edges, new_edges[start_id:end_id], base_edge_leftovers
 
 def _fit_location_corner(l, diff_target, curve1, curve2):
