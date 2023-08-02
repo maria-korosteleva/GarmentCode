@@ -354,6 +354,8 @@ class VisPattern(core.ParametrizedPattern):
         # DEBUG 
         # plt.show()
 
+        plt.close(fig)  # Cleanup
+
 
 class RandomPattern(VisPattern):
     """
