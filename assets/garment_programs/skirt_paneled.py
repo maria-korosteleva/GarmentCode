@@ -254,7 +254,7 @@ class Skirt2(pyp.Component):
             length=design['length']['v'],
             ruffles=design['ruffle']['v'],   # Only if on waistband
             flare=design['flare']['v'],
-            bottom_cut=design['bottom_cut']['v']
+            bottom_cut=design['bottom_cut']['v'] * design['length']['v']
         ).translate_to([0, body['waist_level'], 25])
         self.back = SkirtPanel(
             f'back_{tag}'  if tag else 'back', 
@@ -262,7 +262,7 @@ class Skirt2(pyp.Component):
             length=design['length']['v'],
             ruffles=design['ruffle']['v'],   # Only if on waistband
             flare=design['flare']['v'],
-            bottom_cut=design['bottom_cut']['v']
+            bottom_cut=design['bottom_cut']['v'] * design['length']['v']
         ).translate_to([0, body['waist_level'], -20])
 
         self.stitching_rules = pyp.Stitches(
