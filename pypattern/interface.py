@@ -144,6 +144,9 @@ class Interface():
     def __repr__(self) -> str:
         return self.__str__()
 
+    def panel_names(self):
+        return [p.name for p in self.panel]
+
     # ANCHOR --- Interface Updates -----
 
     def reverse(self, with_edge_dir_reverse=False):
