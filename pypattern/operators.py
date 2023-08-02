@@ -549,7 +549,7 @@ def curve_match_tangents(curve, target_tan0, target_tan1, return_as_edge=False):
         method='L-BFGS-B',
     )
     if not out.success:
-        print(f'Curve_match_tangents::Warning::optimization not successfull')
+        print(f'Curve_match_tangents::WARNING::optimization not successfull')
         if flags.VERBOSE:
             print(out)
 

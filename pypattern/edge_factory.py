@@ -344,7 +344,7 @@ class EdgeSeqFactory:
         )
 
         if not out.success:
-            print('Curve From Extreme::Warning::Optimization not successful')
+            print('Curve From Extreme::WARNING::Optimization not successful')
             if flags.VERBOSE:
                 print(out)
 
@@ -368,7 +368,7 @@ class EdgeSeqFactory:
         )
 
         if not out.success:
-            print('Curve From Extreme::Warning::Optimization not successful')
+            print('Curve From Extreme::WARNING::Optimization not successful')
             if flags.VERBOSE:
                 print(out)
 
