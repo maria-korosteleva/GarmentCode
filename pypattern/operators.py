@@ -314,7 +314,7 @@ def distribute_horisontally(component, n_copies, stride=20, name_tag='panel'):
 
 
 # ANCHOR ----- Sleeve support -----
-def even_armhole_openings(front_opening, back_opening):
+def even_armhole_openings(front_opening, back_opening, tol=1e-2):
     """
         Rearrange sleeve openings for front and back s.t. their projection 
         on vertical line is the same, while preserving the overall shape.
@@ -347,7 +347,9 @@ def even_armhole_openings(front_opening, back_opening):
             'Check the quality of supplied curves'
         )
     
-    if len(intersect_t) >= 1 and not close_enough(intersect_t[0][0], 0, tol=0.01):
+    if (len(intersect_t) >= 1 
+            and not (close_enough(intersect_t[0][0], 0, tol=tol)   # checking if they are already ok separated
+                     or close_enough(intersect_t[0][0], 1, tol=tol))):
         # The current separation is not satisfactory
         # Update the opening shapes
         intersect_t = intersect_t[0][0]

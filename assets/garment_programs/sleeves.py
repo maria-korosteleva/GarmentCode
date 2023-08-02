@@ -203,7 +203,8 @@ class Sleeve(pyp.Component):
         
         if depth_diff != 0: 
             front_opening, back_opening = pyp.ops.even_armhole_openings(
-                front_opening, back_opening
+                front_opening, back_opening, 
+                tol=0.2 / front_opening.length()  # ~2mm tolerance as a fraction of length
             )
 
         # ----- Get sleeve panels -------
