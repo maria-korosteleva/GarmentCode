@@ -87,11 +87,11 @@ def generate(path, props, verbose=False):
         # Redo sampling untill success
         for _ in range(100):  # Putting a limit on re-tries to avoid infinite loops
             new_design = sampler.randomize()
+            name = f'rand_{_id_generator()}'
             try:
-                name = f'rand_{_id_generator()}'
-                
                 # DEBUG
-                print(f'{name} saving design params for debug')
+                if verbose:
+                    print(f'{name} saving design params for debug')
                 with open(Path('./Logs') / f'{name}_design_params.yaml', 'w') as f:
                     yaml.dump(
                         {'design': new_design}, 
@@ -123,10 +123,11 @@ def generate(path, props, verbose=False):
                         default_flow_style=False,
                         sort_keys=False
                     )
-                print(f'Saved {piece.name}')
+                if verbose:
+                    print(f'Saved {piece.name}')
                 break  # Stop generation
             except BaseException as e:
-                print(f'{i} failed')
+                print(f'{name} failed')
                 traceback.print_exc()
                 print(e)
                 
@@ -161,17 +162,17 @@ if __name__ == '__main__':
         props.set_basic(
             design_file='./assets/design_params/default.yaml',
             body_file='./assets/body_measurments/f_smpl_avg.yaml',
-            name='data_5',
-            size=5,
+            name='data_30',
+            size=30,
             to_subfolders=True)
         props.set_section_config('generator')
     else:
         props = Properties(
-            Path(system_props['datasets_path']) / 'data_5_230728-19-05-21/dataset_properties.yaml', 
+            Path(system_props['datasets_path']) / 'data_30_230802-12-25-09/dataset_properties.yaml', 
             True)
 
     # Generator
-    generate(system_props['datasets_path'], props)
+    generate(system_props['datasets_path'], props, verbose=False)
 
     # Gather the pattern images separately
     gather_visuals(Path(system_props['datasets_path']) / props['data_folder'])
