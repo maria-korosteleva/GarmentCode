@@ -123,6 +123,12 @@ class EdgeSeqFactory:
         """
         rel_target = _abs_to_rel_2d(start, end, target)
 
+        if rel_target[0] > 1 or rel_target[0] < 0:
+            raise NotImplementedError(
+                f"EdgeFactory::Curve_by_3_points::ERROR::requested target point's projection "
+                "is outside of the base edge, which is not yet supported"
+            )
+
         # Initialization with a target point as control point
         # Ensures very smooth, minimal solution
         out = minimize(

@@ -589,8 +589,8 @@ design:
     low_angle:
       v: 0
       range:
-      - -50
-      - 50
+      - -30
+      - 30
       type: int
     front_cut:
       v: 0
