@@ -61,7 +61,7 @@ class GodetSkirt(pyp.Component):
             cut_width = 1  # 1 cm 
             cuts_dist_req = cuts_dist
             cuts_dist = (bottom_len - cut_width * num_inserts) / num_inserts
-            print(f'{self.__class__.__name__}::Warning:: Cannot place {num_inserts} cuts '
+            print(f'{self.__class__.__name__}::WARNING:: Cannot place {num_inserts} cuts '
                   f'with requested distance between cuts ({cuts_dist_req}). '
                   f'Using the maximum possible distance ({cuts_dist})')
 
@@ -71,7 +71,18 @@ class GodetSkirt(pyp.Component):
         self.subs += pyp.ops.distribute_horisontally(insert, num_inserts, -ins_w, panel.name)
 
         # make appropriate cuts and stitches
-        cut_depth = math.sqrt((ins_w / 2)**2 + ins_depth**2 - (cut_width / 2)**2)
+        side_len = math.sqrt((ins_w / 2)**2 + ins_depth**2)  # should be the same on the skirt and the insert
+
+        if side_len > cut_width / 2: # Normal case
+            cut_depth = math.sqrt(side_len**2 - (cut_width / 2)**2)
+        else:
+            old_cut_width = cut_width
+            cut_depth = 1
+            cut_width = 2 * math.sqrt(side_len**2 - cut_depth**2)
+            print(f'{self.__class__.__name__}::WARNING::Requested cut_width ({old_cut_width:.2f}) '
+                  'is too wide for given inserts. '
+                  f'Using the maximum possible width ({cut_width:.2f})')
+        
         cut_shape = pyp.esf.from_verts([0,0], [cut_width / 2, cut_depth], [cut_width, 0])  
 
         right = z_transl < 0    # NOTE: heuristic corresponding to skirts in our collection
