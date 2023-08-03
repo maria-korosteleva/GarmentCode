@@ -420,7 +420,7 @@ design:
       type: float
     low_angle: 
       v: 0
-      range: [-50, 50]
+      range: [-30, 30]
       type: int
     front_cut: # TODO Not to be used with low_angle!
       v: 0
