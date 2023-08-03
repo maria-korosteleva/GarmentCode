@@ -210,7 +210,7 @@ class Edge():
         """
 
         frac = [abs(f) for f in fractions]
-        if not close_enough(fsum:=sum(frac), 1, 1e-4):
+        if not close_enough(fsum := sum(frac), 1, 1e-4):
             raise RuntimeError(f'Edge Subdivision::Error::fraction is incorrect. The sum {fsum} is not 1')
 
         vec = np.asarray(self.end) - np.asarray(self.start)
@@ -303,7 +303,7 @@ class CircleEdge(Edge):
         # So parent implementation is ok
         # TODOLOW Implementation is very similar to CurveEdge param-based subdivision
         frac = [abs(f) for f in fractions]
-        if not close_enough(fsum:=sum(frac), 1, 1e-4):
+        if not close_enough(fsum := sum(frac), 1, 1e-4):
             raise RuntimeError(f'Edge Subdivision::Error::fraction is incorrect. The sum {fsum} is not 1')
 
         curve = self.as_curve()

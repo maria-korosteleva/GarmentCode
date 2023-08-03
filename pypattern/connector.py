@@ -30,8 +30,8 @@ class StitchingRule():
             self.match_interfaces()
 
         if verbose and not close_enough(
-                len1:=int1.projecting_edges().length(), 
-                len2:=int2.projecting_edges().length(), 
+                len1 := int1.projecting_edges().length(),
+                len2 := int2.projecting_edges().length(),
                 tol=0.3):   # NOTE = 3 mm
             print(
                 f'{self.__class__.__name__}::Warning::Projected edges do not match in the stitch: \n'

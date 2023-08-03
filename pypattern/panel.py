@@ -24,7 +24,7 @@ class Panel(BaseComponent):
         self.translation = np.zeros(3)
         self.rotation = R.from_euler('XYZ', [0, 0, 0])  # zero rotation
         # NOTE: initiating with empty sequence allows .append() to it safely
-        self.edges =  EdgeSequence() 
+        self.edges = EdgeSequence()
 
     # Info
     # DRAFT 

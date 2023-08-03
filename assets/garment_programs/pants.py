@@ -1,17 +1,15 @@
 import svgpathtools as svgpath
 from copy import deepcopy
 
-# Custom
 import pypattern as pyp
-
-# other assets
 from . import bands
 
 
 class PantPanel(pyp.Panel):
     def __init__(self, name, body, design) -> None:
         """
-            Basic pant panel with option to be fitted (with darts) or ruffled at waist area.
+            Basic pant panel with option to be fitted (with darts) or ruffled
+            at waist area.
         """
         super().__init__(name)
 
@@ -25,7 +23,7 @@ class PantPanel(pyp.Panel):
         dart_depth = hips_depth * 0.8 
 
         # Crotch cotrols
-        crotch_depth_diff =  body['crotch_hip_diff']
+        crotch_depth_diff = body['crotch_hip_diff']
         crotch_extention = body['leg_circ'] / 2 - body['hips'] / 4
 
         # eval pants shape
@@ -36,9 +34,9 @@ class PantPanel(pyp.Panel):
         # We distribute w_diff among the side angle and a dart 
         hw_shift = w_diff / 3
 
-        right = pyp.esf.curve_3_points(
+        right = pyp.EdgeSeqFactory.curve_3_points(
             [
-                min(- (low_width - pant_width), (pant_width - low_width) / 2),   # extend wide pants out
+                min(- (low_width - pant_width), (pant_width - low_width) / 2),  # extend wide pants out
                 0],    
             [hw_shift, length + hips_depth],
             target=[0, length]
@@ -87,12 +85,14 @@ class PantPanel(pyp.Panel):
 
         # Add top dart 
         dart_width = w_diff - hw_shift
-        dart_shape = pyp.esf.dart_shape(dart_width, dart_depth)
+        dart_shape = pyp.EdgeSeqFactory.dart_shape(dart_width, dart_depth)
         top_edges, dart_edges, int_edges = pyp.ops.cut_into_edge(
-            dart_shape, top, offset=(hw_shift + waist - dart_position), right=True)
+            dart_shape, top, offset=(hw_shift + waist - dart_position),
+            right=True)
 
         self.edges.substitute(top, top_edges)
-        self.stitching_rules.append((pyp.Interface(self, dart_edges[0]), pyp.Interface(self, dart_edges[1])))
+        self.stitching_rules.append((pyp.Interface(self, dart_edges[0]),
+                                     pyp.Interface(self, dart_edges[1])))
 
         self.interfaces['top'] = pyp.Interface(self, int_edges)   
 
@@ -113,7 +113,6 @@ class PantPanel(pyp.Panel):
         new_top = pyp.Edge(new_right.end, new_crotch.start)
 
         return new_right, new_top, new_crotch
-
 
 
 class PantsHalf(pyp.Component):
@@ -139,7 +138,8 @@ class PantsHalf(pyp.Component):
         if design['cuff']['type']['v']:
             
             pant_bottom = pyp.Interface.from_multiple(
-                    self.front.interfaces['bottom'], self.back.interfaces['bottom'])
+                self.front.interfaces['bottom'],
+                self.back.interfaces['bottom'])
 
             # Copy to avoid editing original design dict
             cdesign = deepcopy(design)
@@ -170,10 +170,10 @@ class PantsHalf(pyp.Component):
             'top_b': self.back.interfaces['top'],
         }
 
+
 class Pants(pyp.Component):
     def __init__(self, body, design) -> None:
         super().__init__('Pants')
-
 
         self.right = PantsHalf('r', body, design)
         self.left = PantsHalf('l', body, design).mirror()
@@ -195,6 +195,7 @@ class Pants(pyp.Component):
                 self.left.interfaces['top_b'],   
                 self.right.interfaces['top_b'].reverse()),
         }
+
 
 class WBPants(pyp.Component):
     def __init__(self, body, design) -> None:

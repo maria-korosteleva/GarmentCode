@@ -54,7 +54,7 @@ def Sun(width, depth, n_rays=8, d_rays=5):
     plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
     
-    return pyp.esf.from_verts(verts=verts)
+    return pyp.EdgeSeqFactory.from_verts(verts=verts)
 
 
 # DEBUG

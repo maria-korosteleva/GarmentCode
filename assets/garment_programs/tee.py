@@ -1,12 +1,9 @@
 """ Panels for a straight upper garment (T-shirt)
     Note that the code is very similar to Bodice. 
 """
-
-from copy import copy
 import numpy as np
-
-# Custom
 import pypattern as pyp
+
 
 class TorsoFrontHalfPanel(pyp.Panel):
     """Half of a simple non-fitted upper garment (e.g. T-Shirt)
@@ -28,9 +25,10 @@ class TorsoFrontHalfPanel(pyp.Panel):
         frac = body_width / body['bust'] 
         self.width = frac * m_width
         b_width = frac * b_width
-        connecting_point =  b_width * (m_width / 4 / self.width)
+        connecting_point = b_width * (m_width / 4 / self.width)
 
-        shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
+        sh_tan = np.tan(np.deg2rad(body['shoulder_incl']))
+        shoulder_incl = sh_tan * self.width
         length = design['length']['v'] * body['waist_line']
 
         # length in the front panel is adjusted due to shoulder inclination
@@ -38,7 +36,7 @@ class TorsoFrontHalfPanel(pyp.Panel):
         fb_diff = (frac - (0.5 - frac)) * body['bust']
         length = length - sh_tan * fb_diff
 
-        self.edges = pyp.esf.from_verts(
+        self.edges = pyp.EdgeSeqFactory.from_verts(
             [0, 0], 
             [-connecting_point, 0],   # Extra vertex to connect with front-back symmetric bottoms correctly
             [-b_width, 0], 
@@ -85,10 +83,11 @@ class TorsoBackHalfPanel(pyp.Panel):
         self.width = frac * m_width
         b_width = frac * b_width
 
-        shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
+        sh_tan = np.tan(np.deg2rad(body['shoulder_incl']))
+        shoulder_incl = sh_tan * self.width
         length = design['length']['v'] * body['waist_line']
 
-        self.edges = pyp.esf.from_verts(
+        self.edges = pyp.EdgeSeqFactory.from_verts(
             [0, 0], 
             [-b_width, 0], 
             [-self.width, length], 

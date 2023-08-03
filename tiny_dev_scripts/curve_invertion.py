@@ -350,8 +350,8 @@ print(curve_inverse_bend.unit_tangent(0))
 print(curve_inverse_bend.unit_tangent(1))
 print('Target 1 tangent ', curve_inverse_rot.unit_tangent(1)) 
 print('Shortcut_dist = ', shortcut_dist)
-print(f_len:=curve_forward.length())
-print(in_len:=curve_inverse_bend.length())
+print(f_len := curve_forward.length())
+print(in_len := curve_inverse_bend.length())
 print('Length diff after bending: ', abs(f_len - in_len))
 
 # Curvatures

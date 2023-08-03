@@ -1,7 +1,7 @@
-# Custom
 import pypattern as pyp
-from . import skirt_paneled
 from .circle_skirt import CircleArcPanel
+from . import skirt_paneled
+
 
 class StraightBandPanel(pyp.Panel):
     """One panel for a panel skirt"""
@@ -10,7 +10,8 @@ class StraightBandPanel(pyp.Panel):
         super().__init__(name)
 
         # define edge loop
-        self.edges = pyp.esf.from_verts([0,0], [0, depth], [width, depth], [width, 0], loop=True)
+        self.edges = pyp.EdgeSeqFactory.from_verts(
+            [0, 0], [0, depth], [width, depth], [width, 0], loop=True)
 
         # define interface
         self.interfaces = {
@@ -52,14 +53,20 @@ class StraightWB(pyp.Component):
             'top_f': self.front.interfaces['top'],
             'top_b': self.back.interfaces['top'],
 
-            'bottom': pyp.Interface.from_multiple(self.front.interfaces['bottom'], self.back.interfaces['bottom']),
-            'top': pyp.Interface.from_multiple(self.front.interfaces['top'], self.back.interfaces['top']),
+            'bottom': pyp.Interface.from_multiple(
+                self.front.interfaces['bottom'],
+                self.back.interfaces['bottom']),
+            'top': pyp.Interface.from_multiple(
+                self.front.interfaces['top'], 
+                self.back.interfaces['top']),
         }
 
 
 class FittedWB(pyp.Component):
-    """Also known as Yoke: a waistband that ~follows the body curvature, and hence sits tight
-        Made out of two circular arc panels
+    """Also known as Yoke: a waistband that ~follows the body curvature, and 
+    hence sits tight 
+    
+    Made out of two circular arc panels
     """
     def __init__(self, body, design) -> None:
         super().__init__(self.__class__.__name__)
@@ -101,9 +108,14 @@ class FittedWB(pyp.Component):
             'top_f': self.front.interfaces['top'],
             'top_b': self.back.interfaces['top'],
 
-            'bottom': pyp.Interface.from_multiple(self.front.interfaces['bottom'], self.back.interfaces['bottom']),
-            'top': pyp.Interface.from_multiple(self.front.interfaces['top'], self.back.interfaces['top']),
+            'bottom': pyp.Interface.from_multiple(
+                self.front.interfaces['bottom'], 
+                self.back.interfaces['bottom']),
+            'top': pyp.Interface.from_multiple(
+                self.front.interfaces['top'], 
+                self.back.interfaces['top']),
         }
+
 
 class CuffBand(pyp.Component):
     """ Cuff class for sleeves or pants
@@ -116,10 +128,12 @@ class CuffBand(pyp.Component):
 
         # TODO flexible fractions of the width
         self.front = StraightBandPanel(
-            f'{tag}_cuff_f', design['b_width']['v'] / 2, design['b_depth']['v'])
+            f'{tag}_cuff_f', design['b_width']['v'] / 2, 
+            design['b_depth']['v'])
         self.front.translate_by([0, 0, 15])  
         self.back = StraightBandPanel(
-            f'{tag}_cuff_b', design['b_width']['v'] / 2, design['b_depth']['v'])
+            f'{tag}_cuff_b', design['b_width']['v'] / 2, 
+            design['b_depth']['v'])
         self.back.translate_by([0, 0, -15])  
 
         self.stitching_rules = pyp.Stitches(
@@ -129,12 +143,15 @@ class CuffBand(pyp.Component):
 
         self.interfaces = {
             'bottom': pyp.Interface.from_multiple(
-                self.front.interfaces['bottom'], self.back.interfaces['bottom']),
+                self.front.interfaces['bottom'], 
+                self.back.interfaces['bottom']),
             'top_front': self.front.interfaces['top'],
             'top_back': self.back.interfaces['top'],
             'top': pyp.Interface.from_multiple(
-                self.front.interfaces['top'], self.back.interfaces['top']),
+                self.front.interfaces['top'], 
+                self.back.interfaces['top']),
         }
+
 
 class CuffSkirt(pyp.Component):
     """A skirt-like flared cuff """
@@ -168,8 +185,10 @@ class CuffSkirt(pyp.Component):
             'top_front': self.front.interfaces['top'],
             'top_back': self.back.interfaces['top'],
             'bottom': pyp.Interface.from_multiple(
-                self.front.interfaces['bottom'], self.back.interfaces['bottom']),
+                self.front.interfaces['bottom'], 
+                self.back.interfaces['bottom']),
         }
+
 
 class CuffBandSkirt(pyp.Component):
     """ Cuff class for sleeves or pants

@@ -56,6 +56,7 @@ class Component(BaseComponent):
         return self
     
     def rotate_to(self, new_rot):
+        # TODO: ami -
         # TODOLOW Implement with correct preservation of relative placement
         # of subcomponents
         raise NotImplementedError(

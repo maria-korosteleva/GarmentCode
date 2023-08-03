@@ -2,12 +2,12 @@ from copy import copy
 from numpy.linalg import norm
 import numpy as np
 
-# Custom
-from .edge import EdgeSequence
-from .generic_utils import close_enough
+from pypattern.edge import EdgeSequence
+from pypattern.generic_utils import close_enough
+
 
 # TODO as EdgeSequence wrapper??
-class Interface():
+class Interface:
     """Description of an interface of a panel or component
         that can be used in stitches as a single unit
     """

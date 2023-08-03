@@ -1,4 +1,5 @@
 """ Sample panels/components without a role to test stuff"""
+# TODO: ami - do we need this here?
 import pypattern as pyp
 
 
@@ -8,7 +9,7 @@ class CurvyPanel(pyp.Panel):
     def __init__(self, name, size=40) -> None:
         super().__init__(name)
 
-        # self.edges = pyp.esf.from_verts(
+        # self.edges = pyp.EdgeSeqFactory.from_verts(
         #     [0, 0], [0, size], [size, size], [size, 0]
         # )
         # TODO Creation shortcut
@@ -36,7 +37,7 @@ class CurvyPanel(pyp.Panel):
 
         print('DART')  # DEBUG
         b_edge, b_dart_edges, b_interface = pyp.ops.cut_into_edge(
-            pyp.esf.dart_shape(5, 15), self.edges[-1], 
+            pyp.EdgeSeqFactory.dart_shape(5, 15), self.edges[-1], 
             offset=self.edges[-1].length() / 2, right=True)
         
         # DEBUG
@@ -52,7 +53,7 @@ class StraightPanel(pyp.Panel):
     def __init__(self, name, size=40) -> None:
         super().__init__(name)
 
-        self.edges = pyp.esf.from_verts(
+        self.edges = pyp.EdgeSeqFactory.from_verts(
             [0, 0], [0, size], [size, size], [size, 0], 
             loop=True
         )
@@ -64,7 +65,7 @@ class StraightPanel(pyp.Panel):
 
         print('SHAPE')  # DEBUG
 
-        left_seq, right_seq = pyp.esf.halfs_from_svg(
+        left_seq, right_seq = pyp.EdgeSeqFactory.halfs_from_svg(
             './assets/img/logo_cropped.svg',   #'./assets/img/test_shape.svg', './assets/img/logo_cropped.svg',  # './assets/img/Logo_adjusted.svg', 
             target_height=size / 2)
 

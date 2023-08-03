@@ -1,6 +1,4 @@
-# Custom
 import pypattern as pyp
-from scipy.spatial.transform import Rotation as R
 import numpy as np
 
 
@@ -22,7 +20,8 @@ class CircleArcPanel(pyp.Panel):
             [-dist_w/2, 0], [dist_w/2, 0], 
             radius=top_rad, large_arc=halfarc > np.pi / 2))
 
-        self.edges.append(pyp.Edge(self.edges[-1].end, [dist_out / 2, -vert_len]))
+        self.edges.append(pyp.Edge(
+            self.edges[-1].end, [dist_out / 2, -vert_len]))
         
         # Bottom
         self.edges.append(pyp.CircleEdge.from_points_radius(
@@ -47,6 +46,7 @@ class CircleArcPanel(pyp.Panel):
 
         return CircleArcPanel(name, rad, length, arc)
     
+    @staticmethod
     def from_all_length(name, length, top_width, bottom_width):
 
         diff = bottom_width - top_width
@@ -55,6 +55,7 @@ class CircleArcPanel(pyp.Panel):
 
         return CircleArcPanel(name, rad, length, arc)
     
+    @staticmethod
     def from_length_rad(name, length, top_width, rad):
 
         arc = top_width / rad
@@ -62,6 +63,7 @@ class CircleArcPanel(pyp.Panel):
         return CircleArcPanel(name, rad, length, arc)
 
 
+# TODO: ami - do we still need this?
 # DEBUG This is a test garment!
 class MinimalALine(pyp.Component):
     """Simple circle skirt"""
@@ -157,8 +159,12 @@ class SkirtCircle(pyp.Component):
 
         # Interfaces
         self.interfaces = {
-            'top': pyp.Interface.from_multiple(self.front.interfaces['top'], self.back.interfaces['top']),
-            'bottom': pyp.Interface.from_multiple(self.front.interfaces['bottom'], self.back.interfaces['bottom'])
+            'top': pyp.Interface.from_multiple(
+                self.front.interfaces['top'],
+                self.back.interfaces['top']),
+            'bottom': pyp.Interface.from_multiple(
+                self.front.interfaces['bottom'],
+                self.back.interfaces['bottom'])
         }
         
     def add_cut(self, panel, design, sk_length):
@@ -177,7 +183,7 @@ class SkirtCircle(pyp.Component):
         right = target_edge.start[0] > target_edge.end[0]
 
         # Make a cut
-        cut_shape = pyp.esf.dart_shape(width, depth)
+        cut_shape = pyp.EdgeSeqFactory.dart_shape(width, depth)
         new_edges, _, interf_edges = pyp.ops.cut_into_edge(
             cut_shape, target_edge, 
             offset=offset, 

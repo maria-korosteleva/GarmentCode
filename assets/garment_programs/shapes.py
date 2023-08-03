@@ -38,7 +38,7 @@ def Sun(width, depth, n_rays=8, d_rays=5, **kwargs):
     for i in range(len(in_verts)):
         verts.insert(i*2, in_verts[i])
 
-    shape = pyp.esf.from_verts(*verts)
+    shape = pyp.EdgeSeqFactory.from_verts(*verts)
     return shape, shape
 
 
@@ -47,7 +47,7 @@ def SIGGRAPH_logo(width, depth=None, **kwargs):
 
     filename='./assets/img/Logo_adjusted.svg'   # NOTE assumes the script is run from the root
     # TODO path w.r.t. current file
-    left_seq, right_seq = pyp.esf.halfs_from_svg(filename, target_height=width)
+    left_seq, right_seq = pyp.EdgeSeqFactory.halfs_from_svg(filename, target_height=width)
 
     return left_seq, right_seq
 
@@ -58,7 +58,7 @@ def SVGFile(width, filename, depth=None, **kwargs):
         each passing through OY once
     """
 
-    left_seq, right_seq = pyp.esf.halfs_from_svg(filename, target_height=width)
+    left_seq, right_seq = pyp.EdgeSeqFactory.halfs_from_svg(filename, target_height=width)
 
     return left_seq, right_seq
 

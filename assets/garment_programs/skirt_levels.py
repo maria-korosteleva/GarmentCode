@@ -1,11 +1,8 @@
-
 from copy import deepcopy
-from scipy.spatial.transform import Rotation as R
 
-# Custom
-import pypattern as pyp
 from .skirt_paneled import *
 from .circle_skirt import *
+
 
 # TODO Test geometry with different settings
 class SkirtLevels(pyp.Component):
@@ -24,7 +21,7 @@ class SkirtLevels(pyp.Component):
 
         level_skirt_class = globals()[ldesign['level']['v']]
 
-        if (hasattr(base:=self.subs[0], 'design') 
+        if (hasattr(base := self.subs[0], 'design')
                 and 'low_angle' in base.design):
             angle = base.design['low_angle']['v']
         else:
@@ -43,7 +40,8 @@ class SkirtLevels(pyp.Component):
 
             # Placement
             # Rotation if base is assymetric
-            self.subs[-1].rotate_by(R.from_euler('XYZ', [0, 0, -angle], degrees=True))
+            self.subs[-1].rotate_by(R.from_euler('XYZ', [0, 0, -angle],
+                                                 degrees=True))
 
             self.subs[-1].place_by_interface(
                 self.subs[-1].interfaces['top'],

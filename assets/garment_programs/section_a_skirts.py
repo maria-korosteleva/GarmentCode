@@ -1,5 +1,5 @@
 """3-section A line skirts: by commertial patterns"""
-
+# TODO: ami - seems to be a draft file?
 import numpy as np
 
 # Custom

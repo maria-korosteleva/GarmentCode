@@ -1,21 +1,25 @@
 import math
 import numpy as np
 
-# Custom
 import pypattern as pyp
 from . import skirt_paneled as skirts
+
 
 class Insert(pyp.Panel):
     def __init__(self, id, width=30, depth=30) -> None:
         super().__init__(f'Insert_{id}')
 
-        self.edges = pyp.esf.from_verts([0, 0], [width/2, depth], [width, 0], loop=True)
+        self.edges = pyp.EdgeSeqFactory.from_verts(
+            [0, 0],
+            [width/2, depth],
+            [width, 0], loop=True)
 
         self.interfaces = [
             pyp.Interface(self, self.edges[:2])
         ]
         self.top_center_pivot()
         self.center_x()
+
 
 class GodetSkirt(pyp.Component):
     def __init__(self, body, design) -> None:
@@ -39,7 +43,6 @@ class GodetSkirt(pyp.Component):
         self.interfaces = {
             'top': self.base.interfaces['top']
         }
-
 
     def inserts(
             self, bottom_edge, panel, ins_w, ins_depth,
@@ -70,7 +73,7 @@ class GodetSkirt(pyp.Component):
 
         # make appropriate cuts and stitches
         cut_depth = math.sqrt((ins_w / 2)**2 + ins_depth**2 - (cut_width / 2)**2)
-        cut_shape = pyp.esf.from_verts([0,0], [cut_width / 2, cut_depth], [cut_width, 0])  
+        cut_shape = pyp.EdgeSeqFactory.from_verts([0,0], [cut_width / 2, cut_depth], [cut_width, 0])  
 
         right = z_transl < 0    # FIXME: heuristic corresponding to skirts in our collection
 
