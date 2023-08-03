@@ -10,6 +10,7 @@ from typing import TypeVar, Generic, Sequence, Callable
 T = TypeVar('T')
 V = TypeVar('V')
 
+
 class KeyWrapper(Generic[T, V]):
     def __init__(self, iterable: Sequence[T], key: Callable[[T], V]):
         self.it = iterable
@@ -20,6 +21,7 @@ class KeyWrapper(Generic[T, V]):
 
     def __len__(self) -> int:
         return len(self.it)
+
 
 def vector_angle(v1, v2):
     """Find an angle between two 2D vectors"""
@@ -33,9 +35,11 @@ def vector_angle(v1, v2):
         angle *= np.sign(cross)
     return angle
 
+
 def R2D(angle):
     """2D rotation matrix by an angle"""
     return np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
+
 
 def vector_align_3D(v1, v2):
     """Find a rotation to align v1 with v2"""
@@ -52,15 +56,19 @@ def vector_align_3D(v1, v2):
 
     return Rotation.from_rotvec(cross * angle)
 
+
 def close_enough(f1, f2=0, tol=1e-4):
     """Compare two floats correctly """
     return abs(f1 - f2) < tol
+
 
 def bbox_paths(paths):
     """Bounding box of a list of paths/Edge Sequences"""
 
     bboxes = np.array([p.bbox() for p in paths])
-    return (min(bboxes[:, 0]), max(bboxes[:, 1]), min(bboxes[:, 2]), max(bboxes[:, 3]))
+    return (min(bboxes[:, 0]), max(bboxes[:, 1]),
+            min(bboxes[:, 2]), max(bboxes[:, 3]))
+
 
 # ---- Complex numbers converters ----- 
 def c_to_list(num):
@@ -83,13 +91,16 @@ def c_to_np(num):
     else: 
         return np.asarray([num.real, num.imag])
 
+
 def list_to_c(num):
-    """Convert 2D list or list of 2D lists into complex number/list of complex numbers"""
+    """Convert 2D list or list of 2D lists into complex number/list of complex
+    numbers"""
     if isinstance(num[0], (list, tuple, set, np.ndarray)):
         return [complex(n[0], n[1]) for n in num]
     else: 
         return complex(num[0], num[1])
-    
+
+
 # ---- Nested Dictionaries shortcuts ---- 
 # https://stackoverflow.com/a/37704379
 def nested_get(dic, keys):    
@@ -97,10 +108,12 @@ def nested_get(dic, keys):
         dic = dic[key]
     return dic
 
+
 def nested_set(dic, keys, value):
     for key in keys[:-1]:
         dic = dic.setdefault(key, {})
     dic[keys[-1]] = value
+
 
 def nested_del(dic, keys):
     for key in keys[:-1]:

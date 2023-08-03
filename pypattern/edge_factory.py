@@ -1,23 +1,23 @@
-
 from copy import copy
 import numpy as np
 from numpy.linalg import norm
 import svgpathtools as svgpath
 from scipy.optimize import minimize
 
-# Custom
 from .edge import EdgeSequence, Edge, CurveEdge
 from .generic_utils import vector_angle, close_enough, c_to_list, list_to_c, bbox_paths
 from .interface import Interface
 from . import flags
 
+
 class EdgeSeqFactory:
-    """Create EdgeSequence objects for some common edge seqeunce patterns
+    """Create EdgeSequence objects for some common edge sequence patterns
     """
 
     @staticmethod
     def from_verts(*verts, loop=False):
-        """Generate edge sequence from given vertices. If loop==True, the method also closes the edge sequence as a loop
+        """Generate edge sequence from given vertices. If loop==True,
+         the method also closes the edge sequence as a loop
         """
         # TODO Curvatures -- on the go
 
@@ -32,13 +32,15 @@ class EdgeSeqFactory:
         return seq
 
     @staticmethod
-    def from_fractions(start, end, frac=[1]):
+    def from_fractions(start, end, frac=None):
         """A sequence of edges between start and end wich lengths are distributed
             as specified in frac list 
         Parameters:
             * frac -- list of legth fractions. Every entry is in (0, 1], 
                 all entries sums up to 1
         """
+        if frac is None:
+            frac = [1]
         # TODO Deprecated? 
         # FIXME From fractions should be straight in the names??
         frac = [abs(f) for f in frac]
@@ -57,7 +59,7 @@ class EdgeSeqFactory:
         return EdgeSeqFactory.from_verts(*verts)
 
     @staticmethod
-    def side_with_cut(start=(0,0), end=(1,0), start_cut=0, end_cut=0):
+    def side_with_cut(start=(0, 0), end=(1, 0), start_cut=0, end_cut=0):
         """ Edge with internal vertices that allows to stitch only part of the border represented
             by the long side edge
 
@@ -81,16 +83,26 @@ class EdgeSeqFactory:
     # ------ Darts ------
     #DRAFT
     @staticmethod
-    def side_with_dart_by_width(start=(0,0), end=(100,0), width=5, depth=10, dart_position=50, opening_angle=180, right=True, modify='both', panel=None):
-        """Create a seqence of edges that represent a side with a dart with given parameters
+    def side_with_dart_by_width(start=(0, 0), end=(100, 0), width=5, depth=10,
+                                dart_position=50, opening_angle=180,
+                                right=True, modify='both', panel=None):
+        """Create a sequence of edges that represent a side with a dart with
+            given parameters
         Parameters:
-            * start and end -- vertices between which side with a dart is located
+            * start and end -- vertices between which side with a dart is
+                located
             * width -- width of a dart opening
-            * depth -- depth of a dart (distance between the opening and the farthest vertex)
+            * depth -- depth of a dart (distance between the opening and the
+                farthest vertex)
             * dart_position -- position along the edge (from the start vertex)
-            * opening angle (deg) -- angle between side edges after the dart is stitched (as evaluated opposite from the dart). default = 180 (straight line)
-            * right -- whether the dart is created on the right from the edge direction (otherwise created on the left). Default - Right (True)
-            * modify -- which vertex position to update to accomodate for contraints: 'start', 'end', or 'both'. Default: 'both'
+            * opening angle (deg) -- angle between side edges after the dart
+                is stitched (as evaluated opposite to the dart). default =
+                180 (straight line)
+            * right -- whether the dart is created on the right from the edge
+                direction (otherwise created on the left).
+                Default - Right (True)
+            * modify -- which vertex position to update to accommodate for
+             constraints: 'start', 'end', or 'both'. Default: 'both'
 
         Returns: 
             * Full edge with a dart
@@ -98,8 +110,10 @@ class EdgeSeqFactory:
             * References to non-dart edges
             * Suggested dart stitch
 
-        NOTE: (!!) the end of the edge might shift to accomodate the constraints
-        NOTE: The routine makes sure that the the edge is straight after the dart is stitched
+        NOTE: (!!) the end of the edge might shift to accommodate the
+            constraints
+        NOTE: The routine makes sure that the edge is straight after the dart
+            is stitched
         NOTE: Darts always have the same length on the sides
         """
         # TODO Curvatures?? -- on edges, dart sides
@@ -191,14 +205,19 @@ class EdgeSeqFactory:
         return dart_shape, dart_shape[1:-1], out_interface, dart_stitch
 
     @staticmethod
-    def side_with_dart_by_len(start=(0,0), end=(50,0), target_len=35, depth=10, dart_position=25, dart_angle=90, right=True, panel=None, tol=1e-4):
-        """Create a seqence of edges that represent a side with a dart with given parameters
+    def side_with_dart_by_len(start=(0,0), end=(50,0), target_len=35,
+                              depth=10, dart_position=25, dart_angle=90,
+                              right=True, panel=None, tol=1e-4):
+        """Create a seqence of edges that represent a side with a dart with
+            given parameters
         Parameters:
             * start and end -- vertices between which side with a dart is located
             * target_len 
-            * depth -- depth of a dart (distance between the opening and the farthest vertex)
+            * depth -- depth of a dart (distance between the opening and the
+                farthest vertex)
             * dart_position -- position along the edge (from the start vertex)
-            * right -- whether the dart is created on the right from the edge direction (otherwise created on the left). Default - Right (True)
+            * right -- whether the dart is created on the right from the edge
+                direction (otherwise created on the left). Default - Right (True)
 
         Returns: 
             * Full edge with a dart
@@ -206,8 +225,10 @@ class EdgeSeqFactory:
             * References to non-dart edges
             * Suggested dart stitch
 
-        NOTE: (!!) the end of the edge might shift to accomodate the constraints
-        NOTE: The routine makes sure that the the edge is straight after the dart is stitched
+        NOTE: (!!) the end of the edge might shift to accommodate the
+            constraints
+        NOTE: The routine makes sure that the edge is straight after the dart
+            is stitched
         NOTE: Darts always have the same length on the sides
         """
         # TODO Curvatures?? -- on edges, dart sides
@@ -366,8 +387,9 @@ class EdgeSeqFactory:
     def curve_from_len_tangents(start, end, cp, target_len, target_tan0, target_tan1):
         """Find a curve with given relative curvature parameters"""
 
+
 # Utils
-# TODOLOW Move to generic_utils
+# TODOLOW Move to generic_utils  # TODO: ami
 def _rel_to_abs_coords(start, end, vrel):
     """Convert coordinates specified relative to vector v2 - v1 to world coords"""
     # TODOLOW It's in the edges?
@@ -380,6 +402,7 @@ def _rel_to_abs_coords(start, end, vrel):
     new_point = new_start + vrel[1] * vec_perp
 
     return new_point 
+
 
 def _abs_to_rel_2d(start, end, point):
     """Convert control points coordinates from absolute to relative"""
@@ -404,6 +427,7 @@ def _abs_to_rel_2d(start, end, point):
     converted[1] *= -np.sign(np.cross(point_vec, edge)) 
     
     return np.asarray(converted)
+
 
 def _fit_dart(coords, v0, v1, d0, d1, depth, theta=90):
     """Placements of three dart points respecting the constraints"""
@@ -430,9 +454,11 @@ def _fit_dart(coords, v0, v1, d0, d1, depth, theta=90):
 
     return sum(error.values())
 
+
 # --- For Curves ---
 def _softsign(x):
     return x / (abs(x) + 1)
+
 
 def _extreme_points(curve, on_x=False, on_y=True):
     """Return extreme points of the current edge
@@ -448,17 +474,19 @@ def _extreme_points(curve, on_x=False, on_y=True):
         dy = y.deriv()
         
         y_extremizers = svgpath.polyroots(dy, realroots=True,
-                                            condition=lambda r: 0 < r < 1)
+                                          condition=lambda r: 0 < r < 1)
     if on_x:
         x = svgpath.real(poly)
         dx = x.deriv()
         x_extremizers = svgpath.polyroots(dx, realroots=True,
-                                    condition=lambda r: 0 < r < 1)
+                                          condition=lambda r: 0 < r < 1)
     all_extremizers = x_extremizers + y_extremizers
 
-    extreme_points = np.array([c_to_list(curve.point(t)) for t in all_extremizers])
+    extreme_points = np.array([c_to_list(curve.point(t))
+                               for t in all_extremizers])
 
     return extreme_points
+
 
 def _fit_y_extremum(cp_y, target_location):
     """ Fit the control point of basic [[0, 0] -> [1, 0]] Quadratic Bezier s.t. 
@@ -489,6 +517,7 @@ def _fit_y_extremum(cp_y, target_location):
     print('Extreme: ', diff)
 
     return diff**2 
+
 
 def _fit_pass_point(cp, target_location):
     """ Fit the control point of basic [[0, 0] -> [1, 0]] Quadratic Bezier s.t. 
@@ -524,13 +553,17 @@ def _fit_pass_point(cp, target_location):
 # ---- For SVG Loading ----
 
 def split_half_svg_paths(paths):
-    """Sepate SVG paths in half over the vertical line -- for insertion into a edge side
+    """Sepate SVG paths in half over the vertical line -- for insertion into a
+        edge side
     
         Paths shapes restrictions: 
-        1) every path in the provided list is assumed to form a closed loop that has 
-        exactly 2 intersection points with a vetrical line passing though the middle of the shape
+        1) every path in the provided list is assumed to form a closed loop
+            that has
+        exactly 2 intersection points with a vetrical line passing though the
+            middle of the shape
         2) The paths geometry should not be nested
-            as to not create disconnected pieces of the edge when used in shape projection
+            as to not create disconnected pieces of the edge when used in
+                shape projection
 
     """
     # Shape Bbox
@@ -558,7 +591,8 @@ def split_half_svg_paths(paths):
 
         side_1 = p.cropped(from_T, to_T)
         # This order should preserve continuity
-        side_2 = svgpath.Path(*p.cropped(to_T, 1)._segments, *p.cropped(0, from_T)._segments)
+        side_2 = svgpath.Path(*p.cropped(to_T, 1)._segments,
+                              *p.cropped(0, from_T)._segments)
 
         # Collect correctly
         if side_1.bbox()[2] > center_x:

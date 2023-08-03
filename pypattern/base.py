@@ -55,7 +55,9 @@ class BaseComponent:
         return {}
 
     def __call__(self, *args: Any, **kwds: Any) -> Any:
-        return self.assembly(*args,**kwds)
+        # TODO - ami - this looks like an overkill. we should use this only
+        #  when compoenent works as a function or an opeartor
+        return self.assembly(*args, **kwds)
 
     # ----- Placement routines: these are the same for panels and components
     def place_below(self, comp, gap=2):
@@ -68,8 +70,8 @@ class BaseComponent:
         return self
 
     def place_by_interface(self, self_interface, out_interface, gap=2):
-        """Adjust the placement of component acconding to the connectivity
-        instuction
+        """Adjust the placement of component according to the connectivity
+        instruction
         """
         
         # Alight translation
@@ -78,7 +80,7 @@ class BaseComponent:
         mid_out = (out_bbox[1] + out_bbox[0]) / 2
         mid_self = (self_bbox[1] + self_bbox[0]) / 2
 
-        # Add a gap outside of the current 
+        # Add a gap outside the current
         full_bbox = self.bbox3D()
         center = (full_bbox[0] + full_bbox[1]) / 2
         gap_dir = mid_self - center
@@ -91,7 +93,7 @@ class BaseComponent:
         # NOTE: Norm evaluation of vertex set will fail 
         # for the alignment of 2D panels, where they are likely
         # to be in one line or in a panel plane instead of 
-        # the interface place -- so I'm not using norms for gap esitmation
+        # the interface place -- so I'm not using norms for gap estimation
 
         # TODO Estimate rotation
         # TODO not just placement by the midpoint of the interfaces?
