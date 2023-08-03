@@ -525,7 +525,7 @@ design:
         v: 0.1
         range:
         - 0
-        - 0.95
+        - 0.4
         type: float
       place:
         v: -0.5
