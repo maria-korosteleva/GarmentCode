@@ -32,7 +32,8 @@ if __name__ == '__main__':
     body = BodyParameters(body_file)
 
     design_files = {
-        'base': './assets/design_params/base.yaml',
+        # 'base': './assets/design_params/base.yaml',
+        'debug': './Logs/rand_0URAVX1P0H_design_params.yaml'
         #'default': './assets/design_params/default.yaml',
         # 'modern': './assets/design_params/modern.yaml',
         # 'Dress_20s': './assets/design_params/dress_20s.yaml',
@@ -61,13 +62,16 @@ if __name__ == '__main__':
     for piece in test_garments:
         pattern = piece()
 
+        if piece.is_self_intersecting():
+            print(f'{piece.name} is Self-intersecting')
+
         # Save as json file
         sys_props = Properties('./system.json')
         folder = pattern.serialize(
             Path(sys_props['output']), 
             tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
             to_subfolder=False, 
-            with_3d=True, with_text=False, view_ids=False)
+            with_3d=True, with_text=True, view_ids=False)
 
         body.save(folder)
         if piece.name in design_files:

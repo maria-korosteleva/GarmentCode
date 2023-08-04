@@ -111,7 +111,7 @@ design:
     armhole_shape: 
       v: ArmholeSquare
       range: [ArmholeSquare, ArmholeAngle, ArmholeCurve]
-      type: select_null
+      type: select
     length: 
       v: 30
       range: [3, 80]
@@ -261,7 +261,7 @@ design:
       armhole_shape: 
         v: ArmholeCurve
         range: [ArmholeSquare, ArmholeAngle, ArmholeCurve]
-        type: select_null
+        type: select
 
       length: 
         v: 30
@@ -345,8 +345,8 @@ design:
       type: float 
     bottom_cut: 
       v: 0
-      range: [0, 20]  # TODO Untill length
-      type: int
+      range: [0, 0.9]  
+      type: float
     flare: 
       v: 0
       range: [0, 20]
@@ -376,7 +376,7 @@ design:
         type: float
       width: 
         v: 0.1    # 0 == no cut
-        range: [0, 0.95]   # TODO Fraction of skirt length??
+        range: [0, 0.4]   
         type: float
       place: 
         v: 0.5
@@ -420,7 +420,7 @@ design:
       type: float
     low_angle: 
       v: 0
-      range: [-50, 50]
+      range: [-30, 30]
       type: int
     front_cut: # TODO Not to be used with low_angle!
       v: 0

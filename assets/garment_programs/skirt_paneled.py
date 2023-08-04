@@ -110,7 +110,7 @@ class FittedSkirtPanel(pyp.Panel):
         if cut:  # add a cut
             # Use long and thin disconnected dart for a cutout
             new_edges, _, int_edges = pyp.ops.cut_into_edge(
-                pyp.esf.dart_shape(2, cut * length),    # 1 cm  # TODOLOW width could also be a parameter?
+                pyp.esf.dart_shape(2, depth=cut * length),    # 1 cm  # TODOLOW width could also be a parameter?
                 bottom, 
                 offset= bottom.length() / 2,
                 right=True)
@@ -263,7 +263,7 @@ class Skirt2(pyp.Component):
             length=design['length']['v'],
             ruffles=design['ruffle']['v'],   # Only if on waistband
             flare=design['flare']['v'],
-            bottom_cut=design['bottom_cut']['v']
+            bottom_cut=design['bottom_cut']['v'] * design['length']['v']
         ).translate_to([0, body['waist_level'], 25])
         self.back = SkirtPanel(
             f'back_{tag}'  if tag else 'back', 
@@ -271,7 +271,7 @@ class Skirt2(pyp.Component):
             length=design['length']['v'],
             ruffles=design['ruffle']['v'],   # Only if on waistband
             flare=design['flare']['v'],
-            bottom_cut=design['bottom_cut']['v']
+            bottom_cut=design['bottom_cut']['v'] * design['length']['v']
         ).translate_to([0, body['waist_level'], -20])
 
         self.stitching_rules = pyp.Stitches(

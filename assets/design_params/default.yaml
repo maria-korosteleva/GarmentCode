@@ -68,8 +68,7 @@ design:
       - SquareNeckHalf
       - TrapezoidNeckHalf
       - CircleArcNeckHalf
-      - null
-      type: select_null
+      type: select
     b_collar:
       v: CircleNeckHalf
       range:
@@ -79,8 +78,7 @@ design:
       - SquareNeckHalf
       - TrapezoidNeckHalf
       - CircleArcNeckHalf
-      - null
-      type: select_null
+      type: select
     width:
       v: 0.5
       range:
@@ -156,8 +154,7 @@ design:
       - ArmholeSquare
       - ArmholeAngle
       - ArmholeCurve
-      - null
-      type: select_null
+      type: select
     length:
       v: 15
       range:
@@ -287,8 +284,7 @@ design:
         - SquareNeckHalf
         - TrapezoidNeckHalf
         - CircleArcNeckHalf
-        - null
-        type: select_null
+        type: select
       b_collar:
         v: CircleNeckHalf
         range:
@@ -298,8 +294,7 @@ design:
         - SquareNeckHalf
         - TrapezoidNeckHalf
         - CircleArcNeckHalf
-        - null
-        type: select_null
+        type: select
       width:
         v: 0.5
         range:
@@ -375,8 +370,7 @@ design:
         - ArmholeSquare
         - ArmholeAngle
         - ArmholeCurve
-        - null
-        type: select_null
+        type: select
       length:
         v: 15
         range:
@@ -483,12 +477,12 @@ design:
       - 1
       - 2
       type: float
-    bottom_cut:
+    bottom_cut: 
       v: 0
-      range:
+      range: 
       - 0
-      - 20
-      type: int
+      - 0.9  
+      type: float
     flare:
       v: 10
       range:
@@ -531,7 +525,7 @@ design:
         v: 0.1
         range:
         - 0
-        - 0.95
+        - 0.4
         type: float
       place:
         v: -0.5
@@ -596,8 +590,8 @@ design:
     low_angle:
       v: 0
       range:
-      - -50
-      - 50
+      - -30
+      - 30
       type: int
     front_cut:
       v: 0

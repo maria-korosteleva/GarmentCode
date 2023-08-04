@@ -4,9 +4,11 @@
 
 from datetime import timedelta
 import json
+import yaml
 from numbers import Number
 import traceback
 import sys
+from pathlib import Path
 
 # for system info
 import platform
@@ -42,8 +44,21 @@ class Properties():
             * backup is expected to be a Properties object
         """
         try:
-            with open(filename, 'w') as f_json:
-                json.dump(self.properties, f_json, indent=2, sort_keys=True)
+            extention = Path(filename).suffix.lower()
+            if extention == '.json':
+                with open(filename, 'w') as f_json:
+                    json.dump(self.properties, f_json, indent=2, sort_keys=True)
+            elif extention == '.yaml':
+                with open(filename, 'w') as f:
+                    yaml.dump(
+                        self.properties, 
+                        f,
+                        default_flow_style=False,
+                        sort_keys=False
+                    )
+            else:
+                raise ValueError(f'{self.__class__.__name__}::ERROR::Unsupported file type on serialization: {extention}')
+            
         except Exception as e:
             print('Exception occured while saving properties:')
             traceback.print_exception(*sys.exc_info()) 
@@ -212,8 +227,16 @@ class Properties():
     # ---- Private utils ----
     def _from_file(self, filename):
         """ Load properties from previously created file """
-        with open(filename, 'r') as f_json:
-            return json.load(f_json)
+        extention = Path(filename).suffix.lower()
+        if extention == '.json':
+            with open(filename, 'r') as f_json:
+                return json.load(f_json)
+        elif extention == '.yaml':
+            with open(filename, 'r') as f:
+                return yaml.safe_load(f)
+        else:
+            raise ValueError(f'{self.__class__.__name__}::ERROR::Unsupported file type on load: {extention}')
+
 
     def _recursive_dict_update(self, in_dict, new_dict, re_write=True, adding_tag='added', in_stats=False):
         """
