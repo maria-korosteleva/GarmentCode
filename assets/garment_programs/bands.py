@@ -32,7 +32,7 @@ class StraightWB(pyp.Component):
         super().__init__(self.__class__.__name__)
 
         self.waist = design['waistband']['waist']['v'] * body['waist']
-        self.width = design['waistband']['width']['v']
+        self.width = design['waistband']['width']['v'] * body['hips_line']
 
         # TODO flexible fractions of the waist
         self.front = StraightBandPanel('wb_front', self.waist / 2, self.width)
@@ -71,13 +71,17 @@ class FittedWB(pyp.Component):
     def __init__(self, body, design) -> None:
         super().__init__(self.__class__.__name__)
 
+        # FIXME the linear interpolation does not appear to fix the body curves that well
+        # TODO Assymetric front-back panels! (back has stronger curvature change)
+
+
         self.waist = design['waistband']['waist']['v'] * body['waist']
-        self.width = design['waistband']['width']['v']
+        self.width = design['waistband']['width']['v'] * body['hips_line']
 
         hips = body['hips'] * design['waistband']['waist']['v']
         hip_line = body['hips_line']
 
-        bottom_width = self.waist + (hips - self.waist) * self.width / hip_line
+        bottom_width = pyp.utils.lin_interpolation(self.waist, hips, self.width / hip_line)
 
         self.front = CircleArcPanel.from_all_length(
             'wb_front', 

@@ -220,7 +220,10 @@ class BodiceHalf(pyp.Component):
         max_w = 2 * (self.btorso.width - design['sleeve']['inclination']['v'] - 1)
         min_w = body['neck_w']
 
-        design['collar']['width']['v'] = width = min_w + design['collar']['width']['v'] * (max_w - min_w)
+        if design['collar']['width']['v'] >= 0:
+            design['collar']['width']['v'] = width = pyp.utils.lin_interpolation(min_w, max_w, design['collar']['width']['v'])
+        else:
+            design['collar']['width']['v'] = width = pyp.utils.lin_interpolation(0, min_w, 1 + design['collar']['width']['v'])
 
         # Depth
         # Collar depth is given w.r.t. length.

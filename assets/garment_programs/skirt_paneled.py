@@ -91,7 +91,7 @@ class FittedSkirtPanel(pyp.Panel):
 
         # adjust for a rise
         adj_hips_depth = rise * hips_depth
-        adj_waist = hips - rise * (hips - waist)
+        adj_waist = pyp.utils.lin_interpolation(hips, waist, rise)
         dart_depth = hips_depth * dart_frac
         dart_depth = max(dart_depth - (hips_depth - adj_hips_depth), 0)
 
@@ -120,9 +120,9 @@ class FittedSkirtPanel(pyp.Panel):
         if cut:  # add a cut
             # Use long and thin disconnected dart for a cutout
             new_edges, _, int_edges = pyp.ops.cut_into_edge(
-                pyp.EdgeSeqFactory.dart_shape(2, cut * length),  # 1 cm  # TODOLOW width could also be a parameter?
+                pyp.EdgeSeqFactory.dart_shape(2, depth=cut * length),  # 1 cm  # TODOLOW width could also be a parameter?
                 bottom, 
-                offset= bottom.length() / 2,
+                offset=bottom.length() / 2,
                 right=True)
 
             self.edges.substitute(bottom, new_edges)
@@ -197,10 +197,7 @@ class PencilSkirt(pyp.Component):
         self.design = design  # Make accessible from outside
 
         # Depends on leg length
-        length = (
-            body['hips_line'] * design['rise']['v'] 
-            + design['length']['v'] * body['leg_length']
-        )
+        length = design['length']['v'] * body['leg_length']
 
         # condition
         if design['style_side_cut']['v'] is not None:
@@ -279,7 +276,7 @@ class Skirt2(pyp.Component):
             length=design['length']['v'],
             ruffles=design['ruffle']['v'],   # Only if on waistband
             flare=design['flare']['v'],
-            bottom_cut=design['bottom_cut']['v']
+            bottom_cut=design['bottom_cut']['v'] * design['length']['v']
         ).translate_to([0, body['waist_level'], 25])
         self.back = SkirtPanel(
             f'back_{tag}'  if tag else 'back', 
@@ -287,7 +284,7 @@ class Skirt2(pyp.Component):
             length=design['length']['v'],
             ruffles=design['ruffle']['v'],   # Only if on waistband
             flare=design['flare']['v'],
-            bottom_cut=design['bottom_cut']['v']
+            bottom_cut=design['bottom_cut']['v'] * design['length']['v']
         ).translate_to([0, body['waist_level'], -20])
 
         self.stitching_rules = pyp.Stitches(

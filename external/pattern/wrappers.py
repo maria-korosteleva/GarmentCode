@@ -54,9 +54,12 @@ class VisPattern(core.ParametrizedPattern):
 
     def serialize(
             self, path, to_subfolder=True, tag='', 
-            with_3d=True, with_text=True, view_ids=True):
+            with_3d=True, with_text=True, view_ids=True, empty_ok=False):
 
-        log_dir = super().serialize(path, to_subfolder, tag=tag)
+        log_dir = super().serialize(path, to_subfolder, tag=tag, empty_ok=empty_ok)
+        if len(self.panel_order()) == 0:  # If we are still here, but pattern is empty, don't generate an image
+            return log_dir
+        
         svg_file = os.path.join(log_dir, (self.name + tag + '_pattern.svg'))
         png_file = os.path.join(log_dir, (self.name + tag + '_pattern.png'))
         png_3d_file = os.path.join(log_dir, (self.name + tag + '_3d_pattern.png'))
@@ -265,15 +268,18 @@ class VisPattern(core.ParametrizedPattern):
         # Get panel paths
         paths_front, paths_back = [], []
         attributes_f, attributes_b = [], []
+        names_f, names_b = [], []
         for panel in z_sorted_panels:
             if panel is not None:
                 path, attr, front = self._draw_a_panel(panel)
                 if front:
                     paths_front.append(path) 
                     attributes_f.append(attr) 
+                    names_f.append(panel)
                 else:
                     paths_back.append(path)
                     attributes_b.append(attr)
+                    names_b.append(panel)
 
         # Shift back panels if both front and back exist
         if len(paths_front) > 0 and len(paths_back) > 0:
@@ -306,8 +312,9 @@ class VisPattern(core.ParametrizedPattern):
             filename=svg_filename, viewbox=viewbox, paths2Drawing=True)
 
         # text annotations
+        panel_names = names_f + names_b
         if with_text or view_ids:
-            for i, panel in enumerate(panel_order):
+            for i, panel in enumerate(panel_names):
                 if panel is not None:
                     self._add_panel_annotations(
                         dwg, panel, paths[i], with_text, view_ids)
@@ -346,6 +353,8 @@ class VisPattern(core.ParametrizedPattern):
         fig.savefig(png_filename, dpi=300, transparent=False)
         # DEBUG 
         # plt.show()
+
+        plt.close(fig)  # Cleanup
 
 
 class RandomPattern(VisPattern):

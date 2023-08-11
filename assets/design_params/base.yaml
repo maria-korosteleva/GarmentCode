@@ -12,11 +12,11 @@ design:
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
-      v: null
+      v: FittedWB
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
-      v: SectionALineSkirt  
+      v: null  
       range: 
         - SkirtCircle
         - GodetSkirt
@@ -25,7 +25,6 @@ design:
         - SkirtManyPanels
         - PencilSkirt
         - SkirtLevels
-        - SectionALineSkirt  
         - MinimalALine   # For testing only
       type: select_null
 
@@ -35,8 +34,8 @@ design:
       range: [1., 2]   # 1 == waist length
       type: float
     width: 
-      v: 3
-      range: [1, 15]
+      v: 0.1
+      range: [0.1, 1]
       type: float
 
   shirt: 
@@ -112,7 +111,7 @@ design:
     armhole_shape: 
       v: ArmholeSquare
       range: [ArmholeSquare, ArmholeAngle, ArmholeCurve]
-      type: select_null
+      type: select
     length: 
       v: 30
       range: [3, 80]
@@ -262,7 +261,7 @@ design:
       armhole_shape: 
         v: ArmholeCurve
         range: [ArmholeSquare, ArmholeAngle, ArmholeCurve]
-        type: select_null
+        type: select
 
       length: 
         v: 30
@@ -346,44 +345,16 @@ design:
       type: float 
     bottom_cut: 
       v: 0
-      range: [0, 20]  # TODO Untill length
-      type: int
+      range: [0, 0.9]  
+      type: float
     flare: 
       v: 0
       range: [0, 20]
       type: int
 
-  section-skirt: 
-    length:
-      v: 0.2
-      range: [-0.2, 1]
-      type: float 
-    insert_flare: 
-      v: 1.
-      range: [1, 4]
-      type: float
-    cut_depth:
-      v: 0.1
-      range: [0, 0.9]
-      type: float
-    
-    front_cuts:
-      v: 1
-      range: [1, 5]
-      type: int
-    back_cuts:
-      v: 3
-      range: [1, 5]
-      type: int
-
-    side_panel_width: 
-      v: 0.15
-      range: [0.1, 0.3]
-      type: float
-
   flare-skirt:
     length:
-      v: 0.2
+      v: 0.3
       range: [-0.2, 1]
       type: float 
     n_panels:
@@ -405,7 +376,7 @@ design:
         type: float
       width: 
         v: 0.1    # 0 == no cut
-        range: [0, 0.95]   # TODO Fraction of skirt length??
+        range: [0, 0.4]   
         type: float
       place: 
         v: 0.5
@@ -436,20 +407,20 @@ design:
 
   pencil-skirt: 
     length:
-      v: 0.3
-      range: [-0.2, 1]
+      v: 0.4
+      range: [0.2, 1]
       type: float 
     rise:
-      v: 1
+      v: 0.7
       range: [0.5, 1]
       type: float
     flare:   # coefficient may depend on length
-      v: 0.9
-      range: [0.3, 1]   
+      v: 1.
+      range: [0.3, 1.1]   
       type: float
     low_angle: 
       v: 0
-      range: [-50, 50]
+      range: [-30, 30]
       type: int
     front_cut: # TODO Not to be used with low_angle!
       v: 0
@@ -460,7 +431,7 @@ design:
       range: [0, 0.9]   # 1 = length
       type: float
     style_side_cut:
-      v: SVGFile
+      v: null
       range: [Sun, SIGGRAPH_logo, SVGFile]
       type: select_null
 
@@ -489,16 +460,16 @@ design:
     
   pants: 
     length: 
-      v: 0.4
-      range: [0.1, 1]   # 0 == hip line, 1 == floor length
+      v: 0.5
+      range: [0.1, 1.5]   # 0 == hip line, 1 == floor length
       type: float
     width: 
       v: 1.
       range: [1., 1.5]   # 1 = fits the hips
       type: float
     flare: 
-      v: 1.3
-      range: [0.5, 1.5]   # 1 = same as hips
+      v: 1.
+      range: [0.5, 1.2]   # 1 = same as hips
       type: float
     rise:
       v: 0.8
@@ -506,7 +477,7 @@ design:
       type: float
     cuff: 
       type:
-        v: CuffBand
+        v: null
         range: [CuffBand, CuffSkirt, CuffBandSkirt]
         type: select_null
       top_ruffle: 

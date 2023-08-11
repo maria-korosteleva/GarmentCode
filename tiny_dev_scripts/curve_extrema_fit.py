@@ -225,8 +225,8 @@ def _fit_quadratic_pass(cp, ends, target_location):
     # TODO the point directly below the control point is at the target location
 
     inter_segment = svgpath.Line(
-            target_location[0] + 1j * 1,
-            target_location[0] + 1j * 0
+            target_location[0] + 1j * target_location[1] * 2,
+            target_location[0] + 1j * (- target_location[1] * 2)
         )
 
     params = list_to_c(control_bezier)
@@ -245,9 +245,13 @@ def _fit_quadratic_pass(cp, ends, target_location):
     return diff**2
 
 
-bshift, top_shift, length, crotch = 10, 5, 30, 15
-ends = np.array([[bshift, 0], [top_shift, length + crotch]])
-target_extrema_loc = [0, length]
+# DRAFT bshift, top_shift, length, crotch = 10, 5, 30, 15
+# ends = np.array([[bshift, 0], [top_shift, length + crotch]])
+# target_extrema_loc = [0, length]
+
+ends = np.array([[0, 0], [1, 0]])
+target_extrema_loc = [ 0.70931856, -0.0119797 ]
+
 
 rel_target = _abs_to_rel_2d(ends, target_extrema_loc)
 

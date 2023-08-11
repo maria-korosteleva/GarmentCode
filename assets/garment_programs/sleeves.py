@@ -210,7 +210,8 @@ class Sleeve(pyp.Component):
         
         if depth_diff != 0: 
             front_opening, back_opening = pyp.ops.even_armhole_openings(
-                front_opening, back_opening
+                front_opening, back_opening, 
+                tol=0.2 / front_opening.length()  # ~2mm tolerance as a fraction of length
             )
 
         # ----- Get sleeve panels -------
@@ -232,7 +233,7 @@ class Sleeve(pyp.Component):
         # Interfaces
         self.interfaces.update({
             'in': pyp.Interface.from_multiple(
-                self.f_sleeve.interfaces['in'].reverse(),
+                self.f_sleeve.interfaces['in'],
                 self.b_sleeve.interfaces['in'].reverse()
             ),
             'out': pyp.Interface.from_multiple(

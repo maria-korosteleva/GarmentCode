@@ -90,7 +90,11 @@ class BasicPattern(object):
         # template normalization - panel translations and curvature to relative coords
         self._normalize_template()
 
-    def serialize(self, path, to_subfolder=True, tag=''):
+    def serialize(self, path, to_subfolder=True, tag='', empty_ok=False):
+
+        if not empty_ok and len(self.panel_order()) == 0:
+            raise RuntimeError(f'{self.__class__.__name__}::ERROR::Asked to save an empty pattern')
+
         # log context
         if to_subfolder:
             log_dir = os.path.join(path, self.name + '_' + tag)  # NOTE Added change

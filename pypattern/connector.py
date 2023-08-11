@@ -63,21 +63,15 @@ class StitchingRule():
 
         # Eval the fractions corresponding to every segments in the interfaces
         # Using projecting edges to match desired gather patterns
-
-        # Remember the state of interfaces before projection (for later)
-        edges1 = self.int1.edges.copy()
-        panels1 = copy(self.int1.panel) 
         frac1 = self.int1.projecting_edges(on_oriented=True).fractions()
-
-        edges2 = self.int2.edges.copy()
-        panels2 = copy(self.int2.panel) 
         frac2 = self.int2.projecting_edges(on_oriented=True).fractions()
+        min_frac = min(min(frac1), min(frac2))  # projection tolerance should not be larger than the smallest fraction
 
-        self._match_to_fractions(self.int1, frac2, edges2, panels2)
-        self._match_to_fractions(self.int2, frac1, edges1, panels1)
+        self._match_to_fractions(self.int1, frac2, tol=min(1e-3, min_frac / 2))
+        self._match_to_fractions(self.int2, frac1, tol=min(1e-3, min_frac / 2))
 
 
-    def _match_to_fractions(self, inter:Interface, to_add, edges, panels, tol=1e-3):
+    def _match_to_fractions(self, inter:Interface, to_add, tol=1e-3):
         """Add the vertices at given location to the edge sequence in a given interface
 
         Parameters:
@@ -123,7 +117,7 @@ class StitchingRule():
                     if verbose:
                         print(f'{self.__class__.__name__}::INFO::{base_edge} from {base_panel.name} reoriented in interface')
 
-                # Split the base edge accrordingly
+                # Split the base edge accordingly
                 subdiv = base_edge.subdivide_len([split_frac, 1 - split_frac])
 
                 inter.panel[in_id].edges.substitute(base_edge, subdiv)  # Update the panel
@@ -133,14 +127,7 @@ class StitchingRule():
                     subdiv.edges.reverse()
                     
                 # Update interface accordingly
-                inter.edges.substitute(base_edge, subdiv)  
-                inter.panel.insert(in_id, inter.panel[in_id]) 
-                inter.edges_flipping.insert(in_id, inter.edges_flipping[in_id]) 
-                for it in inter.ruffle:  # UPD ruffle indicators
-                    if it['sec'][0] > in_id:
-                        it['sec'][0] += 1
-                    if it['sec'][1] > in_id:
-                        it['sec'][1] += 1
+                inter.substitute(base_edge, subdiv, [inter.panel[in_id] for _ in range(len(subdiv))])
 
                 # TODO what if these edges are used in other interfaces? Do they need to be updated as well?
                 # next step

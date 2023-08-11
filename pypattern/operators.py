@@ -212,13 +212,10 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True,
     
     return all_new_edges, new_in_edges, int_edges
 
-    
-def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True,
-                         flip_target=False, tol=1e-4):
-    """ Insert edges of the target_shape into the given base_edge, starting
-        from offset
-        edges in target shape are rotated s.t. start -> end vertex vector is
-            aligned with the edge
+
+def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True, flip_target=False, tol=1e-2):
+    """ Insert edges of the target_shape into the given base_edge, starting from offset
+        edges in target shape are rotated s.t. start -> end vertex vector is aligned with the edge
 
         NOTE: for now the base_edge is treated as straight edge
 
@@ -246,7 +243,8 @@ def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True,
     target_shape_w = norm(shortcut)
     edge_len = base_edge.length()
 
-    if offset < target_shape_w / 2 - tol or offset > (edge_len - target_shape_w / 2) + tol:
+    if offset < target_shape_w / 2  - tol or offset > (edge_len - target_shape_w / 2) + tol:   
+        # NOTE: This is not a definitive check, and the cut might still not fit, depending on the base_edge curvature
         raise ValueError(f'Operators-CutingIntoEdge::Error::offset value is not within the base_edge length')
 
     # find starting vertex for insertion & place edges there
@@ -254,22 +252,32 @@ def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True,
     rel_offset = curve.ilength(offset)   # TODO methods of an Edge class? 
 
     # ----- OPTIMIZATION --- 
-    start = [0, 0]
+    start = [0.1, 0.1]
     out = minimize(
        _fit_location_edge, start, 
        args=(rel_offset, target_shape_w, curve),
        bounds=[(0, 1)])
+    shift = out.x  
 
+    # Error checks
     if flags.VERBOSE and not out.success:
-        print(f'Cut_corner::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
+        print(f'Cut_edge::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
 
-    if flags.VERBOSE and not close_enough(out.fun):
-        print(f'Cut_corner::Warning::projection on {base_edge} finished with fun={out.fun}')
-        print(out) 
+    if not close_enough(out.fun, tol=0.01):
+        if flags.VERBOSE:
+            print(out) 
+        raise RuntimeError(f'Cut_edge::ERROR::projection on {base_edge} finished with fun={out.fun}')
+    
+    if rel_offset + shift[0] > 1 + tol or (rel_offset - shift[1]) < 0 - tol:
+        # TODO Adjust offset if projection is breaking?
+        raise RuntimeError(
+            f'Cut_edge::ERROR::projection on {base_edge} is out of edge bounds: '
+            f'[{rel_offset - shift[1], rel_offset + shift[0]}].'
+            ' Check the offset value')
 
-    shift = out.x   
+    # All good -- integrate the target shape
     ins_point = c_to_np(curve.point(rel_offset - shift[1])) if (rel_offset - shift[1]) > tol else base_edge.start
-    fin_point = c_to_np(curve.point(rel_offset + shift[0])) if (rel_offset + shift[0]) < edge_len - tol else base_edge.end
+    fin_point = c_to_np(curve.point(rel_offset + shift[0])) if (rel_offset + shift[0]) < 1 - tol else base_edge.end
 
     # Align the shape with an edge
     # find rotation to apply on target shape 
@@ -287,26 +295,30 @@ def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True,
         # flip shape to match the requested direction
         new_edges.reflect(new_edges[0].start, new_edges[-1].end)  
 
-    # re-create edges and return 
+    # Integrate edges
     # NOTE: no need to create extra edges if the the shape is incerted right at the beggining or end of the edge
     base_edge_leftovers = EdgeSequence()
     start_id, end_id = 0, len(new_edges)
 
-    if offset > target_shape_w / 2 + tol:  
+    if ins_point is base_edge.start:
+        new_edges[0].start = base_edge.start   # Connect into the original edge
+    else:
         # TODO more elegant subroutine
         start_part = base_edge.subdivide_param([rel_offset - shift[1], 1 - (rel_offset - shift[1])])[0]
         start_part.end = new_edges[0].start
         new_edges.insert(0, start_part)
         base_edge_leftovers.append(new_edges[0])
         start_id = 1 
-    
-    if offset < (edge_len - target_shape_w / 2) - tol:
+
+    if fin_point is base_edge.end:
+        new_edges[-1].end = base_edge.end  # Connect into the original edge
+    else:
         end_part = base_edge.subdivide_param([rel_offset + shift[0], 1 - (rel_offset + shift[0])])[-1]
         end_part.start = new_edges[-1].end
         new_edges.append(end_part)
         base_edge_leftovers.append(new_edges[-1])
         end_id = -1
-    
+        
     return new_edges, new_edges[start_id:end_id], base_edge_leftovers
 
 
@@ -359,9 +371,9 @@ def _fit_location_edge(shift, location, width_target, curve):
         print('Location Progression: ', (_dist(point1, point2) - width_target)**2)
 
     # regularize points to be at the same distance from center
-    reg = (_dist(point1, pointc) - _dist(point2, pointc))**2
+    reg_symmetry = (_dist(point1, pointc) - _dist(point2, pointc))**2
 
-    return (_dist(point1, point2) - width_target)**2 + reg
+    return (_dist(point1, point2) - width_target)**2 + reg_symmetry
 
 
 # ANCHOR ----- Panel operations ------
@@ -413,7 +425,7 @@ def distribute_horisontally(component, n_copies, stride=20, name_tag='panel'):
 
 
 # ANCHOR ----- Sleeve support -----
-def even_armhole_openings(front_opening, back_opening):
+def even_armhole_openings(front_opening, back_opening, tol=1e-2):
     """
         Rearrange sleeve openings for front and back s.t. their projection 
         on vertical line is the same, while preserving the overall shape.
@@ -446,7 +458,9 @@ def even_armhole_openings(front_opening, back_opening):
             'Check the quality of supplied curves'
         )
     
-    if len(intersect_t) >= 1 and not close_enough(intersect_t[0][0], 0, tol=0.01):
+    if (len(intersect_t) >= 1 
+            and not (close_enough(intersect_t[0][0], 0, tol=tol)   # checking if they are already ok separated
+                     or close_enough(intersect_t[0][0], 1, tol=tol))):
         # The current separation is not satisfactory
         # Update the opening shapes
         intersect_t = intersect_t[0][0]
@@ -563,7 +577,7 @@ def curve_match_tangents(curve, target_tan0, target_tan1, return_as_edge=False):
         method='L-BFGS-B',
     )
     if not out.success:
-        print(f'Curve_match_tangents::Warning::optimization not successfull')
+        print(f'Curve_match_tangents::WARNING::optimization not successfull')
         if flags.VERBOSE:
             print(out)
 

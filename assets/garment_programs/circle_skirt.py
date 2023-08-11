@@ -183,7 +183,8 @@ class SkirtCircle(pyp.Component):
         right = target_edge.start[0] > target_edge.end[0]
 
         # Make a cut
-        cut_shape = pyp.EdgeSeqFactory.dart_shape(width, depth)
+        cut_shape = pyp.EdgeSeqFactory.dart_shape(width, depth=depth)
+
         new_edges, _, interf_edges = pyp.ops.cut_into_edge(
             cut_shape, target_edge, 
             offset=offset, 
@@ -191,4 +192,6 @@ class SkirtCircle(pyp.Component):
         )
 
         panel.edges.substitute(target_edge, new_edges)
-        panel.interfaces['bottom'].edges.substitute(target_edge, interf_edges)
+        panel.interfaces['bottom'].substitute(
+            target_edge, interf_edges,
+            [panel for _ in range(len(interf_edges))])

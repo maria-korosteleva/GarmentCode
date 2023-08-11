@@ -112,6 +112,15 @@ class Component(BaseComponent):
 
         return mins.min(axis=0), maxes.max(axis=0)
 
+    def is_self_intersecting(self):
+        """Check whether the component have self-intersections on panel level"""
+
+        for s in self._get_subcomponents():
+            if s.is_self_intersecting():
+                return True
+        return False
+
+    # Subcomponents
     def _get_subcomponents(self):
         """Unique set of subcomponents defined in the `self.subs` list or as
         attributes of the object"""

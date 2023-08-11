@@ -281,11 +281,25 @@ class EdgeSeqFactory:
         return dart_shape, dart_shape[1:-1], out_interface, dart_stitch
 
     @staticmethod
-    def dart_shape(width, depth):
-        """Shape of simple triangular dart"""
-        depth_perp = np.sqrt((depth**2 - (width / 2)**2))
+    def dart_shape(width, side_len=None, depth=None):
+        """Shape of simple triangular dart: 
+            specified by desired width and either the dart side length or depth
+        """
 
-        return EdgeSeqFactory.from_verts([0, 0], [width / 2, -depth_perp], [width, 0])
+        if side_len is None and depth is None:
+            raise ValueError(
+                'EdgeFactory::Error::dart shape is not fully specified.'
+                ' Add dart side length or dart perpendicular'
+            )
+
+        if depth is None:
+            if width / 2 > side_len: 
+                raise ValueError(
+                    f'EdgeFactory::Error::Requested dart shape (w={width}, side={side_len}) '
+                    'does not form a valid triangle')
+            depth = np.sqrt((side_len**2 - (width / 2)**2))
+
+        return EdgeSeqFactory.from_verts([0, 0], [width / 2, -depth], [width, 0])
 
     # --- SVG ----
     @staticmethod
@@ -351,7 +365,7 @@ class EdgeSeqFactory:
         )
 
         if not out.success:
-            print('Curve From Extreme::Warning::Optimization not successful')
+            print('Curve From Extreme::WARNING::Optimization not successful')
             if flags.VERBOSE:
                 print(out)
 
@@ -366,6 +380,12 @@ class EdgeSeqFactory:
         """
         rel_target = _abs_to_rel_2d(start, end, target)
 
+        if rel_target[0] > 1 or rel_target[0] < 0:
+            raise NotImplementedError(
+                f"EdgeFactory::Curve_by_3_points::ERROR::requested target point's projection "
+                "is outside of the base edge, which is not yet supported"
+            )
+
         # Initialization with a target point as control point
         # Ensures very smooth, minimal solution
         out = minimize(
@@ -375,7 +395,7 @@ class EdgeSeqFactory:
         )
 
         if not out.success:
-            print('Curve From Extreme::Warning::Optimization not successful')
+            print('Curve From Extreme::WARNING::Optimization not successful')
             if flags.VERBOSE:
                 print(out)
 
@@ -528,7 +548,6 @@ def _fit_pass_point(cp, target_location):
         * target_location -- target to fit extremum to -- 
             expressed in RELATIVE coordinates to your desired edge
     """
-
     control_bezier = np.array([
         [0, 0], 
         cp, 
@@ -538,8 +557,8 @@ def _fit_pass_point(cp, target_location):
     curve = svgpath.QuadraticBezier(*params)
 
     inter_segment = svgpath.Line(
-            target_location[0] + 1j * 1,
-            target_location[0] + 1j * 0
+            target_location[0] + 1j * target_location[1] * 2,
+            target_location[0] + 1j * (- target_location[1] * 2)
         )
 
     intersect_t = curve.intersect(inter_segment)
