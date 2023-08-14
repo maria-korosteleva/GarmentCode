@@ -11,7 +11,8 @@ from .panel import Panel
 from .edge import *
 from .connector import Stitches
 from .interface import Interface
-from .edge_factory import EdgeSeqFactory
+from .edge_factory import EdgeSeqFactory, CircleEdgeFactory, CurveEdgeFactory
+
 
 # Operations
 import pypattern.operators as ops

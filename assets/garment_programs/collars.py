@@ -57,7 +57,7 @@ def CurvyNeckHalf(depth, width, flip=False, **kwargs):
 def CircleArcNeckHalf(depth, width, angle=90, flip=False, **kwargs):
     """Collar with a side represented by a circle arc"""
     # 1/4 of a circle
-    edges = pyp.EdgeSequence(pyp.CircleEdge.from_points_angle(
+    edges = pyp.EdgeSequence(pyp.CircleEdgeFactory.from_points_angle(
         [0, 0], [width / 2,-depth], arc_angle=np.deg2rad(angle),
         right=(not flip)
     ))
@@ -69,7 +69,7 @@ def CircleNeckHalf(depth, width, **kwargs):
     """Collar that forms a perfect circle arc when halfs are stitched"""
 
     # Take a full desired arc and half it!
-    circle = pyp.CircleEdge.from_three_points(
+    circle = pyp.CircleEdgeFactory.from_three_points(
         [0, 0],
         [width, 0],
         [width / 2, -depth])
@@ -80,7 +80,7 @@ def CircleNeckHalf(depth, width, **kwargs):
 # # ------ Collars with panels ------
 
 class NoPanelsCollar(pyp.Component):
-    """Face collar class that only only forms the projected shapes """
+    """Face collar class that only forms the projected shapes """
     
     def __init__(self, name, body, design) -> None:
         super().__init__(name)

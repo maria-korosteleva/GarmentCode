@@ -16,10 +16,10 @@ def Sun(width, depth, n_rays=8, d_rays=5, **kwargs):
     """Sun-like mark"""
 
     # Outer arc
-    out_arc = pyp.CircleEdge.from_three_points(
+    out_arc = pyp.CircleEdgeFactory.from_three_points(
         [0, 0], [width, 0], [width/2, depth]
     )
-    in_arc = pyp.CircleEdge.from_three_points(
+    in_arc = pyp.CircleEdgeFactory.from_three_points(
         [d_rays, 0], [width - d_rays, 0], [width/2, depth - d_rays]
     )
     out_curve = out_arc.as_curve()

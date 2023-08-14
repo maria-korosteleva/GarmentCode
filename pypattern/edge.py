@@ -3,9 +3,11 @@ import numpy as np
 from numpy.linalg import norm
 import svgpathtools as svgpath  # https://github.com/mathandy/svgpathtools
 
-# Custom
-from .generic_utils import vector_angle, R2D, close_enough, c_to_list, list_to_c
-from .flags import VERBOSE
+from pypattern.generic_utils import R2D
+from pypattern.generic_utils import close_enough
+from pypattern.generic_utils import c_to_list
+from pypattern.generic_utils import list_to_c
+from pypattern.flags import VERBOSE
 
 
 class Edge:
@@ -342,6 +344,8 @@ class CircleEdge(Edge):
         # NOTE: subdivide_param() is the same as subdivide_len()
         # So parent implementation is ok
         # TODOLOW Implementation is very similar to CurveEdge param-based subdivision
+
+        from .edge_factory import CircleEdgeFactory  # TODO: ami - better solution?
         frac = [abs(f) for f in fractions]
         if not close_enough(fsum := sum(frac), 1, 1e-4):
             raise RuntimeError(f'Edge Subdivision::Error::fraction is incorrect. The sum {fsum} is not 1')
@@ -357,7 +361,7 @@ class CircleEdge(Edge):
         # Convert to CircleEdge objects
         subedges = EdgeSequence()
         for curve in subcurves:
-            subedges.append(CircleEdge.from_svg_curve(curve))
+            subedges.append(CircleEdgeFactory.from_svg_curve(curve))
         # Reference the first/last vertices correctly
         subedges[0].start = self.start
         subedges[-1].end = self.end
@@ -441,121 +445,6 @@ class CircleEdge(Edge):
         """Indicate if the arc sweeps the large or small angle"""
         return abs(self.control_y) > self._rel_radius()
 
-    # Factories
-    @staticmethod
-    def from_points_angle(start, end, arc_angle, right=True):
-        """Construct circle arc from two fixed points and an angle
-        
-            arc_angle: 
-            
-            NOTE: Might fail on angles close to 2pi
-        """
-        # Big or small arc
-        if arc_angle > np.pi:
-            arc_angle = 2*np.pi - arc_angle
-            to_sum = True
-        else: 
-            to_sum = False
-
-        radius = 1 / np.sin(arc_angle / 2) / 2
-        h = 1 / np.tan(arc_angle / 2) / 2
-
-        control_y = radius + h if to_sum else radius - h  # relative control point
-        control_y *= -1 if right else 1
-
-        return CircleEdge(start, end, cy=control_y)
-
-    @staticmethod
-    def from_points_radius(start, end, radius, large_arc=False, right=True):
-        """Construct circle arc relative representation
-            from two fixed points and an (absolute) radius
-        """
-        # Find circle center
-        str_dist = norm(np.asarray(end) - np.asarray(start))
-        center_r = np.sqrt(radius**2 - str_dist**2 / 4)
-
-        # Find the absolute value of Y
-        control_y = radius + center_r if large_arc else radius - center_r
-
-        # Convert to relative
-        control_y = control_y / str_dist
-
-        # Flip sight according to "right" parameter
-        control_y *= -1 if right else 1 
-
-        return CircleEdge(start, end, cy=control_y)
-
-    @staticmethod
-    def from_rad_length(rad, length, right=True, start=None):
-        """NOTE: if start vertex is not provided, both vertices will be created
-            to match desired radius and length
-        """
-        max_len = 2 * np.pi * rad
-
-        if length > max_len:
-            raise ValueError(f'CircleEdge::ERROR::Incorrect length for specified radius')
-
-        large_arc = length > max_len / 2
-        if large_arc:
-            length = max_len - length
-
-        w_half = rad * np.sin(length / rad / 2)
-
-        edge = CircleEdge.from_points_radius(
-            [-w_half, 0], [w_half, 0], 
-            radius=rad, 
-            large_arc=large_arc,
-            right=right
-        )
-
-        if start: 
-            edge.snap_to(start)
-            edge.start = start
-
-        return edge
-
-
-    @staticmethod
-    def from_svg_curve(seg: svgpath.Arc):
-        """Create object from svgpath arc"""
-        start, end = c_to_list(seg.start), c_to_list(seg.end)
-        # NOTE: assuming circular arc (same radius in both directoins)
-        radius = seg.radius.real
-
-        return CircleEdge.from_points_radius(
-            start, end, radius, seg.large_arc, seg.sweep
-        )
-
-    @staticmethod
-    def from_three_points(start, end, point_on_arc):
-        """Create a circle arc from 3 points (start, end and any point on an arc)
-        
-            NOTE: Control point specified in the same coord system as start and end
-            NOTE: points should not be on the same line
-        """
-
-        nstart, nend, npoint_on_arc = np.asarray(start), np.asarray(end), np.asarray(point_on_arc)
-
-        # https://stackoverflow.com/a/28910804
-        # Using complex numbers to calculate the center & radius
-        x, y, z = list_to_c([start, point_on_arc, end]) 
-        w = z - x
-        w /= y - x
-        c = (x - y)*(w - abs(w)**2)/2j/w.imag - x
-        # NOTE center = [c.real, c.imag]
-        rad = abs(c + x)
-
-        # Large/small arc
-        mid_dist = norm(npoint_on_arc - ((nstart + nend) / 2))
-
-        # Orientation
-        angle = vector_angle(npoint_on_arc - nstart, nend - nstart)  # +/-
-
-        return CircleEdge.from_points_radius(
-            start, end, radius=rad, 
-            large_arc=mid_dist > rad, right=angle > 0) 
-
-    # Finally
     def assembly(self):
         """Returns the dict-based representation of edges, 
             compatible with core -> BasePattern JSON (dict) 
@@ -642,6 +531,7 @@ class CurveEdge(Edge):
             splitting its curve parametrization or overall length according to 
             fractions while preserving the overall shape
         """
+        from .edge_factory import CurveEdgeFactory  # TODO: ami - better solution?
         curve = self.as_curve()
 
         # Sub-curves
@@ -660,7 +550,7 @@ class CurveEdge(Edge):
         # Convert to CurveEdge objects
         subedges = EdgeSequence()
         for curve in subcurves:
-            subedges.append(CurveEdge.from_svg_curve(curve))
+            subedges.append(CurveEdgeFactory.from_svg_curve(curve))
         # Reference the first/last vertices correctly
         subedges[0].start = self.start
         subedges[-1].end = self.end
@@ -710,7 +600,8 @@ class CurveEdge(Edge):
         return svgpath.QuadraticBezier(*params) if len(cp) < 2 else svgpath.CubicBezier(*params)
 
     def linearize(self):
-        """Return a linear approximation of an edge using the same vertex objects
+        """Return a linear approximation of an edge using the same vertex
+            objects
         
             # NOTE: Add extra vertex at an extremum of the edge
         """
@@ -738,28 +629,15 @@ class CurveEdge(Edge):
         poly = svgpath.bezier2polynomial(curve, return_poly1d=True)
         y = svgpath.imag(poly)
         dy = y.deriv()
-        y_extremizers = svgpath.polyroots(dy, realroots=True,
-                                          condition=lambda r: 0 < r < 1)
+        y_extremizers = svgpath.polyroots(
+            dy, realroots=True, condition=lambda r: 0 < r < 1)
 
         extreme_points = np.array(
-            [self._rel_to_abs_2d(c_to_list(curve.point(t))) for t in y_extremizers]
+            [self._rel_to_abs_2d(c_to_list(curve.point(t)))
+             for t in y_extremizers]
         )
 
         return extreme_points
-
-    @staticmethod
-    def from_svg_curve(seg):
-        """Create CurveEdge object from svgpath bezier objects"""
-
-        start, end = c_to_list(seg.start), c_to_list(seg.end)
-        if isinstance(seg, svgpath.QuadraticBezier):
-            cp = [c_to_list(seg.control)]
-        elif isinstance(seg, svgpath.CubicBezier):
-            cp = [c_to_list(seg.control1), c_to_list(seg.control2)]
-        else:
-            raise NotImplementedError(f'CurveEdge::Error::Incorrect curve type supplied {seg.type}')
-
-        return CurveEdge(start, end, cp, relative=False)
 
     # Assembly into serializable object
     def assembly(self):
@@ -788,40 +666,6 @@ class EdgeSequence:
         self.edges = []
         for arg in args:
             self.append(arg)
-
-    @staticmethod
-    def from_svg_path(path:svgpath.Path, dist_tol=0.05):
-        """Convert SVG path given as svgpathtool Path object to an EdgeSequence
-            
-        * dist_tol: tolerance for vertex closeness to be considered the same
-            vertex
-            NOTE: Assumes that the path can be chained
-        """
-        # Convert as is
-        edges = []
-        for seg in path._segments:
-            # skip segments of length zero
-            if close_enough(seg.length(), tol=dist_tol):
-                if VERBOSE:
-                    print('Skipped: ', seg)  
-                continue
-            if isinstance(seg, svgpath.Line):
-                edges.append(Edge(
-                    c_to_list(seg.start), c_to_list(seg.end)))
-            elif isinstance(seg, svgpath.Arc):
-                edges.append(CircleEdge.from_svg_curve(seg))
-            else:
-                edges.append(CurveEdge.from_svg_curve(seg))
-
-        # Chain the edges
-        if len(edges) > 1: 
-            for i in range(1, len(edges)):
-
-                if not all(close_enough(s, e, tol=dist_tol) for s, e in zip(edges[i].start, edges[i - 1].end)):
-                    raise ValueError('EdgeSequence::from_svg_path::input path is not chained')
-
-                edges[i].start = edges[i - 1].end
-        return EdgeSequence(*edges)
 
     # ANCHOR Properties
     def __getitem__(self, i):
@@ -898,7 +742,8 @@ class EdgeSequence:
     def shortcut(self):
         """Opening of an edge sequence as a vector
         
-            # NOTE May not reflect true shortcut if the egdes were flipped but the order remained
+            # NOTE May not reflect true shortcut if the egdes were flipped but
+                the order remained
         """
         return np.array([self[0].start, self[-1].end]) 
 

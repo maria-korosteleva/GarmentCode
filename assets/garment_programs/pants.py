@@ -108,11 +108,11 @@ class PantPanel(pyp.Panel):
 
         right_intersect = right_c.intersect(cutout)[0]
         right_cut = right_c.cropped(0, right_intersect[0])
-        new_right = pyp.CurveEdge.from_svg_curve(right_cut)
+        new_right = pyp.CurveEdgeFactory.from_svg_curve(right_cut)
 
         c_intersect = crotch_c.intersect(cutout)[0]
         c_cut = crotch_c.cropped(c_intersect[0], 1)
-        new_crotch = pyp.CurveEdge.from_svg_curve(c_cut)
+        new_crotch = pyp.CurveEdgeFactory.from_svg_curve(c_cut)
 
         new_top = pyp.Edge(new_right.end, new_crotch.start)
 

@@ -93,6 +93,7 @@ def c_to_list(num):
     else: 
         return [num.real, num.imag]
 
+
 def c_to_np(num):
     """Convert complex number to a numpy array of 2 elements
         Allows processing of lists of complex numbers

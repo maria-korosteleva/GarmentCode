@@ -2,7 +2,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 from external.pattern.wrappers import VisPattern
-from .base import BaseComponent
+from pypattern.base import BaseComponent
 
 
 class Component(BaseComponent):

@@ -1,7 +1,7 @@
 from typing import Any
 import numpy as np
 
-from .connector import Stitches
+from pypattern.connector import Stitches
 
 
 # TODO: ami - should we make them abstract?

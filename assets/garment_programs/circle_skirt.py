@@ -16,7 +16,7 @@ class CircleArcPanel(pyp.Panel):
         vert_len = length * np.cos(halfarc)
 
         # top
-        self.edges.append(pyp.CircleEdge.from_points_radius(
+        self.edges.append(pyp.CircleEdgeFactory.from_points_radius(
             [-dist_w/2, 0], [dist_w/2, 0], 
             radius=top_rad, large_arc=halfarc > np.pi / 2))
 
@@ -24,7 +24,7 @@ class CircleArcPanel(pyp.Panel):
             self.edges[-1].end, [dist_out / 2, -vert_len]))
         
         # Bottom
-        self.edges.append(pyp.CircleEdge.from_points_radius(
+        self.edges.append(pyp.CircleEdgeFactory.from_points_radius(
             self.edges[-1].end, [- dist_out / 2, -vert_len], 
             radius=top_rad + length,
             large_arc=halfarc > np.pi / 2, right=False))
