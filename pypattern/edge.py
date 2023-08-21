@@ -7,7 +7,6 @@ from pypattern.generic_utils import R2D
 from pypattern.generic_utils import close_enough
 from pypattern.generic_utils import c_to_list
 from pypattern.generic_utils import list_to_c
-from pypattern.flags import VERBOSE
 
 
 class Edge:
@@ -662,8 +661,9 @@ class EdgeSequence:
         starts from the same vertex that the previous edge ends with and
         allows building some typical edge sequences
     """
-    def __init__(self, *args) -> None:
+    def __init__(self, *args, verbose: bool = False) -> None:
         self.edges = []
+        self.verbose = verbose
         for arg in args:
             self.append(arg)
 
@@ -710,7 +710,7 @@ class EdgeSequence:
 
         for i in range(1, len(self.edges)):
             if self.edges[i].start is not self.edges[i-1].end:
-                if VERBOSE:
+                if self.verbose:
                     # This should be helpful to catch bugs
                     print(f'{self.__class__.__name__}::Warning!::Edge sequence is not properly chained')
                 return False

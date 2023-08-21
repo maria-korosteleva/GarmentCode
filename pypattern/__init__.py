@@ -17,7 +17,6 @@ from .edge_factory import EdgeSeqFactory, CircleEdgeFactory, CurveEdgeFactory
 # Operations
 import pypattern.operators as ops
 import pypattern.generic_utils as utils
-import pypattern.flags as flags
 
 # Parameter support
 from .params import *

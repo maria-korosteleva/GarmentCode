@@ -11,7 +11,6 @@ from pypattern.generic_utils import close_enough
 from pypattern.generic_utils import c_to_list
 from pypattern.generic_utils import list_to_c
 from pypattern.interface import Interface
-from pypattern import flags
 from pypattern.edge import CircleEdge
 
 
@@ -153,7 +152,7 @@ class EdgeSeqFactory:
     """
 
     @staticmethod
-    def from_svg_path(path: svgpath.Path, dist_tol=0.05):
+    def from_svg_path(path: svgpath.Path, dist_tol=0.05, verbose=False):
         """Convert SVG path given as svgpathtool Path object to an EdgeSequence
 
         * dist_tol: tolerance for vertex closeness to be considered the same
@@ -165,7 +164,7 @@ class EdgeSeqFactory:
         for seg in path._segments:
             # skip segments of length zero
             if close_enough(seg.length(), tol=dist_tol):
-                if flags.VERBOSE:
+                if verbose:
                     print('Skipped: ', seg)
                 continue
             if isinstance(seg, svgpath.Line):
@@ -186,7 +185,7 @@ class EdgeSeqFactory:
                         'EdgeSequence::from_svg_path::input path is not chained')
 
                 edges[i].start = edges[i - 1].end
-        return EdgeSequence(*edges)
+        return EdgeSequence(*edges, verbose=verbose)
 
     @staticmethod
     def from_verts(*verts, loop=False):
@@ -531,7 +530,7 @@ class EdgeSeqFactory:
     # DRAFT: previous fitting strategy 
     # TODO remove if all works!
     @staticmethod
-    def curve_from_extreme(start, end, target):
+    def curve_from_extreme(start, end, target, verbose=False):
         """Create (Quadratic) curve edge that 
             has an extreme point as close as possible to target_extreme
             with extreme point aligned with it
@@ -546,15 +545,15 @@ class EdgeSeqFactory:
 
         if not out.success:
             print('Curve From Extreme::WARNING::Optimization not successful')
-            if flags.VERBOSE:
+            if verbose:
                 print(out)
 
         cp = [rel_target[0], out.x.item()]
 
         return CurveEdge(start, end, control_points=[cp], relative=True)
-    
+
     @staticmethod
-    def curve_3_points(start, end, target):
+    def curve_3_points(start, end, target, verbose=False):
         """Create (Quadratic) curve edge between start and end that
             passes through the target point 
         """
@@ -576,7 +575,7 @@ class EdgeSeqFactory:
 
         if not out.success:
             print('Curve From Extreme::WARNING::Optimization not successful')
-            if flags.VERBOSE:
+            if verbose:
                 print(out)
 
         cp = out.x.tolist()

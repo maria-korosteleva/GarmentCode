@@ -1,31 +1,30 @@
-from copy import copy
-from numpy.linalg import norm
 import numpy as np
 
-# Custom
-from .edge_factory import EdgeSeqFactory
 from .interface import Interface
 from .generic_utils import close_enough
-from . import flags
 
-verbose=flags.VERBOSE
 
-class StitchingRule():
+class StitchingRule:
     """High-level stitching instructions connecting two component interfaces
     """
-    def __init__(self, int1:Interface, int2:Interface) -> None:
+    def __init__(self, int1: Interface, int2: Interface,
+                 verbose: bool = False) -> None:
         """
-        NOTE: When connecting interfaces with multiple edge count on both sides, 
+        NOTE: When connecting interfaces with multiple edge count on both
+            sides,
             1) Note that the edge sequences may change their structure.
-                Involved interfaces and corresponding patterns will be updated automatically
-                Use of the same interfaces in other stitches (creating 3+way stitch edge) may fail. 
-            2) The interfaces' edges are matched based on the provided order in the interface. 
+                Involved interfaces and corresponding patterns will be updated
+                    automatically
+                Use of the same interfaces in other stitches (creating 3+way
+                    stitch edge) may fail.
+            2) The interfaces' edges are matched based on the provided order
+                in the interface.
             The order can be controlled at the moment of interface creation
         """
         # TODO Explicitely support 3+way stitches
         self.int1 = int1
         self.int2 = int2
-
+        self.verbose = verbose
         if not self.isMatching():
             self.match_interfaces()
 
@@ -36,7 +35,6 @@ class StitchingRule():
             print(
                 f'{self.__class__.__name__}::Warning::Projected edges do not match in the stitch: \n'
                 f'{len1}: {int1}\n{len2}: {int2}')
-    
 
     def isMatching(self, tol=0.05):
         # if both the breakdown and relative partitioning is similar
@@ -45,11 +43,12 @@ class StitchingRule():
         rev_frac1.reverse()
 
         return (len(self.int1) == len(self.int2) 
-                and (np.allclose(self.int1.edges.fractions(), self.int2.edges.fractions(), atol=tol)
-                    or np.allclose(rev_frac1, self.int2.edges.fractions(), atol=tol)
+                and (np.allclose(self.int1.edges.fractions(),
+                                 self.int2.edges.fractions(), atol=tol)
+                     or np.allclose(rev_frac1, self.int2.edges.fractions(),
+                                    atol=tol)
                 )
         )
-
 
     def match_interfaces(self):
         """ Subdivide the interface edges on both sides s.t. they are matching 
@@ -61,7 +60,7 @@ class StitchingRule():
             # SIM specific
         """
 
-        # Eval the fractions corresponding to every segments in the interfaces
+        # Eval the fractions corresponding to every segment in the interfaces
         # Using projecting edges to match desired gather patterns
         frac1 = self.int1.projecting_edges(on_oriented=True).fractions()
         frac2 = self.int2.projecting_edges(on_oriented=True).fractions()
@@ -70,15 +69,17 @@ class StitchingRule():
         self._match_to_fractions(self.int1, frac2, tol=min(1e-3, min_frac / 2))
         self._match_to_fractions(self.int2, frac1, tol=min(1e-3, min_frac / 2))
 
-
     def _match_to_fractions(self, inter:Interface, to_add, tol=1e-3):
-        """Add the vertices at given location to the edge sequence in a given interface
+        """Add the vertices at given location to the edge sequence in a given
+            interface
 
         Parameters:
             * inter -- interface to modify
-            * to_add -- the faractions of segements to be projected onto the edge sequence in the inter
-            * tol -- the proximity of vertices when they can be regarded as the same vertex.  
-                    NOTE: tol should be shorter then the smallest expected edge
+            * to_add -- the faractions of segements to be projected onto the
+                edge sequence in the inter
+            * tol -- the proximity of vertices when they can be regarded as
+                the same vertex.
+                    NOTE: tol should be shorter than the smallest expected edge
         """
 
         # NOTE Edge sequences to subdivide might be disconnected 
@@ -114,7 +115,7 @@ class StitchingRule():
                 flip = inter.needsFlipping(in_id)
                 if flip: 
                     split_frac = 1 - split_frac
-                    if verbose:
+                    if self.verbose:
                         print(f'{self.__class__.__name__}::INFO::{base_edge} from {base_panel.name} reoriented in interface')
 
                 # Split the base edge accordingly
@@ -127,7 +128,9 @@ class StitchingRule():
                     subdiv.edges.reverse()
                     
                 # Update interface accordingly
-                inter.substitute(base_edge, subdiv, [inter.panel[in_id] for _ in range(len(subdiv))])
+                inter.substitute(
+                    base_edge, subdiv, [inter.panel[in_id]
+                                        for _ in range(len(subdiv))])
 
                 # TODO what if these edges are used in other interfaces? Do they need to be updated as well?
                 # next step
@@ -139,12 +142,11 @@ class StitchingRule():
 
         if add_id != len(to_add):
             raise RuntimeError(f'{self.__class__.__name__}::Error::Projection failed')
-                
 
     def assembly(self):
         """Produce a stitch that connects two interfaces
         """
-        if verbose and not self.isMatching():
+        if self.verbose and not self.isMatching():
             print(f'{self.__class__.__name__}::WARNING::Stitch sides do not match on assembly!!')
 
         stitches = []
@@ -164,7 +166,7 @@ class StitchingRule():
         return stitches
 
 
-class Stitches():
+class Stitches:
     """Describes a collection of StitchingRule objects
         Needed for more compact specification and evaluation of those rules
     """
