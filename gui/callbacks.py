@@ -607,7 +607,8 @@ class GUIState():
             
             if 'v' in design_params[param]:
                 if f'{pre_key}#{param}' in self.window.AllKeysDict:
-                    self.window[f'{pre_key}#{param}'].update(design_params[param]['v'])
+                    val = design_params[param]['v']
+                    self.window[f'{pre_key}#{param}'].update(val if val is not None else 'None')
                 elif verbose:
                     print(f'Info::{pre_key}#{param}: unknown element. Skipped')
             else:
