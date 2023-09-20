@@ -873,7 +873,7 @@ class EdgeSequence():
         return np.array([self[0].start, self[-1].end]) 
 
     def bbox(self):
-        """Evaluate 3D bounding box of the current panel"""
+        """Evaluate 2D bounding box of the current edge sequence"""
 
         # Using curve linearization for more accurate approximation of bbox
         lin_edges = EdgeSequence([e.linearize() for e in self.edges])
