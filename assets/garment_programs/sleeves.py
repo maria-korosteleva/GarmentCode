@@ -81,12 +81,14 @@ def ArmholeCurve(incl, width, angle, invert=True, **kwargs):
     shortcut = inv_edge.shortcut()
     rotated_direction = shortcut[-1] - shortcut[0]
     rotated_direction /= np.linalg.norm(rotated_direction)
+    mix_factor = 0.2
 
     # TODOLOW Remember relative curvature results and reuse them? (speed)
     fin_inv_edge = pyp.ops.curve_match_tangents(
         inv_edge.as_curve(), 
-        down_direction, 
-        rotated_direction, 
+        down_direction,  # Full opening is vertically aligned
+        (1 - mix_factor) * down_direction + mix_factor * rotated_direction,   # Lower tangent 
+                                                                              # Mixed with perpendicular 
         return_as_edge=True
     )
 
