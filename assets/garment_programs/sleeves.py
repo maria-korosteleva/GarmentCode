@@ -52,7 +52,7 @@ def ArmholeAngle(incl, width, angle, incl_coeff=0.2, w_coeff=0.2,  invert=True, 
     return edges, sleeve_edges
 
 
-def ArmholeCurve(incl, width, angle, invert=True, **kwargs):
+def ArmholeCurve(incl, width, angle, bottom_angle_mix=0, invert=True, **kwargs):
     """ Classic sleeve opening on Cubic Bezier curves
     """
     # Curvature as parameters?
@@ -81,14 +81,17 @@ def ArmholeCurve(incl, width, angle, invert=True, **kwargs):
     shortcut = inv_edge.shortcut()
     rotated_direction = shortcut[-1] - shortcut[0]
     rotated_direction /= np.linalg.norm(rotated_direction)
-    mix_factor = 0.2
+    left_direction = np.array([-1, 0]) 
+    mix_factor = bottom_angle_mix  
+                                                          
+    dir = (1 - mix_factor) * rotated_direction + (
+        mix_factor * down_direction if mix_factor > 0 else (- mix_factor * left_direction))
 
     # TODOLOW Remember relative curvature results and reuse them? (speed)
     fin_inv_edge = pyp.ops.curve_match_tangents(
         inv_edge.as_curve(), 
         down_direction,  # Full opening is vertically aligned
-        (1 - mix_factor) * down_direction + mix_factor * rotated_direction,   # Lower tangent 
-                                                                              # Mixed with perpendicular 
+        dir,
         return_as_edge=True
     )
 
@@ -188,15 +191,16 @@ class Sleeve(pyp.Component):
             angle=rest_angle, 
             incl_coeff=smoothing_coeff, 
             w_coeff=smoothing_coeff, 
-            invert=not design['sleeveless']['v']
+            invert=not design['sleeveless']['v'],
+            bottom_angle_mix=design['opening_dir_mix']['v']
         )
-        
         back_project, back_opening = armhole(
             inclination, connecting_width, 
             angle=rest_angle, 
             incl_coeff=smoothing_coeff, 
             w_coeff=smoothing_coeff,
-            invert=not design['sleeveless']['v']
+            invert=not design['sleeveless']['v'],
+            bottom_angle_mix=design['opening_dir_mix']['v']
         )
         
         self.interfaces = {

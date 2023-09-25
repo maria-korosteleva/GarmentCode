@@ -179,6 +179,12 @@ design:
       - 10
       - 50
       type: int
+    opening_dir_mix:  
+      v: 0  
+      range: 
+      - -0.9
+      - 0.8
+      type: float
     standing_shoulder:
       v: false
       range:
@@ -395,6 +401,12 @@ design:
         - 10
         - 50
         type: int
+      opening_dir_mix:  
+        v: 0  
+        range: 
+        - -0.9
+        - 0.8
+        type: float
       standing_shoulder:
         v: false
         range:

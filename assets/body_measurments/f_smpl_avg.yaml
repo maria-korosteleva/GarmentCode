@@ -9,7 +9,7 @@ body:
   armscye_depth: 15  # Nape of the Neck to armscye depth on the back
   shoulder_incl: 10  # degrees
 
-  arm_pose_angle: 80  # Degrees
+  arm_pose_angle: 30  # Degrees
 
   waist:  80  # 82 adjusted for 'dips'
   waist_line:  35  # Nape of the Neck to waist (on the back)

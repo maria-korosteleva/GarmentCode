@@ -129,6 +129,10 @@ design:
       v: 60  # deg   
       range: [10, 50]
       type: int
+    opening_dir_mix:   # Detailed control over shape of sleeve opening 
+      v: 0  # deg   
+      range: [-0.9, 1.4]
+      type: float
     
     # Shoulder shape
     standing_shoulder: 
@@ -280,6 +284,10 @@ design:
         v: 30  # deg   
         range: [10, 50]
         type: int
+      opening_dir_mix:
+        v: 0  # deg   
+        range: [-0.9, 1.4]
+        type: float
     
       # Shoulder shape
       standing_shoulder: 
