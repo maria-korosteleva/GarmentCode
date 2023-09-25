@@ -8,11 +8,11 @@
 design: 
   meta: 
     upper: 
-      v: null
+      v: FittedShirt
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
-      v: FittedWB
+      v: null
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
@@ -54,7 +54,7 @@ design:
 
   collar:
     f_collar: 
-      v: VNeckHalf
+      v: CircleNeckHalf
       range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf]
       type: select_null
     b_collar: 
@@ -91,7 +91,7 @@ design:
       type: bool
     component:
       style: 
-        v: SimpleLapel
+        v: null
         range: [Turtle, SimpleLapel]
         type: select_null
       depth: 
@@ -105,11 +105,11 @@ design:
      
   sleeve:
     sleeveless: 
-      v: True
+      v: False
       range: [True, False]
       type: bool
     armhole_shape: 
-      v: ArmholeSquare
+      v: ArmholeCurve
       range: [ArmholeSquare, ArmholeAngle, ArmholeCurve]
       type: select
     length: 
@@ -117,16 +117,16 @@ design:
       range: [3, 80]
       type: int
     connecting_width:
-      v: 0.2  
+      v: 0.50 
       range: [0, 1]   # 0 = armscue_depth, 1 = as big as the shirt side
       type: float
     end_width:
-      v: 0.8
+      v: 0.55
       range: [0.2, 2]   # 1 = same as arm opening
       type: float
 
     sleeve_angle:  # the rest angle of a sleeve, created at connected point
-      v: 10  # deg   
+      v: 60  # deg   
       range: [10, 50]
       type: int
     
@@ -142,7 +142,7 @@ design:
 
     # Ruffle
     connect_ruffle:
-      v: 1
+      v: 1.7
       range: [1, 2]
       type: float
     
