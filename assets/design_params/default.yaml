@@ -68,6 +68,7 @@ design:
       - SquareNeckHalf
       - TrapezoidNeckHalf
       - CircleArcNeckHalf
+      - Bezier2NeckHalf
       type: select
     b_collar:
       v: CircleNeckHalf
@@ -78,6 +79,7 @@ design:
       - SquareNeckHalf
       - TrapezoidNeckHalf
       - CircleArcNeckHalf
+      - Bezier2NeckHalf
       type: select
     width:
       v: 0.5
@@ -109,6 +111,30 @@ design:
       - 30
       - 180
       type: int
+    f_bezier_x: 
+      v: 0.5
+      range:
+      - 0.05
+      - 0.95
+      type: float
+    f_bezier_y: 
+      v: 0.3
+      range:
+      - 0.05
+      - 0.95
+      type: float
+    b_bezier_x: 
+      v: 0.5
+      range:
+      - 0.05
+      - 0.95
+      type: float
+    b_bezier_y: 
+      v: 0.3
+      range:
+      - 0.05
+      - 0.95
+      type: float
     f_flip_curve:
       v: false
       range:
@@ -290,6 +316,7 @@ design:
         - SquareNeckHalf
         - TrapezoidNeckHalf
         - CircleArcNeckHalf
+        - Bezier2NeckHalf
         type: select
       b_collar:
         v: CircleNeckHalf
@@ -300,6 +327,7 @@ design:
         - SquareNeckHalf
         - TrapezoidNeckHalf
         - CircleArcNeckHalf
+        - Bezier2NeckHalf
         type: select
       width:
         v: 0.5
@@ -331,6 +359,30 @@ design:
         - 30
         - 180
         type: int
+      f_bezier_x: 
+        v: 0.5
+        range:
+        - 0.05
+        - 0.95
+        type: float
+      f_bezier_y: 
+        v: 0.3
+        range:
+        - 0.05
+        - 0.95
+        type: float
+      b_bezier_x: 
+        v: 0.5
+        range:
+        - 0.05
+        - 0.95
+        type: float
+      b_bezier_y: 
+        v: 0.3
+        range:
+        - 0.05
+        - 0.95
+        type: float
       f_flip_curve:
         v: false
         range:

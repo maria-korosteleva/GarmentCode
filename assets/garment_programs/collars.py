@@ -18,7 +18,6 @@ def VNeckHalf(depth, width, **kwargs):
     
     return edges
 
-
 def SquareNeckHalf(depth, width, **kwargs):
     """Square design"""
 
@@ -41,8 +40,6 @@ def TrapezoidNeckHalf(depth, width, angle=90, **kwargs):
 
     return edges
 
-
-# Collar shapes withough extra panels
 def CurvyNeckHalf(depth, width, flip=False, **kwargs):
     """Testing Curvy Collar design"""
 
@@ -52,7 +49,6 @@ def CurvyNeckHalf(depth, width, flip=False, **kwargs):
         [[0.4, sign * 0.3], [0.8, sign * -0.3]]))
     
     return edges
-
 
 def CircleArcNeckHalf(depth, width, angle=90, flip=False, **kwargs):
     """Collar with a side represented by a circle arc"""
@@ -74,6 +70,15 @@ def CircleNeckHalf(depth, width, **kwargs):
 
     return pyp.EdgeSequence(subdiv[0])
 
+def Bezier2NeckHalf(depth, width, flip=False, x=0.5, y=0.3, **kwargs):
+    """2d degree Bezier curve as neckline"""
+
+    sign = 1 if flip else -1
+    edges = pyp.EdgeSequence(pyp.CurveEdge(
+        [0, 0], [width / 2,-depth], 
+        [[x, sign*y]]))
+    
+    return edges
 
 # # ------ Collars with panels ------
 
@@ -89,7 +94,9 @@ class NoPanelsCollar(pyp.Component):
             design['collar']['fc_depth']['v'],
             design['collar']['width']['v'], 
             angle=design['collar']['fc_angle']['v'], 
-            flip=design['collar']['f_flip_curve']['v'])
+            flip=design['collar']['f_flip_curve']['v'],
+            x=design['collar']['f_bezier_x']['v'],
+            y=design['collar']['f_bezier_y']['v'],)
 
         # Back
         collar_type = globals()[design['collar']['b_collar']['v']]
@@ -97,7 +104,10 @@ class NoPanelsCollar(pyp.Component):
             design['collar']['bc_depth']['v'], 
             design['collar']['width']['v'], 
             angle=design['collar']['bc_angle']['v'],
-            flip=design['collar']['b_flip_curve']['v'])
+            flip=design['collar']['b_flip_curve']['v'],
+            x=design['collar']['b_bezier_x']['v'],
+            y=design['collar']['b_bezier_y']['v'],
+            )
         
         self.interfaces = {
             'front_proj': pyp.Interface(self, f_collar),
