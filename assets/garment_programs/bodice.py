@@ -80,7 +80,7 @@ class BodiceFrontHalf(pyp.Panel):
             'shoulder_corner': pyp.Interface(self, [self.edges[-3], self.edges[-2]]),
             'collar_corner': pyp.Interface(self, [self.edges[-2], self.edges[-1]])
         }
-
+  
         # default placement
         self.translate_by([0, body['height'] - body['head_l'] - max_len, 0])
 

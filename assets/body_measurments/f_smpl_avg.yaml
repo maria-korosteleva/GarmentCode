@@ -22,6 +22,7 @@ body:
   back_width:  40  # 32 + 2 * between-size
 
   hips: 107  
+  hip_back_width: 55  # DRAFT Tentative number  # TODO Add to all measurements
   hips_line: 18    # From the waist
   bum_points: 18.5
   crotch_hip_diff: 14   # NOTE vertical projection of the level

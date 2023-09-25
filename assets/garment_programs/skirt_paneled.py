@@ -88,7 +88,8 @@ class FittedSkirtPanel(pyp.Panel):
         # amount of extra fabric
         w_diff = hips - adj_waist   # Assume its positive since waist is smaller then hips
         # We distribute w_diff among the side angle and a dart 
-        hw_shift = w_diff / 6
+        # TODO Add as a body parameter
+        hw_shift = w_diff / 2  # DRAFT w_diff / 6  
 
         # Adjust the bottom edge to the desired angle
         angle_shift = np.tan(np.deg2rad(low_angle)) * low_width
@@ -200,13 +201,17 @@ class PencilSkirt(pyp.Component):
         else:
             style_shape_l, style_shape_r = None, None
 
+        # DRAFT 
+        front_frac = (body['bust'] - body['back_width']) / 2 / body['bust'] 
+
+        # TODO distribute flare accordingly
         self.front = FittedSkirtPanel(
             f'skirt_f',   
-            body['waist'] / 4, 
-            body['hips'] / 4, 
+            body['waist'] / 4,   # DRAFT body['waist'] * front_frac, 
+            (body['hips'] - body['hip_back_width']) / 2,  # DRAFT body['hips'] / 4, 
             body['hips_line'],
             length,
-            low_width=design['flare']['v'] * body['hips'] / 4,
+            low_width=design['flare']['v'] * (body['hips'] - body['hip_back_width']) / 2,  # DRAFT body['hips'] / 4,  
             rise=design['rise']['v'],
             low_angle=design['low_angle']['v'],
             dart_position=body['bust_points'] / 2,
@@ -216,11 +221,11 @@ class PencilSkirt(pyp.Component):
         ).translate_to([0, body['waist_level'], 25])
         self.back = FittedSkirtPanel(
             f'skirt_b', 
-            body['waist'] / 4, 
-            body['hips'] / 4,
+            body['waist'] / 4,   # DRAFT body['waist'] * (0.5 - front_frac),   
+            body['hip_back_width'] / 2,  # DRAFT body['hips'] / 4,
             body['hips_line'],
             length,
-            low_width=design['flare']['v'] * body['hips'] / 4,
+            low_width=design['flare']['v'] * body['hip_back_width'] / 2,  # DRAFT  * body['hips'] / 4,
             rise=design['rise']['v'],
             low_angle=design['low_angle']['v'],
             dart_position=body['bum_points'] / 2,
