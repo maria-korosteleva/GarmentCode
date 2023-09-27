@@ -59,7 +59,9 @@ class VisPattern(core.ParametrizedPattern):
         log_dir = super().serialize(path, to_subfolder, tag=tag, empty_ok=empty_ok)
         if len(self.panel_order()) == 0:  # If we are still here, but pattern is empty, don't generate an image
             return log_dir
-        
+
+        if tag:
+            tag = '_' + tag
         svg_file = os.path.join(log_dir, (self.name + tag + '_pattern.svg'))
         png_file = os.path.join(log_dir, (self.name + tag + '_pattern.png'))
         png_3d_file = os.path.join(log_dir, (self.name + tag + '_3d_pattern.png'))
@@ -149,7 +151,7 @@ class VisPattern(core.ParametrizedPattern):
             if ('curvature' in edge):
                 if isinstance(edge['curvature'], list) or edge['curvature']['type'] == 'quadratic':  # FIXME placeholder for old curves
                     control_scale = self._flip_y(edge['curvature'] if isinstance(edge['curvature'], list) else edge['curvature']['params'][0])
-                    control_point = self._control_to_abs_coord(
+                    control_point = self.control_to_abs_coord(
                         start, end, control_scale)
                     segs.append(svgpath.QuadraticBezier(*list_to_c([start, control_point, end])))
                 elif edge['curvature']['type'] == 'circle':  # Assuming circle
@@ -171,7 +173,7 @@ class VisPattern(core.ParametrizedPattern):
                     cps = []
                     for p in edge['curvature']['params']:
                         control_scale = self._flip_y(p)
-                        control_point = self._control_to_abs_coord(
+                        control_point = self.control_to_abs_coord(
                             start, end, control_scale)
                         cps.append(control_point)
 

@@ -92,13 +92,37 @@ class Edge():
 
         return svgpath.Line(*params)
 
-    def linearize(self):
+    def linearize(self, n_verts_inside = 0):
         """Return a linear approximation of an edge using the same vertex objects
         
-            # NOTE: for the linear edge it is an egde
+            # NOTE: for the linear edge it is an egde if n_verts_inside = 0,
+            # else n_verts_inside = number of vertices (excluding the start
+            and end vertices) used to create a linearization of the edge
         """
 
-        return self
+        if not n_verts_inside:
+            return self
+        else:
+            n = n_verts_inside + 1
+            tvals = np.linspace(0, 1, n, endpoint=False)[1:]
+
+            curve = self.as_curve()
+            edge_verts = [c_to_list(curve.point(t)) for t in tvals]
+            seq = self.to_edge_sequence(edge_verts)
+
+            return seq
+
+    def to_edge_sequence(self, edge_verts):
+        """
+        Returns the edge as a sequence of STRAIGHT edges based on points sampled on the edge
+        between self.start and self.end (edge_verts).
+        """
+        seq = EdgeSequence(Edge(self.start, edge_verts[0]))
+        for i in range(1, len(edge_verts)):
+            seq.append(Edge(seq[-1].end, edge_verts[i]))
+        seq.append(Edge(seq[-1].end, self.end))
+
+        return seq
 
     # Support for relative coordinate system
     def _rel_to_abs_2d(self, point):
@@ -373,15 +397,20 @@ class CircleEdge(Edge):
             self.control_y < 0
         )
 
-    def linearize(self):
+    def linearize(self, n_verts_inside = 9):
         """Return a linear approximation of an edge using the same vertex objects
-        
-            # NOTE: Add extra vertex at an extremum of the edge
+           NOTE: n_verts_inside = number of vertices (excluding the start
+            and end vertices) used to create a linearization of the edge
         """
-        midpoint = self.midpoint()
-        edges = [Edge(self.start, midpoint), Edge(midpoint, self.end)]
+        n = n_verts_inside + 1
+        tvals = np.linspace(0, 1, n, endpoint=False)[1:]
 
-        return EdgeSequence(*edges)
+        curve = self.as_curve()
+        edge_verts = [c_to_list(curve.point(t)) for t in tvals]
+        seq = self.to_edge_sequence(edge_verts)
+
+        return seq
+
 
     # NOTE: The following values are calculated at runtime to allow 
     # changes to control point after the edge definition
@@ -679,24 +708,26 @@ class CurveEdge(Edge):
 
         return svgpath.QuadraticBezier(*params) if len(cp) < 2 else svgpath.CubicBezier(*params)
 
-    def linearize(self):
+    def linearize(self, n_verts_inside = 9):
         """Return a linear approximation of an edge using the same vertex objects
-        
-            # NOTE: Add extra vertex at an extremum of the edge
+           NOTE: n_verts_inside = number of vertices (excluding the start
+           and end vertices) used to create a linearization of the edge
+
         """
         # TODO Use linearization for more correct 3D visualization 
         # and self-intersection estimation
-        extreme_points = self._extreme_points()
 
-        if len(extreme_points):
-            seq = EdgeSequence(Edge(self.start, extreme_points[0]))
-            for i in range(1, len(extreme_points)):
-                seq.append(Edge(seq[-1].end, extreme_points[i]))
-            seq.append(Edge(seq[-1].end, self.end))
+        n = n_verts_inside + 1
+        tvals_init = np.linspace(0, 1, n, endpoint=False)[1:]
 
-            return seq
-        else:
-            return Edge(self.start, self.end)
+        curve = self.as_curve(absolute=False)
+        curve_lengths = tvals_init * curve.length()
+        tvals = [curve.ilength(c_len) for c_len in curve_lengths]
+
+        edge_verts = [self._rel_to_abs_2d(c_to_list(curve.point(t))) for t in tvals]
+        seq = self.to_edge_sequence(edge_verts)
+
+        return seq
 
     def _extreme_points(self):
         """Return extreme points (on Y) of the current edge
@@ -873,15 +904,38 @@ class EdgeSequence():
         return np.array([self[0].start, self[-1].end]) 
 
     def bbox(self):
-        """Evaluate 2D bounding box of the current edge sequence"""
+        """
+        This function evaluates the 2D bounding box of the current panel and returns the panel vertices which are
+        located on the bounding box (b_points).
+        Output:
+            * bbox (list): [min_x, max_x, min_y, max_y] of verts_2d
+            * b_points (list): list of 2D vertices representing the b_points, i.e.,
+              the vertices of verts_2d located on the bounding box
+        """
+        # Take linear version of the edges
+        # To correctly process edges with extreme curvatures
 
-        # Using curve linearization for more accurate approximation of bbox
         lin_edges = EdgeSequence([e.linearize() for e in self.edges])
         verts_2d = np.asarray(lin_edges.verts())
+        mi = verts_2d.min(axis=0)
+        ma = verts_2d.max(axis=0)
+        xs = [mi[0],ma[0]]
+        ys = [mi[1],ma[1]]
+        #return points on bounding box
+        b_points = []
+        for v in verts_2d:
+            if v[0] in xs or v[1] in ys:
+                b_points.append(v)
+        if len(b_points) == 2:
+            if not any(np.array_equal(arr, mi) for arr in b_points):
+                b_points = [b_points[0], mi, b_points[1]]
+            else:
+                p = [mi[0],ma[1]]
+                b_points = [b_points[0],p,b_points[1]]
 
-        bbox = (verts_2d.min(axis=0), verts_2d.max(axis=0))
+        bbox = [mi[0], ma[0], mi[1], ma[1]]
 
-        return bbox[0][0], bbox[1][0], bbox[0][1], bbox[1][1]
+        return bbox, b_points
 
     # ANCHOR Modifiers
     # All modifiers return self object to allow chaining

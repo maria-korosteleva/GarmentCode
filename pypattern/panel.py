@@ -196,7 +196,7 @@ class Panel(BaseComponent):
         if np.dot(norm_dr, self.translation) < 0: 
             # Swap if wrong  
             self.edges.reverse()
-        
+
         return self
 
     def mirror(self, axis=[0, 1]):
@@ -279,13 +279,15 @@ class Panel(BaseComponent):
         return spattern
 
     # ANCHOR utils
-    def _center_2D(self):
+    def _center_2D(self, n_verts_inside = 3):
         """Approximate Location of the panel center. 
-            
-            NOTE: uses crude linear approximation for curved edges
+
+            NOTE: uses crude linear approximation for curved edges,
+            n_verts_inside = number of vertices (excluding the start
+            and end vertices) used to create a linearization of an edge
         """
         # NOTE: assuming that edges are organized in a loop and share vertices
-        lin_edges = EdgeSequence([e.linearize() for e in self.edges])
+        lin_edges = EdgeSequence([e.linearize(n_verts_inside) for e in self.edges])
         verts = lin_edges.verts()
 
         return np.mean(verts, axis=0)
@@ -301,31 +303,29 @@ class Panel(BaseComponent):
 
         return point_3d
 
+
     def norm(self):
-        """Normal direction for the current panel"""
-
-        # Take linear version of the edges
-        # To correctly process edges with extreme curvatures
-        lin_edges = EdgeSequence([e.linearize() for e in self.edges])
-
-        # center of mass
-        verts = lin_edges.verts()
-
-        center = np.mean(verts, axis=0)
-        center_3d = self.point_to_3D(center)
+        """Normal direction for the current panel using bounding box"""
 
         # To make norm evaluation work for non-convex panels
-        # Evalute norm candidates for all edges and then weight them. 
-        # The dominant norm direction should be the correct one 
-        norms = []
-        for e in lin_edges:
-            vert_0 = self.point_to_3D(e.start)
-            vert_1 = self.point_to_3D(e.end)
+        # Determine points located on bounding box (b_verts_2d),
+        # compute norm of consecutive b_verts_3d and the b_verts_3d mean (b_center_3d),
+        # then weight the norms.
+        # The dominant norm direction should be the correct one
 
+        _, b_verts_2d = self.edges.bbox()
+        b_verts_3d = [self.point_to_3D(bv_2d) for bv_2d in b_verts_2d]
+        b_center_3d = np.mean((b_verts_3d), axis=0)
+
+        norms = []
+        num_b_verts_3d = len(b_verts_3d)
+        for i in range(num_b_verts_3d):
+            vert_0 = b_verts_3d[i]
+            vert_1 = b_verts_3d[(i + 1) % num_b_verts_3d]
             # Pylance + NP error for unreachanble code -- see https://github.com/numpy/numpy/issues/22146
             # Works ok for numpy 1.23.4+
-            norm = np.cross(vert_1 - vert_0, center_3d - vert_0)
-            norm /= np.linalg.norm(norm)  # TODOLOW -- what if we don't add normalization? 
+            norm = np.cross(vert_0 - b_center_3d, vert_1 - b_center_3d)
+            norm /= np.linalg.norm(norm)
             norms.append(norm)
 
         # Current norm direction
@@ -336,7 +336,15 @@ class Panel(BaseComponent):
             # NOTE: sometimes happens on thin arcs
             avg_norm = norms[0]   
             print(f'{self.__class__.__name__}::{self.name}::WARNING::Norm evaluation failed, assigning norm based on the first edge')
-        return avg_norm / np.linalg.norm(avg_norm)
+
+        final_norm = avg_norm / np.linalg.norm(avg_norm)
+
+        # solve float errors
+        for i, ni in enumerate(final_norm):
+            if np.isclose([ni], [0.0]):
+                final_norm[i] = 0.0
+
+        return final_norm
 
     def bbox3D(self):
         """Evaluate 3D bounding box of the current panel"""

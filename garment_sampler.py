@@ -111,8 +111,8 @@ def generate(path, props, verbose=False):
                 # Save as json file
                 folder = pattern.serialize(
                     samples_folder, 
-                    tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
-                    to_subfolder=True, 
+                    tag=datetime.now().strftime("%y%m%d-%H-%M-%S"),
+                    to_subfolder=True,
                     with_3d=True, with_text=False, view_ids=False)
 
                 body.save(folder)
