@@ -105,10 +105,25 @@ class FittedSkirtPanel(pyp.Panel):
         angle_shift = np.tan(np.deg2rad(low_angle)) * low_width
 
         # Edges definitions
-        right_bottom = pyp.Edge(    # TODO different for the flare skirts
+        # DRAFT right_bottom = pyp.Edge(    # TODO different for the flare skirts
+        #     [hips - low_width, angle_shift], 
+        #     [0, length]
+        # )
+        # right_bottom = pyp.esf.curve_from_tangents(    # TODO different for the flare skirts
+        #     [hips - low_width, angle_shift], 
+        #     [0, length],
+        #     target_tan1=np.array([0, 1])
+        # )
+        # # DEBUG
+        # print('cp: ', right_bottom.control_points)
+
+        # TODO Change initialization on demand to adjust the shape?
+        right_bottom = pyp.CurveEdge(    # TODO different for the flare skirts
             [hips - low_width, angle_shift], 
-            [0, length]
+            [0, length],
+            control_points=[[0.75, 0.06]]   # DRAFT Optimized values [[0.495, 0.081]]
         )
+
         right_top = pyp.esf.curve_from_tangents(
             right_bottom.end,    
             [hw_shift, length + adj_hips_depth],
@@ -123,9 +138,14 @@ class FittedSkirtPanel(pyp.Panel):
             [hips * 2, length],
             target_tan1=np.array([0, -1])
         )
-        left_bottom = pyp.Edge(    # TODO different for the flare skirts
+        # DRAFT left_bottom = pyp.Edge(    # TODO different for the flare skirts
+        #     left_top.end, 
+        #     [hips + low_width, angle_shift], 
+        # )
+        left_bottom = pyp.esf.curve_from_tangents(    # TODO different for the flare skirts
             left_top.end, 
             [hips + low_width, angle_shift], 
+            target_tan0=np.array([0, -1])
         )
         
         left = pyp.EdgeSequence(left_top, left_bottom)
