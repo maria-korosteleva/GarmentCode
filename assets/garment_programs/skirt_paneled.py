@@ -205,14 +205,8 @@ class PencilSkirt(pyp.Component):
                 depth=depth, n_rays=6, d_rays=depth*0.2,
                 filename=design['style_side_file']['v']
             )
-
         else:
             style_shape_l, style_shape_r = None, None
-
-        # DRAFT 
-        front_frac = (body['bust'] - body['back_width']) / 2 / body['bust'] 
-
-        # TODO distribute flare accordingly
 
         # DEBUG
         print('Front')
@@ -221,7 +215,7 @@ class PencilSkirt(pyp.Component):
             f'skirt_f',   
             body,
             design,
-            body['waist'] / 4,   # DRAFT body['waist'] * front_frac, 
+            (body['waist'] - body['waist_back_width']) / 2,   # DRAFT body['waist'] * front_frac, 
             (body['hips'] - body['hip_back_width']) / 2,  # DRAFT body['hips'] / 4, 
             dart_position=body['bust_points'] / 2,
             dart_frac=1.35,  # Diff for front and back
@@ -236,10 +230,10 @@ class PencilSkirt(pyp.Component):
             f'skirt_b', 
             body,
             design,
-            body['waist'] / 4,   # DRAFT body['waist'] * (0.5 - front_frac),   
+            body['waist_back_width'] / 2,   # DRAFT body['waist'] / 4,   # DRAFT body['waist'] * (0.5 - front_frac),   
             body['hip_back_width'] / 2,  # DRAFT body['hips'] / 4,
             dart_position=body['bum_points'] / 2,
-            dart_frac=1.1,   
+            dart_frac=0.85,   
             cut=design['back_cut']['v'], 
             side_cut=style_shape_r, 
             flip_side_cut=False,
