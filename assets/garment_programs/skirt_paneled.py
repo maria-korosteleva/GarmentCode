@@ -67,18 +67,29 @@ class ThinSkirtPanel(pyp.Panel):
 
 # TODOLOW front more narrow then the back
 class FittedSkirtPanel(pyp.Panel):
-    """Fitted panel for a pencil skirt
-    """
+    """Fitted panel for a pencil skirt"""
     def __init__(
-        self, name, waist, hips,   # TODO Half measurement instead of a quarter
-        hips_depth, length, low_width, rise=1,
-        low_angle=0,
-        dart_position=None,  dart_frac=0.5,
-        cut=0,
-        side_cut=None, flip_side_cut=False) -> None:
-        # TODOLOW Only the parameters that differ between front/back panels?
+            self, name, body, design, 
+            waist, hips,   # TODO Half measurement instead of a quarter   
+            dart_position=None, 
+            dart_frac=0.5,
+            cut=0,
+            side_cut=None, flip_side_cut=False) -> None:
+        """ Fitted panel for a pencil skirt
+
+            Body/design values that differ between front and back panels are supplied as parameters, 
+            the rest are taken from the body and design dictionaries
+        """
         super().__init__(name)
 
+        # Shared params
+        hips_depth = body['hips_line']
+        length = design['length']['v'] * body['leg_length']  # Depends on leg length
+        rise = design['rise']['v']
+        low_angle = design['low_angle']['v']
+        hip_side_incl = np.deg2rad(body['hip_inclination'])
+        low_width = body['hips'] * (design['flare']['v'] - 1) / 4  + hips  # Distribute the difference equally 
+                                                                           # between front and back
         # adjust for a rise
         adj_hips_depth = rise * hips_depth
         adj_waist = pyp.utils.lin_interpolation(hips, waist, rise)
@@ -88,8 +99,7 @@ class FittedSkirtPanel(pyp.Panel):
         # amount of extra fabric
         w_diff = hips - adj_waist   # Assume its positive since waist is smaller then hips
         # We distribute w_diff among the side angle and a dart 
-        # TODO Add as a body parameter
-        hw_shift = w_diff / 2  # DRAFT w_diff / 6  
+        hw_shift = np.tan(hip_side_incl) * adj_hips_depth  # DRAFT w_diff / 2  # DRAFT w_diff / 6  
 
         # Adjust the bottom edge to the desired angle
         angle_shift = np.tan(np.deg2rad(low_angle)) * low_width
@@ -105,6 +115,7 @@ class FittedSkirtPanel(pyp.Panel):
             [hips + low_width, -angle_shift],
             target=[hips * 2, length]
         )
+
         self.edges = pyp.EdgeSequence(right, top, left).close_loop()
         bottom = self.edges[-1]
 
@@ -185,9 +196,6 @@ class PencilSkirt(pyp.Component):
         design = design['pencil-skirt']
         self.design = design  # Make accessible from outside
 
-        # Depends on leg length
-        length = design['length']['v'] * body['leg_length']
-
         # condition
         if design['style_side_cut']['v'] is not None:
             depth = 0.7 * (body['hips'] / 4 - body['bust_points'] / 2)
@@ -205,29 +213,31 @@ class PencilSkirt(pyp.Component):
         front_frac = (body['bust'] - body['back_width']) / 2 / body['bust'] 
 
         # TODO distribute flare accordingly
+
+        # DEBUG
+        print('Front')
+
         self.front = FittedSkirtPanel(
             f'skirt_f',   
+            body,
+            design,
             body['waist'] / 4,   # DRAFT body['waist'] * front_frac, 
             (body['hips'] - body['hip_back_width']) / 2,  # DRAFT body['hips'] / 4, 
-            body['hips_line'],
-            length,
-            low_width=design['flare']['v'] * (body['hips'] - body['hip_back_width']) / 2,  # DRAFT body['hips'] / 4,  
-            rise=design['rise']['v'],
-            low_angle=design['low_angle']['v'],
             dart_position=body['bust_points'] / 2,
             dart_frac=1.35,  # Diff for front and back
             cut=design['front_cut']['v'], 
             side_cut=style_shape_l
         ).translate_to([0, body['waist_level'], 25])
+
+        # DEBUG
+        print('Back')
+
         self.back = FittedSkirtPanel(
             f'skirt_b', 
+            body,
+            design,
             body['waist'] / 4,   # DRAFT body['waist'] * (0.5 - front_frac),   
             body['hip_back_width'] / 2,  # DRAFT body['hips'] / 4,
-            body['hips_line'],
-            length,
-            low_width=design['flare']['v'] * body['hip_back_width'] / 2,  # DRAFT  * body['hips'] / 4,
-            rise=design['rise']['v'],
-            low_angle=design['low_angle']['v'],
             dart_position=body['bum_points'] / 2,
             dart_frac=1.1,   
             cut=design['back_cut']['v'], 
