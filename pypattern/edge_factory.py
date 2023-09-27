@@ -385,6 +385,39 @@ class EdgeSeqFactory:
     @staticmethod
     def curve_from_len_tangents(start, end, cp, target_len, target_tan0, target_tan1):
         """Find a curve with given relative curvature parameters"""
+        pass
+
+    @staticmethod
+    def curve_from_tangents(start, end, target_tan0=None, target_tan1=None):
+        """Create Quadratic Bezier curve connecting given points with the target tangents
+            (both or any of the two can be specified)
+        """
+
+        if target_tan0 is not None:
+            target_tan0 = _abs_to_rel_2d_vector(start, end, target_tan0)
+            target_tan0 /= norm(target_tan0)
+        
+        if target_tan1 is not None:
+            target_tan1 = _abs_to_rel_2d_vector(start, end, target_tan1)
+            target_tan1 /= norm(target_tan1)
+        
+        # Initialization with a target point as control point
+        # Ensures very smooth, minimal solution
+        out = minimize(
+            _fit_tangents, 
+            [0.5, 0],
+            args=(target_tan0, target_tan1)
+        )
+
+        if not out.success:
+            print('Curve From Tangents::WARNING::Optimization not successful')
+            if flags.VERBOSE:
+                print(out)
+
+        cp = out.x.tolist()
+
+        return CurveEdge(start, end, control_points=[cp], relative=True)
+
 
 # Utils
 # TODOLOW Move to generic_utils
@@ -422,6 +455,28 @@ def _abs_to_rel_2d(start, end, point):
 
     # Distinguish left&right curvature
     converted[1] *= -np.sign(np.cross(point_vec, edge)) 
+    
+    return np.asarray(converted)
+
+def _abs_to_rel_2d_vector(start, end, vec):
+    """Convert control points coordinates from absolute to relative"""
+    # TODOLOW It's in the edge class?
+    start, end = np.asarray(start), np.asarray(end)
+    edge = end - start
+    edge_len = norm(edge)
+
+    converted = [None, None]
+    # X
+    # project vec on edge by dot product properties
+    projected_len = edge.dot(vec) / edge_len 
+    converted[0] = projected_len / edge_len
+    # Y
+    control_projected = edge * converted[0]
+    vert_comp = vec - control_projected  
+    converted[1] = norm(vert_comp) / edge_len
+
+    # Distinguish left&right curvature
+    converted[1] *= -np.sign(np.cross(vec, edge)) 
     
     return np.asarray(converted)
 
@@ -512,9 +567,9 @@ def _fit_y_extremum(cp_y, target_location):
 
 def _fit_pass_point(cp, target_location):
     """ Fit the control point of basic [[0, 0] -> [1, 0]] Quadratic Bezier s.t. 
-        it's expremum is close to target location.
+        it passes through the target location.
 
-        * cp_y - initial guess for Quadratic Bezier control point y coordinate
+        * cp - initial guess for Quadratic Bezier control point coordinates
             (relative to the edge)
         * target_location -- target to fit extremum to -- 
             expressed in RELATIVE coordinates to your desired edge
@@ -538,6 +593,38 @@ def _fit_pass_point(cp, target_location):
     diff = abs(point - list_to_c(target_location))
 
     return diff**2 
+
+def _fit_tangents(cp, target_tangent_start, target_tangent_end, reg_strength=0.01):
+    """ Fit the control point of basic [[0, 0] -> [1, 0]] Quadratic Bezier s.t. 
+        it's expremum is close to target location.
+
+        * cp - initial guess for Quadratic Bezier control point coordinates
+            (relative to the edge)
+        * target_location -- target to fit extremum to -- 
+            expressed in RELATIVE coordinates to your desired edge
+    """
+    control_bezier = np.array([
+        [0, 0], 
+        cp, 
+        [1, 0]
+    ])
+    params = list_to_c(control_bezier)
+    curve = svgpath.QuadraticBezier(*params)
+
+    fin = 0
+    if target_tangent_start is not None: 
+        target0 = target_tangent_start[0] + 1j*target_tangent_start[1]
+        fin += (abs(curve.unit_tangent(0) - target0))**2
+    
+    if target_tangent_end is not None: 
+        target1 = target_tangent_end[0] + 1j*target_tangent_end[1]
+        fin += (abs(curve.unit_tangent(1) - target1))**2
+
+    # NOTE: tried regularizing based on Y value in relative coordinates (for speed), 
+    # But it doesn't produce good results
+    # DRAFT fin += _max_curvature(curve_inverse, points_estimates=point_estimates)**2
+
+    return fin
 
 
 # ---- For SVG Loading ----

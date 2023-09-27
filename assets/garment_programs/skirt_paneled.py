@@ -104,17 +104,31 @@ class FittedSkirtPanel(pyp.Panel):
         # Adjust the bottom edge to the desired angle
         angle_shift = np.tan(np.deg2rad(low_angle)) * low_width
 
-        right = pyp.esf.curve_3_points(
-            [hips - low_width, angle_shift],    
+        # Edges definitions
+        right_bottom = pyp.Edge(    # TODO different for the flare skirts
+            [hips - low_width, angle_shift], 
+            [0, length]
+        )
+        right_top = pyp.esf.curve_from_tangents(
+            right_bottom.end,    
             [hw_shift, length + adj_hips_depth],
-            target=[0, length]
+            target_tan0=np.array([0, 1])
         )
-        top = pyp.Edge(right.end, [hips * 2 - hw_shift, length + adj_hips_depth])
-        left = pyp.esf.curve_3_points(
-            top.end,
-            [hips + low_width, -angle_shift],
-            target=[hips * 2, length]
+        right = pyp.EdgeSequence(right_bottom, right_top)
+
+        top = pyp.Edge(right[-1].end, [hips * 2 - hw_shift, length + adj_hips_depth])
+
+        left_top = pyp.esf.curve_from_tangents(
+            top.end,    
+            [hips * 2, length],
+            target_tan1=np.array([0, -1])
         )
+        left_bottom = pyp.Edge(    # TODO different for the flare skirts
+            left_top.end, 
+            [hips + low_width, angle_shift], 
+        )
+        
+        left = pyp.EdgeSequence(left_top, left_bottom)
 
         self.edges = pyp.EdgeSequence(right, top, left).close_loop()
         bottom = self.edges[-1]
