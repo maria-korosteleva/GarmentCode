@@ -388,7 +388,7 @@ class EdgeSeqFactory:
         pass
 
     @staticmethod
-    def curve_from_tangents(start, end, target_tan0=None, target_tan1=None):
+    def curve_from_tangents(start, end, target_tan0=None, target_tan1=None, initial_guess=None):
         """Create Quadratic Bezier curve connecting given points with the target tangents
             (both or any of the two can be specified)
         """
@@ -405,7 +405,7 @@ class EdgeSeqFactory:
         # Ensures very smooth, minimal solution
         out = minimize(
             _fit_tangents, 
-            [0.5, 0],
+            [0.5, 0] if initial_guess is None else initial_guess,
             args=(target_tan0, target_tan1)
         )
 

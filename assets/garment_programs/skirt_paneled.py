@@ -88,7 +88,8 @@ class FittedSkirtPanel(pyp.Panel):
         rise = design['rise']['v']
         low_angle = design['low_angle']['v']
         hip_side_incl = np.deg2rad(body['hip_inclination'])
-        low_width = body['hips'] * (design['flare']['v'] - 1) / 4  + hips  # Distribute the difference equally 
+        flare = design['flare']['v']
+        low_width = body['hips'] * (flare - 1) / 4  + hips  # Distribute the difference equally 
                                                                            # between front and back
         # adjust for a rise
         adj_hips_depth = rise * hips_depth
@@ -104,26 +105,24 @@ class FittedSkirtPanel(pyp.Panel):
         # Adjust the bottom edge to the desired angle
         angle_shift = np.tan(np.deg2rad(low_angle)) * low_width
 
-        # Edges definitions
-        # DRAFT right_bottom = pyp.Edge(    # TODO different for the flare skirts
-        #     [hips - low_width, angle_shift], 
-        #     [0, length]
-        # )
-        # right_bottom = pyp.esf.curve_from_tangents(    # TODO different for the flare skirts
-        #     [hips - low_width, angle_shift], 
-        #     [0, length],
-        #     target_tan1=np.array([0, 1])
-        # )
-        # # DEBUG
-        # print('cp: ', right_bottom.control_points)
-
-        # TODO Change initialization on demand to adjust the shape?
-        right_bottom = pyp.CurveEdge(    # TODO different for the flare skirts
-            [hips - low_width, angle_shift], 
-            [0, length],
-            control_points=[[0.75, 0.06]]   # DRAFT Optimized values [[0.495, 0.081]]
-        )
-
+        # --- Edges definition ---
+        # Right
+        if pyp.close_enough(flare, 1):  # skip optimization
+            right_bottom = pyp.Edge(    
+                [hips - low_width, angle_shift], 
+                [0, length]
+            )
+        else:
+            right_bottom = pyp.esf.curve_from_tangents(
+                [hips - low_width, angle_shift], 
+                [0, length],
+                target_tan1=np.array([0, 1]), 
+                # initial guess places control point closer to the hips for fitted style, 
+                # and closer to the bottom for flared style
+                # These are the values that look good for 0.8 flare [[0.75, 0.06]]  and are a target
+                # TODO define the flared style experimentally
+                initial_guess=[0.75, 0] if flare < 1 else [0.25, 0] 
+            )
         right_top = pyp.esf.curve_from_tangents(
             right_bottom.end,    
             [hw_shift, length + adj_hips_depth],
@@ -131,25 +130,32 @@ class FittedSkirtPanel(pyp.Panel):
         )
         right = pyp.EdgeSequence(right_bottom, right_top)
 
+        # top
         top = pyp.Edge(right[-1].end, [hips * 2 - hw_shift, length + adj_hips_depth])
 
+        # left
         left_top = pyp.esf.curve_from_tangents(
             top.end,    
             [hips * 2, length],
             target_tan1=np.array([0, -1])
         )
-        # DRAFT left_bottom = pyp.Edge(    # TODO different for the flare skirts
-        #     left_top.end, 
-        #     [hips + low_width, angle_shift], 
-        # )
-        left_bottom = pyp.esf.curve_from_tangents(    # TODO different for the flare skirts
-            left_top.end, 
-            [hips + low_width, angle_shift], 
-            target_tan0=np.array([0, -1])
-        )
-        
+        if pyp.close_enough(flare, 1):  # skip optimization for straight skirt
+            left_bottom = pyp.Edge(  
+                left_top.end, 
+                [hips + low_width, angle_shift], 
+            )
+        else:
+            left_bottom = pyp.esf.curve_from_tangents(  
+                left_top.end, 
+                [hips + low_width, angle_shift], 
+                target_tan0=np.array([0, -1]),
+                # initial guess places control point closer to the hips for fitted style, 
+                # and closer to the bottom for flared style
+                initial_guess=[0.25, 0] if flare < 1 else [0.75, 0] 
+            )
         left = pyp.EdgeSequence(left_top, left_bottom)
 
+        # fin
         self.edges = pyp.EdgeSequence(right, top, left).close_loop()
         bottom = self.edges[-1]
 
@@ -167,12 +173,12 @@ class FittedSkirtPanel(pyp.Panel):
         if side_cut is not None:
             # Add a stylistic cutout to the skirt
             new_edges, _, int_edges = pyp.ops.cut_into_edge(
-                side_cut, left, 
-                offset=left.length() / 2,   # TODO define
+                side_cut, left_bottom, 
+                offset=left_bottom.length() / 2,   # TODO define
                 right=True, flip_target=flip_side_cut)
 
-            self.edges.substitute(left, new_edges)
-            left = int_edges
+            self.edges.substitute(left_bottom, new_edges)
+            left.substitute(left_bottom, new_edges)
 
         # Default placement
         self.top_center_pivot()
@@ -242,9 +248,6 @@ class PencilSkirt(pyp.Component):
         else:
             style_shape_l, style_shape_r = None, None
 
-        # DEBUG
-        print('Front')
-
         self.front = FittedSkirtPanel(
             f'skirt_f',   
             body,
@@ -256,9 +259,6 @@ class PencilSkirt(pyp.Component):
             cut=design['front_cut']['v'], 
             side_cut=style_shape_l
         ).translate_to([0, body['waist_level'], 25])
-
-        # DEBUG
-        print('Back')
 
         self.back = FittedSkirtPanel(
             f'skirt_b', 
