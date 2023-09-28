@@ -9,18 +9,18 @@ body:
   armscye_depth: 15  # Nape of the Neck to armscye depth on the back
   shoulder_incl: 10  # degrees
 
-  arm_pose_angle: 30  # Degrees
+  arm_pose_angle: 75  # Degrees
 
   waist:  80  # 82 adjusted for 'dips'
-  waist_line:  35  # Nape of the Neck to waist (on the back)
-  waist_over_bust_line: 40   # -- measurement + addition for the shoulder  # 47
+  waist_line: 36 # DRAFT 35  # Nape of the Neck to waist (on the back)
+  waist_over_bust_line: 41 # DRAFT 40   # -- measurement + addition for the shoulder  # 47
   waist_back_width: 37  # TODO correct value
 
-  bust_line: 23  
+  bust_line: 21 # DRAFT 23  
   bust: 90  # adjust for the 'dips' from 96 
   bust_points:  21 # 
   underbust: 83
-  back_width:  37  # 32 + 2 * between-size   # TODO Correct value?
+  back_width:  45  # 32 + 2 * between-size   # TODO Correct value?
 
   hips: 107  
   hip_back_width: 55  # DRAFT Tentative number  # TODO Add to all measurements

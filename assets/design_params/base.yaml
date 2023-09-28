@@ -54,11 +54,11 @@ design:
 
   collar:
     f_collar: 
-      v: CircleNeckHalf
+      v: Bezier2NeckHalf
       range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf, Bezier2NeckHalf]
       type: select_null
     b_collar: 
-      v: CircleNeckHalf
+      v: Bezier2NeckHalf
       range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf, Bezier2NeckHalf]
       type: select_null
     width: 
@@ -66,11 +66,11 @@ design:
       range: [-0.5, 1]   # 0 = a neck width, 1 = max possible width
       type: float
     fc_depth:   # Front collar depth
-      v: 0.2
+      v: 0.25
       range: [0, 1]   # 0 = min possible, 1 = bust line
       type: float
     bc_depth:   # back collar depth
-      v: 0
+      v: 0.2
       range: [0, 1]   # 0 = min possible, 1 = bust line
       type: float
     fc_angle:    # Used in Trapesoid and CircleArc collars (differently)
@@ -94,13 +94,13 @@ design:
       - 0.95
       type: float
     b_bezier_x: 
-      v: 0.5
+      v: 0.85
       range:
       - 0.05
       - 0.95
       type: float
     b_bezier_y: 
-      v: 0.3
+      v: 0.1
       range:
       - 0.05
       - 0.95
@@ -129,7 +129,7 @@ design:
      
   sleeve:
     sleeveless: 
-      v: True
+      v: False
       range: [True, False]
       type: bool
     armhole_shape: 
@@ -137,7 +137,7 @@ design:
       range: [ArmholeSquare, ArmholeAngle, ArmholeCurve]
       type: select
     length: 
-      v: 30
+      v: 30  # 30
       range: [3, 80]
       type: int
     connecting_width:
@@ -145,7 +145,7 @@ design:
       range: [0, 1]   # 0 = armscue_depth, 1 = as big as the shirt side
       type: float
     end_width:
-      v: 0.55
+      v: 0.7 #  0.55
       range: [0.2, 2]   # 1 = same as arm opening
       type: float
 
@@ -180,7 +180,7 @@ design:
       range: [0.1, 0.4]
       type: float
     inclination:   # How much intro the shoulder the sleeve will cut
-      v: 3
+      v: 5
       range: [2, 6]
       type: float
 
@@ -213,12 +213,12 @@ design:
 
   left:   # If this section is not defined, the garment will be symmetric by default
     enable_asym: 
-      v: False    # True == create asymmetric top
+      v: True    # True == create asymmetric top
       range: [True, False]
       type: bool
     shirt: 
       strapless: 
-        v: False
+        v: True
         range: [True, False]
         type: bool
       length: 
@@ -244,11 +244,11 @@ design:
         range: [0, 1]   # 0 = a neck width, 1 = max possible width
         type: float
       fc_depth:   # Front collar depth
-        v: 0.2
+        v: 0.25
         range: [0, 1]   # 0 = min possible, 1 = bust line
         type: float
       bc_depth:   # back collar depth
-        v: 0
+        v: 0.2
         range: [0, 1]   # 0 = min possible, 1 = bust line
         type: float
       f_bezier_x: 
@@ -463,7 +463,7 @@ design:
 
   pencil-skirt: 
     length:
-      v: 0.4
+      v: 0.5
       range: [0.2, 1]
       type: float 
     rise:
@@ -471,7 +471,7 @@ design:
       range: [0.5, 1]
       type: float
     flare:   # coefficient may depend on length
-      v: 1.3
+      v: 0.7
       range: [0.3, 1.1]   
       type: float
     low_angle: 
