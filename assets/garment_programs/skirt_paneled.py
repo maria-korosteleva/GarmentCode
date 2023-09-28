@@ -278,6 +278,10 @@ class PencilSkirt(pyp.Component):
             (self.front.interfaces['left'], self.back.interfaces['left'])
         )
 
+        # DEBUG
+        print(f"Skirt front len: {self.front.interfaces['top'].edges.length()}")
+        print(f"Skirt back len: {self.back.interfaces['top'].edges.length()}")
+
         # Reusing interfaces of sub-panels as interfaces of this component
         self.interfaces = {
             'top_f': self.front.interfaces['top'],

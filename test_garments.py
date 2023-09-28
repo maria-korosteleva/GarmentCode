@@ -62,8 +62,8 @@ if __name__ == '__main__':
     for piece in test_garments:
         pattern = piece()
 
-        if piece.is_self_intersecting():
-            print(f'{piece.name} is Self-intersecting')
+        # DEBUG if piece.is_self_intersecting():
+        #     print(f'{piece.name} is Self-intersecting')
 
         # Save as json file
         sys_props = Properties('./system.json')
