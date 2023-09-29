@@ -26,7 +26,7 @@ body:
   hip_back_width: 55  # DRAFT Tentative number  # TODO Add to all measurements
   hips_line:  22  # 18    # From the waist
   hip_inclination: 9 #7 #  12
-  bum_points: 18.5
+  bum_points: 16
   crotch_hip_diff: 14   # NOTE vertical projection of the level
   leg_circ: 64
   
