@@ -32,11 +32,11 @@ class StraightWB(pyp.Component):
 
         self.waist = design['waistband']['waist']['v'] * body['waist']
         self.width = design['waistband']['width']['v'] * body['hips_line']
+        back_width = design['waistband']['waist']['v'] * body['waist_back_width']
 
-        # TODO flexible fractions of the waist
-        self.front = StraightBandPanel('wb_front', self.waist / 2, self.width)
+        self.front = StraightBandPanel('wb_front', self.waist - back_width, self.width)
         self.front.translate_by([0, body['waist_level'], 20])  
-        self.back = StraightBandPanel('wb_back', self.waist / 2, self.width)
+        self.back = StraightBandPanel('wb_back', back_width, self.width)
         self.back.translate_by([0, body['waist_level'], -15])  
 
         self.stitching_rules = pyp.Stitches(
@@ -63,31 +63,31 @@ class FittedWB(pyp.Component):
     """
     def __init__(self, body, design) -> None:
         super().__init__(self.__class__.__name__)
-
-        # FIXME the linear interpolation does not appear to fix the body curves that well
-        # TODO Assymetric front-back panels! (back has stronger curvature change)
-
-
         self.waist = design['waistband']['waist']['v'] * body['waist']
         self.width = design['waistband']['width']['v'] * body['hips_line']
-
+        waist_back_frac = body['waist_back_width'] / body['waist']
+        
         hips = body['hips'] * design['waistband']['waist']['v']
         hip_line = body['hips_line']
+        hips_back_frac = body['hip_back_width'] / body['hips']
 
-        bottom_width = pyp.utils.lin_interpolation(self.waist, hips, self.width / hip_line)
+        bottom_width = pyp.utils.lin_interpolation(
+            self.waist, hips, self.width / hip_line)
+        bottom_back_fraction = pyp.utils.lin_interpolation(
+            waist_back_frac, hips_back_frac, self.width / hip_line)
 
         self.front = CircleArcPanel.from_all_length(
             'wb_front', 
             self.width, 
-            self.waist / 2, 
-            bottom_width / 2)
+            self.waist * (1 - waist_back_frac), 
+            bottom_width * (1 - bottom_back_fraction))
         self.front.translate_by([0, body['waist_level'], 20])  
         
         self.back = CircleArcPanel.from_all_length(
             'wb_back', 
             self.width, 
-            self.waist / 2, 
-            bottom_width / 2)     
+            self.waist * waist_back_frac, 
+            bottom_width * bottom_back_fraction)     
         self.back.translate_by([0, body['waist_level'], -15])  
 
         # ---

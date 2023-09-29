@@ -186,7 +186,7 @@ design:
       range:
       - 0.1
       - 1.2
-      type: int
+      type: float
     connecting_width:
       v: 0.2
       range:
@@ -428,7 +428,7 @@ design:
         range:
         - 0.05
         - 1.2
-        type: int
+        type: float
       connecting_width:
         v: 0.2
         range:
