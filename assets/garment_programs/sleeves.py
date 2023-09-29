@@ -181,9 +181,6 @@ class Sleeve(pyp.Component):
         design = design['sleeve']
         inclination = max(1, (body['back_width'] - body['sholder_w']) / 2)
 
-        # DEBUG
-        print('Sleeve inclination ', inclination)
-
         rest_angle = max(np.deg2rad(design['sleeve_angle']['v']), np.deg2rad(body['shoulder_incl']))
 
         connecting_width = design['connecting_width']['v']
