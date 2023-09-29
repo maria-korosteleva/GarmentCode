@@ -182,10 +182,10 @@ design:
       - ArmholeCurve
       type: select
     length:
-      v: 15
+      v: 0.9
       range:
-      - 3
-      - 80
+      - 0.1
+      - 1.2
       type: int
     connecting_width:
       v: 0.2
@@ -424,10 +424,10 @@ design:
         - ArmholeCurve
         type: select
       length:
-        v: 15
+        v: 0.9
         range:
-        - 3
-        - 80
+        - 0.05
+        - 1.2
         type: int
       connecting_width:
         v: 0.2

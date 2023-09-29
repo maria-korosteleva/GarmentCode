@@ -129,7 +129,7 @@ design:
      
   sleeve:
     sleeveless: 
-      v: True
+      v: False
       range: [True, False]
       type: bool
     armhole_shape: 
@@ -137,8 +137,8 @@ design:
       range: [ArmholeSquare, ArmholeAngle, ArmholeCurve]
       type: select
     length: 
-      v: 30  # 30
-      range: [3, 80]
+      v: 1  # 30
+      range: [0.05, 1]
       type: int
     connecting_width:
       v: 0.50 
@@ -312,8 +312,8 @@ design:
         type: select
 
       length: 
-        v: 30
-        range: [3, 100]
+        v: 0.5
+        range: [0.1, 1]
         type: int
       connecting_width:
         v: 0.2  

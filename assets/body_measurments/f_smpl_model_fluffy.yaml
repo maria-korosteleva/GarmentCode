@@ -1,5 +1,6 @@
 body:
   arm_pose_angle: 50.0
+  arm_length: 80  # TODO Check
   armscye_depth: 14.5
   back_width: 46
   bum_points: 19

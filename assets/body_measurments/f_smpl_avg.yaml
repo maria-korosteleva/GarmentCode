@@ -10,6 +10,7 @@ body:
   shoulder_incl: 10  # degrees
 
   arm_pose_angle: 75  # Degrees
+  arm_length: 80  # TODO Check
 
   waist:  80  # 82 adjusted for 'dips'
   waist_line: 36 # DRAFT 35  # Nape of the Neck to waist (on the back)

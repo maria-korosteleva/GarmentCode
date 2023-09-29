@@ -112,14 +112,16 @@ class SleevePanel(pyp.Panel):
         rest_angle = max(np.deg2rad(design['sleeve_angle']['v']), shoulder_angle)
         standing = design['standing_shoulder']['v']
 
-        length = design['length']['v']
-
         # Ruffles at opening
         if not pyp.utils.close_enough(design['connect_ruffle']['v'], 1):
             open_shape.extend(design['connect_ruffle']['v'])
 
         arm_width = abs(open_shape[0].start[1] - open_shape[-1].end[1]) 
         end_width = design['end_width']['v'] * arm_width
+        opening_length = abs(open_shape[0].start[0] - open_shape[-1].end[0])
+        
+        # Length from the min opening to the end of the sleeve
+        length = design['length']['v'] * (body['arm_length'] - opening_length)
 
         # Main body of a sleeve 
         self.edges = pyp.esf.from_verts(

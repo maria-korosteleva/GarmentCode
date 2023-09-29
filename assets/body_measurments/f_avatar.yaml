@@ -9,6 +9,7 @@ body:
   sholder_w: 27   
   armscye_depth: 10.5  # Nape of the Neck to armscye depth on the back
   shoulder_incl: 10  # degrees 
+  arm_length: 80  # TODO Check
 
   arm_pose_angle: 40  # Degrees
 
