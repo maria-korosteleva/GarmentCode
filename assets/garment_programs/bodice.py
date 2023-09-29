@@ -54,9 +54,6 @@ class BodiceFrontHalf(pyp.Panel):
             (pyp.Interface(self, s_dart_edges[0]), pyp.Interface(self, s_dart_edges[1])))
 
         # Bottom dart
-        # DEBUG
-        print('Bottom Dart')
-
         b_edge, b_dart_edges, b_interface = pyp.ops.cut_into_edge(
             pyp.esf.dart_shape(bottom_d_width, 1. * bust_line), 
             self.edges[0], 
@@ -64,9 +61,6 @@ class BodiceFrontHalf(pyp.Panel):
         self.edges.substitute(0, b_edge)
         self.stitching_rules.append(
             (pyp.Interface(self, b_dart_edges[0]), pyp.Interface(self, b_dart_edges[1])))
-        
-        # DEBUG
-        print('Bottom edge len ', b_edge.lengths(), bust_point + bottom_d_width / 2, bust_point)
 
         # Take some fabric from side in the bottom (!: after side dart insertion)
         b_edge[-1].end[0] = - (waist + bottom_d_width) 
@@ -139,9 +133,6 @@ class BodiceBackHalf(pyp.Panel):
             self.edges.substitute(0, b_edge)
             self.interfaces['bottom'] = pyp.Interface(self, b_interface)
 
-            # DEBUG
-            print('Bottom edge len ', b_edge.lengths(), bottom_d_position + bottom_d_width / 2, bottom_d_position)
-
             # Stitch the dart
             self.stitching_rules.append((pyp.Interface(self, b_dart_edges[0]), pyp.Interface(self, b_dart_edges[1])))
 
@@ -159,12 +150,7 @@ class BodiceHalf(pyp.Component):
 
         # Torso
         if fitted:
-            # DEBUG
-            print('Front')
             self.ftorso = BodiceFrontHalf(f'{name}_ftorso', body, design).translate_by([0, 0, 25])
-
-            # DEBUG
-            print('Back')
             self.btorso = BodiceBackHalf(f'{name}_btorso', body, design).translate_by([0, 0, -20])
         else:
             self.ftorso = tee.TorsoFrontHalfPanel(f'{name}_ftorso', body, design).translate_by([0, 0, 25])
