@@ -205,7 +205,7 @@ class FittedSkirtPanel(pyp.Panel):
         top_edges, dart_edges, int_edges = pyp.ops.cut_into_edge(
             dart_shape, 
             top, 
-            offset=(top_edge_len / 2 - dart_position),   # from the middle of the edge
+            offset=(top_edge_len / 2 - dart_position - dart_width / 2),   # from the middle of the edge
             right=True)
         
         self.stitching_rules.append(
@@ -215,7 +215,7 @@ class FittedSkirtPanel(pyp.Panel):
         top_edges_2, dart_edges, int_edges_2 = pyp.ops.cut_into_edge(
             dart_shape, 
             top_edges[-1], 
-            offset=left_edge_len - top_edge_len / 2 + dart_position, # from the middle of the edge
+            offset=left_edge_len - top_edge_len / 2 + dart_position + dart_width / 2, # from the middle of the edge
             right=True)
 
         self.stitching_rules.append(

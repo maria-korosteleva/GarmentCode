@@ -56,14 +56,23 @@ class BodiceFrontHalf(pyp.Panel):
         self.stitching_rules.append(
             (pyp.Interface(self, s_dart_edges[0]), pyp.Interface(self, s_dart_edges[1])))
 
+        # DEBUG
+        print('Side edge len ', s_edge.lengths(), bust_line + side_d_width / 2, bust_line)
+
         # Bottom dart
+        # DEBUG
+        print('Bottom Dart')
+
         b_edge, b_dart_edges, b_interface = pyp.ops.cut_into_edge(
             pyp.esf.dart_shape(bottom_d_width, 1. * bust_line),   # FIXME is this correct???
             self.edges[0], 
-            offset=bust_point, right=True)
+            offset=bust_point + bottom_d_width / 2, right=True)
         self.edges.substitute(0, b_edge)
         self.stitching_rules.append(
             (pyp.Interface(self, b_dart_edges[0]), pyp.Interface(self, b_dart_edges[1])))
+        
+        # DEBUG
+        print('Bottom edge len ', b_edge.lengths(), bust_point + bottom_d_width / 2, bust_point)
 
         # Take some fabric from side in the bottom (!: after side dart insertion)
         # DRAFT front_bottom_part_edge.end[0] 
@@ -105,9 +114,6 @@ class BodiceBackHalf(pyp.Panel):
         # slight inclination on the side
         waist_width = self.width - (self.width - waist) / 3 if waist < self.width else waist   
 
-        # DEBUG
-        print(body['waist_back_width'], body['back_width'], self.width, waist)
-
         shoulder_incl = np.tan(np.deg2rad(body['shoulder_incl'])) * self.width
 
         # Base edge loop
@@ -133,14 +139,17 @@ class BodiceBackHalf(pyp.Panel):
         if waist < self.width:
             bottom_d_width = (self.width - waist) * 2 / 3
             bottom_d_depth = 0.9 * (length - body['bust_line'])  # calculated value
-            bottom_d_position = body['bust_points'] / 2
+            bottom_d_position = body['bum_points'] / 2
 
             b_edge, b_dart_edges, b_interface = pyp.ops.cut_into_edge(
                 pyp.esf.dart_shape(bottom_d_width, bottom_d_depth), self.edges[0], 
-                offset=bottom_d_position, right=True)
+                offset=bottom_d_position + bottom_d_width / 2, right=True)
 
             self.edges.substitute(0, b_edge)
             self.interfaces['bottom'] = pyp.Interface(self, b_interface)
+
+            # DEBUG
+            print('Bottom edge len ', b_edge.lengths(), bottom_d_position + bottom_d_width / 2, bottom_d_position)
 
             # Stitch the dart
             self.stitching_rules.append((pyp.Interface(self, b_dart_edges[0]), pyp.Interface(self, b_dart_edges[1])))
