@@ -59,10 +59,5 @@ class MetaGarment(pyp.Component):
                     self.subs[-2].interfaces['bottom'], 
                     gap=3
                 )
-
-                # DEBUG
-                print(f'UL Stitch: top {self.subs[-2].interfaces["bottom"].edges.length()},'
-                      f' bottom {self.subs[-1].interfaces["top"].edges.length()}')
-
                 self.stitching_rules.append(
                     (self.subs[-2].interfaces['bottom'], self.subs[-1].interfaces['top']))

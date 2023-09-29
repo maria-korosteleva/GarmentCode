@@ -24,7 +24,7 @@ class BodiceFrontHalf(pyp.Panel):
         front_frac = (body['bust'] - body['back_width']) / 2 / body['bust'] 
 
         self.width = front_frac * m_bust
-        waist = (m_waist - body['waist_back_width']) / 2  # DRAFT front_frac * m_waist
+        waist = (m_waist - body['waist_back_width']) / 2  
         shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
         bottom_d_width = (self.width - waist) * 2 / 3   # TODO probably need a correction here!
 
@@ -35,14 +35,11 @@ class BodiceFrontHalf(pyp.Panel):
 
         self.edges = pyp.esf.from_verts(
             [0, 0], 
-            # DRAFT Not needed anymore [-m_waist / 4 - bottom_d_width, 0],   # Extra point for correct connections at the bottom
-            [-self.width, 0],  # DRAFT [-self.width, 0], 
+            [-self.width, 0],
             [-self.width, max_len], 
             [0, max_len + shoulder_incl], 
             loop=True
         )
-
-        # DRAFT front_bottom_part_edge = self.edges[1]
 
         # Side dart
         bust_line = body['waist_line'] - body['bust_line']
@@ -56,15 +53,12 @@ class BodiceFrontHalf(pyp.Panel):
         self.stitching_rules.append(
             (pyp.Interface(self, s_dart_edges[0]), pyp.Interface(self, s_dart_edges[1])))
 
-        # DEBUG
-        print('Side edge len ', s_edge.lengths(), bust_line + side_d_width / 2, bust_line)
-
         # Bottom dart
         # DEBUG
         print('Bottom Dart')
 
         b_edge, b_dart_edges, b_interface = pyp.ops.cut_into_edge(
-            pyp.esf.dart_shape(bottom_d_width, 1. * bust_line),   # FIXME is this correct???
+            pyp.esf.dart_shape(bottom_d_width, 1. * bust_line), 
             self.edges[0], 
             offset=bust_point + bottom_d_width / 2, right=True)
         self.edges.substitute(0, b_edge)
@@ -75,7 +69,6 @@ class BodiceFrontHalf(pyp.Panel):
         print('Bottom edge len ', b_edge.lengths(), bust_point + bottom_d_width / 2, bust_point)
 
         # Take some fabric from side in the bottom (!: after side dart insertion)
-        # DRAFT front_bottom_part_edge.end[0] 
         b_edge[-1].end[0] = - (waist + bottom_d_width) 
 
         # Interfaces
@@ -83,9 +76,8 @@ class BodiceFrontHalf(pyp.Panel):
             'outside':  pyp.Interface(self, side_interface),   # side_interface,    # pyp.Interface(self, [side_interface]),  #, self.edges[-3]]),
             'inside': pyp.Interface(self, self.edges[-1]),
             'shoulder': pyp.Interface(self, self.edges[-2]),
-            'bottom_front': pyp.Interface(self, b_interface),
-            # DRAFT 'bottom_back': pyp.Interface(self, front_bottom_part_edge),
-            
+            'bottom': pyp.Interface(self, b_interface),
+
             # Reference to the corner for sleeve and collar projections
             'shoulder_corner': pyp.Interface(self, [self.edges[-3], self.edges[-2]]),
             'collar_corner': pyp.Interface(self, [self.edges[-2], self.edges[-1]])
@@ -103,7 +95,6 @@ class BodiceBackHalf(pyp.Panel):
 
         # account for ease in basic measurements
         m_bust = body['bust']
-        m_waist = body['waist']
 
         # Overall measurements
         length = body['waist_line']
@@ -181,9 +172,7 @@ class BodiceHalf(pyp.Component):
 
         # Interfaces
         self.interfaces.update({
-            'f_bottom': self.ftorso.interfaces['bottom_front'],
-            # DRAFT -- not needed! 'b_bottom': pyp.Interface.from_multiple(
-            #    self.btorso.interfaces['bottom'], self.ftorso.interfaces['bottom_back']),
+            'f_bottom': self.ftorso.interfaces['bottom'],
             'b_bottom': self.btorso.interfaces['bottom'],
             'front_in': self.ftorso.interfaces['inside'],
             'back_in': self.btorso.interfaces['inside']
@@ -203,11 +192,6 @@ class BodiceHalf(pyp.Component):
             ))  # tops
 
         # Main connectivity
-
-        # DEBUG
-        print(f'Side Stitch: front {self.ftorso.interfaces["outside"].edges.length()},'
-              f' back {self.btorso.interfaces["outside"].edges.length()}')
-
         self.stitching_rules.append((
             self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
 
@@ -375,10 +359,6 @@ class Shirt(pyp.Component):
         self.left.interfaces['b_bottom'].reverse()
         if fitted: 
             self.right.interfaces['f_bottom'].reorder([0, 1], [1, 0])
-
-        # DEBUG
-        print(f"Bodice front len: {self.right.interfaces['f_bottom'].edges.length() + self.left.interfaces['f_bottom'].edges.length()}")
-        print(f"Bodice back len: {self.right.interfaces['b_bottom'].edges.length() + self.left.interfaces['b_bottom'].edges.length()}")
 
         self.interfaces = {   # Bottom connection
             'bottom': pyp.Interface.from_multiple(

@@ -65,7 +65,6 @@ class ThinSkirtPanel(pyp.Panel):
             'left': pyp.Interface(self, self.edges[2])
         }
 
-# TODOLOW front more narrow then the back
 class FittedSkirtPanel(pyp.Panel):
     """Fitted panel for a pencil skirt"""
     def __init__(
@@ -100,7 +99,7 @@ class FittedSkirtPanel(pyp.Panel):
         # amount of extra fabric
         w_diff = hips - adj_waist   # Assume its positive since waist is smaller then hips
         # We distribute w_diff among the side angle and a dart 
-        hw_shift = np.tan(hip_side_incl) * adj_hips_depth  # DRAFT w_diff / 2  # DRAFT w_diff / 6  
+        hw_shift = np.tan(hip_side_incl) * adj_hips_depth
 
         # Adjust the bottom edge to the desired angle
         angle_shift = np.tan(np.deg2rad(low_angle)) * low_width
@@ -174,7 +173,7 @@ class FittedSkirtPanel(pyp.Panel):
             # Add a stylistic cutout to the skirt
             new_edges, _, int_edges = pyp.ops.cut_into_edge(
                 side_cut, left_bottom, 
-                offset=left_bottom.length() / 2,   # TODO define
+                offset=left_bottom.length() / 2, 
                 right=True, flip_target=flip_side_cut)
 
             self.edges.substitute(left_bottom, new_edges)
@@ -199,7 +198,6 @@ class FittedSkirtPanel(pyp.Panel):
     def add_darts(self, top, dart_width, dart_depth, dart_position):
         
         # TODO: routine for multiple darts
-        # FIXME front/back darts don't appear to be located at the same position
         dart_shape = pyp.esf.dart_shape(dart_width, dart_depth)
         top_edge_len = top.length()
         top_edges, dart_edges, int_edges = pyp.ops.cut_into_edge(
@@ -252,8 +250,8 @@ class PencilSkirt(pyp.Component):
             f'skirt_f',   
             body,
             design,
-            (body['waist'] - body['waist_back_width']) / 2,   # DRAFT body['waist'] * front_frac, 
-            (body['hips'] - body['hip_back_width']) / 2,  # DRAFT body['hips'] / 4, 
+            (body['waist'] - body['waist_back_width']) / 2,
+            (body['hips'] - body['hip_back_width']) / 2,
             dart_position=body['bust_points'] / 2,
             dart_frac=0.9,  # 1.35,  # Diff for front and back
             cut=design['front_cut']['v'], 
@@ -264,8 +262,8 @@ class PencilSkirt(pyp.Component):
             f'skirt_b', 
             body,
             design,
-            body['waist_back_width'] / 2,   # DRAFT body['waist'] / 4,   # DRAFT body['waist'] * (0.5 - front_frac),   
-            body['hip_back_width'] / 2,  # DRAFT body['hips'] / 4,
+            body['waist_back_width'] / 2,
+            body['hip_back_width'] / 2,
             dart_position=body['bum_points'] / 2,
             dart_frac=0.85,   
             cut=design['back_cut']['v'], 
@@ -277,10 +275,6 @@ class PencilSkirt(pyp.Component):
             (self.front.interfaces['right'], self.back.interfaces['right']),
             (self.front.interfaces['left'], self.back.interfaces['left'])
         )
-
-        # DEBUG
-        print(f"Skirt front len: {self.front.interfaces['top'].edges.length()}")
-        print(f"Skirt back len: {self.back.interfaces['top'].edges.length()}")
 
         # Reusing interfaces of sub-panels as interfaces of this component
         self.interfaces = {
