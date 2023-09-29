@@ -196,7 +196,8 @@ class BodiceHalf(pyp.Component):
         # Width
         max_edge = self.ftorso.interfaces['collar_corner'].edges[0]
         # NOTE: Back panel is more narrow, so using it
-        max_w = 2 * (self.btorso.width - design['sleeve']['inclination']['v'] - 1)
+        inclination = max(1, (body['back_width'] - body['sholder_w']) / 2)
+        max_w = 2 * (self.btorso.width - inclination - 1)
         min_w = body['neck_w']
 
         if design['collar']['width']['v'] >= 0:

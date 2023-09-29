@@ -11,6 +11,8 @@ body:
   height: 162.5
   hips: 122.0
   hips_line: 19.0
+  hip_back_width: 70  # TODO Check
+  hip_inclination: 9  # TODO Check
   leg_circ: 78.0
   neck_w: 16
   sholder_w: 35
@@ -19,3 +21,4 @@ body:
   waist: 100.0
   waist_line: 37.3
   waist_over_bust_line: 44
+  waist_back_width: 50  # TODO Check

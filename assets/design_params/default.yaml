@@ -235,12 +235,6 @@ design:
       - 0.1
       - 0.4
       type: float
-    inclination:
-      v: 3
-      range:
-      - 2
-      - 6
-      type: float
     cuff:
       type:
         v: null
@@ -482,12 +476,6 @@ design:
         range:
         - 0.1
         - 0.4
-        type: float
-      inclination:
-        v: 3
-        range:
-        - 2
-        - 6
         type: float
       cuff:
         type:

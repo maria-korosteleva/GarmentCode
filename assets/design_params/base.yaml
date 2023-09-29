@@ -179,10 +179,6 @@ design:
       v: 0.25
       range: [0.1, 0.4]
       type: float
-    inclination:   # How much intro the shoulder the sleeve will cut
-      v: 5
-      range: [2, 6]
-      type: float
 
     # Cuff
     cuff: 
@@ -357,10 +353,6 @@ design:
       smoothing_coeff:
         v: 0.25
         range: [0.1, 0.4]
-        type: float
-      inclination:   # How much intro the shoulder the sleeve will cut
-        v: 3
-        range: [2, 6]
         type: float
 
       # Cuff
