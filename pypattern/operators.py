@@ -160,6 +160,8 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, flip_targe
     """
 
     # TODO Not only for Y-aligned shapes
+    # TODOLOW Add a parameter: Align target_shape by center or from the start of the offset
+        # NOTE: the optimization routine might be different for the two options
 
     if isinstance(target_shape, EdgeSequence):
         return cut_into_edge_single(
@@ -198,12 +200,9 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, flip_targe
     
     return all_new_edges, new_in_edges, int_edges
 
-    
 def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True, flip_target=False, tol=1e-2):
     """ Insert edges of the target_shape into the given base_edge, starting from offset
         edges in target shape are rotated s.t. start -> end vertex vector is aligned with the edge 
-
-        NOTE: for now the base_edge is treated as straight edge
 
         Parameters:
         * target_shape -- list of single edge or chained edges to be inserted in the edge. 
