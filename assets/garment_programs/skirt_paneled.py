@@ -70,8 +70,7 @@ class FittedSkirtPanel(pyp.Panel):
     def __init__(
             self, name, body, design, 
             waist, hips,   # TODO Half measurement instead of a quarter   
-            dart_position=None, 
-            dart_frac=0.5,
+            dart_position=None, dart_frac=0.5, double_dart=False,
             slit=0, left_slit=0, right_slit=0,
             side_cut=None, flip_side_cut=False) -> None:
         """ Fitted panel for a pencil skirt
@@ -204,39 +203,55 @@ class FittedSkirtPanel(pyp.Panel):
 
         # Add top darts
         dart_width = w_diff - hw_shift
-        self.add_darts(top, dart_width, dart_depth, dart_position)
+        self.add_darts(top, dart_width, dart_depth, dart_position, double_dart=double_dart)
 
 
-    def add_darts(self, top, dart_width, dart_depth, dart_position):
+    def add_darts(self, top, dart_width, dart_depth, dart_position, double_dart=False):
         
-        # TODO: routine for multiple darts
-        dart_shape = pyp.esf.dart_shape(dart_width, dart_depth)
         top_edge_len = top.length()
-        top_edges, dart_edges, int_edges = pyp.ops.cut_into_edge(
-            dart_shape, 
-            top, 
-            offset=(top_edge_len / 2 - dart_position - dart_width / 2),   # from the middle of the edge
-            right=True)
-        
-        self.stitching_rules.append(
-            (pyp.Interface(self, dart_edges[0]), pyp.Interface(self, dart_edges[1])))
+        if double_dart:
+            dist = dart_position * 0.8   # TODOLOW Avoid hardcoding for matching with the top?
+            offsets_mid = [
+                - (dart_position + dist / 2) - dart_width / 2,
+                - (dart_position - dist / 2) - dart_width / 2,
+                dart_position - dist / 2 + dart_width / 2,
+                dart_position + dist / 2 + dart_width / 2,
+            ]
 
-        left_edge_len = top_edges[-1].length()
-        top_edges_2, dart_edges, int_edges_2 = pyp.ops.cut_into_edge(
-            dart_shape, 
-            top_edges[-1], 
-            offset=left_edge_len - top_edge_len / 2 + dart_position + dart_width / 2, # from the middle of the edge
-            right=True)
+            dart_shape_full = pyp.esf.dart_shape(dart_width / 2, dart_depth)
+            dart_shape_small = pyp.esf.dart_shape(dart_width / 2, dart_depth * 0.9)
+            darts = [
+                dart_shape_small, 
+                dart_shape_full, 
+                dart_shape_full, 
+                dart_shape_small, 
+            ]
+        else:
+            offsets_mid = [
+                - dart_position - dart_width / 2,
+                dart_position + dart_width / 2,
+            ]
 
-        self.stitching_rules.append(
-            (pyp.Interface(self, dart_edges[0]), pyp.Interface(self, dart_edges[1])))
-        
-        # Update panel
-        top_edges.substitute(-1, top_edges_2)
-        int_edges.substitute(-1, int_edges_2)
+            dart_shape = pyp.esf.dart_shape(dart_width, dart_depth)
+            darts = [
+                dart_shape, 
+                dart_shape, 
+            ]
+        top_edges, int_edges = pyp.EdgeSequence(top), pyp.EdgeSequence(top)
+
+        for off, dart in zip(offsets_mid, darts):
+            left_edge_len = top_edges[-1].length()
+            top_edges, int_edges = self.add_dart(
+                dart,
+                top_edges[-1],
+                offset=(left_edge_len - top_edge_len / 2) + off,
+                edge_seq=top_edges, 
+                int_edge_seq=int_edges
+            )
 
         self.interfaces['top'] = pyp.Interface(self, int_edges) 
         self.edges.substitute(top, top_edges)
+
 
 
 class PencilSkirt(pyp.Component):
@@ -280,6 +295,7 @@ class PencilSkirt(pyp.Component):
             body['hip_back_width'] / 2,
             dart_position=body['bum_points'] / 2,
             dart_frac=0.85,   
+            double_dart=True,
             slit=design['back_slit']['v'], 
             left_slit=design['left_slit']['v'], 
             right_slit=design['right_slit']['v'],

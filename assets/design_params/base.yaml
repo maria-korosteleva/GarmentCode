@@ -479,7 +479,7 @@ design:
       range: [0, 0.9]   # 1 = length
       type: float
     left_slit:
-      v: 0.5
+      v: 0
       range: [0, 0.9]   # 1 = length
       type: float
     right_slit: 

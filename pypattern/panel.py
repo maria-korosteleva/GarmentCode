@@ -6,11 +6,11 @@ from scipy.spatial.transform import Rotation as R
 
 # Custom
 from pattern.core import BasicPattern
-from pattern.wrappers import VisPattern
 from .base import BaseComponent
 from .edge import Edge, EdgeSequence
-from .connector import Stitches
 from .generic_utils import close_enough, vector_align_3D
+from .operators import cut_into_edge
+from .interface import Interface
 
 class Panel(BaseComponent):
     """ A Base class for defining a Garment component corresponding to a single flat fiece of fabric
@@ -227,7 +227,36 @@ class Panel(BaseComponent):
             raise NotImplementedError(f'{self.name}::Error::Mirrowing over arbitrary axis is not implemented')
 
         return self
+
+    def add_dart(self, dart_shape, edge, offset, right=True, edge_seq=None, int_edge_seq=None, ):
+        """ Shortcut for adding a dart to a panel: 
+            * Performs insertion of the dart_shape in the given edge (parameters are the same 
+                as in pyp.ops.cut_into_edge)
+            * Creates stitch to connect the dart sides
+            * Modifies edge_sequnces with full set (edge_seq) or only the interface part (int_edge_seq) 
+                of the created edges, if those are provided
+            
+            Returns new edges after insertion, and the interface part (excludes dart edges)
+        """
+        edges_new, dart_edges, int_new = cut_into_edge(
+            dart_shape, 
+            edge, 
+            offset=offset,
+            right=right)
         
+        self.stitching_rules.append(
+            (Interface(self, dart_edges[0]), Interface(self, dart_edges[1])))
+        
+        # Update the edges if given
+        if edge_seq is not None: 
+            edge_seq.substitute(-1, edges_new)
+            edges_new = edge_seq
+        if int_edge_seq is not None:
+            int_edge_seq.substitute(-1, int_new)
+            int_new = int_edge_seq
+
+        return edges_new, int_new
+
     # ANCHOR - Build the panel -- get serializable representation
     def assembly(self):
         """Convert panel into serialazable representation
