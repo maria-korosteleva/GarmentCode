@@ -645,13 +645,13 @@ design:
       - -30
       - 30
       type: int
-    front_cut:
+    front_slit:
       v: 0
       range:
       - 0
       - 0.9
       type: float
-    back_cut:
+    back_slit:
       v: 0
       range:
       - 0

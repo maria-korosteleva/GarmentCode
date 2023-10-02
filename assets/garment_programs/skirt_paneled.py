@@ -72,7 +72,7 @@ class FittedSkirtPanel(pyp.Panel):
             waist, hips,   # TODO Half measurement instead of a quarter   
             dart_position=None, 
             dart_frac=0.5,
-            cut=0,
+            slit=0, left_slit=0, right_slit=0,
             side_cut=None, flip_side_cut=False) -> None:
         """ Fitted panel for a pencil skirt
 
@@ -158,16 +158,28 @@ class FittedSkirtPanel(pyp.Panel):
         self.edges = pyp.EdgeSequence(right, top, left).close_loop()
         bottom = self.edges[-1]
 
-        if cut:  # add a cut
+        if slit:  # add a slit
             # Use long and thin disconnected dart for a cutout
             new_edges, _, int_edges = pyp.ops.cut_into_edge(
-                pyp.esf.dart_shape(2, depth=cut * length),    # 1 cm  # TODOLOW width could also be a parameter?
+                pyp.esf.dart_shape(2, depth=slit * length),    # 1 cm  # TODOLOW width could also be a parameter?
                 bottom, 
                 offset= bottom.length() / 2,
                 right=True)
 
             self.edges.substitute(bottom, new_edges)
             bottom = int_edges
+        
+        if left_slit:
+            frac = left_slit
+            new_left_bottom = left_bottom.subdivide_len([1 - frac, frac])
+            left.substitute(left_bottom, new_left_bottom[0])
+            self.edges.substitute(left_bottom, new_left_bottom)
+        
+        if right_slit:
+            frac = right_slit
+            new_rbottom = right_bottom.subdivide_len([frac, 1 - frac])
+            right.substitute(right_bottom, new_rbottom[1])
+            self.edges.substitute(right_bottom, new_rbottom)
 
         if side_cut is not None:
             # Add a stylistic cutout to the skirt
@@ -254,7 +266,9 @@ class PencilSkirt(pyp.Component):
             (body['hips'] - body['hip_back_width']) / 2,
             dart_position=body['bust_points'] / 2,
             dart_frac=0.9,  # 1.35,  # Diff for front and back
-            cut=design['front_cut']['v'], 
+            slit=design['front_slit']['v'], 
+            left_slit=design['left_slit']['v'], 
+            right_slit=design['right_slit']['v'],
             side_cut=style_shape_l
         ).translate_to([0, body['waist_level'], 25])
 
@@ -266,7 +280,9 @@ class PencilSkirt(pyp.Component):
             body['hip_back_width'] / 2,
             dart_position=body['bum_points'] / 2,
             dart_frac=0.85,   
-            cut=design['back_cut']['v'], 
+            slit=design['back_slit']['v'], 
+            left_slit=design['left_slit']['v'], 
+            right_slit=design['right_slit']['v'],
             side_cut=style_shape_r, 
             flip_side_cut=False,
         ).translate_to([0, body['waist_level'], -20])

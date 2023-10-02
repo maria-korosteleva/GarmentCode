@@ -12,11 +12,11 @@ design:
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
-      v: StraightWB
+      v: null
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
-      v: null  
+      v: PencilSkirt  
       range: 
         - SkirtCircle
         - GodetSkirt
@@ -463,18 +463,26 @@ design:
       range: [0.5, 1]
       type: float
     flare:   # coefficient may depend on length
-      v: 0.7
+      v: 0.8
       range: [0.3, 1.1]   
       type: float
     low_angle: 
       v: 0
       range: [-30, 30]
       type: int
-    front_cut: # TODO Not to be used with low_angle!
+    front_slit: # TODO Not to be used with low_angle!
       v: 0
       range: [0, 0.9]   # 1 = length
       type: float
-    back_cut: 
+    back_slit: 
+      v: 0
+      range: [0, 0.9]   # 1 = length
+      type: float
+    left_slit:
+      v: 0.5
+      range: [0, 0.9]   # 1 = length
+      type: float
+    right_slit: 
       v: 0
       range: [0, 0.9]   # 1 = length
       type: float
