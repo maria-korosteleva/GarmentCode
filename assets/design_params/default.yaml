@@ -182,7 +182,7 @@ design:
       - ArmholeCurve
       type: select
     length:
-      v: 0.9
+      v: 0.3
       range:
       - 0.1
       - 1.2
@@ -424,7 +424,7 @@ design:
         - ArmholeCurve
         type: select
       length:
-        v: 0.9
+        v: 0.3
         range:
         - 0.05
         - 1.2
