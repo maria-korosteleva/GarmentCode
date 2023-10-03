@@ -53,7 +53,7 @@ class BodiceFrontHalf(pyp.Panel):
 
         # Bottom dart
         b_edge, b_interface = self.add_dart(
-            pyp.esf.dart_shape(bottom_d_width, 1. * bust_line), 
+            pyp.esf.dart_shape(bottom_d_width, 0.7 * bust_line), 
             self.edges[0], 
             offset=bust_point + bottom_d_width / 2
         )
