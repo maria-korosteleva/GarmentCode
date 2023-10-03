@@ -8,7 +8,7 @@
 design: 
   meta: 
     upper: 
-      v: null
+      v: FittedShirt
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
@@ -129,7 +129,7 @@ design:
      
   sleeve:
     sleeveless: 
-      v: False
+      v: True
       range: [True, False]
       type: bool
     armhole_shape: 

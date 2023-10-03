@@ -249,10 +249,10 @@ class Panel(BaseComponent):
         
         # Update the edges if given
         if edge_seq is not None: 
-            edge_seq.substitute(-1, edges_new)
+            edge_seq.substitute(edge, edges_new)
             edges_new = edge_seq
         if int_edge_seq is not None:
-            int_edge_seq.substitute(-1, int_new)
+            int_edge_seq.substitute(edge, int_new)
             int_new = int_edge_seq
 
         return edges_new, int_new

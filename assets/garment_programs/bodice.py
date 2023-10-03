@@ -45,22 +45,19 @@ class BodiceFrontHalf(pyp.Panel):
         bust_line = body['waist_line'] - body['bust_line']
         side_d_depth = 0.8 * (self.width - bust_point)    # NOTE: calculated value 
         side_d_width = max_len - side_len
-        s_edge, s_dart_edges, side_interface = pyp.ops.cut_into_edge(
+        s_edge, side_interface = self.add_dart(
             pyp.esf.dart_shape(side_d_width, side_d_depth), 
             self.edges[1], 
-            offset=bust_line + side_d_width / 2, right=True)
+            offset=bust_line + side_d_width / 2)
         self.edges.substitute(1, s_edge)
-        self.stitching_rules.append(
-            (pyp.Interface(self, s_dart_edges[0]), pyp.Interface(self, s_dart_edges[1])))
 
         # Bottom dart
-        b_edge, b_dart_edges, b_interface = pyp.ops.cut_into_edge(
+        b_edge, b_interface = self.add_dart(
             pyp.esf.dart_shape(bottom_d_width, 1. * bust_line), 
             self.edges[0], 
-            offset=bust_point + bottom_d_width / 2, right=True)
+            offset=bust_point + bottom_d_width / 2
+        )
         self.edges.substitute(0, b_edge)
-        self.stitching_rules.append(
-            (pyp.Interface(self, b_dart_edges[0]), pyp.Interface(self, b_dart_edges[1])))
 
         # Take some fabric from side in the bottom (!: after side dart insertion)
         b_edge[-1].end[0] = - (waist + bottom_d_width) 
@@ -122,19 +119,27 @@ class BodiceBackHalf(pyp.Panel):
 
         # Bottom dart as cutout -- for straight line
         if waist < self.width:
-            bottom_d_width = (self.width - waist) * 2 / 3
+            bottom_d_width = (self.width - waist) * 2 / 3 
+            bottom_d_width /= 2   # double darts
             bottom_d_depth = 0.9 * (length - body['bust_line'])  # calculated value
             bottom_d_position = body['bum_points'] / 2
 
-            b_edge, b_dart_edges, b_interface = pyp.ops.cut_into_edge(
-                pyp.esf.dart_shape(bottom_d_width, bottom_d_depth), self.edges[0], 
-                offset=bottom_d_position + bottom_d_width / 2, right=True)
-
+            # TODOLOW Avoid hardcoding for matching with the bottoms?
+            dist = bottom_d_position * 0.5  # Dist between darts -> dist between centers
+            b_edge, b_interface = self.add_dart(
+                pyp.esf.dart_shape(bottom_d_width, 0.9 * bottom_d_depth), 
+                self.edges[0], 
+                offset=bottom_d_position + dist / 2 + bottom_d_width + bottom_d_width / 2,
+            )
+            b_edge, b_interface = self.add_dart(
+                pyp.esf.dart_shape(bottom_d_width, bottom_d_depth), 
+                b_edge[0], 
+                offset=bottom_d_position - dist / 2 + bottom_d_width / 2,
+                edge_seq=b_edge,
+                int_edge_seq=b_interface,
+            )
             self.edges.substitute(0, b_edge)
             self.interfaces['bottom'] = pyp.Interface(self, b_interface)
-
-            # Stitch the dart
-            self.stitching_rules.append((pyp.Interface(self, b_dart_edges[0]), pyp.Interface(self, b_dart_edges[1])))
 
         # default placement
         self.translate_by([0, body['height'] - body['head_l'] - length, 0])

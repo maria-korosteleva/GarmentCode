@@ -210,12 +210,13 @@ class FittedSkirtPanel(pyp.Panel):
         
         top_edge_len = top.length()
         if double_dart:
-            dist = dart_position * 0.8   # TODOLOW Avoid hardcoding for matching with the top?
+            # TODOLOW Avoid hardcoding for matching with the top?
+            dist = dart_position * 0.5  # Dist between darts -> dist between centers
             offsets_mid = [
-                - (dart_position + dist / 2) - dart_width / 2,
-                - (dart_position - dist / 2) - dart_width / 2,
-                dart_position - dist / 2 + dart_width / 2,
-                dart_position + dist / 2 + dart_width / 2,
+                - (dart_position + dist / 2 + dart_width / 2) - dart_width / 4,   
+                - (dart_position - dist / 2) - dart_width / 4,
+                dart_position - dist / 2 + dart_width / 4,
+                dart_position + dist / 2 + dart_width / 2 + dart_width / 4,
             ]
 
             dart_shape_full = pyp.esf.dart_shape(dart_width / 2, dart_depth)
