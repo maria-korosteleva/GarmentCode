@@ -657,6 +657,18 @@ design:
       - 0
       - 0.9
       type: float
+    left_slit:
+      v: 0
+      range:
+      - 0
+      - 0.9
+      type: float
+    right_slit: 
+      v: 0
+      range:
+      - 0
+      - 0.9
+      type: float
     style_side_cut:
       v: null
       range: 
