@@ -130,7 +130,6 @@ class VisPattern(core.ParametrizedPattern):
                     # https://svgwrite.readthedocs.io/en/latest/classes/path.html#svgwrite.path.Path.push_arc
 
                     radius, large_arc, right = edge['curvature']['params']
-                    radius *= self.px_per_unit
 
                     segs.append(svgpath.Arc(
                         list_to_c(start), radius + 1j*radius,
