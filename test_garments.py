@@ -32,8 +32,8 @@ if __name__ == '__main__':
     body = BodyParameters(body_file)
 
     design_files = {
-        # 'base': './assets/design_params/base.yaml',
-        'debug': './Logs/rand_0URAVX1P0H_design_params.yaml'
+        'base': './assets/design_params/base.yaml',
+        # 'debug': './Logs/rand_0URAVX1P0H_design_params.yaml'
         #'default': './assets/design_params/default.yaml',
         # 'modern': './assets/design_params/modern.yaml',
         # 'Dress_20s': './assets/design_params/dress_20s.yaml',
@@ -71,7 +71,7 @@ if __name__ == '__main__':
             Path(sys_props['output']), 
             tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
             to_subfolder=False, 
-            with_3d=True, with_text=True, view_ids=False)
+            with_3d=False, with_text=True, view_ids=True)
 
         body.save(folder)
         if piece.name in design_files:
