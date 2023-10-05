@@ -34,6 +34,8 @@ if __name__ == '__main__':
     design_files = {
         'base': './assets/design_params/base.yaml',
         # 'debug': './Logs/rand_0URAVX1P0H_design_params.yaml'
+        'base': './assets/design_params/base.yaml',
+        # 'debug': './Logs/rand_0URAVX1P0H_design_params.yaml'
         #'default': './assets/design_params/default.yaml',
         # 'modern': './assets/design_params/modern.yaml',
         # 'Dress_20s': './assets/design_params/dress_20s.yaml',

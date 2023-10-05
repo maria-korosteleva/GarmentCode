@@ -40,6 +40,8 @@ class VisPattern(core.ParametrizedPattern):
         
         Not implemented: 
             * Support for patterns with darts
+
+        NOTE: Visualization assumes the pattern uses cm as units
     """
 
     # ------------ Interface -------------
@@ -47,56 +49,31 @@ class VisPattern(core.ParametrizedPattern):
     def __init__(self, pattern_file=None):
         super().__init__(pattern_file)
 
-        # tnx to this all patterns produced from the same template will have the same 
-        # visualization scale
-        # and that's why I need a class object fot 
-        self.scaling_for_drawing = self._verts_to_px_scaling_factor()
+        self.px_per_unit = 3
 
     def serialize(
             self, path, to_subfolder=True, tag='', 
-            with_3d=True, with_text=True, view_ids=True, empty_ok=False):
+            with_3d=True, with_text=True, view_ids=True, 
+            empty_ok=False):
 
         log_dir = super().serialize(path, to_subfolder, tag=tag, empty_ok=empty_ok)
         if len(self.panel_order()) == 0:  # If we are still here, but pattern is empty, don't generate an image
             return log_dir
-        
+
+        if tag:
+            tag = '_' + tag
         svg_file = os.path.join(log_dir, (self.name + tag + '_pattern.svg'))
-        png_file = os.path.join(log_dir, (self.name + tag + '_pattern.png'))
+        png_file = os.path.join(log_dir, (self.name + tag + '_pattern.png')) 
         png_3d_file = os.path.join(log_dir, (self.name + tag + '_3d_pattern.png'))
 
         # save visualtisation
         self._save_as_image(svg_file, png_file, with_text, view_ids)
         if with_3d:
             self._save_as_image_3D(png_3d_file)
-
+            
         return log_dir
 
     # -------- Drawing ---------
-
-    def _verts_to_px_scaling_factor(self):
-        """
-        Estimates multiplicative factor to convert vertex units to pixel coordinates
-        Heuritic approach, s.t. all the patterns from the same template are displayed similarly
-        """
-        if len(self.pattern['panels']) == 0:  # empty pattern
-            return None
-        
-        # TODO Make the scale controllable from outside?
-        avg_box_x = []
-        for panel in self.pattern['panels'].values():
-            vertices = np.asarray(panel['vertices'])
-            box_size = np.max(vertices, axis=0) - np.min(vertices, axis=0) 
-            avg_box_x.append(box_size[0])
-        avg_box_x = sum(avg_box_x) / len(avg_box_x)
-
-        if avg_box_x < 3:      # meters
-            scaling_to_px = 300
-        elif avg_box_x < 250:  # sentimeters
-            scaling_to_px = 3
-        else:                    # pixels
-            scaling_to_px = 1  
-
-        return scaling_to_px
 
     def _verts_to_px_coords(self, vertices, translation_2d):
         """Convert given vertices and panel (2D) translation to px coordinate frame & units"""
@@ -107,9 +84,6 @@ class VisPattern(core.ParametrizedPattern):
         offset = np.min(vertices, axis=0)
         vertices = vertices - offset
         translation_2d = translation_2d + offset
-        # Update units scaling
-        vertices *= self.scaling_for_drawing
-        translation_2d *= self.scaling_for_drawing
         return vertices, translation_2d
 
     def _flip_y(self, point):
@@ -131,7 +105,7 @@ class VisPattern(core.ParametrizedPattern):
         attributes = {
             'fill':  'rgb(227,175,186)',  
             'stroke': 'rgb(51,51,51)', 
-            'stroke-width': '0.75'
+            'stroke-width': '0.2'
         }
 
         panel = self.pattern['panels'][panel_name]
@@ -149,14 +123,13 @@ class VisPattern(core.ParametrizedPattern):
             if ('curvature' in edge):
                 if isinstance(edge['curvature'], list) or edge['curvature']['type'] == 'quadratic':  # FIXME placeholder for old curves
                     control_scale = self._flip_y(edge['curvature'] if isinstance(edge['curvature'], list) else edge['curvature']['params'][0])
-                    control_point = self._control_to_abs_coord(
+                    control_point = self.control_to_abs_coord(
                         start, end, control_scale)
                     segs.append(svgpath.QuadraticBezier(*list_to_c([start, control_point, end])))
                 elif edge['curvature']['type'] == 'circle':  # Assuming circle
                     # https://svgwrite.readthedocs.io/en/latest/classes/path.html#svgwrite.path.Path.push_arc
 
                     radius, large_arc, right = edge['curvature']['params']
-                    radius *= self.scaling_for_drawing
 
                     segs.append(svgpath.Arc(
                         list_to_c(start), radius + 1j*radius,
@@ -171,7 +144,7 @@ class VisPattern(core.ParametrizedPattern):
                     cps = []
                     for p in edge['curvature']['params']:
                         control_scale = self._flip_y(p)
-                        control_point = self._control_to_abs_coord(
+                        control_point = self.control_to_abs_coord(
                             start, end, control_scale)
                         cps.append(control_point)
 
@@ -221,8 +194,10 @@ class VisPattern(core.ParametrizedPattern):
         if with_text:
             text_insert = panel_center   # + np.array([-len(panel_name) * 12 / 2, 3])
             drawing.add(drawing.text(panel_name, insert=text_insert, 
-                        fill='rgb(31,31,31)', font_size='25', 
-                        text_anchor='middle', dominant_baseline='middle'))
+                        fill='rgb(31,31,31)', 
+                        font_size='7', 
+                        text_anchor='middle', 
+                        dominant_baseline='middle'))
 
         if view_ids:
             # name vertices 
@@ -231,7 +206,8 @@ class VisPattern(core.ParametrizedPattern):
                 ver = c_to_np(seg.start)
                 drawing.add(
                     drawing.text(str(idx), insert=ver, 
-                                 fill='rgb(245,96,66)', font_size='25'))
+                                 fill='rgb(245,96,66)', 
+                                 font_size='7'))
             # name edges
             for idx in range(len(path)):
                 seg = path[idx]
@@ -240,11 +216,12 @@ class VisPattern(core.ParametrizedPattern):
                 # name
                 drawing.add(
                     drawing.text(idx, insert=middle, 
-                                 fill='rgb(44,131,68)', font_size='20', 
+                                 fill='rgb(44,131,68)', 
+                                 font_size='7', 
                                  text_anchor='middle'))
 
     def _save_as_image(
-            self, svg_filename, png_filename, 
+            self, svg_filename, png_filename,
             with_text=True, view_ids=True, 
             margin=2):  
         """
@@ -255,9 +232,6 @@ class VisPattern(core.ParametrizedPattern):
             * margin: small amount of free space around the svg drawing (to correctly display the line width)
 
         """
-        if self.scaling_for_drawing is None:  # re-evaluate if not ready
-            self.scaling_for_drawing = self._verts_to_px_scaling_factor()
-
         # Get svg representation per panel
         # Order by depth (=> most front panels render in front)
         # TODOLOW Even smarter way is needed for prettier allignment
@@ -301,15 +275,20 @@ class VisPattern(core.ParametrizedPattern):
         )
 
         # "floor" level for a pattern
-        self.body_bottom_shift = -viewbox[0], -viewbox[1]
+        self.body_bottom_shift = -viewbox[0] * self.px_per_unit, -viewbox[1] * self.px_per_unit 
         self.png_size = viewbox[2:]
 
         # Save
         attributes = attributes_f + attributes_b
 
         dwg = svgpath.wsvg(
-            paths, attributes=attributes, margin_size=0,
-            filename=svg_filename, viewbox=viewbox, paths2Drawing=True)
+            paths, 
+            attributes=attributes, 
+            margin_size=0,
+            filename=svg_filename, 
+            viewbox=viewbox, 
+            dimensions=[str(viewbox[2]) + 'cm', str(viewbox[3]) + 'cm'],
+            paths2Drawing=True)
 
         # text annotations
         panel_names = names_f + names_b
@@ -322,7 +301,11 @@ class VisPattern(core.ParametrizedPattern):
         dwg.save(pretty=True)
 
         # to png
-        cairosvg.svg2png(url=svg_filename, write_to=png_filename, scale=1)
+        # NOTE: Assuming the pattern uses cm
+        # 3 px == 1 cm
+        # DPI = 96 (default) px/inch == 96/2.54 px/cm
+        cairosvg.svg2png(
+            url=svg_filename, write_to=png_filename, dpi=2.54*self.px_per_unit)
         
     def _save_as_image_3D(self, png_filename):
         """Save the patterns with 3D positioning using matplotlib visualization"""

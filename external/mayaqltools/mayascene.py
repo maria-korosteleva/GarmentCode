@@ -702,7 +702,7 @@ class MayaGarment(wrappers.VisPattern):
         # FIXME Legacy curvature representation
         if 'curvature' in edge:
             if isinstance(edge['curvature'], list):  
-                abs_points = self._control_to_abs_coord(
+                abs_points = self.control_to_abs_coord(
                     points[0], points[1], edge['curvature']
                 )
                 abs_points = [abs_points]
@@ -713,7 +713,7 @@ class MayaGarment(wrappers.VisPattern):
             elif edge['curvature']['type'] == 'cubic' or edge['curvature']['type'] == 'quadratic':
                 abs_points = []
                 for p in edge['curvature']['params']:
-                    abs_points.append(self._control_to_abs_coord(
+                    abs_points.append(self.control_to_abs_coord(
                         points[0], points[1], p))
                 points = np.r_[
                     [points[0]], abs_points, [points[1]]
