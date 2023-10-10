@@ -483,10 +483,10 @@ design:
       - 2
       type: float
     bottom_cut:
-      v: 5
+      v: 0.2
       range:
       - 0
-      - 20
+      - 0.9
       type: int
     flare:
       v: 0
