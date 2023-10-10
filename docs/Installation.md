@@ -11,7 +11,7 @@
 * matplotlib
 * [svgpathtools](https://github.com/mathandy/svgpathtools)
 * [cairoSVG](https://cairosvg.org/)
-    NOTE: this lib has some quirks on Windows, which we resolve with including needed dlls in `./patttern/cairo_dlls` and adding the ditrectory to PATH in runtime
+    NOTE: this lib has some quirks on Windows, which we resolve with including needed dlls in `./pattern/cairo_dlls` and adding the ditrectory to PATH in runtime
 * [PySimpleGUI](https://github.com/PySimpleGUI/PySimpleGUI) to run GUI script
 * wmi (on Windows)
 

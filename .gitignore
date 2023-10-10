@@ -25,3 +25,7 @@ system.json
 tmp*
 *tmp*.mb
 Logs*
+
+# PyPi builds
+dist
+*egg*
