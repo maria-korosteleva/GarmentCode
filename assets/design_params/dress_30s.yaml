@@ -1,0 +1,721 @@
+design:
+  meta:
+    upper:
+      v: FittedShirt
+      range:
+      - FittedShirt
+      - Shirt
+      - null
+      type: select_null
+    wb:
+      v: false
+      range:
+      - true
+      - false
+      type: bool
+    bottom:
+      v: GodetSkirt
+      range:
+      - SkirtCircle
+      - GodetSkirt
+      - Pants
+      - Skirt2
+      - SkirtManyPanels
+      - PencilSkirt
+      - SkirtLevels
+      - null
+      type: select_null
+  waistband:
+    waist:
+      v: 1.0
+      range:
+      - 1.0
+      - 2
+      type: float
+    width:
+      v: 3
+      range:
+      - 1
+      - 15
+      type: float
+  shirt:
+    strapless:
+      v: false
+      range:
+      - true
+      - false
+      type: bool
+    length:
+      v: 1.2
+      range:
+      - 0.5
+      - 4.5
+      type: float
+    width:
+      v: 1.0
+      range:
+      - 1.0
+      - 2
+      type: float
+  collar:
+    f_collar:
+      v: CircleNeckHalf
+      range:
+      - CircleNeckHalf
+      - CurvyNeckHalf
+      - VNeckHalf
+      - SquareNeckHalf
+      - TrapezoidNeckHalf
+      - CircleArcNeckHalf
+      - null
+      type: select_null
+    b_collar:
+      v: CircleNeckHalf
+      range:
+      - CircleNeckHalf
+      - CurvyNeckHalf
+      - VNeckHalf
+      - SquareNeckHalf
+      - TrapezoidNeckHalf
+      - CircleArcNeckHalf
+      - null
+      type: select_null
+    width:
+      v: 0.85
+      range:
+      - -0.5
+      - 1
+      type: float
+    fc_depth:
+      v: 0.15
+      range:
+      - 0
+      - 1
+      type: float
+    bc_depth:
+      v: 0.0
+      range:
+      - 0
+      - 1
+      type: float
+    fc_angle:
+      v: 90
+      range:
+      - 30
+      - 180
+      type: int
+    bc_angle:
+      v: 90
+      range:
+      - 30
+      - 180
+      type: int
+    f_flip_curve:
+      v: false
+      range:
+      - true
+      - false
+      type: bool
+    b_flip_curve:
+      v: false
+      range:
+      - true
+      - false
+      type: bool
+    component:
+      style:
+        v: null
+        range:
+        - Turtle
+        - SimpleLapel
+        - null
+        type: select_null
+      depth:
+        v: 7
+        range:
+        - 2
+        - 8
+        type: int
+      lapel_standing:
+        v: false
+        range:
+        - true
+        - false
+        type: bool
+  sleeve:
+    sleeveless:
+      v: false
+      range:
+      - true
+      - false
+      type: bool
+    armhole_shape:
+      v: ArmholeCurve
+      range:
+      - ArmholeSquare
+      - ArmholeAngle
+      - ArmholeCurve
+      - null
+      type: select_null
+    length:
+      v: 20
+      range:
+      - 3
+      - 80
+      type: int
+    connecting_width:
+      v: 0.0
+      range:
+      - 0
+      - 1
+      type: float
+    end_width:
+      v: 1.0
+      range:
+      - 0.2
+      - 2
+      type: float
+    sleeve_angle:
+      v: 10
+      range:
+      - 10
+      - 50
+      type: int
+    standing_shoulder:
+      v: false
+      range:
+      - true
+      - false
+      type: bool
+    standing_shoulder_len:
+      v: 5.0
+      range:
+      - 4
+      - 10
+      type: float
+    connect_ruffle:
+      v: 1
+      range:
+      - 1
+      - 2
+      type: float
+    smoothing_coeff:
+      v: 0.25
+      range:
+      - 0.1
+      - 0.4
+      type: float
+    inclination:
+      v: 3
+      range:
+      - 2
+      - 6
+      type: float
+    cuff:
+      type:
+        v: CuffSkirt
+        range:
+        - CuffBand
+        - CuffSkirt
+        - CuffBandSkirt
+        - null
+        type: select_null
+      top_ruffle:
+        v: 1
+        range:
+        - 1
+        - 2
+        type: float
+      b_depth:
+        v: 3
+        range:
+        - 1
+        - 20
+        type: int
+      skirt_length:
+        v: 30
+        range:
+        - 5
+        - 50
+        type: int
+      skirt_flare:
+        v: 1.35
+        range:
+        - 1
+        - 2
+        type: float
+      skirt_ruffle:
+        v: 1.0
+        range:
+        - 1
+        - 1.5
+        type: float
+  left:
+    enable_asym:
+      v: false
+      range:
+      - true
+      - false
+      type: bool
+    shirt:
+      strapless:
+        v: false
+        range:
+        - true
+        - false
+        type: bool
+      length:
+        v: 1.2
+        range:
+        - 0.5
+        - 4.5
+        type: float
+      width:
+        v: 1.0
+        range:
+        - 1.0
+        - 2
+        type: float
+    collar:
+      f_collar:
+        v: CircleNeckHalf
+        range:
+        - CircleNeckHalf
+        - CurvyNeckHalf
+        - VNeckHalf
+        - SquareNeckHalf
+        - TrapezoidNeckHalf
+        - CircleArcNeckHalf
+        - null
+        type: select_null
+      b_collar:
+        v: CircleNeckHalf
+        range:
+        - CircleNeckHalf
+        - CurvyNeckHalf
+        - VNeckHalf
+        - SquareNeckHalf
+        - TrapezoidNeckHalf
+        - CircleArcNeckHalf
+        - null
+        type: select_null
+      width:
+        v: 0.85
+        range:
+        - -0.5
+        - 1
+        type: float
+      fc_depth:
+        v: 0.15
+        range:
+        - 0
+        - 1
+        type: float
+      bc_depth:
+        v: 0.0
+        range:
+        - 0
+        - 1
+        type: float
+      fc_angle:
+        v: 90
+        range:
+        - 30
+        - 180
+        type: int
+      bc_angle:
+        v: 90
+        range:
+        - 30
+        - 180
+        type: int
+      f_flip_curve:
+        v: false
+        range:
+        - true
+        - false
+        type: bool
+      b_flip_curve:
+        v: false
+        range:
+        - true
+        - false
+        type: bool
+      component:
+        style:
+          v: null
+          range:
+          - Turtle
+          - SimpleLapel
+          - null
+          type: select_null
+        depth:
+          v: 7
+          range:
+          - 2
+          - 8
+          type: int
+        lapel_standing:
+          v: false
+          range:
+          - true
+          - false
+          type: bool
+    sleeve:
+      sleeveless:
+        v: false
+        range:
+        - true
+        - false
+        type: bool
+      armhole_shape:
+        v: ArmholeCurve
+        range:
+        - ArmholeSquare
+        - ArmholeAngle
+        - ArmholeCurve
+        - null
+        type: select_null
+      length:
+        v: 20
+        range:
+        - 3
+        - 80
+        type: int
+      connecting_width:
+        v: 0.0
+        range:
+        - 0
+        - 1
+        type: float
+      end_width:
+        v: 1.0
+        range:
+        - 0.2
+        - 2
+        type: float
+      sleeve_angle:
+        v: 10
+        range:
+        - 10
+        - 50
+        type: int
+      standing_shoulder:
+        v: false
+        range:
+        - true
+        - false
+        type: bool
+      standing_shoulder_len:
+        v: 5.0
+        range:
+        - 4
+        - 10
+        type: float
+      connect_ruffle:
+        v: 1
+        range:
+        - 1
+        - 2
+        type: float
+      smoothing_coeff:
+        v: 0.25
+        range:
+        - 0.1
+        - 0.4
+        type: float
+      inclination:
+        v: 3
+        range:
+        - 2
+        - 6
+        type: float
+      cuff:
+        type:
+          v: CuffSkirt
+          range:
+          - CuffBand
+          - CuffSkirt
+          - CuffBandSkirt
+          - null
+          type: select_null
+        top_ruffle:
+          v: 1
+          range:
+          - 1
+          - 2
+          type: float
+        b_depth:
+          v: 3
+          range:
+          - 1
+          - 20
+          type: int
+        skirt_length:
+          v: 30
+          range:
+          - 5
+          - 50
+          type: int
+        skirt_flare:
+          v: 1.35
+          range:
+          - 1
+          - 2
+          type: float
+        skirt_ruffle:
+          v: 1.0
+          range:
+          - 1
+          - 1.5
+          type: float
+  skirt:
+    length:
+      v: 30
+      range:
+      - 5
+      - 150
+      type: int
+    ruffle:
+      v: 1.0
+      range:
+      - 1
+      - 2
+      type: float
+    bottom_cut:
+      v: 0
+      range:
+      - 0
+      - 20
+      type: int
+    flare:
+      v: 10
+      range:
+      - 0
+      - 20
+      type: int
+  flare-skirt:
+    length:
+      v: 0.2
+      range:
+      - 0.1
+      - 1
+      type: float
+    n_panels:
+      v: 4
+      range:
+      - 4
+      - 15
+      type: int
+    suns:
+      v: 0.5
+      range:
+      - 0.1
+      - 1.95
+      type: float
+    cut:
+      add:
+        v: false
+        range:
+        - true
+        - false
+        type: bool
+      depth:
+        v: 0.5
+        range:
+        - 0
+        - 0.95
+        type: float
+      width:
+        v: 0.1
+        range:
+        - 0
+        - 0.95
+        type: float
+      place:
+        v: -0.5
+        range:
+        - -1
+        - 1
+        type: float
+  godet-skirt:
+    base:
+      v: PencilSkirt
+      range:
+      - Skirt2
+      - PencilSkirt
+      - SkirtWB
+      type: select
+    insert_w:
+      v: 21
+      range:
+      - 10
+      - 50
+      type: int
+    insert_depth:
+      v: 40
+      range:
+      - 10
+      - 50
+      type: int
+    num_inserts:
+      v: 8
+      range:
+      - 4
+      - 6
+      - 8
+      - 10
+      - 12
+      type: select
+    cuts_distance:
+      v: 5
+      range:
+      - 0
+      - 10
+      type: int
+  pencil-skirt:
+    length:
+      v: 1.
+      range:
+      - 0.1
+      - 1
+      type: float
+    rise:
+      v: 1
+      range:
+      - 0.5
+      - 1
+      type: float
+    flare:
+      v: 0.7
+      range:
+      - 0.3
+      - 1
+      type: float
+    low_angle:
+      v: 0
+      range:
+      - -50
+      - 50
+      type: int
+    front_cut:
+      v: 0.0
+      range:
+      - 0
+      - 0.9
+      type: float
+    back_cut:
+      v: 0.0
+      range:
+      - 0
+      - 0.9
+      type: float
+    style_side_cut:
+      v: false
+      range:
+      - true
+      - false
+      type: bool
+  levels-skirt:
+    base:
+      v: PencilSkirt
+      range:
+      - Skirt2
+      - PencilSkirt
+      - SkirtWB
+      - SkirtCircle
+      type: select
+    level:
+      v: Skirt2
+      range:
+      - Skirt2
+      - SkirtCircle
+      type: select
+    num_levels:
+      v: 1
+      range:
+      - 1
+      - 5
+      type: int
+    level_ruffle:
+      v: 1.0
+      range:
+      - 1
+      - 2
+      type: float
+  pants:
+    length:
+      v: 0.3
+      range:
+      - 0.1
+      - 1
+      type: float
+    width:
+      v: 1.0
+      range:
+      - 1.0
+      - 1.5
+      type: float
+    flare:
+      v: 1.0
+      range:
+      - 0.5
+      - 1.5
+      type: float
+    rise:
+      v: 1.0
+      range:
+      - 0.5
+      - 1
+      type: float
+    ruffle_front:
+      v: false
+      range:
+      - true
+      - false
+      type: bool
+    ruffle_back:
+      v: false
+      range:
+      - true
+      - false
+      type: bool
+    cuff:
+      type:
+        v: null
+        range:
+        - CuffBand
+        - CuffSkirt
+        - CuffBandSkirt
+        - null
+        type: select_null
+      top_ruffle:
+        v: 1.0
+        range:
+        - 1
+        - 2
+        type: float
+      b_depth:
+        v: 5
+        range:
+        - 1
+        - 20
+        type: int
+      skirt_length:
+        v: 10
+        range:
+        - 5
+        - 20
+        type: int
+      skirt_flare:
+        v: 1.2
+        range:
+        - 1
+        - 2
+        type: float
+      skirt_ruffle:
+        v: 1.0
+        range:
+        - 1
+        - 1.5
+        type: float
