@@ -34,12 +34,12 @@ class PantPanel(pyp.Panel):
         # We distribute w_diff among the side angle and a dart 
         hw_shift = w_diff / 3
 
-        right = pyp.esf.curve_from_extreme(
+        right = pyp.esf.curve_3_points(
             [
                 min(- (low_width - pant_width), (pant_width - low_width) / 2),   # extend wide pants out
                 0],    
             [hw_shift, length + hips_depth],
-            target_extreme=[0, length]
+            target=[0, length]
         )
 
         top = pyp.Edge(

@@ -80,12 +80,12 @@ class EdgeSeqFactory:
         return EdgeSeqFactory.from_verts([0, 0], [width / 2, -depth_perp], [width, 0])
 
     @staticmethod
-    def curve_from_extreme(start, end, target_extreme):
+    def curve_from_extreme(start, end, target):
         """Create (Quadratic) curve edge that 
             has an extreme point as close as possible to target_extreme
             with extreme point aligned with it
         """
-        rel_target = _abs_to_rel_2d(start, end, target_extreme)
+        rel_target = _abs_to_rel_2d(start, end, target)
 
         out = minimize(
             _fit_y_extremum, 
@@ -99,6 +99,30 @@ class EdgeSeqFactory:
                 print(out)
 
         cp = [rel_target[0], out.x.item()]
+
+        return CurveEdge(start, end, control_points=[cp], relative=True)
+    
+    @staticmethod
+    def curve_3_points(start, end, target):
+        """Create (Quadratic) curve edge between start and end that
+            passes through the target point 
+        """
+        rel_target = _abs_to_rel_2d(start, end, target)
+
+        # Initialization with a target point as control point
+        # Ensures very smooth, minimal solution
+        out = minimize(
+            _fit_pass_point, 
+            rel_target,    
+            args=(rel_target)
+        )
+
+        if not out.success:
+            print('Curve From Extreme::Warning::Optimization not successful')
+            if flags.VERBOSE:
+                print(out)
+
+        cp = out.x.tolist()
 
         return CurveEdge(start, end, control_points=[cp], relative=True)
 

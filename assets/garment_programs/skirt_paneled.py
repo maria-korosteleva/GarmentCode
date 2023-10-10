@@ -92,16 +92,16 @@ class FittedSkirtPanel(pyp.Panel):
         # Adjust the bottom edge to the desired angle
         angle_shift = np.tan(np.deg2rad(low_angle)) * low_width
 
-        right = pyp.esf.curve_from_extreme(
+        right = pyp.esf.curve_3_points(
             [hips - low_width, angle_shift],    
             [hw_shift, length + adj_hips_depth],
-            target_extreme=[0, length]
+            target=[0, length]
         )
         top = pyp.Edge(right.end, [hips * 2 - hw_shift, length + adj_hips_depth])
-        left = pyp.esf.curve_from_extreme(
+        left = pyp.esf.curve_3_points(
             top.end,
             [hips + low_width, -angle_shift],
-            target_extreme=[hips * 2, length]
+            target=[hips * 2, length]
         )
         self.edges = pyp.EdgeSequence(right, top, left).close_loop()
         bottom = self.edges[-1]
