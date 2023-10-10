@@ -273,7 +273,7 @@ class Panel(BaseComponent):
             # Pylance + NP error for unreachanble code -- see https://github.com/numpy/numpy/issues/22146
             # Works ok for numpy 1.23.4+
             norm = np.cross(vert_1 - vert_0, center_3d - vert_0)
-            norm /= np.linalg.norm(norm)  # TODOLOW -- what if we don't add normalization? 
+            norm /= np.linalg.norm(norm) 
             norms.append(norm)
 
         # Current norm direction

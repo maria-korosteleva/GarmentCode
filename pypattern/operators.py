@@ -185,7 +185,6 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-4):
         raise RuntimeError(f'Cut_edge::ERROR::projection on {base_edge} finished with fun={out.fun}')
     
     if rel_offset + shift[0] > 1 + tol or (rel_offset - shift[1]) < 0 - tol:
-        # TODO Adjust offset if projection is breaking?
         raise RuntimeError(
             f'Cut_edge::ERROR::projection on {base_edge} is out of edge bounds: '
             f'[{rel_offset - shift[1], rel_offset + shift[0]}].'

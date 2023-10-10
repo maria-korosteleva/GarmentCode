@@ -37,7 +37,6 @@ class GodetSkirt(pyp.Component):
 
         self.interfaces = {
             'top': self.base.interfaces['top']
-            # TODO Add bottom interface? Can be done with interface.substitute func
         }
 
 
