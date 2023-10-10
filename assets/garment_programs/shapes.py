@@ -2,7 +2,7 @@
 
 
 # Custom
-import pypattern as pyp
+import pygarment as pyg
 
 def sample_arc(curve, length, stride, n_points, shift=0):
     ts = [(shift + i*stride) / length for i in range(n_points)]
@@ -17,10 +17,10 @@ def Sun(width, depth, n_rays=8, d_rays=5):
     """Sun-like mark"""
 
     # Outer arc
-    out_arc = pyp.CircleEdge.from_three_points(
+    out_arc = pyg.CircleEdge.from_three_points(
         [0, 0], [width, 0], [width/2, depth]
     )
-    in_arc = pyp.CircleEdge.from_three_points(
+    in_arc = pyg.CircleEdge.from_three_points(
         [d_rays, 0], [width - d_rays, 0], [width/2, depth - d_rays]
     )
     out_curve = out_arc.as_curve()
@@ -38,7 +38,7 @@ def Sun(width, depth, n_rays=8, d_rays=5):
     for i in range(len(in_verts)):
         verts.insert(i*2, in_verts[i])
 
-    return pyp.esf.from_verts(*verts)
+    return pyg.esf.from_verts(*verts)
 
 
 if __name__ == '__main__':

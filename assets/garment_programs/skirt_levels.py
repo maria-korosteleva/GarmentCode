@@ -3,11 +3,11 @@ from copy import deepcopy
 from scipy.spatial.transform import Rotation as R
 
 # Custom
-import pypattern as pyp
+import pygarment as pyg
 from .skirt_paneled import *
 from .circle_skirt import *
 
-class SkirtLevels(pyp.Component):
+class SkirtLevels(pyg.Component):
     """Skirt constiting of multuple stitched skirts"""
 
     def __init__(self, body, design) -> None:

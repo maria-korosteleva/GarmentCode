@@ -5,7 +5,7 @@
 """
 
 # Custom
-import pypattern as pyp
+import pygarment as pyg
 
 from assets.garment_programs.skirt_paneled import *
 from assets.garment_programs.circle_skirt import *
@@ -18,7 +18,7 @@ from assets.garment_programs.bands import *
 from assets.garment_programs.sleeves import *
 
 
-class MetaGarment(pyp.Component):
+class MetaGarment(pyg.Component):
     def __init__(self, name, body, design) -> None:
         super().__init__(name)
 

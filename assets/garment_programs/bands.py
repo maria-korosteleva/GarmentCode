@@ -1,23 +1,23 @@
 # Custom
-import pypattern as pyp
+import pygarment as pyg
 from . import skirt_paneled
 
 
-class BandPanel(pyp.Panel):
+class BandPanel(pyg.Panel):
     """One panel for a panel skirt"""
 
     def __init__(self, name, width, depth=10) -> None:
         super().__init__(name)
 
         # define edge loop
-        self.edges = pyp.esf.from_verts([0,0], [0, depth], [width, depth], [width, 0], loop=True)
+        self.edges = pyg.esf.from_verts([0,0], [0, depth], [width, depth], [width, 0], loop=True)
 
         # define interface
         self.interfaces = {
-            'right': pyp.Interface(self, self.edges[0]),
-            'top': pyp.Interface(self, self.edges[1]).reverse(True),
-            'left': pyp.Interface(self, self.edges[2]),
-            'bottom': pyp.Interface(self, self.edges[3])
+            'right': pyg.Interface(self, self.edges[0]),
+            'top': pyg.Interface(self, self.edges[1]).reverse(True),
+            'left': pyg.Interface(self, self.edges[2]),
+            'bottom': pyg.Interface(self, self.edges[3])
         }
 
         # Default translation
@@ -25,7 +25,7 @@ class BandPanel(pyp.Panel):
         self.center_x()
 
 
-class WB(pyp.Component):
+class WB(pyg.Component):
     """Simple 2 panel waistband"""
     def __init__(self, body, design) -> None:
         super().__init__(self.__class__.__name__)
@@ -38,7 +38,7 @@ class WB(pyp.Component):
         self.back = BandPanel('wb_back', self.waist / 2, self.width)
         self.back.translate_by([0, body['waist_level'], -15])  
 
-        self.stitching_rules = pyp.Stitches(
+        self.stitching_rules = pyg.Stitches(
             (self.front.interfaces['right'], self.back.interfaces['right']),
             (self.front.interfaces['left'], self.back.interfaces['left'])
         )
@@ -51,12 +51,12 @@ class WB(pyp.Component):
             'top_f': self.front.interfaces['top'],
             'top_b': self.back.interfaces['top'],
 
-            'bottom': pyp.Interface.from_multiple(self.front.interfaces['bottom'], self.back.interfaces['bottom']),
-            'top': pyp.Interface.from_multiple(self.front.interfaces['top'], self.back.interfaces['top']),
+            'bottom': pyg.Interface.from_multiple(self.front.interfaces['bottom'], self.back.interfaces['bottom']),
+            'top': pyg.Interface.from_multiple(self.front.interfaces['top'], self.back.interfaces['top']),
         }
 
 
-class CuffBand(pyp.Component):
+class CuffBand(pyg.Component):
     """ Cuff class for sleeves or pants
         band-like piece of fabric with optional "skirt"
     """
@@ -72,21 +72,21 @@ class CuffBand(pyp.Component):
             f'{tag}_cuff_b', design['b_width']['v'] / 2, design['b_depth']['v'])
         self.back.translate_by([0, 0, -15])  
 
-        self.stitching_rules = pyp.Stitches(
+        self.stitching_rules = pyg.Stitches(
             (self.front.interfaces['right'], self.back.interfaces['right']),
             (self.front.interfaces['left'], self.back.interfaces['left'])
         )
 
         self.interfaces = {
-            'bottom': pyp.Interface.from_multiple(
+            'bottom': pyg.Interface.from_multiple(
                 self.front.interfaces['bottom'], self.back.interfaces['bottom']),
             'top_front': self.front.interfaces['top'],
             'top_back': self.back.interfaces['top'],
-            'top': pyp.Interface.from_multiple(
+            'top': pyg.Interface.from_multiple(
                 self.front.interfaces['top'], self.back.interfaces['top']),
         }
 
-class CuffSkirt(pyp.Component):
+class CuffSkirt(pyg.Component):
     """A skirt-like flared cuff """
 
     def __init__(self, tag, design) -> None:
@@ -107,21 +107,21 @@ class CuffSkirt(pyp.Component):
             flare=flare_diff)
         self.back.translate_by([0, 0, -15])  
 
-        self.stitching_rules = pyp.Stitches(
+        self.stitching_rules = pyg.Stitches(
             (self.front.interfaces['right'], self.back.interfaces['right']),
             (self.front.interfaces['left'], self.back.interfaces['left'])
         )
 
         self.interfaces = {
-            'top': pyp.Interface.from_multiple(
+            'top': pyg.Interface.from_multiple(
                 self.front.interfaces['top'], self.back.interfaces['top']),
             'top_front': self.front.interfaces['top'],
             'top_back': self.back.interfaces['top'],
-            'bottom': pyp.Interface.from_multiple(
+            'bottom': pyg.Interface.from_multiple(
                 self.front.interfaces['bottom'], self.back.interfaces['bottom']),
         }
 
-class CuffBandSkirt(pyp.Component):
+class CuffBandSkirt(pyg.Component):
     """ Cuff class for sleeves or pants
         band-like piece of fabric with optional "skirt"
     """
@@ -134,7 +134,7 @@ class CuffBandSkirt(pyp.Component):
         # Align
         self.skirt.place_below(self.cuff)
 
-        self.stitching_rules = pyp.Stitches(
+        self.stitching_rules = pyg.Stitches(
             (self.cuff.interfaces['bottom'], self.skirt.interfaces['top']),
         )
 

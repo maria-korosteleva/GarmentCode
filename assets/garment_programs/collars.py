@@ -2,7 +2,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 # Custom
-import pypattern as pyp
+import pygarment as pyg
 
 # Other assets
 
@@ -14,7 +14,7 @@ from .circle_skirt import CircleArcPanel
 def VNeckHalf(depth, width, **kwargs):
     """Simple VNeck design"""
 
-    edges = pyp.EdgeSequence(pyp.Edge([0, 0], [width / 2,-depth]))
+    edges = pyg.EdgeSequence(pyg.Edge([0, 0], [width / 2,-depth]))
     
     return edges
 
@@ -22,7 +22,7 @@ def VNeckHalf(depth, width, **kwargs):
 def SquareNeckHalf(depth, width, **kwargs):
     """Square design"""
 
-    edges = pyp.esf.from_verts([0, 0], [0, -depth], [width / 2, -depth])
+    edges = pyg.esf.from_verts([0, 0], [0, -depth], [width / 2, -depth])
     
     return edges
 
@@ -30,14 +30,14 @@ def TrapezoidNeckHalf(depth, width, angle=90, **kwargs):
     """Trapesoid neck design"""
 
     # Special case when angle = 180 (sin = 0)
-    if (pyp.utils.close_enough(angle, 180, tol=1) 
-            or pyp.utils.close_enough(angle, 0, tol=1)):
+    if (pyg.utils.close_enough(angle, 180, tol=1) 
+            or pyg.utils.close_enough(angle, 0, tol=1)):
         # degrades into VNeck
         return VNeckHalf(depth, width)
 
     angle = np.deg2rad(angle)
 
-    edges = pyp.esf.from_verts([0, 0], [-depth * np.cos(angle) / np.sin(angle), -depth], [width / 2, -depth])
+    edges = pyg.esf.from_verts([0, 0], [-depth * np.cos(angle) / np.sin(angle), -depth], [width / 2, -depth])
 
     return edges
 
@@ -47,7 +47,7 @@ def CurvyNeckHalf(depth, width, flip=False, **kwargs):
     """Testing Curvy Collar design"""
 
     sign = -1 if flip else 1
-    edges = pyp.EdgeSequence(pyp.CurveEdge(
+    edges = pyg.EdgeSequence(pyg.CurveEdge(
         [0, 0], [width / 2,-depth], 
         [[0.4, sign * 0.3], [0.8, sign * -0.3]]))
     
@@ -57,7 +57,7 @@ def CurvyNeckHalf(depth, width, flip=False, **kwargs):
 def CircleArcNeckHalf(depth, width, angle=90, flip=False, **kwargs):
     """Collar with a side represented by a circle arc"""
     # 1/4 of a circle
-    edges = pyp.EdgeSequence(pyp.CircleEdge.from_points_angle(
+    edges = pyg.EdgeSequence(pyg.CircleEdge.from_points_angle(
         [0, 0], [width / 2,-depth], arc_angle=np.deg2rad(angle),
         right=(not flip)
     ))
@@ -68,16 +68,16 @@ def CircleNeckHalf(depth, width, **kwargs):
     """Collar that forms a perfect circle arc when halfs are stitched"""
 
     # Take a full desired arc and half it!
-    circle = pyp.CircleEdge.from_three_points([0, 0], [width, 0], [width / 2, -depth])
+    circle = pyg.CircleEdge.from_three_points([0, 0], [width, 0], [width / 2, -depth])
 
     subdiv = circle.subdivide_len([0.5, 0.5])
 
-    return pyp.EdgeSequence(subdiv[0])
+    return pyg.EdgeSequence(subdiv[0])
 
 
 # # ------ Collars with panels ------
 
-class NoPanelsCollar(pyp.Component):
+class NoPanelsCollar(pyg.Component):
     """Face collar class that only only forms the projected shapes """
     
     def __init__(self, name, body, design) -> None:
@@ -100,12 +100,12 @@ class NoPanelsCollar(pyp.Component):
             flip=design['collar']['b_flip_curve']['v'])
         
         self.interfaces = {
-            'front_proj': pyp.Interface(self, f_collar),
-            'back_proj': pyp.Interface(self, b_collar)
+            'front_proj': pyg.Interface(self, f_collar),
+            'back_proj': pyg.Interface(self, b_collar)
         }
 
 
-class Turtle(pyp.Component):
+class Turtle(pyg.Component):
 
     def __init__(self, tag, body, design) -> None:
         super().__init__(f'Turtle_{tag}')
@@ -121,8 +121,8 @@ class Turtle(pyp.Component):
             design['collar']['width']['v'])
         
         self.interfaces = {
-            'front_proj': pyp.Interface(self, f_collar),
-            'back_proj': pyp.Interface(self, b_collar)
+            'front_proj': pyg.Interface(self, f_collar),
+            'back_proj': pyg.Interface(self, b_collar)
         }
 
         # -- Panels --
@@ -142,23 +142,23 @@ class Turtle(pyp.Component):
         self.interfaces.update({
             'front': self.front.interfaces['left'],
             'back': self.back.interfaces['left'],
-            'bottom': pyp.Interface.from_multiple(
+            'bottom': pyg.Interface.from_multiple(
                 self.front.interfaces['bottom'],
                 self.back.interfaces['bottom']
             )
         })
 
-class SimpleLapelPanel(pyp.Panel):
+class SimpleLapelPanel(pyg.Panel):
     """A panel for the front part of simple Lapel"""
     def __init__(self, name, length, max_depth) -> None:
         super().__init__(name)
 
-        self.edges = pyp.esf.from_verts(
+        self.edges = pyg.esf.from_verts(
             [0, 0], [max_depth, 0], [max_depth, -length]
         )
 
         self.edges.append(
-            pyp.CurveEdge(
+            pyg.CurveEdge(
                 self.edges[-1].end, 
                 self.edges[0].start, 
                 [[0.7, 0.2]]
@@ -166,12 +166,12 @@ class SimpleLapelPanel(pyp.Panel):
         )
 
         self.interfaces = {
-            'to_collar': pyp.Interface(self, self.edges[0]),
-            'to_bodice': pyp.Interface(self, self.edges[1])
+            'to_collar': pyg.Interface(self, self.edges[0]),
+            'to_bodice': pyg.Interface(self, self.edges[1])
         }
 
 
-class SimpleLapel(pyp.Component):
+class SimpleLapel(pyg.Component):
 
     def __init__(self, tag, body, design) -> None:
         super().__init__(f'Turtle_{tag}')
@@ -193,8 +193,8 @@ class SimpleLapel(pyp.Component):
             design['collar']['width']['v'])
         
         self.interfaces = {
-            'front_proj': pyp.Interface(self, f_collar),
-            'back_proj': pyp.Interface(self, b_collar)
+            'front_proj': pyg.Interface(self, f_collar),
+            'back_proj': pyg.Interface(self, b_collar)
         }
 
         # -- Panels --
@@ -224,7 +224,7 @@ class SimpleLapel(pyp.Component):
         self.interfaces.update({
             #'front': NOTE: no front interface here
             'back': self.back.interfaces['left'] if standing else self.back.interfaces['right'],
-            'bottom': pyp.Interface.from_multiple(
+            'bottom': pyg.Interface.from_multiple(
                 self.front.interfaces['to_bodice'],
                 self.back.interfaces['bottom'] if standing else self.back.interfaces['top'],
             )

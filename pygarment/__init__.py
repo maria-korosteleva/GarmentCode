@@ -10,9 +10,9 @@ from .interface import Interface
 from .edge_factory import EdgeSeqFactory as esf
 
 # Operations
-import pypattern.operators as ops
-import pypattern.generic_utils as utils
-import pypattern.flags as flags
+import pygarment.operators as ops
+import pygarment.generic_utils as utils
+import pygarment.flags as flags
 
 # Parameter support
 from .params import *
