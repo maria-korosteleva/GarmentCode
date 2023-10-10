@@ -23,8 +23,8 @@ from assets.body_measurments.body_params import BodyParameters
 if __name__ == '__main__':
     bodies_measurements = {
         'avg': './assets/body_measurments/f_smpl_avg.yaml',
-        'thin': './assets/body_measurments/f_smpl_model.yaml',
-        'fluffy': './assets/body_measurments/f_smpl_model_fluffy.yaml',
+        'thin': './assets/body_measurments/f_smpl_thin.yaml',
+        'fluffy': './assets/body_measurments/f_smpl_fluffy.yaml',
         'man': './assets/body_measurments/m_smpl_avg.yaml'
     }
     body_to_use = 'thin'   # CHANGE HERE to use different set of body measurements
