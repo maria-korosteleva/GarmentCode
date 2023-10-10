@@ -1316,7 +1316,7 @@ class Scene(object):
         
         # image setup
         old_setup = self._set_image_size(im_size, im_size[0]/im_size[1], im_size[0]/im_size[1])
-        cmds.setAttr("defaultArnoldDriver.aiTranslator", "tif", type="string")   #REVIEW - for paper
+        cmds.setAttr("defaultArnoldDriver.aiTranslator", "png", type="string")   #REVIEW - for paper
 
         # fixing dark rendering problem
         # https://forums.autodesk.com/t5/maya-shading-lighting-and/output-render-w-color-management-is-darker-than-render-view/td-p/7207081
