@@ -57,3 +57,6 @@ Our library serializes sewing patterns in a JSON format that extends the file fo
 Using this tool is exactly the same as in the original project, follow the instrustions here: [Garment Viewer](https://github.com/maria-korosteleva/Garment-Pattern-Generator/blob/master/docs/Setting_up_generator.md#preview-your-setup-in-garmentviewer-gui)
 
 
+### Material properties
+
+Material properties for garment simulation (in Garment Viewer) that were used for the figures in the paper are located in [assets/Sim_props](assets/Sim_props)
