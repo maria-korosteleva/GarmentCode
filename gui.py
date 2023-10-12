@@ -1,6 +1,7 @@
 import os
 import sys
 
+# Makes core library available without extra installation steps
 sys.path.insert(0, './external/')
 sys.path.insert(1, './')
 

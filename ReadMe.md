@@ -1,34 +1,36 @@
 # GarmentCode: Programming Parametric Sewing Patterns
 
-![Examples of garments sampled from GarmentCode configurator](assets/img/header.png)
+![Examples of garments sampled from GarmentCode configurator](https://github.com/maria-korosteleva/GarmentCode/blob/master/assets/img/header.png)
 
-Implementation of GarmentCode architecture and garment programs.
+Official Implementation of [GarmentCode: Programming Parametric Sewing Patterns](https://arxiv.org/abs/2306.03642), including architecture and garment programs.
 
 ## Documents
 
-Provided in `./docs` folder
-
-1. Installtion instructions: [Installation](docs/Installation.md)
-2. How to run the configurator & adjust parameters: [Running](docs/Running.md)
+1. Installtion instructions: [Installation](https://github.com/maria-korosteleva/GarmentCode/blob/master/docs/Installation.md)
+2. How to run the configurator & adjust parameters: [Running](https://github.com/maria-korosteleva/GarmentCode/blob/master/docs/Running.md)
 
 ## Navigation
 
 ### Library
 
-[PyGarment](pypattern) is the core library described in the GarmentCode paper. It containes the base types (Edge, Panel, Component, Interface, etc.), as well as edge factory and various helpers and operators that help you design sewing patterns.  
+[PyGarment](https://github.com/maria-korosteleva/GarmentCode/tree/master/pygarment) is the core library described in the GarmentCode paper. It contains the base types (Edge, Panel, Component, Interface, etc.), as well as edge factory and various helpers and operators that help you design sewing patterns.  
+
+Install with 
+```
+pip install pygarment
+```
 
 ### Examples
 
-* [assets/garment_programs/](assets/garment_programs/) contains the code of garment components designed using PyGarment. 
-* [assets/design_params/](assets/design_params/), [assets/body_measurements/](assets/body_measurments/) contain examples of design and body measurements presets corresponding to the designs and retargeting results showcased in our GarmentCode paper. They can be used in both GarmentCode GUI and `test_garments.py` script.
+* [assets/garment_programs/](https://github.com/maria-korosteleva/GarmentCode/tree/master/assets/garment_programs/) contains the code of garment components designed using PyGarment. 
+* [assets/design_params/](https://github.com/maria-korosteleva/GarmentCode/tree/master/assets/design_params/), [assets/body_measurements/](https://github.com/maria-korosteleva/GarmentCode/tree/master/assets/body_measurments/) contain examples of design and body measurements presets corresponding to the designs and retargeting results showcased in our GarmentCode paper. They can be used in both GarmentCode GUI and `test_garments.py` script.
 
-> NOTE: [assets/design_params/default.yaml](assets/design_params/default.yaml) is the setup used by GUI on load. Changing this file results in changes in the GUI initial state =) 
+> NOTE: [assets/design_params/default.yaml](https://github.com/maria-korosteleva/GarmentCode/blob/master/assets/design_params/default.yaml) is the setup used by GUI on load. Changing this file results in changes in the GUI initial state =) 
 
 
 ## Citation
 
 If you are using our system in your research, please cite our paper:
-
 
 ```
 @article{GarmentCode2023,
@@ -56,7 +58,7 @@ For other requests you can find my info on https://korosteleva.com/.
 
 
 ## Attribution & Body use disclaimer
-We are using samples from [SMPL](https://smpl.is.tue.mpg.de/) body model as base for [Body Model examples](assets/Bodies). 
+We are using samples from [SMPL](https://smpl.is.tue.mpg.de/) body model as base for [Body Model examples](https://github.com/maria-korosteleva/GarmentCode/tree/master/assets/Bodies). 
 
 ### Disclaimer
 Due to the restrictions of the SMPL license, we cannot share all 3D models of the body shapes used in our paper, except for the base average bodies for male and female versions of SMPL. We nevertheless share the approximate body measurements of the thin and the full-bodied models to showcase the adaptation of the patterns to different body types. 

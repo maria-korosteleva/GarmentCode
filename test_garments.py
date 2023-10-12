@@ -5,11 +5,11 @@ import yaml
 import sys
 import shutil 
 
+# Makes core library available without extra installation steps
 sys.path.insert(0, './external/')
 sys.path.insert(1, './')
 
 # Custom
-from customconfig import Properties
 from assets.garment_programs.skirt_paneled import *
 from assets.garment_programs.tee import *
 from assets.garment_programs.godet import *

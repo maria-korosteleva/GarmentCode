@@ -1,11 +1,23 @@
 # Installation
 
-## Install python with dependencies:
+## Using pip
+
+With pip, you can install the core pygarment library and its dependencies to start writing your own garment programs!
+
+```
+pip install pygarment
+```
+
+## Manual Installation
+
+If required, you could install the library and dependecies manually
+
+### Install python with dependencies:
 
 * Python 3.9
 * numpy
 * scipy
-* pyaml
+* pyyaml >= 6.0
 * [svgwrite](https://pypi.org/project/svgwrite/)
 * psutil
 * matplotlib
@@ -29,17 +41,9 @@ pip install numpy scipy pyaml svgwrite psutil matplotlib svgpathtools cairosvg p
 > * The dependency on [Pattern Generator](https://github.com/maria-korosteleva/Garment-Pattern-Generator) is included in the repo (`./external`), and will be loaded automatically by test script
 > * The environemtal variables needed for correct lib loading are set up in the test script
 
-## Configuration of local paths
-
-Same as here: [Garment-Pattern-Generator/Installation](https://github.com/maria-korosteleva/Garment-Pattern-Generator/blob/master/docs/Installation.md#local-paths-setup)
-
-NOTE: Currently, only the 'output' path is actually used, so it is enough to set up only 'output' parameter
-
-## Using as a library in other projects
+### Using as a library in other projects
 
 Add GarmentCode repository to `PYTHONPATH`.
-
-> NOTE: We do not currently have installation script or pip package for PyGarment. Contributions are welcomed!
 
 ## (Optional) Installing Autodesk Maya+Qualoth garment viewer GUI
 
