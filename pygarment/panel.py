@@ -51,8 +51,8 @@ class Panel(BaseComponent):
 
         # UPD vertex locations relative to new pivot
         for v in self.edges.verts():
-            v[0] -= point_2d[0]
-            v[1] -= point_2d[1]
+            v[0] -= int(point_2d[0])
+            v[1] -= int(point_2d[1])
 
     def top_center_pivot(self):
         """One of the most useful pivots 
