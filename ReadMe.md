@@ -1,4 +1,3 @@
-
 # GarmentCode: Programming Parametric Sewing Patterns
 
 ![Examples of garments sampled from GarmentCode configurator](assets/img/header.png)
@@ -16,7 +15,7 @@ Provided in `./docs` folder
 
 ### Library
 
-[PyGarment](pypattern) is the core library described in GarmentCode paper. It containes the base types (Edge, Panel, Component, Interface, etc.), as well as edge factory and various helpers and operators that help you design sewing patterns.  
+[PyGarment](pypattern) is the core library described in the GarmentCode paper. It containes the base types (Edge, Panel, Component, Interface, etc.), as well as edge factory and various helpers and operators that help you design sewing patterns.  
 
 ### Examples
 
@@ -28,13 +27,13 @@ Provided in `./docs` folder
 
 ## Citation
 
-If you are using our system in your research, consider citing our paper.
+If you are using our system in your research, please cite our paper:
 
 
 ```
 @article{GarmentCode2023,
   author = {Korosteleva, Maria and Sorkine-Hornung, Olga},
-  title = {GarmentCode: Programming Parametric Sewing Patterns},
+  title = {{GarmentCode}: Programming Parametric Sewing Patterns},
   year = {2023},
   issue_date = {December 2023},
   publisher = {Association for Computing Machinery},
@@ -43,6 +42,7 @@ If you are using our system in your research, consider citing our paper.
   number = {6},
   doi = {10.1145/3618351},
   journal = {ACM Transaction on Graphics},
+  note = {SIGGRAPH ASIA 2023 issue},
   numpages = {16},
   keywords = {sewing patterns, garment modeling}
 }
@@ -50,7 +50,7 @@ If you are using our system in your research, consider citing our paper.
 
 ## Issues, questions, suggestions
 
-Please, post your issues and questions to [GitHub Issues](https://github.com/maria-korosteleva/GarmentCode/issues).
+Please post your issues and questions to [GitHub Issues](https://github.com/maria-korosteleva/GarmentCode/issues).
 
 For other requests you can find my info on https://korosteleva.com/.  
 
@@ -59,4 +59,4 @@ For other requests you can find my info on https://korosteleva.com/.
 We are using samples from [SMPL](https://smpl.is.tue.mpg.de/) body model as base for [Body Model examples](assets/Bodies). 
 
 ### Disclaimer
-Due to the restrictiond of SMPL License we cannot share all 3D models of the body shapes used in our paper, except for the base average bodies for male and female versions of SMPL. We nontheless share the approximate body measurements a skinny and fluffy models to showcase the adaptation of the patterns to different body types. 
+Due to the restrictions of the SMPL license, we cannot share all 3D models of the body shapes used in our paper, except for the base average bodies for male and female versions of SMPL. We nevertheless share the approximate body measurements of the thin and the full-bodied models to showcase the adaptation of the patterns to different body types. 
