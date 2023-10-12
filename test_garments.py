@@ -24,10 +24,10 @@ if __name__ == '__main__':
     bodies_measurements = {
         'avg': './assets/body_measurments/f_smpl_avg.yaml',
         'thin': './assets/body_measurments/f_smpl_thin.yaml',
-        'fluffy': './assets/body_measurments/f_smpl_fluffy.yaml',
+        'full-bodied': './assets/body_measurments/f_smpl_full_bodied.yaml',
         'man': './assets/body_measurments/m_smpl_avg.yaml'
     }
-    body_to_use = 'thin'   # CHANGE HERE to use different set of body measurements
+    body_to_use = 'full-bodied'   # CHANGE HERE to use different set of body measurements
 
     body = BodyParameters(bodies_measurements[body_to_use])
 
