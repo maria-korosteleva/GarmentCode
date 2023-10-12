@@ -43,7 +43,7 @@ pip install numpy scipy pyaml svgwrite psutil matplotlib svgpathtools cairosvg p
 
 ### Using as a library in other projects
 
-Add GarmentCode repository to `PYTHONPATH`.
+Add the root repository to `PYTHONPATH`.
 
 ## (Optional) Installing Autodesk Maya+Qualoth garment viewer GUI
 
@@ -53,5 +53,5 @@ Our library serializes sewing patterns in a JSON format that extends the file fo
 
 1. Obtain Maya and Qualoth
 1. Installing python libraries into python environment
-1. Setup environment variables (NEW!) pointing to the `./external` subdirectory of the GarmentCode repo
+1. (NEW!) Setup environment variables pointing to the `./external` subdirectory of the GarmentCode repo
 
