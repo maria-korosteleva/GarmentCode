@@ -8,6 +8,7 @@ import numpy as np
 # Custom
 import pypattern as pyp
 
+# FIXME Length measured from the shoulder point as in bodice
 class TorsoFrontHalfPanel(pyp.Panel):
     """Half of a simple non-fitted upper garment (e.g. T-Shirt)
     
