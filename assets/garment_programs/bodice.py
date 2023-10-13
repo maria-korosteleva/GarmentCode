@@ -43,7 +43,7 @@ class BodiceFrontHalf(pyp.Panel):
 
         # Side dart
         bust_line = body['waist_line'] - body['bust_line']
-        side_d_depth = 0.7 * (self.width - bust_point)    # NOTE: calculated value 
+        side_d_depth = 0.65 * (self.width - bust_point)    # NOTE: calculated value 
         side_d_width = max_len - side_len
         s_edge, side_interface = self.add_dart(
             pyp.esf.dart_shape(side_d_width, side_d_depth), 
@@ -93,8 +93,8 @@ class BodiceBackHalf(pyp.Panel):
         
         self.width = back_fraction * m_bust
         waist = body['waist_back_width'] / 2   # back_fraction * m_waist
-        # slight inclination on the side
-        waist_width = self.width - (self.width - waist) / 3 if waist < self.width else waist   
+        # NOTE: no inclination on the side, since there is not much to begin with
+        waist_width = self.width if waist < self.width else waist  
 
         shoulder_incl = np.tan(np.deg2rad(body['shoulder_incl'])) * self.width
 
@@ -119,7 +119,7 @@ class BodiceBackHalf(pyp.Panel):
 
         # Bottom dart as cutout -- for straight line
         if waist < self.width:
-            bottom_d_width = (self.width - waist) * 2 / 3 
+            bottom_d_width = waist_width - waist
             bottom_d_width /= 2   # double darts
             bottom_d_depth = 0.9 * (length - body['bust_line'])  # calculated value
             bottom_d_position = body['bum_points'] / 2
@@ -181,9 +181,6 @@ class BodiceHalf(pyp.Component):
                 self.ftorso.interfaces['shoulder'], 
                 self.btorso.interfaces['shoulder']
             ))  # tops
-
-            # DEBUG
-            print('Shoulder width: ', self.ftorso.interfaces['shoulder'].edges.length())
 
         # Main connectivity
         self.stitching_rules.append((

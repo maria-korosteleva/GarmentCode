@@ -281,7 +281,7 @@ class PencilSkirt(pyp.Component):
             (body['waist'] - body['waist_back_width']) / 2,
             (body['hips'] - body['hip_back_width']) / 2,
             dart_position=body['bust_points'] / 2,
-            dart_frac=0.9,  # 1.35,  # Diff for front and back
+            dart_frac=0.8,  # Diff for front and back
             slit=design['front_slit']['v'], 
             left_slit=design['left_slit']['v'], 
             right_slit=design['right_slit']['v'],
