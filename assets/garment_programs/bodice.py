@@ -182,6 +182,12 @@ class BodiceHalf(pyp.Component):
                 self.btorso.interfaces['shoulder']
             ))  # tops
 
+        # DEBUG
+        print('Side stitch ', 
+              self.ftorso.interfaces['outside'].edges.length(),
+              self.btorso.interfaces['outside'].edges.length()
+              )
+
         # Main connectivity
         self.stitching_rules.append((
             self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
@@ -301,8 +307,15 @@ class BodiceHalf(pyp.Component):
         out_depth = design['sleeve']['connecting_width']['v']
         f_in_depth = design['collar']['f_strapless_depth']['v']
         b_in_depth = design['collar']['b_strapless_depth']['v']
+
+        # Compensate for lenght difference
+        # FIXME Too many patches around length difference ?
+        len_front = self.ftorso.interfaces['outside'].edges.length()
+        len_back = self.btorso.interfaces['outside'].edges.length()
+        diff = len_back - len_front
+
         self._adjust_top_level(self.ftorso, out_depth, f_in_depth)
-        self._adjust_top_level(self.btorso, out_depth, b_in_depth)
+        self._adjust_top_level(self.btorso, out_depth - diff, b_in_depth)
 
     def _adjust_top_level(self, panel, out_level, in_level):
         """NOTE: Assumes the top of the panel is a single edge
