@@ -18,9 +18,7 @@ class BodiceFrontHalf(pyp.Panel):
         m_waist = body['waist']
 
         # sizes   
-        max_len = body['waist_over_bust_line']
         bust_point = body['bust_points'] / 2
-
         front_frac = (body['bust'] - body['back_width']) / 2 / body['bust'] 
 
         self.width = front_frac * m_bust
@@ -28,10 +26,16 @@ class BodiceFrontHalf(pyp.Panel):
         shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
         bottom_d_width = (self.width - waist) * 2 / 3   # TODO probably need a correction here!
 
+        # Adjust to make sure length is measured from the shoulder
+        # and not the de-fact side of the garment
+        adjustment = sh_tan * (self.width - body['sholder_w'] / 2)
+        max_len = body['waist_over_bust_line'] - adjustment
+
         # side length is adjusted due to shoulder inclination
         # for the correct sleeve fitting
         fb_diff = (front_frac - (0.5 - front_frac)) * body['bust']
-        side_len = body['waist_line'] - sh_tan * fb_diff
+        back_adjustment = sh_tan * (body['back_width'] / 2 - body['sholder_w'] / 2)
+        side_len = body['waist_line'] - back_adjustment - sh_tan * fb_diff 
 
         self.edges = pyp.esf.from_verts(
             [0, 0], 
@@ -84,19 +88,19 @@ class BodiceBackHalf(pyp.Panel):
     def __init__(self, name, body, design) -> None:
         super().__init__(name)
 
-        # account for ease in basic measurements
-        m_bust = body['bust']
+        # TODO account for ease in basic measurements
 
-        # Overall measurements
-        length = body['waist_line']
-        back_fraction = body['back_width'] / body['bust'] / 2
-        
-        self.width = back_fraction * m_bust
-        waist = body['waist_back_width'] / 2   # back_fraction * m_waist
+        # Overall measurements        
+        self.width = body['back_width'] / 2
+        waist = body['waist_back_width'] / 2  
         # NOTE: no inclination on the side, since there is not much to begin with
         waist_width = self.width if waist < self.width else waist  
+        shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
 
-        shoulder_incl = np.tan(np.deg2rad(body['shoulder_incl'])) * self.width
+        # Adjust to make sure length is measured from the shoulder
+        # and not the de-fact side of the garment
+        back_adjustment = sh_tan * (self.width - body['sholder_w'] / 2)
+        length = body['waist_line'] - back_adjustment
 
         # Base edge loop
         self.edges = pyp.esf.from_verts(
@@ -181,12 +185,6 @@ class BodiceHalf(pyp.Component):
                 self.ftorso.interfaces['shoulder'], 
                 self.btorso.interfaces['shoulder']
             ))  # tops
-
-        # DEBUG
-        print('Side stitch ', 
-              self.ftorso.interfaces['outside'].edges.length(),
-              self.btorso.interfaces['outside'].edges.length()
-              )
 
         # Main connectivity
         self.stitching_rules.append((
