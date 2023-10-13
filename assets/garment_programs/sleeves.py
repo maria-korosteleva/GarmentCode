@@ -130,6 +130,9 @@ class SleevePanel(pyp.Panel):
             [0, 0], [0, -end_width], [length, -arm_width]
         )
 
+        # DEBUG
+        print('Sleeve opening shape ', open_shape.length( ))
+
         # Align the opening
         open_shape.snap_to(self.edges[-1].end)
         open_shape[0].start = self.edges[-1].end   # chain
@@ -182,6 +185,9 @@ class Sleeve(pyp.Component):
 
         design = design['sleeve']
         inclination = max(1, (body['back_width'] - body['sholder_w']) / 2)
+
+        # DEBUG
+        print('Sleeve inclination ', inclination)
 
         rest_angle = max(np.deg2rad(design['sleeve_angle']['v']), np.deg2rad(body['shoulder_incl']))
 

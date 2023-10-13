@@ -9,7 +9,7 @@ body:
   armscye_depth: 15  # Nape of the Neck to armscye depth on the back
   shoulder_incl: 10  # degrees
 
-  arm_pose_angle: 30  # Degrees
+  arm_pose_angle: 80  # Degrees
   arm_length: 80  # TODO Check
 
   waist:  80  # 82 adjusted for 'dips'
@@ -26,7 +26,7 @@ body:
   hips: 107  
   hip_back_width: 55  # DRAFT Tentative number  # TODO Add to all measurements
   hips_line:  22  # 18    # From the waist
-  hip_inclination: 9 #7 #  12
+  hip_inclination: 5 
   bum_points: 16
   crotch_hip_diff: 14   # NOTE vertical projection of the level
   leg_circ: 64

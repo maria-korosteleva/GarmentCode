@@ -13,6 +13,9 @@ class BodyParameters(pyp.BodyParametrizationBase):
 
         self.params['waist_level'] = self.params['height'] - self.params['head_l'] - self.params['waist_line']
         self.params['leg_length'] = self.params['waist_level'] - self.params['hips_line']
+        # Correct sleeve line location is a little closer to the neck
+        # than the true shoulder width
+        self.params['sholder_w'] = self.params['sholder_w'] - 4
 
 if __name__ == "__main__":
 
