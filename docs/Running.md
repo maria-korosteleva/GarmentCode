@@ -6,7 +6,7 @@ python gui.py
 ```
 
 It can load body and design parameter files and display the corresponding sewing pattern right away.
-Design files should be compatible with `MetaGarment` object (all examples provided in our supplementary materials are compatible, you can load `design_params.yaml` files).
+Design files should be compatible with `MetaGarment` object (all examples provided [assets/design_params/](../assets/design_params) are compatible).
 
 ### GUI: Notes on use
 
@@ -27,7 +27,7 @@ It will create sewing pattern for the current state of `assets/design_params/def
 
 ### Modifying the parameters
 ​
-`./assets/design_params/default.yaml` contains the full set of style parameters for creating samples of our garment configurator.
+[assets/design_params/default.yaml](../assets/design_params/default.yaml) contains the full set of style parameters for creating samples of our garment configurator.
 ​
 * Update some of parameter values ('v:' field under parameter name) within a given range 
 * run `test_garments.py` 
@@ -41,9 +41,10 @@ NOTE:
 To use another set of body measurements (among the ones used in the paper): 
  In `test_garments.py` change `body_to_use` variable to another key from `bodies_measurements` dictionary to use 
 ​
- * Options: 'avg', 'thin', 'fluffy', 'man'
+ * Options: 'avg', 'thin', 'full-bodied', 'man'
  * Default: 'avg'  (=average female body shape)
 ​
+
 The values for body measurements can be updated in corresponding configuration files (`./assets/body_measurements`)
 ​
 Utilized examples for body shapes are given in `./assets/bodies` for reference.
@@ -59,4 +60,4 @@ Using this tool is exactly the same as in the original project, follow the instr
 
 ### Material properties
 
-Material properties for garment simulation (in Garment Viewer) that were used for the figures in the paper are located in [assets/Sim_props](assets/Sim_props)
+Material properties for garment simulation (in Garment Viewer) that were used for the figures in the paper are located in [assets/Sim_props](../assets/Sim_props)
