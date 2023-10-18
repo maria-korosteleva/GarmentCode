@@ -2,7 +2,7 @@
 
 ![Examples of garments sampled from GarmentCode configurator](https://github.com/maria-korosteleva/GarmentCode/blob/master/assets/img/header.png)
 
-Official Implementation of [GarmentCode: Programming Parametric Sewing Patterns](https://arxiv.org/abs/2306.03642), including architecture and garment programs.
+Official Implementation of [GarmentCode: Programming Parametric Sewing Patterns](https://igl.ethz.ch/projects/garmentcode/), including architecture and garment programs.
 
 ## Documents
 
