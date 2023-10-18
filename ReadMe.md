@@ -1,6 +1,6 @@
 # GarmentCode: Programming Parametric Sewing Patterns
 
-![Examples of garments sampled from GarmentCode configurator](https://github.com/maria-korosteleva/GarmentCode/blob/main/assets/img/header.png)
+![Examples of garments sampled from GarmentCode configurator](https://github.com/maria-korosteleva/GarmentCode/raw/main/assets/img/header.png)
 
 Official Implementation of [GarmentCode: Programming Parametric Sewing Patterns](https://igl.ethz.ch/projects/garmentcode/), including architecture and garment programs.
 
