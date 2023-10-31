@@ -99,6 +99,9 @@ class FittedSkirtPanel(pyp.Panel):
         w_diff = hips - adj_waist   # Assume its positive since waist is smaller then hips
         # We distribute w_diff among the side angle and a dart 
         hw_shift = np.tan(hip_side_incl) * adj_hips_depth
+        # Small difference
+        if hw_shift > w_diff:
+            hw_shift = w_diff
 
         # Adjust the bottom edge to the desired angle
         angle_shift = np.tan(np.deg2rad(low_angle)) * low_width
@@ -202,9 +205,14 @@ class FittedSkirtPanel(pyp.Panel):
         }
 
         # Add top darts
-        dart_width = w_diff - hw_shift
-        self.add_darts(top, dart_width, dart_depth, dart_position, double_dart=double_dart)
+        if w_diff > hw_shift:
+            dart_width = w_diff - hw_shift
+            top_edges, int_edges = self.add_darts(top, dart_width, dart_depth, dart_position, double_dart=double_dart)
 
+            self.interfaces['top'] = pyp.Interface(self, int_edges) 
+            self.edges.substitute(top, top_edges)
+        else:
+            self.interfaces['top'] = pyp.Interface(self, top) 
 
     def add_darts(self, top, dart_width, dart_depth, dart_position, double_dart=False):
         
@@ -250,11 +258,8 @@ class FittedSkirtPanel(pyp.Panel):
                 int_edge_seq=int_edges
             )
 
-        self.interfaces['top'] = pyp.Interface(self, int_edges) 
-        self.edges.substitute(top, top_edges)
-
-
-
+        return top_edges, int_edges
+        
 class PencilSkirt(pyp.Component):
     def __init__(self, body, design) -> None:
         super().__init__(self.__class__.__name__)
@@ -320,7 +325,6 @@ class PencilSkirt(pyp.Component):
                 self.front.interfaces['bottom'], self.back.interfaces['bottom']
             )
         }
-
 
 # Full garments - Components
 class Skirt2(pyp.Component):
