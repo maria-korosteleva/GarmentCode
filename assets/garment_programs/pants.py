@@ -1,5 +1,6 @@
 import svgpathtools as svgpath
 from copy import deepcopy
+import numpy as np
 
 # Custom
 import pypattern as pyp
@@ -8,8 +9,8 @@ import pypattern as pyp
 from . import bands
 
 
-# TODO Sectioned side 
-# TODO hip angle
+# TODO Cuffs
+# FIXME Slides too high
 
 class PantPanel(pyp.Panel):
     def __init__(
@@ -22,12 +23,13 @@ class PantPanel(pyp.Panel):
         super().__init__(name)
 
         # FIXME Fix pant width parameter to change appropriately in asymmetric pants
-        pant_width = design['width']['v'] * hips  # DRAFT body['hips'] / 4
-        low_width = pant_width * design['flare']['v']    # FIXME flare application
+        pant_width = design['width']['v'] * hips 
         length = design['length']['v'] * body['leg_length']
+        flare = design['flare']['v'] 
+        low_width = design['width']['v'] * body['hips'] * (flare - 1) / 4  + hips
 
-        # DRAFT waist = body['waist'] / 4
         hips_depth = body['hips_line']
+        hip_side_incl = np.deg2rad(body['hip_inclination'])
         dart_position = body['bust_points'] / 2
         dart_depth = hips_depth * 0.8  # FIXME check
 
@@ -41,22 +43,35 @@ class PantPanel(pyp.Panel):
         # amount of extra fabric at waist
         w_diff = pant_width - waist   # Assume its positive since waist is smaller then hips
         # We distribute w_diff among the side angle and a dart 
-        hw_shift = w_diff / 3
+        hw_shift = np.tan(hip_side_incl) * hips_depth
+        # Small difference
+        if hw_shift > w_diff:
+            hw_shift = w_diff
 
-        right = pyp.esf.curve_3_points(
-            [
-                min(- (low_width - pant_width), (pant_width - low_width) / 2),   # extend wide pants out
-                0
-            ],    
-            [
-                hw_shift, 
-                length + hips_depth
-            ],
-            target=[0, length]
+        # --- Edges definition ---
+        # Right
+        if pyp.close_enough(flare, 1):  # skip optimization
+            right_bottom = pyp.Edge(    
+                [hips - low_width, 0], 
+                [0, length]
+            )
+        else:
+            right_bottom = pyp.esf.curve_from_tangents(
+                [hips - low_width, 0], 
+                [0, length],
+                target_tan1=np.array([0, 1]), 
+                # initial guess places control point closer to the hips 
+                initial_guess=[0.75, 0]
+            )
+        right_top = pyp.esf.curve_from_tangents(
+            right_bottom.end,    
+            [hw_shift, length + hips_depth],
+            target_tan0=np.array([0, 1]),
+            initial_guess=[0.5, 0] 
         )
-
+       
         top = pyp.Edge(
-            right.end, 
+            right_top.end, 
             [w_diff + waist, length + hips_depth] 
         )
 
@@ -71,8 +86,9 @@ class PantPanel(pyp.Panel):
         rise = design['rise']['v']
         if not pyp.utils.close_enough(rise, 1.):
             new_level = top.end[1] - (1 - rise) * hips_depth
-            right, top, crotch = self.apply_rise(new_level, right, top, crotch)
+            right_top, top, crotch = self.apply_rise(new_level, right_top, top, crotch)
 
+        # TODO With target tangent!
         left = pyp.CurveEdge(
             crotch.end,
             [
@@ -81,7 +97,7 @@ class PantPanel(pyp.Panel):
             [[0.2, -0.1]]
         )
 
-        self.edges = pyp.EdgeSequence(right, top, crotch, left).close_loop()
+        self.edges = pyp.EdgeSequence(right_bottom, right_top, top, crotch, left).close_loop()
         bottom = self.edges[-1]
 
         # Default placement
@@ -90,7 +106,7 @@ class PantPanel(pyp.Panel):
 
         # Out interfaces (easier to define before adding a dart)
         self.interfaces = {
-            'outside': pyp.Interface(self, right),
+            'outside': pyp.Interface(self, pyp.EdgeSequence(right_bottom, right_top)),
             'crotch': pyp.Interface(self, crotch),
             'inside': pyp.Interface(self, left),
             'bottom': pyp.Interface(self, bottom)
@@ -166,7 +182,6 @@ class PantsHalf(pyp.Component):
         super().__init__(tag)
         design = design['pants']
 
-        # TODO assymmetric front/back
         self.front = PantPanel(
             f'pant_f_{tag}', body, design,
             waist=(body['waist'] - body['waist_back_width']) / 2,
