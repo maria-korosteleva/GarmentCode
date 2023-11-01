@@ -9,24 +9,27 @@ from . import bands
 
 
 # TODO Sectioned side 
-# TODO Assymmetric front-back
-# TODO Dart depth
+# TODO hip angle
 
 class PantPanel(pyp.Panel):
-    def __init__(self, name, body, design, double_dart=False) -> None:
+    def __init__(
+            self, name, body, design, 
+            waist, hips,
+            double_dart=False) -> None:
         """
             Basic pant panel with option to be fitted (with darts) or ruffled at waist area.
         """
         super().__init__(name)
 
-        pant_width = design['width']['v'] * body['hips'] / 4
-        low_width = pant_width * design['flare']['v']  
+        # FIXME Fix pant width parameter to change appropriately in asymmetric pants
+        pant_width = design['width']['v'] * hips  # DRAFT body['hips'] / 4
+        low_width = pant_width * design['flare']['v']    # FIXME flare application
         length = design['length']['v'] * body['leg_length']
 
-        waist = body['waist'] / 4
+        # DRAFT waist = body['waist'] / 4
         hips_depth = body['hips_line']
         dart_position = body['bust_points'] / 2
-        dart_depth = hips_depth * 0.8 
+        dart_depth = hips_depth * 0.8  # FIXME check
 
         # Crotch cotrols
         crotch_depth_diff =  body['crotch_hip_diff']
@@ -165,10 +168,14 @@ class PantsHalf(pyp.Component):
 
         # TODO assymmetric front/back
         self.front = PantPanel(
-            f'pant_f_{tag}', body, design
+            f'pant_f_{tag}', body, design,
+            waist=(body['waist'] - body['waist_back_width']) / 2,
+            hips=(body['hips'] - body['hip_back_width']) / 2,
             ).translate_by([0, body['waist_level'] - 5, 25])
         self.back = PantPanel(
             f'pant_b_{tag}', body, design,
+            waist=body['waist_back_width'] / 2,
+            hips=body['hip_back_width'] / 2,
             double_dart=True
             ).translate_by([0, body['waist_level'] - 5, -20])
 
