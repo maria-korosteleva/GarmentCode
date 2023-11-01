@@ -8,7 +8,7 @@
 design: 
   meta: 
     upper: 
-      v: FittedShirt
+      v: null
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
@@ -16,7 +16,7 @@ design:
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
-      v: PencilSkirt  
+      v: Pants  
       range: 
         - SkirtCircle
         - GodetSkirt
@@ -209,7 +209,7 @@ design:
 
   left:   # If this section is not defined, the garment will be symmetric by default
     enable_asym: 
-      v: True    # True == create asymmetric top
+      v: False    # True == create asymmetric top
       range: [True, False]
       type: bool
     shirt: 
@@ -463,7 +463,7 @@ design:
       range: [0.5, 1]
       type: float
     flare:   # coefficient may depend on length
-      v: 0.8
+      v: 1.2
       range: [0.3, 1.1]   
       type: float
     low_angle: 

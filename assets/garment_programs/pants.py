@@ -8,8 +8,12 @@ import pypattern as pyp
 from . import bands
 
 
+# TODO Sectioned side 
+# TODO Assymmetric front-back
+# TODO Dart depth
+
 class PantPanel(pyp.Panel):
-    def __init__(self, name, body, design) -> None:
+    def __init__(self, name, body, design, double_dart=False) -> None:
         """
             Basic pant panel with option to be fitted (with darts) or ruffled at waist area.
         """
@@ -91,14 +95,13 @@ class PantPanel(pyp.Panel):
 
         # Add top dart 
         dart_width = w_diff - hw_shift
-        dart_shape = pyp.esf.dart_shape(dart_width, dart_depth)
-        top_edges, dart_edges, int_edges = pyp.ops.cut_into_edge(
-            dart_shape, top, offset=(hw_shift + waist - dart_position), right=True)
-
-        self.edges.substitute(top, top_edges)
-        self.stitching_rules.append((pyp.Interface(self, dart_edges[0]), pyp.Interface(self, dart_edges[1])))
-
-        self.interfaces['top'] = pyp.Interface(self, int_edges)   
+        if w_diff > hw_shift:
+            top_edges, int_edges = self.add_darts(
+                top, dart_width, dart_depth, dart_position, double_dart=double_dart)
+            self.interfaces['top'] = pyp.Interface(self, int_edges) 
+            self.edges.substitute(top, top_edges)
+        else:
+            self.interfaces['top'] = pyp.Interface(self, top) 
 
     def apply_rise(self, level, right, top, crotch):
 
@@ -119,6 +122,41 @@ class PantPanel(pyp.Panel):
         return new_right, new_top, new_crotch
 
 
+    def add_darts(self, top, dart_width, dart_depth, dart_position, double_dart=False):
+        
+        if double_dart:
+            # TODOLOW Avoid hardcoding for matching with the top?
+            dist = dart_position * 0.5  # Dist between darts -> dist between centers
+            offsets_mid = [
+                - (dart_position + dist / 2 + dart_width / 2) - dart_width / 4,   
+                - (dart_position - dist / 2) - dart_width / 4,
+            ]
+
+            darts = [
+                pyp.esf.dart_shape(dart_width / 2, dart_depth * 0.9), # smaller
+                pyp.esf.dart_shape(dart_width / 2, dart_depth)  
+            ]
+        else:
+            offsets_mid = [
+                - dart_position - dart_width / 2,
+            ]
+            darts = [
+                pyp.esf.dart_shape(dart_width, dart_depth)
+            ]
+        top_edges, int_edges = pyp.EdgeSequence(top), pyp.EdgeSequence(top)
+
+        for off, dart in zip(offsets_mid, darts):
+            left_edge_len = top_edges[-1].length()
+            top_edges, int_edges = self.add_dart(
+                dart,
+                top_edges[-1],
+                offset=left_edge_len + off,
+                edge_seq=top_edges, 
+                int_edge_seq=int_edges
+            )
+
+        return top_edges, int_edges
+        
 
 class PantsHalf(pyp.Component):
     def __init__(self, tag, body, design) -> None:
@@ -130,7 +168,8 @@ class PantsHalf(pyp.Component):
             f'pant_f_{tag}', body, design
             ).translate_by([0, body['waist_level'] - 5, 25])
         self.back = PantPanel(
-            f'pant_b_{tag}', body, design
+            f'pant_b_{tag}', body, design,
+            double_dart=True
             ).translate_by([0, body['waist_level'] - 5, -20])
 
         self.stitching_rules = pyp.Stitches(
