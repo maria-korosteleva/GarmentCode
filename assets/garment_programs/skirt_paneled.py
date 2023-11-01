@@ -118,16 +118,14 @@ class FittedSkirtPanel(pyp.Panel):
                 [hips - low_width, angle_shift], 
                 [0, length],
                 target_tan1=np.array([0, 1]), 
-                # initial guess places control point closer to the hips for fitted style, 
-                # and closer to the bottom for flared style
-                # These are the values that look good for 0.8 flare [[0.75, 0.06]]  and are a target
-                # TODO define the flared style experimentally
-                initial_guess=[0.75, 0] if flare < 1 else [0.25, 0] 
+                # initial guess places control point closer to the hips 
+                initial_guess=[0.75, 0]
             )
         right_top = pyp.esf.curve_from_tangents(
             right_bottom.end,    
             [hw_shift, length + adj_hips_depth],
-            target_tan0=np.array([0, 1])
+            target_tan0=np.array([0, 1]),
+            initial_guess=[0.5, 0] 
         )
         right = pyp.EdgeSequence(right_bottom, right_top)
 
@@ -138,7 +136,8 @@ class FittedSkirtPanel(pyp.Panel):
         left_top = pyp.esf.curve_from_tangents(
             top.end,    
             [hips * 2, length],
-            target_tan1=np.array([0, -1])
+            target_tan1=np.array([0, -1]),
+            initial_guess=[0.5, 0] 
         )
         if pyp.close_enough(flare, 1):  # skip optimization for straight skirt
             left_bottom = pyp.Edge(  
@@ -150,9 +149,8 @@ class FittedSkirtPanel(pyp.Panel):
                 left_top.end, 
                 [hips + low_width, angle_shift], 
                 target_tan0=np.array([0, -1]),
-                # initial guess places control point closer to the hips for fitted style, 
-                # and closer to the bottom for flared style
-                initial_guess=[0.25, 0] if flare < 1 else [0.75, 0] 
+                # initial guess places control point closer to the hips 
+                initial_guess=[0.25, 0]  
             )
         left = pyp.EdgeSequence(left_top, left_bottom)
 
