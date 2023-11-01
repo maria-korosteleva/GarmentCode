@@ -15,8 +15,9 @@ from . import bands
 class PantPanel(pyp.Panel):
     def __init__(
             self, name, body, design, 
-            waist, hips,
-            crotch_ext_frac=0.5,
+            waist, 
+            hips,
+            crotch_width,
             double_dart=False) -> None:
         """
             Basic pant panel with option to be fitted (with darts) or ruffled at waist area.
@@ -37,7 +38,8 @@ class PantPanel(pyp.Panel):
 
         # Crotch cotrols
         crotch_depth_diff =  body['crotch_hip_diff']
-        crotch_extention = (body['leg_circ'] - body['hips'] / 2) * crotch_ext_frac + 7
+        # DRAFT crotch_extention = (body['leg_circ'] - body['hips'] / 2) * crotch_ext_frac + 7
+        crotch_extention = crotch_width
 
         # eval pants shape
         # TODO Return ruffle opportunity?
@@ -91,6 +93,7 @@ class PantPanel(pyp.Panel):
         #     [pant_width + crotch_extention, length - crotch_depth_diff], 
         #     [[0.9, -0.35]]    # NOTE: relative contols allow adaptation to different bodies
         # )
+        # TODO angled?
         crotch_top = pyp.Edge(
             top.end, 
             [hips, length]
@@ -223,17 +226,18 @@ class PantsHalf(pyp.Component):
         super().__init__(tag)
         design = design['pants']
 
+        # DEBUG Note: measurement for the crotch width is 22/25
         self.front = PantPanel(
             f'pant_f_{tag}', body, design,
             waist=(body['waist'] - body['waist_back_width']) / 2,
             hips=(body['hips'] - body['hip_back_width']) / 2,
-            crotch_ext_frac=0.4,
+            crotch_width=6,  # 8,  # TODO Body measurement
             ).translate_by([0, body['waist_level'] - 5, 25])
         self.back = PantPanel(
             f'pant_b_{tag}', body, design,
             waist=body['waist_back_width'] / 2,
             hips=body['hip_back_width'] / 2,
-            crotch_ext_frac=0.6,
+            crotch_width=10,  # 14,
             double_dart=True
             ).translate_by([0, body['waist_level'] - 5, -20])
 
