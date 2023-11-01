@@ -524,7 +524,7 @@ design:
       range: [1., 1.5]   # 1 = fits the hips
       type: float
     flare: 
-      v: 1.1
+      v: 1.
       range: [0.5, 1.2]   # 1 = same as hips
       type: float
     rise:

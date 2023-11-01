@@ -16,6 +16,7 @@ class PantPanel(pyp.Panel):
     def __init__(
             self, name, body, design, 
             waist, hips,
+            crotch_ext_frac=0.5,
             double_dart=False) -> None:
         """
             Basic pant panel with option to be fitted (with darts) or ruffled at waist area.
@@ -26,6 +27,7 @@ class PantPanel(pyp.Panel):
         pant_width = design['width']['v'] * hips 
         length = design['length']['v'] * body['leg_length']
         flare = design['flare']['v'] 
+        # TODO Low width w.r.t. leg_circ??
         low_width = design['width']['v'] * body['hips'] * (flare - 1) / 4  + hips
 
         hips_depth = body['hips_line']
@@ -35,7 +37,7 @@ class PantPanel(pyp.Panel):
 
         # Crotch cotrols
         crotch_depth_diff =  body['crotch_hip_diff']
-        crotch_extention = body['leg_circ'] / 2 - body['hips'] / 4
+        crotch_extention = (body['leg_circ'] - body['hips'] / 2) * crotch_ext_frac + 7
 
         # eval pants shape
         # TODO Return ruffle opportunity?
@@ -75,10 +77,35 @@ class PantPanel(pyp.Panel):
             [w_diff + waist, length + hips_depth] 
         )
 
-        crotch = pyp.CurveEdge(
-            top.end,
+        # TODO With target tangent!
+        # crotch = pyp.esf.curve_from_tangents(
+        #     top.end, 
+        #     [pant_width + crotch_extention, length - crotch_depth_diff], 
+        #     target_tan0=np.array([0, -1]),
+        #     target_tan1=np.array([1, 0]),
+        #     initial_guess=[0.9, -0.5] 
+        # )
+        # DRAFT 
+        # crotch = pyp.CurveEdge(
+        #     top.end,
+        #     [pant_width + crotch_extention, length - crotch_depth_diff], 
+        #     [[0.9, -0.35]]    # NOTE: relative contols allow adaptation to different bodies
+        # )
+        crotch_top = pyp.Edge(
+            top.end, 
+            [hips, length]
+        )
+        # DRAFT crotch_bottom = pyp.CurveEdge(
+        #     crotch_top.end,
+        #     [pant_width + crotch_extention, length - crotch_depth_diff], 
+        #     [[0.5, -0.35]]    # NOTE: relative contols allow adaptation to different bodies
+        # )
+        crotch_bottom = pyp.esf.curve_from_tangents(
+            crotch_top.end,
             [pant_width + crotch_extention, length - crotch_depth_diff], 
-            [[0.9, -0.3]]    # NOTE: relative contols allow adaptation to different bodies
+            target_tan0=np.array([0, -1]),
+            target_tan1=np.array([1, 0]),
+            initial_guess=[0.5, -0.5] 
         )
 
         # Apply the rise
@@ -86,28 +113,42 @@ class PantPanel(pyp.Panel):
         rise = design['rise']['v']
         if not pyp.utils.close_enough(rise, 1.):
             new_level = top.end[1] - (1 - rise) * hips_depth
-            right_top, top, crotch = self.apply_rise(new_level, right_top, top, crotch)
+            right_top, top, crotch_top = self.apply_rise(new_level, right_top, top, crotch_top)
 
         # TODO With target tangent!
-        left = pyp.CurveEdge(
-            crotch.end,
+        # TODO same distance from the crotch as in the front 
+        left = pyp.esf.curve_from_tangents(
+            crotch_bottom.end,    
             [
-                min(pant_width, pant_width - (pant_width - low_width) / 2), 
-                min(0, length - crotch_depth_diff)], 
-            [[0.2, -0.1]]
+                # DRAFT min(pant_width, pant_width - (pant_width - low_width) / 2), 
+                crotch_bottom.end[0] - 5,   # DRAFT 
+                min(0, length - crotch_depth_diff)
+            ], 
+            target_tan1=np.array([0, -1]),
+            initial_guess=[0.3, 0] 
         )
+        # DRAFT
+        # left = pyp.CurveEdge(
+        #     crotch.end,
+        #     [
+        #         min(pant_width, pant_width - (pant_width - low_width) / 2), 
+        #         min(0, length - crotch_depth_diff)], 
+        #     [[0.2, -0.1]]
+        # )
 
-        self.edges = pyp.EdgeSequence(right_bottom, right_top, top, crotch, left).close_loop()
+        self.edges = pyp.EdgeSequence(
+            right_bottom, right_top, top, crotch_top, crotch_bottom, left
+            ).close_loop()
         bottom = self.edges[-1]
 
         # Default placement
-        self.set_pivot(crotch.end)
+        self.set_pivot(crotch_bottom.end)
         self.translation = [-0.5, - hips_depth - crotch_depth_diff + 5, 0] 
 
         # Out interfaces (easier to define before adding a dart)
         self.interfaces = {
             'outside': pyp.Interface(self, pyp.EdgeSequence(right_bottom, right_top)),
-            'crotch': pyp.Interface(self, crotch),
+            'crotch': pyp.Interface(self, pyp.EdgeSequence(crotch_top, crotch_bottom)),
             'inside': pyp.Interface(self, left),
             'bottom': pyp.Interface(self, bottom)
         }
@@ -186,11 +227,13 @@ class PantsHalf(pyp.Component):
             f'pant_f_{tag}', body, design,
             waist=(body['waist'] - body['waist_back_width']) / 2,
             hips=(body['hips'] - body['hip_back_width']) / 2,
+            crotch_ext_frac=0.4,
             ).translate_by([0, body['waist_level'] - 5, 25])
         self.back = PantPanel(
             f'pant_b_{tag}', body, design,
             waist=body['waist_back_width'] / 2,
             hips=body['hip_back_width'] / 2,
+            crotch_ext_frac=0.6,
             double_dart=True
             ).translate_by([0, body['waist_level'] - 5, -20])
 
@@ -260,6 +303,9 @@ class Pants(pyp.Component):
                 self.left.interfaces['top_b'],   
                 self.right.interfaces['top_b'].reverse()),
         }
+
+        # DEBUG
+        print('Waist len: ', self.interfaces['top'].edges.length())
 
 class WBPants(pyp.Component):
     def __init__(self, body, design) -> None:
