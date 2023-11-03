@@ -1,5 +1,4 @@
 """ Sample panels/components without a role to test stuff"""
-# TODO: ami - do we need this here?
 import pypattern as pyp
 
 

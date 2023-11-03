@@ -47,7 +47,7 @@ if __name__ == '__main__':
         test_garments.append(MetaGarment(df, body, designs[df]))
 
     for piece in test_garments:
-        pattern = piece()  # TODO: ami - is this necessary?
+        pattern = piece.assembly()
 
         if piece.is_self_intersecting():
             print(f'{piece.name} is Self-intersecting')

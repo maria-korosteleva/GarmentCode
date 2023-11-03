@@ -131,7 +131,6 @@ class Panel(BaseComponent):
         top_mid_point = mid_points_3D[:, 1].argmax()
 
         self.set_pivot(mid_points_2D[top_mid_point])
-
         return self
 
     def translate_by(self, delta_vector):
@@ -139,14 +138,12 @@ class Panel(BaseComponent):
         self.translation = self.translation + np.array(delta_vector)
         # TODO Autonorm only on the assembly?
         self.autonorm()
-
         return self
     
     def translate_to(self, new_translation):
         """Set panel translation to be exactly that vector"""
         self.translation = np.asarray(new_translation)
         self.autonorm()
-
         return self
     
     def rotate_by(self, delta_rotation: R):
@@ -155,7 +152,6 @@ class Panel(BaseComponent):
         """
         self.rotation = delta_rotation * self.rotation
         self.autonorm()
-
         return self
 
     def rotate_to(self, new_rot: R):
@@ -166,7 +162,6 @@ class Panel(BaseComponent):
             raise ValueError(f'{self.__class__.__name__}::Error::Only accepting rotations in scipy format')
         self.rotation = new_rot
         self.autonorm()
-
         return self
 
     def rotate_align(self, vector):
@@ -177,7 +172,6 @@ class Panel(BaseComponent):
         vector = vector / np.linalg.norm(vector)
         n = self.norm()
         self.rotate_by(vector_align_3D(n, vector))
-
         return self
 
     def center_x(self):
@@ -186,7 +180,6 @@ class Panel(BaseComponent):
 
         center_3d = self.point_to_3D(self._center_2D())
         self.translation[0] += -center_3d[0]
-
         return self
 
     def autonorm(self):
@@ -205,8 +198,6 @@ class Panel(BaseComponent):
         if np.dot(norm_dr, self.translation) < 0: 
             # Swap if wrong  
             self.edges.reverse()
-
-        return self
 
     def mirror(self, axis=None):
         """Swap this panel with its mirror image
@@ -235,7 +226,6 @@ class Panel(BaseComponent):
         else:
             # TODO Any other axis
             raise NotImplementedError(f'{self.name}::Error::Mirrowing over arbitrary axis is not implemented')
-
         return self
         
     # ANCHOR - Build the panel -- get serializable representation
@@ -286,7 +276,6 @@ class Panel(BaseComponent):
 
         # Assembly stitching info (panel might have inner stitches)
         spattern.pattern['stitches'] = self.stitching_rules.assembly()
-            
         return spattern
 
     # ANCHOR utils
@@ -298,7 +287,8 @@ class Panel(BaseComponent):
             and end vertices) used to create a linearization of an edge
         """
         # NOTE: assuming that edges are organized in a loop and share vertices
-        lin_edges = EdgeSequence([e.linearize(n_verts_inside) for e in self.edges])
+        lin_edges = EdgeSequence([e.linearize(n_verts_inside)
+                                  for e in self.edges])
         verts = lin_edges.verts()
 
         return np.mean(verts, axis=0)
@@ -311,16 +301,14 @@ class Panel(BaseComponent):
 
         point_3d = self.rotation.apply(point_2d)
         point_3d += self.translation
-
         return point_3d
-
 
     def norm(self):
         """Normal direction for the current panel using bounding box"""
 
         # To make norm evaluation work for non-convex panels
-        # Determine points located on bounding box (b_verts_2d),
-        # compute norm of consecutive b_verts_3d and the b_verts_3d mean (b_center_3d),
+        # Determine points located on bounding box (b_verts_2d), compute
+        # norm of consecutive b_verts_3d and the b_verts_3d mean (b_center_3d),
         # then weight the norms.
         # The dominant norm direction should be the correct one
 

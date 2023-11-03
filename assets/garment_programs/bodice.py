@@ -9,8 +9,7 @@ from assets.garment_programs import tee
 
 
 class BodiceFrontHalf(pyp.Panel):
-    def __init__(self, name, body, design) -> None:  # TODO: ami - Do we need
-        # 'design' here?
+    def __init__(self, name, body, design) -> None:  # TODO: ami - Do we need 'design' here?
         super().__init__(name)
 
         # account for ease in basic measurements

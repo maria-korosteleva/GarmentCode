@@ -1,13 +1,10 @@
-from typing import Any
+from abc import ABC, abstractmethod
 import numpy as np
 
 from pypattern.connector import Stitches
 
 
-# TODO: ami - should we make them abstract?
-# TODO: ami - can't we avoid returning self in methods below ?
-
-class BaseComponent:
+class BaseComponent(ABC):
     """Basic interface for garment-related components
     
         NOTE: modifier methods return self object to allow chaining of the
@@ -36,32 +33,32 @@ class BaseComponent:
     def bbox3D(self):
         """Bounding box in 3D space"""
         return 0, 0, 0, 0, 0, 0
-    
+
     def is_self_intersecting(self):
         """Check whether the component have self-intersections"""
         return False
 
     # Operations
+    @abstractmethod
     def translate_by(self, delta_translation):
         return self
 
+    @abstractmethod
     def translate_to(self, new_translation):
         """Set panel translation to be exactly that vector"""
         return self
 
+    @abstractmethod
     def rotate_by(self, delta_rotation):
         return self
-    
+
+    @abstractmethod
     def rotate_to(self, new_rot):
         return self
 
-    def assembly(self, *args,**kwds):
-        return {}
-
-    def __call__(self, *args: Any, **kwds: Any) -> Any:
-        # TODO - ami - this looks like an overkill. we should use this only
-        #  when compoenent works as a function or an opeartor
-        return self.assembly(*args, **kwds)
+    @abstractmethod
+    def assembly(self, *args, **kwargs):
+        pass
 
     # ----- Placement routines: these are the same for panels and components
     def place_below(self, comp, gap=2):
@@ -70,7 +67,6 @@ class BaseComponent:
         curr_bbox = self.bbox3D()
 
         self.translate_by([0, other_bbox[0][1] - curr_bbox[1][1] - gap, 0])
-
         return self
 
     def place_by_interface(self, self_interface, out_interface, gap=2):
@@ -101,6 +97,7 @@ class BaseComponent:
 
         # TODO Estimate rotation
         # TODO not just placement by the midpoint of the interfaces?
-        # It created a little overlap when both interfaces are angled a little differently 
-
+        # It created a little overlap when both interfaces are angled a little differently
         return self
+
+

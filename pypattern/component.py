@@ -17,10 +17,6 @@ class Component(BaseComponent):
 
         self.subs = []  # list of generative subcomponents
 
-    # Operations -- update object in-place
-    # All return self object to allow chained operations
-    # TODO: ami - is the above statement true? do we use the chaining?
-
     def pivot_3D(self):
         """Pivot of a component as a block
 
@@ -57,7 +53,6 @@ class Component(BaseComponent):
         return self
     
     def rotate_to(self, new_rot):
-        # TODO: ami -
         # TODOLOW Implement with correct preservation of relative placement
         # of subcomponents
         raise NotImplementedError(
@@ -89,7 +84,7 @@ class Component(BaseComponent):
 
         # Simple merge of subcomponent representations
         for sub in subs:
-            sub_raw = sub().pattern
+            sub_raw = sub.assembly().pattern
 
             # simple merge of panels
             spattern.pattern['panels'] = {**spattern.pattern['panels'],
@@ -99,7 +94,6 @@ class Component(BaseComponent):
             spattern.pattern['stitches'] += sub_raw['stitches']
 
         spattern.pattern['stitches'] += self.stitching_rules.assembly()
-
         return spattern   
 
     def bbox3D(self):

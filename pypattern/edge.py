@@ -126,8 +126,8 @@ class Edge:
 
     def to_edge_sequence(self, edge_verts):
         """
-        Returns the edge as a sequence of STRAIGHT edges based on points sampled on the edge
-        between self.start and self.end (edge_verts).
+        Returns the edge as a sequence of STRAIGHT edges based on points
+        sampled on the edge between `self.start` and `self.end` (edge_verts).
         """
         seq = EdgeSequence(Edge(self.start, edge_verts[0]))
         for i in range(1, len(edge_verts)):
@@ -433,7 +433,6 @@ class CircleEdge(Edge):
         seq = self.to_edge_sequence(edge_verts)
 
         return seq
-
 
     # NOTE: The following values are calculated at runtime to allow 
     # changes to control point after the edge definition
@@ -779,12 +778,13 @@ class EdgeSequence:
 
     def bbox(self):
         """
-        This function evaluates the 2D bounding box of the current panel and returns the panel vertices which are
-        located on the bounding box (b_points).
+        This function evaluates the 2D bounding box of the current panel and
+        returns the panel vertices which are located on the bounding box (
+        b_points).
         Output:
             * bbox (list): [min_x, max_x, min_y, max_y] of verts_2d
-            * b_points (list): list of 2D vertices representing the b_points, i.e.,
-              the vertices of verts_2d located on the bounding box
+            * b_points (list): list of 2D vertices representing the b_points,
+            i.e., the vertices of verts_2d located on the bounding box
         """
         # Take linear version of the edges
         # To correctly process edges with extreme curvatures
@@ -793,8 +793,8 @@ class EdgeSequence:
         verts_2d = np.asarray(lin_edges.verts())
         mi = verts_2d.min(axis=0)
         ma = verts_2d.max(axis=0)
-        xs = [mi[0],ma[0]]
-        ys = [mi[1],ma[1]]
+        xs = [mi[0], ma[0]]
+        ys = [mi[1], ma[1]]
         #return points on bounding box
         b_points = []
         for v in verts_2d:

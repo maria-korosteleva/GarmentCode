@@ -6,13 +6,13 @@ import svgpathtools as svgpath
 from scipy.optimize import minimize
 
 from pypattern.edge import EdgeSequence, Edge, CurveEdge
+from pypattern.edge import CircleEdge
 from pypattern.generic_utils import vector_angle
 from pypattern.generic_utils import bbox_paths
 from pypattern.generic_utils import close_enough
 from pypattern.generic_utils import c_to_list
 from pypattern.generic_utils import list_to_c
 from pypattern.interface import Interface
-from pypattern.edge import CircleEdge
 
 
 class CircleEdgeFactory:
@@ -202,8 +202,7 @@ class EdgeSeqFactory:
         if loop:
             seq.append(Edge(seq[-1].end, seq[0].start))
         
-        seq.isChained()  # TODO: ami - why do we check this here and not use
-        # it ?
+        seq.isChained()  # TODO: ami - why do we check this here and not use it ?
         return seq
 
     @staticmethod
