@@ -18,6 +18,7 @@ class PantPanel(pyp.Panel):
             waist, 
             hips,
             crotch_width,
+            dart_position,
             double_dart=False) -> None:
         """
             Basic pant panel with option to be fitted (with darts) or ruffled at waist area.
@@ -33,7 +34,6 @@ class PantPanel(pyp.Panel):
 
         hips_depth = body['hips_line']
         hip_side_incl = np.deg2rad(body['hip_inclination'])
-        dart_position = body['bust_points'] / 2
         dart_depth = hips_depth * 0.8  # FIXME check
 
         # Crotch cotrols
@@ -96,7 +96,7 @@ class PantPanel(pyp.Panel):
         # TODO angled?
         crotch_top = pyp.Edge(
             top.end, 
-            [hips, length]
+            [pant_width, length]  # + crotch_extention / 5
         )
         # DRAFT crotch_bottom = pyp.CurveEdge(
         #     crotch_top.end,
@@ -106,6 +106,7 @@ class PantPanel(pyp.Panel):
         crotch_bottom = pyp.esf.curve_from_tangents(
             crotch_top.end,
             [pant_width + crotch_extention, length - crotch_depth_diff], 
+            # DRAFT target_tan0=np.array([crotch_extention / 2, - crotch_depth_diff]),
             target_tan0=np.array([0, -1]),
             target_tan1=np.array([1, 0]),
             initial_guess=[0.5, -0.5] 
@@ -191,7 +192,7 @@ class PantPanel(pyp.Panel):
             # TODOLOW Avoid hardcoding for matching with the top?
             dist = dart_position * 0.5  # Dist between darts -> dist between centers
             offsets_mid = [
-                - (dart_position + dist / 2 + dart_width / 2) - dart_width / 4,   
+                - (dart_position + dist / 2 + dart_width / 2 + dart_width / 4),   
                 - (dart_position - dist / 2) - dart_width / 4,
             ]
 
@@ -199,6 +200,8 @@ class PantPanel(pyp.Panel):
                 pyp.esf.dart_shape(dart_width / 2, dart_depth * 0.9), # smaller
                 pyp.esf.dart_shape(dart_width / 2, dart_depth)  
             ]
+
+            print(dart_position, dist)
         else:
             offsets_mid = [
                 - dart_position - dart_width / 2,
@@ -207,6 +210,9 @@ class PantPanel(pyp.Panel):
                 pyp.esf.dart_shape(dart_width, dart_depth)
             ]
         top_edges, int_edges = pyp.EdgeSequence(top), pyp.EdgeSequence(top)
+
+        # DEBUG
+        print('Pants ', offsets_mid)
 
         for off, dart in zip(offsets_mid, darts):
             left_edge_len = top_edges[-1].length()
@@ -231,13 +237,15 @@ class PantsHalf(pyp.Component):
             f'pant_f_{tag}', body, design,
             waist=(body['waist'] - body['waist_back_width']) / 2,
             hips=(body['hips'] - body['hip_back_width']) / 2,
-            crotch_width=6,  # 8,  # TODO Body measurement
+            dart_position = body['bust_points'] / 2,
+            crotch_width=8,  # 8,  # TODO Body measurement
             ).translate_by([0, body['waist_level'] - 5, 25])
         self.back = PantPanel(
             f'pant_b_{tag}', body, design,
             waist=body['waist_back_width'] / 2,
             hips=body['hip_back_width'] / 2,
-            crotch_width=10,  # 14,
+            dart_position = body['bum_points'] / 2,
+            crotch_width=8,  # 14,
             double_dart=True
             ).translate_by([0, body['waist_level'] - 5, -20])
 

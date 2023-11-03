@@ -8,7 +8,7 @@
 design: 
   meta: 
     upper: 
-      v: null
+      v: FittedShirt
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
