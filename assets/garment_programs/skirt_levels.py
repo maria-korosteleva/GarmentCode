@@ -32,8 +32,6 @@ class SkirtLevels(pyp.Component):
             top_width = self.subs[-1].interfaces['bottom'].edges.length()
             top_width *= ruffle
 
-            # TODO Warnings for the subs with the same names!
-
             # Adjust the mesurement to trick skirts into producing correct width
             lbody['waist'] = top_width
             self.subs.append(level_skirt_class(lbody, design, tag=str(i)))
@@ -57,3 +55,4 @@ class SkirtLevels(pyp.Component):
         self.interfaces = {
             'top': self.subs[0].interfaces['top']
         }
+

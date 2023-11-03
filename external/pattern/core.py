@@ -96,14 +96,16 @@ class BasicPattern(object):
             raise RuntimeError(f'{self.__class__.__name__}::ERROR::Asked to save an empty pattern')
 
         # log context
+        if tag:
+            tag = '_' + tag
         if to_subfolder:
-            log_dir = os.path.join(path, self.name + '_' + tag)  # NOTE Added change
+            log_dir = os.path.join(path, self.name + tag)  # NOTE Added change
             try:
                 os.makedirs(log_dir)
             except OSError as e:
                 if e.errno != errno.EEXIST:
                     raise
-            spec_file = os.path.join(log_dir, tag + 'specification.json')
+            spec_file = os.path.join(log_dir, (self.name + tag + '_specification.json'))
         else:
             log_dir = path
             spec_file = os.path.join(path, (self.name + tag + '_specification.json'))
@@ -117,6 +119,8 @@ class BasicPattern(object):
     @staticmethod
     def name_from_path(pattern_file):
         name = os.path.splitext(os.path.basename(pattern_file))[0]
+        if name.endswith('_specification'):
+            name = name.split('_specification')[0]
         if name in standard_filenames:  # use name of directory instead
             path = os.path.dirname(pattern_file)
             name = os.path.basename(os.path.normpath(path))
@@ -382,16 +386,18 @@ class BasicPattern(object):
             panel['rotation'] = rotation_tools.R_to_euler(panel_R * flip_R)
 
         # Stitches -- update the edge references according to the new ids
-        for stitch_id in range(len(self.pattern['stitches'])):
-            for side_id in [0, 1]:
-                if self.pattern['stitches'][stitch_id][side_id]['panel'] == panel_name:
-                    old_edge_id = self.pattern['stitches'][stitch_id][side_id]['edge']
-                    self.pattern['stitches'][stitch_id][side_id]['edge'] = rotated_edge_ids[old_edge_id]
+        if 'stitches' in self.pattern.keys():
+            for stitch_id in range(len(self.pattern['stitches'])):
+                for side_id in [0, 1]:
+                    if self.pattern['stitches'][stitch_id][side_id]['panel'] == panel_name:
+                        old_edge_id = self.pattern['stitches'][stitch_id][side_id]['edge']
+                        self.pattern['stitches'][stitch_id][side_id]['edge'] = rotated_edge_ids[old_edge_id]
 
         return rotated_edge_ids, flipped
 
     # -- sub-utils --
-    def _control_to_abs_coord(self, start, end, control_scale):
+    @staticmethod
+    def control_to_abs_coord(start, end, control_scale):
         """
         Derives absolute coordinates of Bezier control point given as an offset
         """
@@ -496,7 +502,7 @@ class BasicPattern(object):
             edge_coords = vertices[edge_ids]
             if 'curvature' in edge and isinstance(edge['curvature'], list):
                 # FIXME Legacy curvature representation
-                curv_abs = self._control_to_abs_coord(edge_coords[0], edge_coords[1], edge['curvature'])
+                curv_abs = self.control_to_abs_coord(edge_coords[0], edge_coords[1], edge['curvature'])
                 # view curvy edge as two segments
                 # NOTE this aproximation might lead to False positives in intersection tests
                 # FIXME Use linearization (same as in GarmentCode) for better approximation
