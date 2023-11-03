@@ -2,7 +2,7 @@ import math
 import numpy as np
 
 import pypattern as pyp
-from . import skirt_paneled as skirts
+from assets.garment_programs import skirt_paneled as skirts
 
 
 class Insert(pyp.Panel):

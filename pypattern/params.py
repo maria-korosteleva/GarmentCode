@@ -7,7 +7,7 @@ from copy import deepcopy
 import random 
 
 # Custom
-from .generic_utils import nested_del, nested_get, nested_set
+from pypattern.generic_utils import nested_get, nested_set
 
 
 class BodyParametrizationBase():

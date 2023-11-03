@@ -3,8 +3,8 @@ from scipy.spatial.transform import Rotation as R
 
 import pypattern as pyp
 
-from .bands import StraightWB
-from . import shapes  # TODO: - ami - any more explicit way of using this?
+from assets.garment_programs.bands import StraightWB
+from assets.garment_programs import shapes  # TODO: - ami - any more explicit way of using this?
 
 
 class SkirtPanel(pyp.Panel):

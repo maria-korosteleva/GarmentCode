@@ -5,9 +5,9 @@ from scipy.spatial.transform import Rotation as R
 
 # Custom
 from external.pattern.core import BasicPattern
-from .base import BaseComponent
-from .edge import Edge, EdgeSequence
-from .generic_utils import close_enough, vector_align_3D
+from pypattern.base import BaseComponent
+from pypattern.edge import Edge, EdgeSequence
+from pypattern.generic_utils import close_enough, vector_align_3D
 
 
 class Panel(BaseComponent):

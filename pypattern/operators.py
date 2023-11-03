@@ -1,17 +1,17 @@
 """Shortcuts for common operations on panels and components"""
-
 from copy import deepcopy, copy
+
 import numpy as np
 from numpy.linalg import norm
 from scipy.spatial.transform import Rotation as R
 from scipy.optimize import minimize
 import svgpathtools as svgpath
 
-from .edge import Edge, CurveEdge, EdgeSequence
-from .interface import Interface
-from .generic_utils import vector_angle, close_enough, c_to_list, c_to_np
-from .generic_utils import list_to_c
-from .base import BaseComponent
+from pypattern.edge import Edge, CurveEdge, EdgeSequence
+from pypattern.interface import Interface
+from pypattern.generic_utils import vector_angle, close_enough, c_to_list, c_to_np
+from pypattern.generic_utils import list_to_c
+from pypattern.base import BaseComponent
 
 
 # ANCHOR ----- Edge Sequences Modifiers ----

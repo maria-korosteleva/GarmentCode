@@ -4,7 +4,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 import pypattern as pyp
-from . import bands
+from assets.garment_programs import bands
 
 
 # ------  Armhole shapes ------

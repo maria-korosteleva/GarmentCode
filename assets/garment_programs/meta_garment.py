@@ -1,4 +1,3 @@
-# TODO: ami - maybe import each of them by name explicitly
 from assets.garment_programs.tee import *
 from assets.garment_programs.godet import *
 from assets.garment_programs.bodice import *

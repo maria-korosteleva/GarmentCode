@@ -1,8 +1,9 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from external.pattern.wrappers import VisPattern
 from pypattern.base import BaseComponent
+
+from external.pattern.wrappers import VisPattern
 
 
 class Component(BaseComponent):

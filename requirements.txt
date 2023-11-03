@@ -1,8 +1,11 @@
-matplotlib==3.7.2
-numpy==1.25.2
+matplotlib~=3.7.1
+numpy~=1.25.1
 psutil==5.9.5
 pysimplegui==4.60.5
-pyyaml==6.0.1
-svgpathtools==1.6.1
+pyyaml~=6.0
+svgpathtools~=1.6.0
 svgwrite==1.4.3
-cairosvg==2.7.0
+cairosvg~=2.7.1
+pillow~=10.0.0
+yaml~=0.2.5
+scipy~=1.11.1

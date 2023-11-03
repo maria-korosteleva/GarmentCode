@@ -1,5 +1,5 @@
-import pypattern as pyp
 import numpy as np
+import pypattern as pyp
 
 
 class CircleArcPanel(pyp.Panel):

@@ -3,9 +3,10 @@ import shutil
 from pathlib import Path
 import yaml
 
-from external.customconfig import Properties
 from assets.garment_programs.meta_garment import MetaGarment
 from assets.body_measurments.body_params import BodyParameters
+from external.customconfig import Properties
+
 
 if __name__ == '__main__':
 

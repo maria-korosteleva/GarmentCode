@@ -1,7 +1,7 @@
 from copy import deepcopy
 
-from .skirt_paneled import *
-from .circle_skirt import *
+from assets.garment_programs.skirt_paneled import *
+from assets.garment_programs.circle_skirt import *
 
 
 # TODO Test geometry with different settings

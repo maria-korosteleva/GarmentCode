@@ -3,8 +3,8 @@ from scipy.spatial.transform import Rotation as R
 
 import pypattern as pyp
 
-from .bands import StraightBandPanel
-from .circle_skirt import CircleArcPanel
+from assets.garment_programs.bands import StraightBandPanel
+from assets.garment_programs.circle_skirt import CircleArcPanel
 
 
 # # ------ Collar shapes withough extra panels ------

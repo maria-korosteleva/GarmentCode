@@ -1,6 +1,6 @@
 import pypattern as pyp
-from .circle_skirt import CircleArcPanel
-from . import skirt_paneled
+from assets.garment_programs.circle_skirt import CircleArcPanel
+from assets.garment_programs import skirt_paneled
 
 
 class StraightBandPanel(pyp.Panel):

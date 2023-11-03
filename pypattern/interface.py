@@ -1,4 +1,5 @@
 from copy import copy
+
 from numpy.linalg import norm
 import numpy as np
 

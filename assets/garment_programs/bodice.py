@@ -3,9 +3,9 @@ import numpy as np
 
 import pypattern as pyp
 
-from . import sleeves
-from . import collars
-from . import tee
+from assets.garment_programs import sleeves
+from assets.garment_programs import collars
+from assets.garment_programs import tee
 
 
 class BodiceFrontHalf(pyp.Panel):

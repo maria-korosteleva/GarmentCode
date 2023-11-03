@@ -1,7 +1,9 @@
+from typing import TypeVar, Generic, Sequence, Callable
+
 import numpy as np
 from numpy.linalg import norm
 from scipy.spatial.transform import Rotation
-from typing import TypeVar, Generic, Sequence, Callable
+
 
 
 # proper inserstions by key with bicest module in python <3.10

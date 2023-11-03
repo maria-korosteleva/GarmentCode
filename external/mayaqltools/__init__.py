@@ -13,7 +13,10 @@ from importlib import reload
 import mayaqltools.mayascene as mayascene
 reload(mayascene)
 
-from .mayascene import PatternLoadingError, MayaGarment, Scene, MayaGarmentWithUI
+from .mayascene import PatternLoadingError
+from .mayascene import MayaGarment
+from .mayascene import Scene
+from .mayascene import MayaGarmentWithUI
 
 import mayaqltools.simulation as simulation
 import mayaqltools.qualothwrapper as qualothwrapper

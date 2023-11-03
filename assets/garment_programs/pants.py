@@ -2,7 +2,7 @@ import svgpathtools as svgpath
 from copy import deepcopy
 
 import pypattern as pyp
-from . import bands
+from assets.garment_programs import bands
 
 
 class PantPanel(pyp.Panel):
