@@ -288,12 +288,6 @@ design:
         - true
         - false
         type: bool
-      # DRAFT length:
-      #   v: 1.2
-      #   range:
-      #   - 0.5
-      #   - 4.5
-      #   type: float
       length_ruffle:
         v: 1.
         range: 
