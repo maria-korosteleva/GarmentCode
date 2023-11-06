@@ -144,12 +144,12 @@ class FittedSkirtPanel(pyp.Panel):
         if pyp.close_enough(flare, 1):  # skip optimization for straight skirt
             left_bottom = pyp.Edge(  
                 left_top.end, 
-                [hips + low_width, angle_shift], 
+                [hips + low_width, -angle_shift], 
             )
         else:
             left_bottom = pyp.esf.curve_from_tangents(  
                 left_top.end, 
-                [hips + low_width, angle_shift], 
+                [hips + low_width, -angle_shift], 
                 target_tan0=np.array([0, -1]),
                 # initial guess places control point closer to the hips 
                 initial_guess=[0.25, 0]  
