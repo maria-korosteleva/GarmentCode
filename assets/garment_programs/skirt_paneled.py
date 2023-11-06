@@ -335,7 +335,7 @@ class Skirt2(pyp.Component):
 
         self.front = SkirtPanel(
             f'front_{tag}' if tag else 'front', 
-            waist_length=body['waist'], 
+            waist_length=body['waist'] - body['waist_back_width'], 
             length=design['length']['v'],
             ruffles=design['ruffle']['v'],   # Only if on waistband
             flare=design['flare']['v'],
@@ -343,7 +343,7 @@ class Skirt2(pyp.Component):
         ).translate_to([0, body['_waist_level'], 25])
         self.back = SkirtPanel(
             f'back_{tag}'  if tag else 'back', 
-            waist_length=body['waist'], 
+            waist_length=body['waist_back_width'], 
             length=design['length']['v'],
             ruffles=design['ruffle']['v'],   # Only if on waistband
             flare=design['flare']['v'],
