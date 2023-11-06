@@ -30,6 +30,9 @@ class SkirtLevels(pyp.Component):
         else:
             angle = 0
 
+        # FIXME double ruffles for the skirt2
+        # FIXME Total length
+
         # Place the levels
         for i in range(n_levels):
             top_width = self.subs[-1].interfaces['bottom'].edges.length()
@@ -37,6 +40,8 @@ class SkirtLevels(pyp.Component):
 
             # Adjust the mesurement to trick skirts into producing correct width
             lbody['waist'] = top_width
+            # DEBUG Check .back exists for all the patterns
+            lbody['waist_back_width'] = ruffle * self.subs[-1].interfaces['bottom_b'].edges.length()
             self.subs.append(level_skirt_class(lbody, design, tag=str(i)))
 
             # Placement

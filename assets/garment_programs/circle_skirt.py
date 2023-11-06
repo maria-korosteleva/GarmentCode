@@ -158,6 +158,9 @@ class SkirtCircle(pyp.Component):
         # Interfaces
         self.interfaces = {
             'top': pyp.Interface.from_multiple(self.front.interfaces['top'], self.back.interfaces['top']),
+            
+            'bottom_f': self.front.interfaces['bottom'],
+            'bottom_b': self.back.interfaces['bottom'],
             'bottom': pyp.Interface.from_multiple(self.front.interfaces['bottom'], self.back.interfaces['bottom'])
         }
         

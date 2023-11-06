@@ -8,7 +8,7 @@
 design: 
   meta: 
     upper: 
-      v: FittedShirt
+      v: null
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
@@ -16,7 +16,7 @@ design:
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
-      v: null  
+      v: SkirtLevels  
       range: 
         - SkirtCircle
         - GodetSkirt
@@ -390,7 +390,7 @@ design:
       range: [5, 150]
       type: int
     ruffle: 
-      v: 1.5
+      v: 1.
       range: [1, 2]
       type: float 
     bottom_cut: 
@@ -501,7 +501,7 @@ design:
   levels-skirt:
     base:    # NOTE Takes parameters from corresponding sections
       v: PencilSkirt
-      range: [Skirt2, PencilSkirt, SkirtWB, SkirtCircle]
+      range: [Skirt2, PencilSkirt, SkirtCircle]
       type: select
     level:   # NOTE Takes parameters from corresponding sections
       v: Skirt2
@@ -512,7 +512,7 @@ design:
       range: [1, 5]
       type: int 
     level_ruffle:   # NOTE: it will multiple the ruffle setup in the level setting, if any
-      v: 1.3
+      v: 1.
       range: [1, 2]
       type: float
     

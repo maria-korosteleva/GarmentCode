@@ -319,6 +319,8 @@ class PencilSkirt(pyp.Component):
             'top': pyp.Interface.from_multiple(
                 self.front.interfaces['top'], self.back.interfaces['top'].reverse()
             ),
+            'bottom_f': self.front.interfaces['bottom'],
+            'bottom_b': self.back.interfaces['bottom'],
             'bottom': pyp.Interface.from_multiple(
                 self.front.interfaces['bottom'], self.back.interfaces['bottom']
             )
@@ -362,12 +364,15 @@ class Skirt2(pyp.Component):
             'top': pyp.Interface.from_multiple(
                 self.front.interfaces['top'], self.back.interfaces['top']
             ),
+            'bottom_f': self.front.interfaces['bottom'],
+            'bottom_b': self.back.interfaces['bottom'],
             'bottom': pyp.Interface.from_multiple(
                 self.front.interfaces['bottom'], self.back.interfaces['bottom']
             )
         }
 
 # With waistband
+# TODO Remove (can add waistband separately)
 class SkirtWB(pyp.Component):
     def __init__(self, body, design) -> None:
         super().__init__(f'{self.__class__.__name__}')

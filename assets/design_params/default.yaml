@@ -676,7 +676,6 @@ design:
       range:
       - Skirt2
       - PencilSkirt
-      - SkirtWB
       - SkirtCircle
       type: select
     level:
