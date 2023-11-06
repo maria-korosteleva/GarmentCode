@@ -12,10 +12,10 @@ from . import shapes
 class SkirtPanel(pyp.Panel):
     """One panel of a panel skirt with ruffles on the waist"""
 
-    def __init__(self, name, waist_length=70, length=70, ruffles=1, bottom_cut=0, flare=0) -> None:
+    def __init__(self, name, waist_length=40, length=70, ruffles=1, bottom_cut=0, flare=0) -> None:
         super().__init__(name)
 
-        base_width = waist_length / 2
+        base_width = waist_length
         top_width = base_width * ruffles
         low_width = top_width + 2*flare
         x_shift_top = (low_width - top_width) / 2  # to account for flare at the bottom
