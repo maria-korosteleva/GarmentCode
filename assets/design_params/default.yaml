@@ -579,7 +579,6 @@ design:
       range:
       - Skirt2
       - PencilSkirt
-      - SkirtWB
       type: select
     insert_w:
       v: 15

@@ -436,7 +436,7 @@ design:
   godet-skirt: 
     base: 
       v: PencilSkirt
-      range: [Skirt2, PencilSkirt, SkirtWB]
+      range: [Skirt2, PencilSkirt]
       type: select
     insert_w: 
       v: 30

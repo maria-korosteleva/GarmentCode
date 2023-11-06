@@ -371,25 +371,6 @@ class Skirt2(pyp.Component):
             )
         }
 
-# With waistband
-# TODO Remove (can add waistband separately)
-class SkirtWB(pyp.Component):
-    def __init__(self, body, design) -> None:
-        super().__init__(f'{self.__class__.__name__}')
-
-        self.wb = StraightWB(body, design)
-        self.skirt = Skirt2(body, design)
-        self.skirt.place_below(self.wb)
-
-        self.stitching_rules = pyp.Stitches(
-            (self.wb.interfaces['bottom'], self.skirt.interfaces['top'])
-        )
-        self.interfaces = {
-            'top': self.wb.interfaces['top'],
-            'bottom': self.skirt.interfaces['bottom']
-        }
-
-
 class SkirtManyPanels(pyp.Component):
     """Round Skirt with many panels"""
 
@@ -427,16 +408,3 @@ class SkirtManyPanels(pyp.Component):
         self.interfaces = {
             'top': pyp.Interface.from_multiple(*[sub.interfaces['top'] for sub in self.subs])
         }
-
-class SkirtManyPanelsWB(pyp.Component):
-    def __init__(self, body, design) -> None:
-        super().__init__(f'{self.__class__.__name__}')
-
-        wb_width = 5
-        self.skirt = SkirtManyPanels(body, design).translate_by([0, -wb_width, 0])
-        self.wb = StraightWB(body, design).translate_by([0, wb_width, 0])
-
-        self.stitching_rules.append(
-            (self.skirt.interfaces['top'], self.wb.interfaces['bottom']))
-
-
