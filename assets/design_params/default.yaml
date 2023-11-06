@@ -693,7 +693,7 @@ design:
       v: 1.0
       range:
       - 1
-      - 2
+      - 1.7
       type: float
     length:
       v: 0.5
