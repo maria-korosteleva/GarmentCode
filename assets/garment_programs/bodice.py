@@ -346,7 +346,7 @@ class Shirt(pyp.Component):
         name_with_params = f"{self.__class__.__name__}"
         super().__init__(name_with_params)
 
-        design = self.eval_param_depependecies(design)
+        design = self.eval_dep_params(design)
 
         self.right = BodiceHalf(f'right', body, design, fitted=fitted)
         self.left = BodiceHalf(
@@ -370,7 +370,7 @@ class Shirt(pyp.Component):
                 self.right.interfaces['b_bottom'],)
         }
 
-    def eval_param_depependecies(self, design):
+    def eval_dep_params(self, design):
         # NOTE: Support for full collars with partially strapless top
         # requres further development
         # TODOLOW enable this one to work
