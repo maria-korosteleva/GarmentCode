@@ -17,7 +17,6 @@ class Insert(pyp.Panel):
         self.top_center_pivot()
         self.center_x()
 
-# TODO As a correct skirt component
 class GodetSkirt(pyp.Component):
     def __init__(self, body, design) -> None:
         super().__init__(f'{self.__class__.__name__}')
@@ -27,7 +26,9 @@ class GodetSkirt(pyp.Component):
         ins_depth = gdesign['insert_depth']['v']
 
         base_skirt = getattr(skirts, gdesign['base']['v'])
-        self.base = base_skirt(body, design)
+        # NOTE: godets currently don't like slits on the front/back 
+        # of the base skirt => Forcing to remove any slits
+        self.base = base_skirt(body, design, slit=False)  
 
         # TODO resolve collisions on inserts placement
         bintr = self.base.interfaces['bottom']
@@ -39,7 +40,6 @@ class GodetSkirt(pyp.Component):
 
         self.interfaces = {
             'top': self.base.interfaces['top']
-            # TODO Add bottom interface? Can be done with interface.substitute func
         }
 
 
