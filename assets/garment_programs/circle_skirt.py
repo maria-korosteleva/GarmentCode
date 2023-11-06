@@ -131,10 +131,8 @@ class SkirtCircle(SkirtComponent):
         waist = body['waist']
         suns = design['suns']['v']
 
-        # Depends on leg length
-        if length is None:
-            length = design['length']['v']
-        length = body['hips_line'] + length * body['_leg_length']
+        if length is None:  # take from design parameters
+            length = body['hips_line'] + design['length']['v'] * body['_leg_length']
 
         # panels
         self.front = CircleArcPanel.from_w_length_suns(

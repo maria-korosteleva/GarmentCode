@@ -516,7 +516,7 @@ design:
       range: [1, 2]
       type: float
     length: 
-      v: 0.5
+      v: 0.8
       range: [0.2, 1]
       type: float
     base_length_frac: 

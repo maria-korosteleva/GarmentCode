@@ -19,11 +19,6 @@ class SkirtLevels(pyp.Component):
         ruffle = ldesign['level_ruffle']['v']
 
         # Adjust length to the common denominators
-        # FIXME Don't count the hipline twice
-        total_length = ldesign['length']['v']
-        self.base_len = total_length * ldesign['base_length_frac']['v']
-        self.level_len = (total_length - self.base_len) / ldesign['num_levels']['v']
-
         # Definitions
         base_skirt_class = globals()[ldesign['base']['v']]
         self.subs.append(base_skirt_class(
@@ -75,3 +70,15 @@ class SkirtLevels(pyp.Component):
         self.interfaces = {
             'top': self.subs[0].interfaces['top']
         }
+
+
+    def eval_length(self, ldesign, body):
+        
+        # With convertion to absolute values
+        total_length = ldesign['length']['v'] * body['_leg_length']
+        self.base_len = total_length * ldesign['base_length_frac']['v']
+        self.level_len = (total_length - self.base_len) / ldesign['num_levels']['v']
+
+        # Add hip_line (== zero length)
+        # TODO rise?
+        self.base_len = body['hips_line'] + self.base_len

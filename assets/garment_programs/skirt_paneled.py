@@ -72,6 +72,7 @@ class FittedSkirtPanel(pyp.Panel):
     def __init__(
             self, name, body, design, 
             waist, hips,   # TODO Half measurement instead of a quarter   
+            length,
             dart_position=None, dart_frac=0.5, double_dart=False,
             slit=0, left_slit=0, right_slit=0,
             side_cut=None, flip_side_cut=False) -> None:
@@ -84,7 +85,6 @@ class FittedSkirtPanel(pyp.Panel):
 
         # Shared params
         hips_depth = body['hips_line']
-        length = design['length']['v'] * body['_leg_length']  # Depends on leg length
         rise = design['rise']['v']
         low_angle = design['low_angle']['v']
         hip_side_incl = np.deg2rad(body['hip_inclination'])
@@ -264,7 +264,7 @@ class PencilSkirt(SkirtComponent):
     def __init__(self, body, design, tag='', length=None, slit=True, **kwargs) -> None:
         super().__init__(body, design, tag)
 
-        design = deepcopy(design['pencil-skirt'])
+        design = design['pencil-skirt']
         self.design = design  # Make accessible from outside
 
         # condition
@@ -280,8 +280,11 @@ class PencilSkirt(SkirtComponent):
             style_shape_l, style_shape_r = None, None
 
         # Force from arguments if given
-        if length is not None:
-            design['length']['v'] = length
+        if length is None:
+            length = design['length']['v'] * body['_leg_length']  # Depends on leg length
+        else:
+            length = length - body['hips_line']  # FIXME Account for intended rise
+
 
         self.front = FittedSkirtPanel(
             f'skirt_f',   
@@ -289,6 +292,7 @@ class PencilSkirt(SkirtComponent):
             design,
             (body['waist'] - body['waist_back_width']) / 2,
             (body['hips'] - body['hip_back_width']) / 2,
+            length=length,
             dart_position=body['bust_points'] / 2,
             dart_frac=0.8,  # Diff for front and back
             slit=design['front_slit']['v'] if slit else 0, 
@@ -303,6 +307,7 @@ class PencilSkirt(SkirtComponent):
             design,
             body['waist_back_width'] / 2,
             body['hip_back_width'] / 2,
+            length=length,
             dart_position=body['bum_points'] / 2,
             dart_frac=0.85,   
             double_dart=True,
@@ -340,10 +345,7 @@ class Skirt2(SkirtComponent):
 
         design = design['skirt']
 
-        # Force parameters from arguments
-        if length is not None:
-            length = body['hips_line'] + length * body['_leg_length']
-        else:
+        if length is None:  # Take from design parameters (default)
             length = design['length']['v']
 
         self.front = SkirtPanel(
@@ -382,6 +384,7 @@ class Skirt2(SkirtComponent):
             )
         }
 
+# TODO Not the standard Skirt component -- return regular definition
 class SkirtManyPanels(SkirtComponent):
     """Round Skirt with many panels"""
 
@@ -420,7 +423,7 @@ class SkirtManyPanels(SkirtComponent):
         self.stitching_rules.append((self.subs[-1].interfaces['left'], self.subs[0].interfaces['right']))
 
         # Define the interface
-        # FIXME Add all skirt interfaces
+        # FIXME Add all skirt interfaces (?)
         self.interfaces = {
             'top': pyp.Interface.from_multiple(*[sub.interfaces['top'] for sub in self.subs])
         }
