@@ -145,9 +145,23 @@ class GUIPattern():
 
     def sample_design(self):
         """Random design parameters"""
-        new_design = self.design_sampler.randomize()
-        self.design_params.update(new_design)
-        self.reload_garment()
+
+        while True:
+            new_design = self.design_sampler.randomize()
+            self.design_params.update(new_design)
+            self.reload_garment()
+
+            if self.sew_pattern.is_self_intersecting():
+                # Let the user know
+                out = sg.popup_yes_no(
+                    'The design is self-intersecting. Generate a new one?', 
+                    title='Self-Intersecting',
+                    icon=icon_image_b64)
+
+                if out == 'No':
+                    break
+            else:
+                break
 
     def restore_design(self):
         """Restore design values to match the current loaded file"""
