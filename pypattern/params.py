@@ -32,7 +32,7 @@ class BodyParametrizationBase():
     # Updates
     def __setitem__(self, key, value):
         self.params[key] = value
-        self.eval_dependencies()
+        self.eval_dependencies(key)
 
     def load(self, param_file):
         """Load new values from file"""
@@ -42,10 +42,12 @@ class BodyParametrizationBase():
         self.eval_dependencies()  # Parameters have been updated
 
     # Processing
-    def eval_dependencies(self):
+    def eval_dependencies(self, key=None):
         """Evaluate dependent attributes, e.g. after a new value has been set
         
             Define your dependent parameters in the overload of this function
+
+            * key -- the information on what field is being updated
         """
         pass
         

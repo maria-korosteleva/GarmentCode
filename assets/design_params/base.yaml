@@ -16,7 +16,7 @@ design:
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
-      v: Pants  
+      v: null  
       range: 
         - SkirtCircle
         - GodetSkirt
@@ -129,7 +129,7 @@ design:
      
   sleeve:
     sleeveless: 
-      v: True
+      v: False
       range: [True, False]
       type: bool
     armhole_shape: 
@@ -137,7 +137,7 @@ design:
       range: [ArmholeSquare, ArmholeAngle, ArmholeCurve]
       type: select
     length: 
-      v: 1  # 30
+      v: 0.5  # 30
       range: [0.05, 1]
       type: float
     connecting_width:
@@ -145,7 +145,7 @@ design:
       range: [0, 1]   # 0 = armscue_depth, 1 = as big as the shirt side
       type: float
     end_width:
-      v: 0.7 #  0.55
+      v: 0.55 #  0.55
       range: [0.2, 2]   # 1 = same as arm opening
       type: float
 
