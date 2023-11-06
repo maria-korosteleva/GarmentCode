@@ -17,6 +17,7 @@ class Insert(pyp.Panel):
         self.top_center_pivot()
         self.center_x()
 
+# TODO As a correct skirt component
 class GodetSkirt(pyp.Component):
     def __init__(self, body, design) -> None:
         super().__init__(f'{self.__class__.__name__}')

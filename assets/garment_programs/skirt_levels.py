@@ -7,7 +7,6 @@ import pypattern as pyp
 from .skirt_paneled import *
 from .circle_skirt import *
 
-# TODO Test geometry with different settings
 class SkirtLevels(pyp.Component):
     """Skirt constiting of multuple stitched skirts"""
 
@@ -19,34 +18,48 @@ class SkirtLevels(pyp.Component):
         n_levels = ldesign['num_levels']['v']
         ruffle = ldesign['level_ruffle']['v']
 
+        # Adjust length to the common denominators
+        # FIXME Don't count the hipline twice
+        total_length = ldesign['length']['v']
+        self.base_len = total_length * ldesign['base_length_frac']['v']
+        self.level_len = (total_length - self.base_len) / ldesign['num_levels']['v']
+
+        # Definitions
         base_skirt_class = globals()[ldesign['base']['v']]
-        self.subs.append(base_skirt_class(body, design))
+        self.subs.append(base_skirt_class(
+            body, 
+            design, 
+            length=self.base_len, 
+            slit=False))
 
-        level_skirt_class = globals()[ldesign['level']['v']]
-
+        # Skirt angle for correct placement
         if (hasattr(base:=self.subs[0], 'design') 
                 and 'low_angle' in base.design):
-            angle = base.design['low_angle']['v']
+            self.angle = base.design['low_angle']['v']
         else:
-            angle = 0
-
-        # FIXME double ruffles for the skirt2
-        # FIXME Total length
+            self.angle = 0
 
         # Place the levels
+        level_skirt_class = globals()[ldesign['level']['v']]
         for i in range(n_levels):
             top_width = self.subs[-1].interfaces['bottom'].edges.length()
             top_width *= ruffle
 
             # Adjust the mesurement to trick skirts into producing correct width
+            # TODO More elegant overwrite
             lbody['waist'] = top_width
-            # DEBUG Check .back exists for all the patterns
             lbody['waist_back_width'] = ruffle * self.subs[-1].interfaces['bottom_b'].edges.length()
-            self.subs.append(level_skirt_class(lbody, design, tag=str(i)))
+            self.subs.append(level_skirt_class(
+                lbody, 
+                design, 
+                tag=str(i), 
+                length=self.level_len, 
+                slit=False,
+                top_ruffles=False))
 
             # Placement
             # Rotation if base is assymetric
-            self.subs[-1].rotate_by(R.from_euler('XYZ', [0, 0, -angle], degrees=True))
+            self.subs[-1].rotate_by(R.from_euler('XYZ', [0, 0, -self.angle], degrees=True))
 
             self.subs[-1].place_by_interface(
                 self.subs[-1].interfaces['top'],
@@ -62,4 +75,3 @@ class SkirtLevels(pyp.Component):
         self.interfaces = {
             'top': self.subs[0].interfaces['top']
         }
-

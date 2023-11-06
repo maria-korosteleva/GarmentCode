@@ -3,6 +3,7 @@ import pypattern as pyp
 from scipy.spatial.transform import Rotation as R
 import numpy as np
 
+from .skirt import SkirtComponent
 
 class CircleArcPanel(pyp.Panel):
     """One panel circle skirt"""
@@ -120,11 +121,10 @@ class MinimalALine(pyp.Component):
         }
 
 
-class SkirtCircle(pyp.Component):
+class SkirtCircle(SkirtComponent):
     """Simple circle skirt"""
-    def __init__(self, body, design, tag='') -> None:
-        super().__init__(
-            self.__class__.__name__ if not tag else f'{self.__class__.__name__}_{tag}')
+    def __init__(self, body, design, tag='', length=None, slit=True, **kwargs) -> None:
+        super().__init__(body, design, tag)
 
         design = design['flare-skirt']
 
@@ -132,7 +132,9 @@ class SkirtCircle(pyp.Component):
         suns = design['suns']['v']
 
         # Depends on leg length
-        length = body['hips_line'] + design['length']['v'] * body['_leg_length']
+        if length is None:
+            length = design['length']['v']
+        length = body['hips_line'] + length * body['_leg_length']
 
         # panels
         self.front = CircleArcPanel.from_w_length_suns(
@@ -144,7 +146,7 @@ class SkirtCircle(pyp.Component):
             length, waist / 2, suns / 2).translate_by([0, body['_waist_level'], -15])
 
         # Add a cut
-        if design['cut']['add']['v']:
+        if design['cut']['add']['v'] and slit:
             self.add_cut(
                 self.front if design['cut']['place']['v'] > 0 else self.back, 
                 design, length)
@@ -158,7 +160,7 @@ class SkirtCircle(pyp.Component):
         # Interfaces
         self.interfaces = {
             'top': pyp.Interface.from_multiple(self.front.interfaces['top'], self.back.interfaces['top']),
-            
+
             'bottom_f': self.front.interfaces['bottom'],
             'bottom_b': self.back.interfaces['bottom'],
             'bottom': pyp.Interface.from_multiple(self.front.interfaces['bottom'], self.back.interfaces['bottom'])
