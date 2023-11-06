@@ -346,15 +346,7 @@ class Shirt(pyp.Component):
         name_with_params = f"{self.__class__.__name__}"
         super().__init__(name_with_params)
 
-        # NOTE: Support for full collars with partially strapless top
-        # requres further development
-        # TODOLOW enable this one to work
-        if design['left']['enable_asym']['v']:
-            if design['shirt']['strapless']['v'] != design['left']['shirt']['strapless']['v']:
-                # Force no collars
-                design = deepcopy(design)
-                design['collar']['component']['style']['v'] = None
-                design['left']['collar']['component']['style']['v'] = None
+        design = self.eval_param_depependecies(design)
 
         self.right = BodiceHalf(f'right', body, design, fitted=fitted)
         self.left = BodiceHalf(
@@ -377,6 +369,29 @@ class Shirt(pyp.Component):
                 self.left.interfaces['b_bottom'],
                 self.right.interfaces['b_bottom'],)
         }
+
+    def eval_param_depependecies(self, design):
+        # NOTE: Support for full collars with partially strapless top
+        # requres further development
+        # TODOLOW enable this one to work
+        if design['left']['enable_asym']['v']:
+            if design['shirt']['strapless']['v'] != design['left']['shirt']['strapless']['v']:
+                # Force no collars
+                design = deepcopy(design)
+                design['collar']['component']['style']['v'] = None
+                design['left']['collar']['component']['style']['v'] = None
+            
+            # Design compatibility 
+            # TODO check the ruffle in 3D
+            design['left']['shirt'].update(length={})
+            design['left']['shirt']['length']['v'] = design['left']['shirt']['length_ruffle']['v'] * design['shirt']['length']['v']
+            
+            design['left']['collar'].update(fc_depth={}, bc_depth={})
+            design['left']['collar']['fc_depth']['v'] = design['collar']['fc_depth']['v']
+            design['left']['collar']['bc_depth']['v'] = design['collar']['bc_depth']['v']
+
+
+        return design
 
 class FittedShirt(Shirt):
     """Creates fitted shirt

@@ -288,11 +288,17 @@ design:
         - true
         - false
         type: bool
-      length:
-        v: 1.2
-        range:
-        - 0.5
-        - 4.5
+      # DRAFT length:
+      #   v: 1.2
+      #   range:
+      #   - 0.5
+      #   - 4.5
+      #   type: float
+      length_ruffle:
+        v: 1.
+        range: 
+        - 0.8
+        - 1.2
         type: float
       width:
         v: 1.0
@@ -325,18 +331,6 @@ design:
         type: select
       width:
         v: 0.5
-        range:
-        - 0
-        - 1
-        type: float
-      fc_depth:
-        v: 0.15
-        range:
-        - 0
-        - 1
-        type: float
-      bc_depth:
-        v: 0
         range:
         - 0
         - 1

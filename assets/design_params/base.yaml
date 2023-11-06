@@ -217,9 +217,11 @@ design:
         v: True
         range: [True, False]
         type: bool
-      length: 
+      length_ruffle:
         v: 1.
-        range: [0.5, 4.5]   # 1 == waistline
+        range: 
+        - 0.8
+        - 1.2
         type: float
       width:   # Around the body 
         v: 1.
