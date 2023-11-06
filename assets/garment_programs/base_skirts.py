@@ -1,8 +1,11 @@
 import pypattern as pyp
 
 
-class SkirtComponent(pyp.Component):
-    """Abstract skirt definition"""
+class StackableSkirtComponent(pyp.Component):
+    """
+        Abstract definition of a skirt that can be stacked with other stackable skirts
+        (connecting bottom to another StackableSkirtComponent())
+    """
 
     def __init__(self, body, design, tag='', length=None, slit=True, top_ruffles=True) -> None:
         """Skirt initialization

@@ -8,7 +8,7 @@ import pypattern as pyp
 # other assets
 from .bands import StraightWB
 from . import shapes
-from .skirt import SkirtComponent
+from .base_skirts import StackableSkirtComponent
 
 # Panels
 class SkirtPanel(pyp.Panel):
@@ -260,7 +260,7 @@ class FittedSkirtPanel(pyp.Panel):
 
         return top_edges, int_edges
         
-class PencilSkirt(SkirtComponent):
+class PencilSkirt(StackableSkirtComponent):
     def __init__(self, body, design, tag='', length=None, slit=True, **kwargs) -> None:
         super().__init__(body, design, tag)
 
@@ -338,7 +338,7 @@ class PencilSkirt(SkirtComponent):
         }
 
 # Full garments - Components
-class Skirt2(SkirtComponent):
+class Skirt2(StackableSkirtComponent):
     """Simple 2 panel skirt"""
     def __init__(self, body, design, tag='', length=None, slit=True, top_ruffles=True) -> None:
         super().__init__(body, design, tag)
@@ -384,14 +384,13 @@ class Skirt2(SkirtComponent):
             )
         }
 
-# TODO Not the standard Skirt component -- return regular definition
-class SkirtManyPanels(SkirtComponent):
+class SkirtManyPanels(pyp.Component):
     """Round Skirt with many panels"""
 
-    def __init__(self, body, design, tag='', length=None, **kwargs) -> None:
+    def __init__(self, body, design, tag='') -> None:
         tag_extra = str(design["flare-skirt"]["n_panels"]["v"])
         tag = f'{tag}_{tag_extra}' if tag else tag_extra 
-        super().__init__(body, design, tag)
+        super().__init__(f'{self.__class__.__name__}_{tag}')
 
         waist = body['waist']    # Fit to waist
 
@@ -399,9 +398,7 @@ class SkirtManyPanels(SkirtComponent):
         n_panels = design['n_panels']['v']
 
         # Length is dependent on length of legs
-        if length is None:
-            length = design['length']['v']
-        length = body['hips_line'] + length * body['_leg_length']
+        length = body['hips_line'] + design['length']['v'] * body['_leg_length']
 
         flare_coeff_pi = 1 + design['suns']['v'] * length * 2 * np.pi / waist
 
@@ -423,7 +420,6 @@ class SkirtManyPanels(SkirtComponent):
         self.stitching_rules.append((self.subs[-1].interfaces['left'], self.subs[0].interfaces['right']))
 
         # Define the interface
-        # FIXME Add all skirt interfaces (?)
         self.interfaces = {
             'top': pyp.Interface.from_multiple(*[sub.interfaces['top'] for sub in self.subs])
         }
