@@ -19,6 +19,8 @@ class SkirtLevels(pyp.Component):
         ruffle = ldesign['level_ruffle']['v']
 
         # Adjust length to the common denominators
+        self.eval_length(ldesign, body)
+        
         # Definitions
         base_skirt_class = globals()[ldesign['base']['v']]
         self.subs.append(base_skirt_class(
