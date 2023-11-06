@@ -169,8 +169,10 @@ class SleevePanel(pyp.Panel):
             [- body['sholder_w'] / 2,
             body['height'] - body['head_l'] - body['armscye_depth'],
             0]) 
+        # NOTE: Extra 5 deg account for the fact that the arm is ~conic shape
+        # Makes draping of sleeves less problematic
         self.rotate_to(R.from_euler(
-            'XYZ', [0, 0, body['arm_pose_angle']], degrees=True))
+            'XYZ', [0, 0, body['arm_pose_angle'] + 5], degrees=True))
 
 
 class Sleeve(pyp.Component):
