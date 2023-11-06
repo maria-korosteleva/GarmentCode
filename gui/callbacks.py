@@ -80,7 +80,6 @@ class GUIPattern():
     # Updates
     def new_body_file(self, path):
         self.body_file = path
-        # FIXME Update instead of re-writing
         self.body_params = BodyParameters(path)
         self.reload_garment()
 
