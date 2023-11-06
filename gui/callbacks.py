@@ -351,6 +351,10 @@ class GUIState():
         # For now will only show the name of the file that was chosen
         viewer_column = [
             [
+                sg.Text(
+                    '', 
+                    text_color='red', 
+                    key='TEXT-SELF-INTERSECTION'),
                 sg.Push(),
                 sg.Checkbox(
                     'Display Reference Silhouette', 
@@ -694,6 +698,14 @@ class GUIState():
                     f'{pre_key}#{param}'
                 )
 
+    def upd_self_intersecting(self):
+        """Indicate if the current pattern is self-intersecting"""
+        if self.pattern_state.sew_pattern.is_self_intersecting():
+            self.window['TEXT-SELF-INTERSECTION'].update(
+                'WARNING: Some of the panels are self-intersecting')
+        else:
+            self.window['TEXT-SELF-INTERSECTION'].update('')
+
     # Modifiers after window finalization
     def input_text_on_enter(self, tag):
         """Modify input text elements to only send events when Enter is pressed"""
@@ -826,6 +838,9 @@ class GUIState():
                         print(
                             'PatternConfigurator::INFO::New output path: ', 
                             self.pattern_state.save_path)
+                        
+                # Check self-intersection
+                self.upd_self_intersecting()
             
             except BaseException as e:
                 sg.popup_error_with_traceback(
