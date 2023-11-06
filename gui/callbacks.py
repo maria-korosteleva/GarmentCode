@@ -394,7 +394,7 @@ class GUIState():
         for param in body:
             param_input_col.append([
                 sg.Text(
-                    param + ':', 
+                    param.strip('_') + ':', 
                     justification='right', 
                     expand_x=True), 
 
@@ -402,7 +402,8 @@ class GUIState():
                     str(body[param]), 
                     enable_events=False,  # Events enabled outside: only on Enter 
                     key=f'BODY#{param}', 
-                    size=7) 
+                    size=7,
+                    disabled=True if param[0] == '_' else False) 
                 ])
             
         layout = [

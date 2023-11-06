@@ -183,7 +183,7 @@ class Sleeve(pyp.Component):
         super().__init__(f'{self.__class__.__name__}_{tag}')
 
         design = design['sleeve']
-        inclination = max(1, (body['back_width'] - body['base_sleeve_balance']) / 2)
+        inclination = max(1, (body['back_width'] - body['_base_sleeve_balance']) / 2)
 
         rest_angle = max(np.deg2rad(design['sleeve_angle']['v']), np.deg2rad(body['shoulder_incl']))
 

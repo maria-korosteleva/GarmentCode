@@ -76,7 +76,7 @@ class MinimalALine(pyp.Component):
         suns = design['suns']['v']
 
         # Depends on leg length
-        length = body['hips_line'] + design['length']['v'] * body['leg_length']
+        length = body['hips_line'] + design['length']['v'] * body['_leg_length']
 
         # panels
         self.front = CircleArcPanel.from_all_length(
@@ -84,14 +84,14 @@ class MinimalALine(pyp.Component):
             length=body['hips_line'], 
             top_width=waist / 2, 
             bottom_width=hips / 2
-        ).translate_by([0, body['waist_level'], 15])
+        ).translate_by([0, body['_waist_level'], 15])
 
         self.back = CircleArcPanel.from_all_length(
             f'back_{tag}'  if tag else 'back', 
             length=body['hips_line'], 
             top_width=waist / 2, 
             bottom_width=hips / 2
-        ).translate_by([0, body['waist_level'], -15])
+        ).translate_by([0, body['_waist_level'], -15])
 
         # DEBUG
         print('Length: ', self.front.interfaces['right'].edges.length(), body['hips_line'])
@@ -132,16 +132,16 @@ class SkirtCircle(pyp.Component):
         suns = design['suns']['v']
 
         # Depends on leg length
-        length = body['hips_line'] + design['length']['v'] * body['leg_length']
+        length = body['hips_line'] + design['length']['v'] * body['_leg_length']
 
         # panels
         self.front = CircleArcPanel.from_w_length_suns(
             f'front_{tag}' if tag else 'front', 
-            length, waist / 2, suns / 2).translate_by([0, body['waist_level'], 15])
+            length, waist / 2, suns / 2).translate_by([0, body['_waist_level'], 15])
 
         self.back = CircleArcPanel.from_w_length_suns(
             f'back_{tag}'  if tag else 'back', 
-            length, waist / 2, suns / 2).translate_by([0, body['waist_level'], -15])
+            length, waist / 2, suns / 2).translate_by([0, body['_waist_level'], -15])
 
         # Add a cut
         if design['cut']['add']['v']:

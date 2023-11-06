@@ -82,7 +82,7 @@ class FittedSkirtPanel(pyp.Panel):
 
         # Shared params
         hips_depth = body['hips_line']
-        length = design['length']['v'] * body['leg_length']  # Depends on leg length
+        length = design['length']['v'] * body['_leg_length']  # Depends on leg length
         rise = design['rise']['v']
         low_angle = design['low_angle']['v']
         hip_side_incl = np.deg2rad(body['hip_inclination'])
@@ -289,7 +289,7 @@ class PencilSkirt(pyp.Component):
             left_slit=design['left_slit']['v'], 
             right_slit=design['right_slit']['v'],
             side_cut=style_shape_l
-        ).translate_to([0, body['waist_level'], 25])
+        ).translate_to([0, body['_waist_level'], 25])
 
         self.back = FittedSkirtPanel(
             f'skirt_b', 
@@ -305,7 +305,7 @@ class PencilSkirt(pyp.Component):
             right_slit=design['right_slit']['v'],
             side_cut=style_shape_r, 
             flip_side_cut=False,
-        ).translate_to([0, body['waist_level'], -20])
+        ).translate_to([0, body['_waist_level'], -20])
 
         self.stitching_rules = pyp.Stitches(
             (self.front.interfaces['right'], self.back.interfaces['right']),
@@ -340,7 +340,7 @@ class Skirt2(pyp.Component):
             ruffles=design['ruffle']['v'],   # Only if on waistband
             flare=design['flare']['v'],
             bottom_cut=design['bottom_cut']['v'] * design['length']['v']
-        ).translate_to([0, body['waist_level'], 25])
+        ).translate_to([0, body['_waist_level'], 25])
         self.back = SkirtPanel(
             f'back_{tag}'  if tag else 'back', 
             waist_length=body['waist'], 
@@ -348,7 +348,7 @@ class Skirt2(pyp.Component):
             ruffles=design['ruffle']['v'],   # Only if on waistband
             flare=design['flare']['v'],
             bottom_cut=design['bottom_cut']['v'] * design['length']['v']
-        ).translate_to([0, body['waist_level'], -20])
+        ).translate_to([0, body['_waist_level'], -20])
 
         self.stitching_rules = pyp.Stitches(
             (self.front.interfaces['right'], self.back.interfaces['right']),
@@ -397,14 +397,14 @@ class SkirtManyPanels(pyp.Component):
         n_panels = design['n_panels']['v']
 
         # Length is dependent on length of legs
-        length = body['hips_line'] + design['length']['v'] * body['leg_length']
+        length = body['hips_line'] + design['length']['v'] * body['_leg_length']
 
         flare_coeff_pi = 1 + design['suns']['v'] * length * 2 * np.pi / waist
 
         self.front = ThinSkirtPanel('front', panel_w:=waist / n_panels,
                                     bottom_width=panel_w * flare_coeff_pi,
                                     length=length )
-        self.front.translate_to([-waist / 4, body['waist_level'], 0])
+        self.front.translate_to([-waist / 4, body['_waist_level'], 0])
         # Align with a body
         self.front.rotate_by(R.from_euler('XYZ', [0, -90, 0], degrees=True))
         self.front.rotate_align([-waist / 4, 0, panel_w / 2])

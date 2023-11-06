@@ -35,9 +35,9 @@ class StraightWB(pyp.Component):
         back_width = design['waistband']['waist']['v'] * body['waist_back_width']
 
         self.front = StraightBandPanel('wb_front', self.waist - back_width, self.width)
-        self.front.translate_by([0, body['waist_level'], 20])  
+        self.front.translate_by([0, body['_waist_level'], 20])  
         self.back = StraightBandPanel('wb_back', back_width, self.width)
-        self.back.translate_by([0, body['waist_level'], -15])  
+        self.back.translate_by([0, body['_waist_level'], -15])  
 
         self.stitching_rules = pyp.Stitches(
             (self.front.interfaces['right'], self.back.interfaces['right']),
@@ -81,14 +81,14 @@ class FittedWB(pyp.Component):
             self.width, 
             self.waist * (1 - waist_back_frac), 
             bottom_width * (1 - bottom_back_fraction))
-        self.front.translate_by([0, body['waist_level'], 20])  
+        self.front.translate_by([0, body['_waist_level'], 20])  
         
         self.back = CircleArcPanel.from_all_length(
             'wb_back', 
             self.width, 
             self.waist * waist_back_frac, 
             bottom_width * bottom_back_fraction)     
-        self.back.translate_by([0, body['waist_level'], -15])  
+        self.back.translate_by([0, body['_waist_level'], -15])  
 
         # ---
         self.stitching_rules = pyp.Stitches(

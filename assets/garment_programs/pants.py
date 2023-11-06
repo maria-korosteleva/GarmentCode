@@ -27,7 +27,7 @@ class PantPanel(pyp.Panel):
 
         # FIXME Fix pant width parameter to change appropriately in asymmetric pants
         pant_width = design['width']['v'] * hips 
-        length = design['length']['v'] * body['leg_length']
+        length = design['length']['v'] * body['_leg_length']
         flare = design['flare']['v'] 
         # TODO Low width w.r.t. leg_circ??
         low_width = design['width']['v'] * body['hips'] * (flare - 1) / 4  + hips
@@ -239,7 +239,7 @@ class PantsHalf(pyp.Component):
             hips=(body['hips'] - body['hip_back_width']) / 2,
             dart_position = body['bust_points'] / 2,
             crotch_width=8,  # 8,  # TODO Body measurement
-            ).translate_by([0, body['waist_level'] - 5, 25])
+            ).translate_by([0, body['_waist_level'] - 5, 25])
         self.back = PantPanel(
             f'pant_b_{tag}', body, design,
             waist=body['waist_back_width'] / 2,
@@ -247,7 +247,7 @@ class PantsHalf(pyp.Component):
             dart_position = body['bum_points'] / 2,
             crotch_width=8,  # 14,
             double_dart=True
-            ).translate_by([0, body['waist_level'] - 5, -20])
+            ).translate_by([0, body['_waist_level'] - 5, -20])
 
         self.stitching_rules = pyp.Stitches(
             (self.front.interfaces['outside'], self.back.interfaces['outside']),
