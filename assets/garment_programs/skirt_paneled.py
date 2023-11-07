@@ -351,8 +351,9 @@ class Skirt2(StackableSkirtComponent):
 
         design = design['skirt']
 
-        if length is None:  # Take from design parameters (default)
-            length = design['length']['v']
+        # Force from arguments if given
+        if length is None:
+            length = body['hips_line'] + design['length']['v'] * body['_leg_length']  # Depends on leg length
 
         self.front = SkirtPanel(
             f'front_{tag}' if tag else 'front', 

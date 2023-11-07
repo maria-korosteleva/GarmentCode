@@ -506,11 +506,11 @@ design:
           type: float
   skirt:
     length:
-      v: 30
+      v: 0.2
       range:
-      - 5
-      - 150
-      type: int
+      - -0.2
+      - 1
+      type: float
     ruffle:
       v: 1.0
       range:
