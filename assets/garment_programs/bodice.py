@@ -143,12 +143,6 @@ class BodiceBackHalf(pyp.Panel):
                 int_edge_seq=b_interface,
             )
 
-            # DEBUG
-            print('Bodice back ', 
-                  bottom_d_position + dist / 2 + bottom_d_width + bottom_d_width / 2,
-                  bottom_d_position - dist / 2 + bottom_d_width / 2)
-            print(bottom_d_position, dist)
-
             self.edges.substitute(0, b_edge)
             self.interfaces['bottom'] = pyp.Interface(self, b_interface)
 

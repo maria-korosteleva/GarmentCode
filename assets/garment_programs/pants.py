@@ -96,7 +96,7 @@ class PantPanel(pyp.Panel):
         # TODO angled?
         crotch_top = pyp.Edge(
             top.end, 
-            [pant_width, length]  # + crotch_extention / 5
+            [pant_width, length + 0.5 * hips_depth]  # A bit higher than hip line
         )
         # DRAFT crotch_bottom = pyp.CurveEdge(
         #     crotch_top.end,
@@ -139,6 +139,9 @@ class PantPanel(pyp.Panel):
         #         min(0, length - crotch_depth_diff)], 
         #     [[0.2, -0.1]]
         # )
+
+        # DEBUG
+        print('Crotch depth: ', abs(top.end[1] - crotch_bottom.end[1]))
 
         self.edges = pyp.EdgeSequence(
             right_bottom, right_top, top, crotch_top, crotch_bottom, left
@@ -232,20 +235,42 @@ class PantsHalf(pyp.Component):
         super().__init__(tag)
         design = design['pants']
 
+
+        # NOTE: min value = full sum > leg curcumference
+        # Max: pant leg falls flat from the back
+        # Mostly from the back side
+        # => This controls the foundation width of the pant
+        min_ext = body['leg_circ'] - body['hips'] / 2 + 5  # 2 inch "ease"
+        max_ext = 22  # Measured max
+        tmp_width = 0.2
+        front_frac = 0.4   # 0.3 = 6.5 = front/4 for the max width, 0.4 = 6.5 for 0.5
+
+        # DEBUG
+        print('min ext', min_ext)
+
         # DEBUG Note: measurement for the crotch width is 22/25
+        front_hip = (body['hips'] - body['hip_back_width']) / 2
+        crotch_extention = max_ext * tmp_width + (1 - tmp_width) * min_ext  # DRAFT  16 # 22 -- culotte   
+        front_extention = front_frac * crotch_extention  # DRAFT front_hip / 4  #  
+        back_extention = crotch_extention - front_extention
+
+         # DEBUG
+        print('Crotch extention ', crotch_extention, front_extention, back_extention)
+        print('Crotch extention ', front_extention / crotch_extention, back_extention / crotch_extention)
+
         self.front = PantPanel(
             f'pant_f_{tag}', body, design,
             waist=(body['waist'] - body['waist_back_width']) / 2,
             hips=(body['hips'] - body['hip_back_width']) / 2,
             dart_position = body['bust_points'] / 2,
-            crotch_width=8,  # 8,  # TODO Body measurement
+            crotch_width=front_extention,
             ).translate_by([0, body['_waist_level'] - 5, 25])
         self.back = PantPanel(
             f'pant_b_{tag}', body, design,
             waist=body['waist_back_width'] / 2,
             hips=body['hip_back_width'] / 2,
             dart_position = body['bum_points'] / 2,
-            crotch_width=8,  # 14,
+            crotch_width=back_extention,
             double_dart=True
             ).translate_by([0, body['_waist_level'] - 5, -20])
 
