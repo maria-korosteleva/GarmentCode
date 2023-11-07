@@ -161,7 +161,7 @@ class PantPanel(pyp.Panel):
         }
 
         # Add top dart 
-        dart_width = w_diff - hw_shift
+        dart_width = w_diff - hw_shift   # FIXME Adjust according to rise value (now the original darts are used)
         if w_diff > hw_shift:
             top_edges, int_edges = self.add_darts(
                 top, dart_width, dart_depth, dart_position, double_dart=double_dart)
@@ -182,7 +182,8 @@ class PantPanel(pyp.Panel):
 
         c_intersect = crotch_c.intersect(cutout)[0]
         c_cut = crotch_c.cropped(c_intersect[0], 1)
-        new_crotch = pyp.CurveEdge.from_svg_curve(c_cut)
+
+        new_crotch = pyp.Edge.from_svg_curve(c_cut)
 
         new_top = pyp.Edge(new_right.end, new_crotch.start)
 

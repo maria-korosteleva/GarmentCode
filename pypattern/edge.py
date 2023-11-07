@@ -272,6 +272,39 @@ class Edge():
             subdivision[i].start = subdivision[i-1].end
         return subdivision
 
+    @staticmethod
+    def from_svg_curve(seg):
+        """Create Edge object from svgpath object"""
+
+        start, end = c_to_list(seg.start), c_to_list(seg.end)
+        if isinstance(seg, svgpath.Line):
+            # DEBUG
+            print('Line! ', start, end)
+            return Edge(start, end)
+        if isinstance(seg, svgpath.Arc):
+            # NOTE: assuming circular arc (same radius in both directoins)
+            radius = seg.radius.real
+
+            # DEBUG
+            print('Arc! ', start, end, radius)
+
+            return CircleEdge.from_points_radius(
+                start, end, radius, seg.large_arc, seg.sweep
+            )
+
+        # Only Bezier left
+        if isinstance(seg, svgpath.QuadraticBezier):
+            cp = [c_to_list(seg.control)]
+        elif isinstance(seg, svgpath.CubicBezier):
+            cp = [c_to_list(seg.control1), c_to_list(seg.control2)]
+        else:
+            raise NotImplementedError(f'CurveEdge::Error::Incorrect curve type supplied {seg.type}')
+        
+        # DEBUG
+        print('Curve! ', start, end, cp)
+
+        return CurveEdge(start, end, cp, relative=False)
+
     # Assembly into serializable object
     def assembly(self):
         """Returns the dict-based representation of edges, 
@@ -362,7 +395,7 @@ class CircleEdge(Edge):
         # Convert to CircleEdge objects
         subedges = EdgeSequence()
         for curve in subcurves:
-            subedges.append(CircleEdge.from_svg_curve(curve))
+            subedges.append(Edge.from_svg_curve(curve))
         # Reference the first/last vertices correctly
         subedges[0].start = self.start
         subedges[-1].end = self.end
@@ -411,7 +444,6 @@ class CircleEdge(Edge):
 
         return seq
 
-
     # NOTE: The following values are calculated at runtime to allow 
     # changes to control point after the edge definition
     def _rel_radius(self, abs_radius=None):
@@ -448,7 +480,6 @@ class CircleEdge(Edge):
         """Indicate if the arc sweeps the large or small angle"""
         return abs(self.control_y) > self._rel_radius()
     
-
     # Factories
     @staticmethod
     def from_points_angle(start, end, arc_angle, right=True):
@@ -522,17 +553,6 @@ class CircleEdge(Edge):
 
         return edge
 
-
-    @staticmethod
-    def from_svg_curve(seg:svgpath.Arc):
-        """Create object from svgpath arc"""
-        start, end = c_to_list(seg.start), c_to_list(seg.end)
-        # NOTE: assuming circular arc (same radius in both directoins)
-        radius = seg.radius.real
-
-        return CircleEdge.from_points_radius(
-            start, end, radius, seg.large_arc, seg.sweep
-        )
 
     @staticmethod
     def from_three_points(start, end, point_on_arc):
@@ -659,7 +679,7 @@ class CurveEdge(Edge):
         # Convert to CurveEdge objects
         subedges = EdgeSequence()
         for curve in subcurves:
-            subedges.append(CurveEdge.from_svg_curve(curve))
+            subedges.append(Edge.from_svg_curve(curve))
         # Reference the first/last vertices correctly
         subedges[0].start = self.start
         subedges[-1].end = self.end
@@ -748,20 +768,6 @@ class CurveEdge(Edge):
 
         return extreme_points
 
-    @staticmethod
-    def from_svg_curve(seg):
-        """Create CurveEdge object from svgpath bezier objects"""
-
-        start, end = c_to_list(seg.start), c_to_list(seg.end)
-        if isinstance(seg, svgpath.QuadraticBezier):
-            cp = [c_to_list(seg.control)]
-        elif isinstance(seg, svgpath.CubicBezier):
-            cp = [c_to_list(seg.control1), c_to_list(seg.control2)]
-        else:
-            raise NotImplementedError(f'CurveEdge::Error::Incorrect curve type supplied {seg.type}')
-
-        return CurveEdge(start, end, cp, relative=False)
-
     # Assembly into serializable object
     def assembly(self):
         """Returns the dict-based representation of edges, 
@@ -804,13 +810,7 @@ class EdgeSequence():
                 if VERBOSE:
                     print('Skipped: ', seg)  
                 continue
-            if isinstance(seg, svgpath.Line):
-                edges.append(Edge(
-                    c_to_list(seg.start), c_to_list(seg.end)))
-            elif isinstance(seg, svgpath.Arc):
-                edges.append(CircleEdge.from_svg_curve(seg))
-            else:
-                edges.append(CurveEdge.from_svg_curve(seg))
+            edges.append(Edge.from_svg_curve(seg))
 
         # Chain the edges
         if len(edges) > 1: 
