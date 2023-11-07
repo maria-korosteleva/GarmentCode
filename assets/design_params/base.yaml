@@ -25,7 +25,6 @@ design:
         - SkirtManyPanels
         - PencilSkirt
         - SkirtLevels
-        - MinimalALine   # For testing only
       type: select_null
 
   waistband:

@@ -63,64 +63,6 @@ class CircleArcPanel(pyp.Panel):
         return CircleArcPanel(name, rad, length, arc)
 
 
-# DEBUG This is a test garment!
-class MinimalALine(pyp.Component):
-    """Simple circle skirt"""
-    def __init__(self, body, design, tag='') -> None:
-        super().__init__(
-            self.__class__.__name__ if not tag else f'{self.__class__.__name__}_{tag}')
-
-        design = design['flare-skirt']
-
-        waist = body['waist']
-        hips = body['hips']
-        suns = design['suns']['v']
-
-        # Depends on leg length
-        length = body['hips_line'] + design['length']['v'] * body['_leg_length']
-
-        # panels
-        self.front = CircleArcPanel.from_all_length(
-            f'front_{tag}' if tag else 'front', 
-            length=body['hips_line'], 
-            top_width=waist / 2, 
-            bottom_width=hips / 2
-        ).translate_by([0, body['_waist_level'], 15])
-
-        self.back = CircleArcPanel.from_all_length(
-            f'back_{tag}'  if tag else 'back', 
-            length=body['hips_line'], 
-            top_width=waist / 2, 
-            bottom_width=hips / 2
-        ).translate_by([0, body['_waist_level'], -15])
-
-        # DEBUG
-        print('Length: ', self.front.interfaces['right'].edges.length(), body['hips_line'])
-        print('waist: ', 
-              self.front.interfaces['top'].edges.length() + self.back.interfaces['top'].edges.length(), 
-              body['waist'])
-        print('hips: ', 
-              self.front.interfaces['bottom'].edges.length() + self.back.interfaces['bottom'].edges.length(), 
-              body['hips'])
-        print('Radius: ', 
-              self.front.interfaces['top'].edges[0].as_radius_angle(),
-              self.front.interfaces['bottom'].edges[0].as_radius_angle(),
-              self.back.interfaces['top'].edges[0].as_radius_angle(),
-              self.back.interfaces['bottom'].edges[0].as_radius_angle())
-
-        # Stitches
-        self.stitching_rules = pyp.Stitches(
-            (self.front.interfaces['right'], self.back.interfaces['right']),
-            (self.front.interfaces['left'], self.back.interfaces['left'])
-        )
-
-        # Interfaces
-        self.interfaces = {
-            'top': pyp.Interface.from_multiple(self.front.interfaces['top'], self.back.interfaces['top']),
-            'bottom': pyp.Interface.from_multiple(self.front.interfaces['bottom'], self.back.interfaces['bottom'])
-        }
-
-
 class SkirtCircle(StackableSkirtComponent):
     """Simple circle skirt"""
     def __init__(self, body, design, tag='', length=None, slit=True, **kwargs) -> None:
