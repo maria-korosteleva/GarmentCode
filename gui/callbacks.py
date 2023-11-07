@@ -15,6 +15,7 @@ import yaml
 import shutil 
 import numpy as np
 import PySimpleGUI as sg
+import traceback 
 
 
 # Custom 
@@ -843,10 +844,14 @@ class GUIState():
                 self.upd_self_intersecting()
             
             except BaseException as e:
+                # To command line
+                print('Application ERROR detected: ')
+                traceback.print_exc() 
+                # To the user
                 sg.popup_error_with_traceback(
                     'Application ERROR detected (see below)', 
-                    str(e),
-                    '',
+                    traceback.format_exc(),
+                    ''
                     'Most likely, the generated pattern is in incorrect state due to current parameter values',
                     '   Undo your last change to return to correct garment state and click "Close"',
                     ''
