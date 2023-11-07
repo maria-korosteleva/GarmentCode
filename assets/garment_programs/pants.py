@@ -96,7 +96,8 @@ class PantPanel(pyp.Panel):
         # TODO angled?
         crotch_top = pyp.Edge(
             top.end, 
-            [pant_width, length + 0.5 * hips_depth]  # A bit higher than hip line
+            [pant_width, length + 0.45 * hips_depth]  # A bit higher than hip line
+            # NOTE: The point should be lower than the minimum rise value (0.5)
         )
         # DRAFT crotch_bottom = pyp.CurveEdge(
         #     crotch_top.end,
@@ -174,7 +175,8 @@ class PantPanel(pyp.Panel):
 
         # TODOLOW This could be an operator or edge function
         right_c, crotch_c = right.as_curve(), crotch.as_curve()
-        cutout = svgpath.Line(0 + 1j*level, crotch.end[0] + 1j*level)
+        ext = 5  # Extend cutout a bit for stable intersection results
+        cutout = svgpath.Line(0 + 1j*level, crotch.end[0] + ext + 1j*level)
 
         right_intersect = right_c.intersect(cutout)[0]
         right_cut = right_c.cropped(0, right_intersect[0])
