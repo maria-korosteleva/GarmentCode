@@ -186,14 +186,18 @@ class FittedSkirtPanel(pyp.Panel):
             right_bottom = new_rbottom[1]
 
         if side_cut is not None:
-            # Add a stylistic cutout to the skirt
-            new_edges, _, int_edges = pyp.ops.cut_into_edge(
-                side_cut, left_bottom, 
-                offset=left_bottom.length() / 2, 
-                right=True, flip_target=flip_side_cut)
-
-            self.edges.substitute(left_bottom, new_edges)
-            left.substitute(left_bottom, new_edges)
+            try:
+                # Add a stylistic cutout to the skirt
+                new_edges, _, int_edges = pyp.ops.cut_into_edge(
+                    side_cut, left_bottom, 
+                    offset=left_bottom.length() / 2, 
+                    right=True, flip_target=flip_side_cut)
+            except:
+                # Skip adding the cut if it doesn't fit (e.g. because of the slit)
+                pass
+            else:
+                self.edges.substitute(left_bottom, new_edges)
+                left.substitute(left_bottom, new_edges)
 
         # Default placement
         self.top_center_pivot()
