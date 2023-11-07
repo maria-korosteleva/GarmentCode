@@ -278,16 +278,10 @@ class Edge():
 
         start, end = c_to_list(seg.start), c_to_list(seg.end)
         if isinstance(seg, svgpath.Line):
-            # DEBUG
-            print('Line! ', start, end)
             return Edge(start, end)
         if isinstance(seg, svgpath.Arc):
             # NOTE: assuming circular arc (same radius in both directoins)
             radius = seg.radius.real
-
-            # DEBUG
-            print('Arc! ', start, end, radius)
-
             return CircleEdge.from_points_radius(
                 start, end, radius, seg.large_arc, seg.sweep
             )
@@ -300,9 +294,6 @@ class Edge():
         else:
             raise NotImplementedError(f'CurveEdge::Error::Incorrect curve type supplied {seg.type}')
         
-        # DEBUG
-        print('Curve! ', start, end, cp)
-
         return CurveEdge(start, end, cp, relative=False)
 
     # Assembly into serializable object
