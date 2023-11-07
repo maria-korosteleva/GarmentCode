@@ -176,12 +176,14 @@ class FittedSkirtPanel(pyp.Panel):
             new_left_bottom = left_bottom.subdivide_len([1 - frac, frac])
             left.substitute(left_bottom, new_left_bottom[0])
             self.edges.substitute(left_bottom, new_left_bottom)
+            left_bottom = new_left_bottom[0]
         
         if right_slit:
             frac = right_slit
             new_rbottom = right_bottom.subdivide_len([frac, 1 - frac])
             right.substitute(right_bottom, new_rbottom[1])
             self.edges.substitute(right_bottom, new_rbottom)
+            right_bottom = new_rbottom[1]
 
         if side_cut is not None:
             # Add a stylistic cutout to the skirt
