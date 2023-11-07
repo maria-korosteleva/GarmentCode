@@ -18,6 +18,7 @@ class BodyParameters(pyp.BodyParametrizationBase):
             # Correct sleeve line location is a little closer to the neck
             # than the true shoulder width
             self.params['_base_sleeve_balance'] = self.params['sholder_w'] - 4
+            self.params['_base_armhole_incline'] = max(1, (self.params['back_width'] - self.params['_base_sleeve_balance']) / 2)
 
 if __name__ == "__main__":
 

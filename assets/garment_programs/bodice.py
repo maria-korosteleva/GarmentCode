@@ -204,10 +204,9 @@ class BodiceHalf(pyp.Component):
         # Collars
         # NOTE: Assuming the first is the top edge
         # Width
-        max_edge = self.ftorso.interfaces['collar_corner'].edges[0]
+        # TODOLOW What if sleeve inclination is variable?
         # NOTE: Back panel is more narrow, so using it
-        inclination = max(1, (body['back_width'] - body['sholder_w']) / 2)
-        max_w = 2 * (self.btorso.width - inclination - 1)
+        max_w = body['_base_sleeve_balance'] - 2  # 1 cm from default sleeve
         min_w = body['neck_w']
 
         if design['collar']['width']['v'] >= 0:
