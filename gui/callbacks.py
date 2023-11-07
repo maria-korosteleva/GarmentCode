@@ -137,8 +137,8 @@ class GUIPattern():
             # https://stackoverflow.com/a/37704379
             for key in param_path[:-1]:
                 dic = dic.setdefault(key, {})
-
-            dic[param]['v'] = new_value
+            if param in dic:  # Some parameters may not be present
+                dic[param]['v'] = new_value
 
         if reload:
             self.reload_garment()
