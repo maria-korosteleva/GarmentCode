@@ -153,7 +153,7 @@ class GUIPattern():
             if self.sew_pattern.is_self_intersecting():
                 # Let the user know
                 out = sg.popup_yes_no(
-                    'The design is self-intersecting. Generate a new one?', 
+                    'A sampled design is self-intersecting. Generate a new one?', 
                     title='Self-Intersecting',
                     icon=icon_image_b64)
 
