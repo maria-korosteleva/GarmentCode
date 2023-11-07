@@ -35,7 +35,7 @@ if __name__ == '__main__':
     design_files = {
         'base': './assets/design_params/base.yaml',
         # 'our_dress': r"G:\My Drive\GarmentCode\sewing_siggraph_garment\designs\dress_design_params.yaml"
-        # 'debug': './Logs/rand_0URAVX1P0H_design_params.yaml'
+        # 'debug': './Logs/rand_C3EXMEK4MK_design_params.yaml'   #    
         #'default': './assets/design_params/default.yaml',
         # 'modern': './assets/design_params/modern.yaml',
         # 'Dress_20s': './assets/design_params/dress_20s.yaml',
@@ -64,8 +64,8 @@ if __name__ == '__main__':
     for piece in test_garments:
         pattern = piece()
 
-        # DEBUG if piece.is_self_intersecting():
-        #     print(f'{piece.name} is Self-intersecting')
+        if piece.is_self_intersecting():
+            print(f'{piece.name} is Self-intersecting')
 
         # Save as json file
         sys_props = Properties('./system.json')
