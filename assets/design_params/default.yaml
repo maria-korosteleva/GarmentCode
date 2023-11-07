@@ -100,13 +100,13 @@ design:
       - 1
       type: float
     fc_angle:
-      v: 90
+      v: 95
       range:
       - 70
       - 110
       type: int
     bc_angle:
-      v: 90
+      v: 95
       range:
       - 70
       - 110
@@ -330,13 +330,13 @@ design:
         - 1
         type: float
       fc_angle:
-        v: 90
+        v: 95
         range:
         - 70
         - 110
         type: int
       bc_angle:
-        v: 90
+        v: 95
         range:
         - 70
         - 110
