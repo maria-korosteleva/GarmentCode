@@ -48,7 +48,7 @@ design:
       type: float
     width:   # Around the body 
       v: 1.
-      range: [1., 2]    # 1 == bust size
+      range: [1., 1.4]    # 1 == bust size
       type: float
 
   collar:
@@ -218,7 +218,7 @@ design:
         type: bool
       width:   # Around the body 
         v: 1.
-        range: [1., 2]    # 1 == bust size
+        range: [1., 1.4]    # 1 == bust size
         type: float
 
     collar:
