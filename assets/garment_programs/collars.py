@@ -158,7 +158,6 @@ class Turtle(pyp.Component):
             )
         })
 
-# TODO Update achitecture
 class SimpleLapelPanel(pyp.Panel):
     """A panel for the front part of simple Lapel"""
     def __init__(self, name, length, max_depth) -> None:

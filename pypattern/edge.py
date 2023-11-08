@@ -769,8 +769,7 @@ class CurveEdge(Edge):
             [self.start, self.end], 
             {
                 "endpoints": [0, 1], 
-                "curvature": {   # TODOLOW Remove this level? The the 'type' is always present? 
-                                 # Will break backwards compatibility though..
+                "curvature": {
                     "type": 'quadratic' if len(self.control_points) == 1 else 'cubic',
                     "params": self.control_points
                 }

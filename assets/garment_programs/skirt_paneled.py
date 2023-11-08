@@ -72,7 +72,7 @@ class FittedSkirtPanel(pyp.Panel):
     """Fitted panel for a pencil skirt"""
     def __init__(
             self, name, body, design, 
-            waist, hips,   # TODO Half measurement instead of a quarter   
+            waist, hips,   # TODOLOW Half measurement instead of a quarter   
             length,
             hipline_ext=1,
             dart_position=None, dart_frac=0.5, double_dart=False,
@@ -165,7 +165,7 @@ class FittedSkirtPanel(pyp.Panel):
         if slit:  # add a slit
             # Use long and thin disconnected dart for a cutout
             new_edges, _, int_edges = pyp.ops.cut_into_edge(
-                pyp.esf.dart_shape(2, depth=slit * length),    # 1 cm  # TODOLOW width could also be a parameter?
+                pyp.esf.dart_shape(2, depth=slit * length),    # a very thin cutout
                 bottom, 
                 offset= bottom.length() / 2,
                 right=True)
@@ -228,7 +228,7 @@ class FittedSkirtPanel(pyp.Panel):
         top_edge_len = top.length()
         if double_dart:
             # TODOLOW Avoid hardcoding for matching with the top?
-            dist = dart_position * 0.5  # Dist between darts -> dist between centers
+            dist = dart_position * 0.5    # Dist between darts -> dist between centers
             offsets_mid = [
                 - (dart_position + dist / 2 + dart_width / 2) - dart_width / 4,   
                 - (dart_position - dist / 2) - dart_width / 4,

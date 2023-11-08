@@ -39,8 +39,7 @@ class EdgeSeqFactory:
             * frac -- list of legth fractions. Every entry is in (0, 1], 
                 all entries sums up to 1
         """
-        # TODO Deprecated? 
-        # FIXME From fractions should be straight in the names??
+        # TODOLOW Deprecated? 
         frac = [abs(f) for f in frac]
         if not close_enough(fsum:=sum(frac), 1, 1e-4):
             raise RuntimeError(f'EdgeSequence::Error::fraction is incorrect. The sum {fsum} is not 1')
@@ -63,8 +62,6 @@ class EdgeSeqFactory:
 
             start_cut and end_cut specify the fraction of the edge to to add extra vertices at
         """
-        # TODO Curvature support? -- if needed in modeling
-
         nstart, nend = np.array(start), np.array(end)
         verts = [start]
 
@@ -559,9 +556,6 @@ def _fit_y_extremum(cp_y, target_location):
         raise RuntimeError('No extreme points!!')
 
     diff = np.linalg.norm(extremum - target_location)
-
-    # DEBUG
-    print('Extreme: ', diff)
 
     return diff**2 
 

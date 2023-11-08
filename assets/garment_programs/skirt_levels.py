@@ -39,12 +39,9 @@ class SkirtLevels(pyp.Component):
         # Place the levels
         level_skirt_class = globals()[ldesign['level']['v']]
         for i in range(n_levels):
-            top_width = self.subs[-1].interfaces['bottom'].edges.length()
-            top_width *= ruffle
-
             # Adjust the mesurement to trick skirts into producing correct width
-            # TODO More elegant overwrite
-            lbody['waist'] = top_width
+            # TODOLOW More elegant overwrite
+            lbody['waist'] = ruffle * self.subs[-1].interfaces['bottom'].edges.length()
             lbody['waist_back_width'] = ruffle * self.subs[-1].interfaces['bottom_b'].edges.length()
             self.subs.append(level_skirt_class(
                 lbody, 

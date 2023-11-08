@@ -1,9 +1,6 @@
-from copy import copy
-from numpy.linalg import norm
 import numpy as np
 
 # Custom
-from .edge_factory import EdgeSeqFactory
 from .interface import Interface
 from .generic_utils import close_enough
 from . import flags
@@ -173,7 +170,7 @@ class Stitches():
 
         self.rules = [StitchingRule(int1, int2) for int1, int2 in rules]
 
-    def append(self, pair):  # TODO two parameters explicitely rather then "pair" object?
+    def append(self, pair):  # TODOLOW two parameters explicitely rather then "pair" object?
         self.rules.append(StitchingRule(*pair))
 
     def __getitem__(self, id):

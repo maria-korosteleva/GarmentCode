@@ -64,8 +64,7 @@ class Panel(BaseComponent):
 
         edge_curves = [e.as_curve() for e in self.edges]
 
-        # TODOLOW Edge vs. the rest of the path -- could be faster!
-        # simple pairwise checks of edges
+        # NOTE: simple pairwise checks of edges
         for i1 in range(0, len(edge_curves)):
            for i2 in range(i1 + 1, len(edge_curves)):
                 intersect_t = edge_curves[i1].intersect(edge_curves[i2])
@@ -132,7 +131,7 @@ class Panel(BaseComponent):
     def translate_by(self, delta_vector):
         """Translate panel by a vector"""
         self.translation = self.translation + np.array(delta_vector)
-        # TODO Autonorm only on the assembly?
+        # NOTE: One may also want to have autonorm only on the assembly?
         self.autonorm()
 
         return self
@@ -261,8 +260,7 @@ class Panel(BaseComponent):
     def assembly(self):
         """Convert panel into serialazable representation
         
-         # SIM Note that Qualoth simulator does not support internal loops in panels,
-            hence panel EdgeSequence is assumed to be a single loop of edges
+         NOTE: panel EdgeSequence is assumed to be a single loop of edges
         """
         # always start from zero for consistency between panels
         self.set_pivot(self.edges[0].start, replicate_placement=True)

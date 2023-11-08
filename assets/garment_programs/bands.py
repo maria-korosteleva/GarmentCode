@@ -118,7 +118,6 @@ class CuffBand(pyp.Component):
 
         design = design['cuff']
 
-        # TODO flexible fractions of the width
         self.front = StraightBandPanel(
             f'{tag}_cuff_f', design['b_width']['v'] / 2, design['b_depth']['v'])
         self.front.translate_by([0, 0, 15])  
