@@ -292,7 +292,7 @@ class PencilSkirt(StackableSkirtComponent):
         if length is None:
             length = design['length']['v'] * body['_leg_length']  # Depends on leg length
         else:
-            length = length - body['hips_line']  # FIXME Account for intended rise
+            length = length - body['hips_line'] * design['rise']['v']
 
 
         self.front = FittedSkirtPanel(
