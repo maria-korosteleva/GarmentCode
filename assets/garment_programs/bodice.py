@@ -374,10 +374,9 @@ class Shirt(pyp.Component):
                 design['collar']['component']['style']['v'] = None
                 design['left']['collar']['component']['style']['v'] = None
             
-            # Design compatibility 
-            # TODO check the ruffle in 3D
+            # Left-right design compatibility 
             design['left']['shirt'].update(length={})
-            design['left']['shirt']['length']['v'] = design['left']['shirt']['length_ruffle']['v'] * design['shirt']['length']['v']
+            design['left']['shirt']['length']['v'] = design['shirt']['length']['v']
             
             design['left']['collar'].update(fc_depth={}, bc_depth={})
             design['left']['collar']['fc_depth']['v'] = design['collar']['fc_depth']['v']

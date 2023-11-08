@@ -216,12 +216,6 @@ design:
         v: True
         range: [True, False]
         type: bool
-      length_ruffle:
-        v: 1.
-        range: 
-        - 0.8
-        - 1.2
-        type: float
       width:   # Around the body 
         v: 1.
         range: [1., 2]    # 1 == bust size

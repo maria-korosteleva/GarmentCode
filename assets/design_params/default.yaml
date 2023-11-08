@@ -288,12 +288,6 @@ design:
         - true
         - false
         type: bool
-      length_ruffle:
-        v: 1.
-        range: 
-        - 0.8
-        - 1.2
-        type: float
       width:
         v: 1.0
         range:
