@@ -16,7 +16,8 @@ class Interface():
         Parameters:
             * panel - Panel object
             * edges - Edge or EdgeSequence -- edges in the panel that are allowed to connect to
-            * ruffle - ruffle coefficient for a particular edge. Interface object will supply projecting_edges() shape
+            * ruffle - ruffle coefficient (number or a per-edge list). If a number is provided, the ruffle is applied to the whole sequence. 
+              Interface object will supply projecting_edges() shape
                 s.t. the ruffles with the given rate are created. Default = 1. (no ruffles, smooth connection)
         """
 
@@ -29,7 +30,22 @@ class Interface():
 
         # Ruffles are applied to sections
         # Since extending a chain of edges != extending each edge individually
-        self.ruffle = [dict(coeff=ruffle, sec=[0, len(self.edges)])]
+        if isinstance(ruffle, list):
+            assert len(ruffle) == len(edges), "Ruffles and Edges don't match"
+            self.ruffle = []
+            last_coef = None
+            last_start = 0
+            for i, coef in enumerate(ruffle):
+                if coef == last_coef or last_coef is None:
+                    last_coef = coef  # Making sure to overwrite None
+                    continue
+                self.ruffle.append(dict(coeff=last_coef, sec=[last_start, i]))
+                last_start, last_coef = i, coef
+
+            self.ruffle.append(dict(coeff=last_coef, sec=[last_start, len(ruffle)]))
+                
+        else:
+            self.ruffle = [dict(coeff=ruffle, sec=[0, len(self.edges)])]
 
     def projecting_edges(self, on_oriented=False) -> EdgeSequence:
         """Return edges shape that should be used when projecting interface onto another panel

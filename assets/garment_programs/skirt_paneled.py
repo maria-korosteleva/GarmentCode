@@ -74,6 +74,7 @@ class FittedSkirtPanel(pyp.Panel):
             self, name, body, design, 
             waist, hips,   # TODO Half measurement instead of a quarter   
             length,
+            hipline_ext=1,
             dart_position=None, dart_frac=0.5, double_dart=False,
             slit=0, left_slit=0, right_slit=0,
             side_cut=None, flip_side_cut=False) -> None:
@@ -93,7 +94,7 @@ class FittedSkirtPanel(pyp.Panel):
         low_width = body['hips'] * (flare - 1) / 4  + hips  # Distribute the difference equally 
                                                                            # between front and back
         # adjust for a rise
-        adj_hips_depth = rise * hips_depth
+        adj_hips_depth = rise * hips_depth * hipline_ext
         adj_waist = pyp.utils.lin_interpolation(hips, waist, rise)
         dart_depth = hips_depth * dart_frac
         dart_depth = max(dart_depth - (hips_depth - adj_hips_depth), 0)
@@ -205,10 +206,11 @@ class FittedSkirtPanel(pyp.Panel):
         self.translation = [-hips / 2, 5, 0]
 
         # Out interfaces (easier to define before adding a dart)
+        # Adding ruffle factor on the hip line extention (used in back panel)
         self.interfaces = {
             'bottom': pyp.Interface(self, bottom),
-            'right': pyp.Interface(self, right), 
-            'left': pyp.Interface(self, left),  
+            'right': pyp.Interface(self, right, [1] * (len(right) - 1) + [hipline_ext]), 
+            'left': pyp.Interface(self, left, [hipline_ext] + [1] * (len(left) - 1)),  
         }
 
         # Add top darts
@@ -315,6 +317,7 @@ class PencilSkirt(StackableSkirtComponent):
             body['waist_back_width'] / 2,
             body['hip_back_width'] / 2,
             length=length,
+            hipline_ext=1.05,
             dart_position=body['bum_points'] / 2,
             dart_frac=0.85,   
             double_dart=True,
