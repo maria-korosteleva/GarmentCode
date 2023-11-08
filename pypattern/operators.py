@@ -356,7 +356,7 @@ def _fit_location_edge(shift, location, width_target, curve):
 
 
 # ANCHOR ----- Panel operations ------
-def distribute_Y(component, n_copies, odd_copy_shift=10):
+def distribute_Y(component, n_copies, odd_copy_shift=0):
     """Distribute copies of component over the circle around Oy"""
     copies = [ component ]
     delta_rotation = R.from_euler('XYZ', [0, 360 / n_copies, 0], degrees=True)

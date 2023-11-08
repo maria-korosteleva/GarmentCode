@@ -64,7 +64,8 @@ class ThinSkirtPanel(pyp.Panel):
         self.interfaces = {
             'right': pyp.Interface(self, self.edges[0]),
             'top': pyp.Interface(self, self.edges[1]),
-            'left': pyp.Interface(self, self.edges[2])
+            'left': pyp.Interface(self, self.edges[2]),
+            'bottom': pyp.Interface(self, self.edges[-1])
         }
 
 class FittedSkirtPanel(pyp.Panel):
@@ -412,13 +413,19 @@ class SkirtManyPanels(pyp.Component):
         self.front = ThinSkirtPanel('front', panel_w:=waist / n_panels,
                                     bottom_width=panel_w * flare_coeff_pi,
                                     length=length )
-        self.front.translate_to([-waist / 4, body['_waist_level'], 0])
-        # Align with a body
+        
+        # Move far enough s.t. the widest part of the panels fit on the circle
+        dist = self.front.interfaces['bottom'].edges.length() / (2 * np.tan(np.pi / n_panels))
+
+        self.front.translate_to([-dist, body['_waist_level'], 0])
+        # Align orientation with a body
         self.front.rotate_by(R.from_euler('XYZ', [0, -90, 0], degrees=True))
-        self.front.rotate_align([-waist / 4, 0, panel_w / 2])
+        self.front.rotate_align([-dist, 0, panel_w / 2])
+
+        
         
         # Create new panels
-        self.subs = pyp.ops.distribute_Y(self.front, n_panels, odd_copy_shift=15)
+        self.subs = pyp.ops.distribute_Y(self.front, n_panels)
 
         # Stitch new components
         for i in range(1, n_panels):
