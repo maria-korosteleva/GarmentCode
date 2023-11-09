@@ -74,6 +74,7 @@ class FittedSkirtPanel(pyp.Panel):
             self, name, body, design, 
             waist, hips,   # TODOLOW Half measurement instead of a quarter   
             length,
+            rise,
             hipline_ext=1,
             dart_position=None, dart_frac=0.5, double_dart=False,
             slit=0, left_slit=0, right_slit=0,
@@ -87,13 +88,13 @@ class FittedSkirtPanel(pyp.Panel):
 
         # Shared params
         hips_depth = body['hips_line']
-        rise = design['rise']['v']
         low_angle = design['low_angle']['v']
         hip_side_incl = np.deg2rad(body['hip_inclination'])
         flare = design['flare']['v']
         low_width = body['hips'] * (flare - 1) / 4  + hips  # Distribute the difference equally 
                                                                            # between front and back
         # adjust for a rise
+        # TODO Make evaluations on a higher level?
         adj_hips_depth = rise * hips_depth * hipline_ext
         adj_waist = pyp.utils.lin_interpolation(hips, waist, rise)
         dart_depth = hips_depth * dart_frac
@@ -271,7 +272,7 @@ class FittedSkirtPanel(pyp.Panel):
         
 # Full garments - Components
 class PencilSkirt(StackableSkirtComponent):
-    def __init__(self, body, design, tag='', length=None, slit=True, **kwargs) -> None:
+    def __init__(self, body, design, tag='', length=None, rise=None, slit=True, **kwargs) -> None:
         super().__init__(body, design, tag)
 
         design = design['pencil-skirt']
@@ -290,10 +291,11 @@ class PencilSkirt(StackableSkirtComponent):
             style_shape_l, style_shape_r = None, None
 
         # Force from arguments if given
+        rise = design['rise']['v'] if rise is None else rise
         if length is None:
             length = design['length']['v'] * body['_leg_length']  # Depends on leg length
         else:
-            length = length - body['hips_line'] * design['rise']['v']
+            length = length - body['hips_line'] * rise
 
 
         self.front = FittedSkirtPanel(
@@ -303,6 +305,7 @@ class PencilSkirt(StackableSkirtComponent):
             (body['waist'] - body['waist_back_width']) / 2,
             (body['hips'] - body['hip_back_width']) / 2,
             length=length,
+            rise=rise,
             dart_position=body['bust_points'] / 2,
             dart_frac=0.8,  # Diff for front and back
             slit=design['front_slit']['v'] if slit else 0, 
@@ -318,6 +321,7 @@ class PencilSkirt(StackableSkirtComponent):
             body['waist_back_width'] / 2,
             body['hip_back_width'] / 2,
             length=length,
+            rise=rise,
             hipline_ext=1.05,
             dart_position=body['bum_points'] / 2,
             dart_frac=0.85,   
@@ -353,12 +357,12 @@ class PencilSkirt(StackableSkirtComponent):
 
 class Skirt2(StackableSkirtComponent):
     """Simple 2 panel skirt"""
-    def __init__(self, body, design, tag='', length=None, slit=True, top_ruffles=True) -> None:
+    def __init__(self, body, design, tag='', length=None, rise=None, slit=True, top_ruffles=True) -> None:
         super().__init__(body, design, tag)
 
         design = design['skirt']
 
-        waist, hip_line, back_waist = self.eval_rise(design['rise']['v'])
+        waist, hip_line, back_waist = self.eval_rise(design['rise']['v'] if rise is None else rise)
 
         # Force from arguments if given
         if length is None:

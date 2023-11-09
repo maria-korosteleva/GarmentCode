@@ -45,7 +45,7 @@ class StackableSkirtComponent(BaseBottoms):
         (connecting bottom to another StackableSkirtComponent())
     """
 
-    def __init__(self, body, design, tag='', length=None, slit=True, top_ruffles=True) -> None:
+    def __init__(self, body, design, tag='', length=None, rise=None, slit=True, top_ruffles=True) -> None:
         """Skirt initialization
 
             Extra parameters (length, sleets, top_ruffles) 

@@ -12,7 +12,7 @@ class SkirtLevels(BaseBottoms):
     """Skirt constiting of multuple stitched skirts"""
 
     def __init__(self, body, design) -> None:
-        super().__init__(f'{self.__class__.__name__}')
+        super().__init__(body, design)
 
         ldesign = design['levels-skirt']
         lbody = deepcopy(body)  # We will modify the values, so need a copy
@@ -28,6 +28,7 @@ class SkirtLevels(BaseBottoms):
             body, 
             design, 
             length=self.base_len, 
+            rise=ldesign['rise']['v'],
             slit=False))
 
         # Skirt angle for correct placement
@@ -71,9 +72,8 @@ class SkirtLevels(BaseBottoms):
             'top': self.subs[0].interfaces['top']
         }
 
-    # TODO Add rise
     def get_rise(self):
-        return 1.
+        return self.design['levels-skirt']['rise']['v']
 
     def eval_length(self, ldesign, body):
         
@@ -83,5 +83,4 @@ class SkirtLevels(BaseBottoms):
         self.level_len = (total_length - self.base_len) / ldesign['num_levels']['v']
 
         # Add hip_line (== zero length)
-        # TODO rise?
-        self.base_len = body['hips_line'] + self.base_len
+        self.base_len = body['hips_line'] * ldesign['rise']['v'] + self.base_len

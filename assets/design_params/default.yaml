@@ -707,6 +707,12 @@ design:
       - 0.2
       - 1.1
       type: float
+    rise:
+      v: 1
+      range:
+      - 0.5
+      - 1
+      type: float
     base_length_frac: 
       v: 0.5
       range: 

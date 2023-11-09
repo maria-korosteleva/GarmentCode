@@ -65,12 +65,12 @@ class CircleArcPanel(pyp.Panel):
 # TODO Add rise
 class SkirtCircle(StackableSkirtComponent):
     """Simple circle skirt"""
-    def __init__(self, body, design, tag='', length=None, slit=True, **kwargs) -> None:
+    def __init__(self, body, design, tag='', length=None, rise=None, slit=True, **kwargs) -> None:
         super().__init__(body, design, tag)
 
         design = design['flare-skirt']
         suns = design['suns']['v']
-        waist, hips_depth, _ = self.eval_rise(design['rise']['v'])
+        waist, hips_depth, _ = self.eval_rise(design['rise']['v'] if rise is None else rise)
 
         if length is None:  # take from design parameters
             length = hips_depth + design['length']['v'] * body['_leg_length']
