@@ -39,7 +39,6 @@ class PantPanel(pyp.Panel):
 
         # Crotch cotrols
         crotch_depth_diff =  body['crotch_hip_diff']
-        # DRAFT crotch_extention = (body['leg_circ'] - body['hips'] / 2) * crotch_ext_frac + 7
         crotch_extention = crotch_width
 
         # eval pants shape
@@ -80,31 +79,12 @@ class PantPanel(pyp.Panel):
             [w_diff + waist, length + hips_depth] 
         )
 
-        # TODO With target tangent!
-        # crotch = pyp.esf.curve_from_tangents(
-        #     top.end, 
-        #     [pant_width + crotch_extention, length - crotch_depth_diff], 
-        #     target_tan0=np.array([0, -1]),
-        #     target_tan1=np.array([1, 0]),
-        #     initial_guess=[0.9, -0.5] 
-        # )
-        # DRAFT 
-        # crotch = pyp.CurveEdge(
-        #     top.end,
-        #     [pant_width + crotch_extention, length - crotch_depth_diff], 
-        #     [[0.9, -0.35]]    # NOTE: relative contols allow adaptation to different bodies
-        # )
         # TODO angled?
         crotch_top = pyp.Edge(
             top.end, 
             [pant_width, length + 0.45 * hips_depth]  # A bit higher than hip line
             # NOTE: The point should be lower than the minimum rise value (0.5)
         )
-        # DRAFT crotch_bottom = pyp.CurveEdge(
-        #     crotch_top.end,
-        #     [pant_width + crotch_extention, length - crotch_depth_diff], 
-        #     [[0.5, -0.35]]    # NOTE: relative contols allow adaptation to different bodies
-        # )
         crotch_bottom = pyp.esf.curve_from_tangents(
             crotch_top.end,
             [pant_width + crotch_extention, length - crotch_depth_diff], 
@@ -121,7 +101,6 @@ class PantPanel(pyp.Panel):
             new_level = top.end[1] - (1 - rise) * hips_depth
             right_top, top, crotch_top = self.apply_rise(new_level, right_top, top, crotch_top)
 
-        # TODO With target tangent!
         # TODO same distance from the crotch as in the front 
         left = pyp.esf.curve_from_tangents(
             crotch_bottom.end,    
@@ -133,14 +112,6 @@ class PantPanel(pyp.Panel):
             target_tan1=np.array([0, -1]),
             initial_guess=[0.3, 0] 
         )
-        # DRAFT
-        # left = pyp.CurveEdge(
-        #     crotch.end,
-        #     [
-        #         min(pant_width, pant_width - (pant_width - low_width) / 2), 
-        #         min(0, length - crotch_depth_diff)], 
-        #     [[0.2, -0.1]]
-        # )
 
         # DEBUG
         print('Crotch depth: ', abs(top.end[1] - crotch_bottom.end[1]))
@@ -349,22 +320,4 @@ class Pants(BaseBottoms):
 
     def get_rise(self):
         return self.design['pants']['rise']['v']
-
-# TODO Remove -- it's deprecated
-class WBPants(pyp.Component):
-    def __init__(self, body, design) -> None:
-        super().__init__('WBPants')
-
-        self.pants = Pants(body, design)
-
-        # pants top
-        wb_len = (self.pants.interfaces['top_b'].projecting_edges().length() + 
-                    self.pants.interfaces['top_f'].projecting_edges().length())
-
-        self.wb = bands.StraightWB(body, design)
-        self.wb.translate_by([0, self.wb.width + 2, 0])
-
-        self.stitching_rules = pyp.Stitches(
-            (self.pants.interfaces['top'], self.wb.interfaces['bottom']),
-        )
 

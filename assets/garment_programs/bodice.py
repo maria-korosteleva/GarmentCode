@@ -1,4 +1,4 @@
-from copy import copy, deepcopy
+from copy import deepcopy
 import numpy as np
 
 # Custom
@@ -190,7 +190,6 @@ class BodiceHalf(pyp.Component):
         # Main connectivity
         self.stitching_rules.append((
             self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
-
 
     def eval_dep_params(self, body, design):
 
