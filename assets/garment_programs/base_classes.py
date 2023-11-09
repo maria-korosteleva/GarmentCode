@@ -24,6 +24,20 @@ class BaseBottoms(pyp.Component):
     def get_rise(self):
         """Return a rise value for a given component"""
         return 1.
+    
+    def eval_rise(self, rise):
+        """Evaluate updated hip and waist-related measurements, 
+            corresponding to the provided rise value 
+        """
+        waist, hips = self.body['waist'], self.body['hips']
+        hips_level = self.body['hips_line']
+        self.adj_hips_depth = rise * hips_level
+        self.adj_waist = pyp.utils.lin_interpolation(hips, waist, rise)
+
+        self_adj_back_waist = pyp.utils.lin_interpolation(
+            self.body['hip_back_width'], self.body['waist_back_width'], rise)
+
+        return self.adj_waist, self.adj_hips_depth, self_adj_back_waist
 
 class StackableSkirtComponent(BaseBottoms):
     """

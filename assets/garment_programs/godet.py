@@ -105,3 +105,6 @@ class GodetSkirt(BaseBottoms):
                 (self.subs[-1-i if right else -(num_inserts-i)].interfaces[0], 
                 cut_interface))
        
+
+    def get_rise(self):
+        return self.base.get_rise()

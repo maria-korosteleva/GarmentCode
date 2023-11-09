@@ -269,6 +269,7 @@ class FittedSkirtPanel(pyp.Panel):
 
         return top_edges, int_edges
         
+# Full garments - Components
 class PencilSkirt(StackableSkirtComponent):
     def __init__(self, body, design, tag='', length=None, slit=True, **kwargs) -> None:
         super().__init__(body, design, tag)
@@ -350,8 +351,6 @@ class PencilSkirt(StackableSkirtComponent):
     def get_rise(self):
         return self.design['rise']['v']
 
-# TODO Add rise
-# Full garments - Components
 class Skirt2(StackableSkirtComponent):
     """Simple 2 panel skirt"""
     def __init__(self, body, design, tag='', length=None, slit=True, top_ruffles=True) -> None:
@@ -359,13 +358,15 @@ class Skirt2(StackableSkirtComponent):
 
         design = design['skirt']
 
+        waist, hip_line, back_waist = self.eval_rise(design['rise']['v'])
+
         # Force from arguments if given
         if length is None:
-            length = body['hips_line'] + design['length']['v'] * body['_leg_length']  # Depends on leg length
+            length = hip_line + design['length']['v'] * body['_leg_length']  # Depends on leg length
 
         self.front = SkirtPanel(
             f'front_{tag}' if tag else 'front', 
-            waist_length=body['waist'] - body['waist_back_width'], 
+            waist_length=waist - back_waist, 
             length=length,
             ruffles=design['ruffle']['v'] if top_ruffles else 1,   # Only if on waistband
             flare=design['flare']['v'],
@@ -373,7 +374,7 @@ class Skirt2(StackableSkirtComponent):
         ).translate_to([0, body['_waist_level'], 25])
         self.back = SkirtPanel(
             f'back_{tag}'  if tag else 'back', 
-            waist_length=body['waist_back_width'], 
+            waist_length=back_waist, 
             length=length,
             ruffles=design['ruffle']['v'] if top_ruffles else 1,   # Only if on waistband
             flare=design['flare']['v'],
@@ -399,22 +400,23 @@ class Skirt2(StackableSkirtComponent):
             )
         }
 
-# TODO Add rise
+    def get_rise(self):
+        return self.design['skirt']['rise']['v']
+
 class SkirtManyPanels(BaseBottoms):
     """Round Skirt with many panels"""
 
     def __init__(self, body, design, tag='') -> None:
         tag_extra = str(design["flare-skirt"]["n_panels"]["v"])
         tag = f'{tag}_{tag_extra}' if tag else tag_extra 
-        super().__init__(f'{self.__class__.__name__}_{tag}')
-
-        waist = body['waist']    # Fit to waist
+        super().__init__(body, design, tag=tag)
 
         design = design['flare-skirt']
+        waist, hip_line, _ = self.eval_rise(design['rise']['v'])
         n_panels = design['n_panels']['v']
 
         # Length is dependent on length of legs
-        length = body['hips_line'] + design['length']['v'] * body['_leg_length']
+        length = hip_line + design['length']['v'] * body['_leg_length']
 
         flare_coeff_pi = 1 + design['suns']['v'] * length * 2 * np.pi / waist
 
@@ -430,8 +432,6 @@ class SkirtManyPanels(BaseBottoms):
         self.front.rotate_by(R.from_euler('XYZ', [0, -90, 0], degrees=True))
         self.front.rotate_align([-dist, 0, panel_w / 2])
 
-        
-        
         # Create new panels
         self.subs = pyp.ops.distribute_Y(self.front, n_panels)
 
@@ -445,3 +445,6 @@ class SkirtManyPanels(BaseBottoms):
         self.interfaces = {
             'top': pyp.Interface.from_multiple(*[sub.interfaces['top'] for sub in self.subs])
         }
+
+    def get_rise(self):
+        return self.design['flare-skirt']['rise']['v']

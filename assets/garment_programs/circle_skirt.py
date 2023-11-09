@@ -69,12 +69,11 @@ class SkirtCircle(StackableSkirtComponent):
         super().__init__(body, design, tag)
 
         design = design['flare-skirt']
-
-        waist = body['waist']
         suns = design['suns']['v']
+        waist, hips_depth, _ = self.eval_rise(design['rise']['v'])
 
         if length is None:  # take from design parameters
-            length = body['hips_line'] + design['length']['v'] * body['_leg_length']
+            length = hips_depth + design['length']['v'] * body['_leg_length']
 
         # panels
         self.front = CircleArcPanel.from_w_length_suns(
@@ -131,3 +130,6 @@ class SkirtCircle(StackableSkirtComponent):
 
         panel.edges.substitute(target_edge, new_edges)
         panel.interfaces['bottom'].substitute(target_edge, interf_edges, [panel for _ in range(len(interf_edges))])
+
+    def get_rise(self):
+        return self.design['flare-skirt']['rise']['v']

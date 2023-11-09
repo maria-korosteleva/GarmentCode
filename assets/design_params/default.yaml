@@ -505,6 +505,12 @@ design:
       - -0.2
       - 1
       type: float
+    rise:
+      v: 1
+      range:
+      - 0.5
+      - 1
+      type: float
     ruffle:
       v: 1.0
       range:
@@ -528,6 +534,12 @@ design:
       v: 0.2
       range:
       - -0.2
+      - 1
+      type: float
+    rise:
+      v: 1
+      range:
+      - 0.5
       - 1
       type: float
     n_panels:
