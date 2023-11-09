@@ -8,7 +8,7 @@ import pypattern as pyp
 # other assets
 from .bands import StraightWB
 from . import shapes
-from .base_skirts import StackableSkirtComponent
+from .base_classes import StackableSkirtComponent, BaseBottoms
 
 # Panels
 class SkirtPanel(pyp.Panel):
@@ -347,6 +347,10 @@ class PencilSkirt(StackableSkirtComponent):
             )
         }
 
+    def get_rise(self):
+        return self.design['rise']['v']
+
+# TODO Add rise
 # Full garments - Components
 class Skirt2(StackableSkirtComponent):
     """Simple 2 panel skirt"""
@@ -395,7 +399,8 @@ class Skirt2(StackableSkirtComponent):
             )
         }
 
-class SkirtManyPanels(pyp.Component):
+# TODO Add rise
+class SkirtManyPanels(BaseBottoms):
     """Round Skirt with many panels"""
 
     def __init__(self, body, design, tag='') -> None:

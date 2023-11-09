@@ -7,6 +7,7 @@ import pypattern as pyp
 
 # other assets
 from . import bands
+from .base_classes import BaseBottoms
 
 
 # TODO Cuffs
@@ -318,10 +319,9 @@ class PantsHalf(pyp.Component):
             'top_b': self.back.interfaces['top'],
         }
 
-class Pants(pyp.Component):
+class Pants(BaseBottoms):
     def __init__(self, body, design) -> None:
         super().__init__('Pants')
-
 
         self.right = PantsHalf('r', body, design)
         self.left = PantsHalf('l', body, design).mirror()
@@ -347,6 +347,10 @@ class Pants(pyp.Component):
         # DEBUG
         print('Waist len: ', self.interfaces['top'].edges.length())
 
+    def get_rise(self):
+        return self.design['pants']['rise']['v']
+
+# TODO Remove -- it's deprecated
 class WBPants(pyp.Component):
     def __init__(self, body, design) -> None:
         super().__init__('WBPants')

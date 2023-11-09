@@ -36,12 +36,6 @@ design:
       v: 0.1
       range: [0.1, 1]
       type: float
-    rise:
-      v: 0.7
-      range:
-      - 0.1
-      - 1.
-      type: float
 
   shirt: 
     strapless:    # Both for fitted and non-fitted shirts

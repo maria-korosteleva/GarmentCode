@@ -6,8 +6,9 @@ from scipy.spatial.transform import Rotation as R
 import pypattern as pyp
 from .skirt_paneled import *
 from .circle_skirt import *
+from .base_classes import BaseBottoms
 
-class SkirtLevels(pyp.Component):
+class SkirtLevels(BaseBottoms):
     """Skirt constiting of multuple stitched skirts"""
 
     def __init__(self, body, design) -> None:
@@ -70,6 +71,9 @@ class SkirtLevels(pyp.Component):
             'top': self.subs[0].interfaces['top']
         }
 
+    # TODO Add rise
+    def get_rise(self):
+        return 1.
 
     def eval_length(self, ldesign, body):
         

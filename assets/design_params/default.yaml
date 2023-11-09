@@ -39,12 +39,6 @@ design:
       - 0.1
       - 1.
       type: float
-    rise:
-      v: 1.
-      range:
-      - 0.1
-      - 1.
-      type: float
   shirt:
     strapless:
       v: false

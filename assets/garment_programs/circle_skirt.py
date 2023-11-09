@@ -3,7 +3,7 @@ import pypattern as pyp
 from scipy.spatial.transform import Rotation as R
 import numpy as np
 
-from .base_skirts import StackableSkirtComponent
+from .base_classes import StackableSkirtComponent
 
 class CircleArcPanel(pyp.Panel):
     """One panel circle skirt"""
@@ -62,7 +62,7 @@ class CircleArcPanel(pyp.Panel):
 
         return CircleArcPanel(name, rad, length, arc)
 
-
+# TODO Add rise
 class SkirtCircle(StackableSkirtComponent):
     """Simple circle skirt"""
     def __init__(self, body, design, tag='', length=None, slit=True, **kwargs) -> None:

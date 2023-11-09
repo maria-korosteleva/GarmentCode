@@ -27,7 +27,7 @@ class StraightBandPanel(pyp.Panel):
 
 class StraightWB(pyp.Component):
     """Simple 2 panel waistband"""
-    def __init__(self, body, design) -> None:
+    def __init__(self, body, design, **kwargs) -> None:
         super().__init__(self.__class__.__name__)
 
         self.waist = design['waistband']['waist']['v'] * body['waist']
@@ -61,10 +61,18 @@ class FittedWB(pyp.Component):
     """Also known as Yoke: a waistband that ~follows the body curvature, and hence sits tight
         Made out of two circular arc panels
     """
-    def __init__(self, body, design) -> None:
+    def __init__(self, body, design, rise=1.) -> None:
+        """A waistband that ~follows the body curvature, and hence sits tight
+        
+            * rise -- the rise value of the bottoms that the WB is attached to 
+                Adapts the shape of the waistband to sit tight on top 
+                of the given rise level. If 1. or anything less than waistband width, 
+                the rise is ignored and the FittedWB is created to sit well on the waist
+        """
         super().__init__(self.__class__.__name__)
 
-        # TODO Dependency on rise value
+        # TODO Remove rise from the parameters
+
         # Measurements
         self.waist = design['waistband']['waist']['v'] * body['waist']
         waist_back_frac = body['waist_back_width'] / body['waist']
@@ -73,7 +81,7 @@ class FittedWB(pyp.Component):
 
         # Params
         self.width = design['waistband']['width']['v'] 
-        self.rise = design['waistband']['rise']['v']
+        self.rise = rise
         # Check correct values
         if self.rise + self.width > 1:
             self.rise = 1 - self.width

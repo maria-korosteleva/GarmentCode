@@ -4,6 +4,7 @@ import numpy as np
 # Custom
 import pypattern as pyp
 from . import skirt_paneled as skirts
+from .base_classes import BaseBottoms
 
 class Insert(pyp.Panel):
     def __init__(self, id, width=30, depth=30) -> None:
@@ -17,7 +18,7 @@ class Insert(pyp.Panel):
         self.top_center_pivot()
         self.center_x()
 
-class GodetSkirt(pyp.Component):
+class GodetSkirt(BaseBottoms):
     def __init__(self, body, design) -> None:
         super().__init__(f'{self.__class__.__name__}')
 

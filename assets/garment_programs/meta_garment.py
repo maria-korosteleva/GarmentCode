@@ -29,11 +29,23 @@ class MetaGarment(pyp.Component):
             Upper = globals()[upper_name]
             self.subs = [Upper(body, design)]
 
+        # Define Lower garment
+        lower_name = design['meta']['bottom']['v']
+        if lower_name:
+            Lower_class = globals()[lower_name]
+            Lower = Lower_class(body, design)
+        else: 
+            Lower = None
+
         # Belt (or not)
         belt_name = design['meta']['wb']['v']
         if belt_name:
-            Belt = globals()[belt_name]
-            self.subs.append(Belt(body, design))
+            Belt_class = globals()[belt_name]
+            
+            # Adjust rise to match the Lower garment if needed
+            Belt = Belt_class(body, design, Lower.get_rise() if Lower else 1.)
+
+            self.subs.append(Belt)
 
             # Place below the upper garment 
             if len(self.subs) > 1:
@@ -46,12 +58,9 @@ class MetaGarment(pyp.Component):
                 self.stitching_rules.append(
                     (self.subs[-2].interfaces['bottom'], self.subs[-1].interfaces['top']))
 
-        # Lower garment
-        lower_name = design['meta']['bottom']['v']
+        # Attach Lower garment if present
         if lower_name:
-            Lower = globals()[lower_name]
-            self.subs.append(Lower(body, design))
-
+            self.subs.append(Lower)
             # Place below the upper garment or self.wb
             if len(self.subs) > 1:
                 self.subs[-1].place_by_interface(
