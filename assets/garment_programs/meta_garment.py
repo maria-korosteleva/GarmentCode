@@ -71,8 +71,3 @@ class MetaGarment(pyp.Component):
                 self.stitching_rules.append(
                     (self.subs[-2].interfaces['bottom'], self.subs[-1].interfaces['top']))
                 
-                # DEBUG
-                print('Stitch length: ', 
-                      self.subs[-1].interfaces['top'].edges.length(), 
-                      self.subs[-2].interfaces['bottom'].edges.length()
-                      )

@@ -16,7 +16,7 @@ design:
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
-      v: SkirtLevels # SkirtManyPanels  
+      v: PencilSkirt # SkirtManyPanels  
       range: 
         - SkirtCircle
         - GodetSkirt

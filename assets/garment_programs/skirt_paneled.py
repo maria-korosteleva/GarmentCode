@@ -72,9 +72,8 @@ class FittedSkirtPanel(pyp.Panel):
     """Fitted panel for a pencil skirt"""
     def __init__(
             self, name, body, design, 
-            waist, hips,   # TODOLOW Half measurement instead of a quarter   
+            waist, hips, hips_depth,  # TODOLOW Half measurement instead of a quarter   
             length,
-            rise,
             hipline_ext=1,
             dart_position=None, dart_frac=0.5, double_dart=False,
             slit=0, left_slit=0, right_slit=0,
@@ -87,21 +86,19 @@ class FittedSkirtPanel(pyp.Panel):
         super().__init__(name)
 
         # Shared params
-        hips_depth = body['hips_line']
         low_angle = design['low_angle']['v']
         hip_side_incl = np.deg2rad(body['hip_inclination'])
         flare = design['flare']['v']
-        low_width = body['hips'] * (flare - 1) / 4  + hips  # Distribute the difference equally 
+        low_width = body['hips'] * (flare - 1) / 4 + hips  # Distribute the difference equally 
                                                                            # between front and back
         # adjust for a rise
         # TODO Make evaluations on a higher level?
-        adj_hips_depth = rise * hips_depth * hipline_ext
-        adj_waist = pyp.utils.lin_interpolation(hips, waist, rise)
+        adj_hips_depth = hips_depth * hipline_ext
         dart_depth = hips_depth * dart_frac
         dart_depth = max(dart_depth - (hips_depth - adj_hips_depth), 0)
 
         # amount of extra fabric
-        w_diff = hips - adj_waist   # Assume its positive since waist is smaller then hips
+        w_diff = hips - waist   # Assume its positive since waist is smaller then hips
         # We distribute w_diff among the side angle and a dart 
         hw_shift = np.tan(hip_side_incl) * adj_hips_depth
         # Small difference
@@ -292,20 +289,20 @@ class PencilSkirt(StackableSkirtComponent):
 
         # Force from arguments if given
         rise = design['rise']['v'] if rise is None else rise
+        waist, hips_depth, back_waist = self.eval_rise(rise)
         if length is None:
             length = design['length']['v'] * body['_leg_length']  # Depends on leg length
         else:
-            length = length - body['hips_line'] * rise
-
+            length = length - hips_depth
 
         self.front = FittedSkirtPanel(
             f'skirt_f',   
             body,
             design,
-            (body['waist'] - body['waist_back_width']) / 2,
+            (waist - back_waist) / 2,
             (body['hips'] - body['hip_back_width']) / 2,
+            hips_depth=hips_depth,
             length=length,
-            rise=rise,
             dart_position=body['bust_points'] / 2,
             dart_frac=0.8,  # Diff for front and back
             slit=design['front_slit']['v'] if slit else 0, 
@@ -318,10 +315,10 @@ class PencilSkirt(StackableSkirtComponent):
             f'skirt_b', 
             body,
             design,
-            body['waist_back_width'] / 2,
+            back_waist / 2,
             body['hip_back_width'] / 2,
             length=length,
-            rise=rise,
+            hips_depth=hips_depth,
             hipline_ext=1.05,
             dart_position=body['bum_points'] / 2,
             dart_frac=0.85,   
