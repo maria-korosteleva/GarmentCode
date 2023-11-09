@@ -18,6 +18,7 @@ class PantPanel(pyp.Panel):
             self, name, body, design, 
             waist, 
             hips,
+            hips_depth,
             crotch_width,
             dart_position,
             double_dart=False) -> None:
@@ -33,7 +34,6 @@ class PantPanel(pyp.Panel):
         # TODO Low width w.r.t. leg_circ??
         low_width = design['width']['v'] * body['hips'] * (flare - 1) / 4  + hips
 
-        hips_depth = body['hips_line']
         hip_side_incl = np.deg2rad(body['hip_inclination'])
         dart_depth = hips_depth * 0.8  # FIXME check
 
@@ -94,13 +94,6 @@ class PantPanel(pyp.Panel):
             initial_guess=[0.5, -0.5] 
         )
 
-        # Apply the rise
-        # NOTE applying rise here for correctly collecting the edges
-        rise = design['rise']['v']
-        if not pyp.utils.close_enough(rise, 1.):
-            new_level = top.end[1] - (1 - rise) * hips_depth
-            right_top, top, crotch_top = self.apply_rise(new_level, right_top, top, crotch_top)
-
         # TODO same distance from the crotch as in the front 
         left = pyp.esf.curve_from_tangents(
             crotch_bottom.end,    
@@ -134,7 +127,7 @@ class PantPanel(pyp.Panel):
         }
 
         # Add top dart 
-        dart_width = w_diff - hw_shift   # FIXME Adjust according to rise value (now the original darts are used)
+        dart_width = w_diff - hw_shift  
         if w_diff > hw_shift:
             top_edges, int_edges = self.add_darts(
                 top, dart_width, dart_depth, dart_position, double_dart=double_dart)
@@ -142,27 +135,6 @@ class PantPanel(pyp.Panel):
             self.edges.substitute(top, top_edges)
         else:
             self.interfaces['top'] = pyp.Interface(self, top) 
-
-    def apply_rise(self, level, right, top, crotch):
-
-        # TODOLOW This could be an operator or edge function
-        right_c, crotch_c = right.as_curve(), crotch.as_curve()
-        ext = 5  # Extend cutout a bit for stable intersection results
-        cutout = svgpath.Line(0 + 1j*level, crotch.end[0] + ext + 1j*level)
-
-        right_intersect = right_c.intersect(cutout)[0]
-        right_cut = right_c.cropped(0, right_intersect[0])
-        new_right = pyp.CurveEdge.from_svg_curve(right_cut)
-
-        c_intersect = crotch_c.intersect(cutout)[0]
-        c_cut = crotch_c.cropped(c_intersect[0], 1)
-
-        new_crotch = pyp.Edge.from_svg_curve(c_cut)
-
-        new_top = pyp.Edge(new_right.end, new_crotch.start)
-
-        return new_right, new_top, new_crotch
-
 
     def add_darts(self, top, dart_width, dart_depth, dart_position, double_dart=False):
         
@@ -205,11 +177,11 @@ class PantPanel(pyp.Panel):
         return top_edges, int_edges
         
 
-class PantsHalf(pyp.Component):
+class PantsHalf(BaseBottoms):
     def __init__(self, tag, body, design) -> None:
-        super().__init__(tag)
+        super().__init__(body, design, tag)
         design = design['pants']
-
+        waist, hips_depth, waist_back = self.eval_rise(design['rise']['v'])
 
         # NOTE: min value = full sum > leg curcumference
         # Max: pant leg falls flat from the back
@@ -235,15 +207,17 @@ class PantsHalf(pyp.Component):
 
         self.front = PantPanel(
             f'pant_f_{tag}', body, design,
-            waist=(body['waist'] - body['waist_back_width']) / 2,
+            waist=(waist - waist_back) / 2,
             hips=(body['hips'] - body['hip_back_width']) / 2,
+            hips_depth=hips_depth,
             dart_position = body['bust_points'] / 2,
             crotch_width=front_extention,
             ).translate_by([0, body['_waist_level'] - 5, 25])
         self.back = PantPanel(
             f'pant_b_{tag}', body, design,
-            waist=body['waist_back_width'] / 2,
+            waist=waist_back / 2,
             hips=body['hip_back_width'] / 2,
+            hips_depth=hips_depth,
             dart_position = body['bum_points'] / 2,
             crotch_width=back_extention,
             double_dart=True
@@ -292,7 +266,7 @@ class PantsHalf(pyp.Component):
 
 class Pants(BaseBottoms):
     def __init__(self, body, design) -> None:
-        super().__init__('Pants')
+        super().__init__(body, design)
 
         self.right = PantsHalf('r', body, design)
         self.left = PantsHalf('l', body, design).mirror()
