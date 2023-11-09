@@ -55,6 +55,19 @@ class BodiceFrontHalf(pyp.Panel):
             offset=bust_line + side_d_width / 2)
         self.edges.substitute(1, s_edge)
 
+        # Take some fabric from the top to match the shoulder width
+        s_edge[-1].end[0] += (x_upd:=self.width - body['sholder_w'] / 2)
+        s_edge[-1].end[1] += (y_upd:=sh_tan * x_upd)
+
+        # DEBUG
+        print('Shift vec: ', x_upd, (s_edge[-1].end[1] - s_edge[-1].start[1]))
+        print('Factor: ', x_upd / (s_edge[-1].end[1] - s_edge[-1].start[1]), body['sholder_w'] / 2)
+        print('Sums: ', (20 * x_upd / (s_edge[-1].end[1] - s_edge[-1].start[1])) + body['sholder_w'] / 2)
+
+        top_side_y = (s_edge[-1].end[1] - s_edge[-1].start[1])
+        # TODO Make a proper method
+        self.width = lambda y: (y * x_upd / top_side_y) + body['sholder_w'] / 2
+
         # Bottom dart
         b_edge, b_interface = self.add_dart(
             pyp.esf.dart_shape(bottom_d_width, 0.85 * bust_line), 
@@ -88,8 +101,6 @@ class BodiceBackHalf(pyp.Panel):
     def __init__(self, name, body, design) -> None:
         super().__init__(name)
 
-        # TODO account for ease in basic measurements
-
         # Overall measurements        
         self.width = body['back_width'] / 2
         waist = body['waist_back_width'] / 2  
@@ -111,6 +122,13 @@ class BodiceBackHalf(pyp.Panel):
             [0, length + shoulder_incl],   # Add some fabric for the neck (inclination of shoulders)
             loop=True)
         
+        # Take some fabric from the top to match the shoulder width
+        self.edges[2].end[0] += (x_upd:=self.width - body['sholder_w'] / 2)
+        self.edges[2].end[1] += (y_upd:=sh_tan * x_upd)
+        top_side_y = (self.edges[2].end[1] - self.edges[2].start[1])
+        # TODO Make a proper method
+        self.width = lambda y: (y * x_upd / top_side_y) + body['sholder_w'] / 2
+
         self.interfaces = {
             'outside': pyp.Interface(self, [self.edges[1], self.edges[2]]),  #, self.edges[3]]),
             'inside': pyp.Interface(self, self.edges[-1]),
@@ -122,7 +140,7 @@ class BodiceBackHalf(pyp.Panel):
         }
 
         # Bottom dart as cutout -- for straight line
-        if waist < self.width:
+        if waist < self.width(top_side_y):
             bottom_d_width = waist_width - waist
             bottom_d_width /= 2   # double darts
             bottom_d_depth = 0.9 * (length - body['bust_line'])  # calculated value
@@ -146,6 +164,9 @@ class BodiceBackHalf(pyp.Panel):
             self.edges.substitute(0, b_edge)
             self.interfaces['bottom'] = pyp.Interface(self, b_interface)
 
+            # TODO Remove fabric from the sides if the diff is big enough
+            # DRAFT b_edge[-1].end[0] += 2 
+
         # default placement
         self.translate_by([0, body['height'] - body['head_l'] - length, 0])
         
@@ -166,6 +187,9 @@ class BodiceHalf(pyp.Component):
             self.ftorso = tee.TorsoFrontHalfPanel(f'{name}_ftorso', body, design).translate_by([0, 0, 25])
             self.btorso = tee.TorsoBackHalfPanel(f'{name}_btorso', body, design).translate_by([0, 0, -20])
 
+        # DEBUG
+        print('Eval3: ', self.ftorso.width(20))
+
         # Interfaces
         self.interfaces.update({
             'f_bottom': self.ftorso.interfaces['bottom'],
@@ -180,7 +204,7 @@ class BodiceHalf(pyp.Component):
             self.make_strapless(design)
         else:
             # Sleeves and collars 
-            self.add_sleeves(name, body, design)
+            # DEBUG self.add_sleeves(name, body, design)
             self.add_collars(name, body, design)
             self.stitching_rules.append((
                 self.ftorso.interfaces['shoulder'], 
@@ -217,11 +241,13 @@ class BodiceHalf(pyp.Component):
         # Collar depth is given w.r.t. length.
         # adjust for the shoulder inclination
         tg = np.tan(np.deg2rad(body['shoulder_incl']))
-        f_depth_adj = tg * (self.ftorso.width - width / 2)
-        b_depth_adj = tg * (self.btorso.width - width / 2)
+        # TODO This might now be the same value!
+        f_depth_adj = tg * (self.ftorso.width(0) - width / 2)
+        b_depth_adj = tg * (self.btorso.width(0) - width / 2)
 
-        max_f_len = self.ftorso.interfaces['collar_corner'].edges[1].length() - tg * self.ftorso.width - 1  # cm
-        max_b_len = self.btorso.interfaces['collar_corner'].edges[1].length() - tg * self.btorso.width - 1  # cm
+        # TODO these might be the same now as well
+        max_f_len = self.ftorso.interfaces['collar_corner'].edges[1].length() - tg * self.ftorso.width(0) - 1  # cm
+        max_b_len = self.btorso.interfaces['collar_corner'].edges[1].length() - tg * self.btorso.width(0) - 1  # cm
 
         
         design['collar']['f_strapless_depth'] = {}
@@ -234,7 +260,14 @@ class BodiceHalf(pyp.Component):
 
     def add_sleeves(self, name, body, design):
 
-        diff = self.ftorso.width - self.btorso.width
+        # TODO Sleeve inclination should also be dynamic and not depend on body back_width
+        diff = lambda y: self.ftorso.width(y) - self.btorso.width(y)
+
+        # DEBUG
+        print('Eval2: ', self.ftorso.width(20))
+        print('Front w: ', [(self.ftorso.width(y), y) for y in np.linspace(0, 18, num=5)])
+        print([(diff(y), y) for y in np.linspace(0, 18, num=5)])
+        print('Back w: ', [(self.btorso.width(y), y) for y in np.linspace(0, 18, num=5)])
 
         self.sleeve = sleeves.Sleeve(name, body, design, depth_diff=diff)
 

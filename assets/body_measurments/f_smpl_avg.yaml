@@ -15,7 +15,7 @@ body:
   waist:  80  # 82 adjusted for 'dips'
   waist_line: 36 # DRAFT 35  # Nape of the Neck to waist (on the back)
   waist_over_bust_line: 43 # DRAFT 40   # -- measurement + addition for the shoulder  # 47
-  waist_back_width: 37  # TODO correct value
+  waist_back_width: 37  
 
   bust_line: 23 # DRAFT 23  
   bust: 90  # adjust for the 'dips' from 96 

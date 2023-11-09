@@ -179,7 +179,7 @@ class Sleeve(pyp.Component):
     """Trying to do a proper sleeve"""
 
 
-    def __init__(self, tag, body, design, depth_diff=3) -> None: 
+    def __init__(self, tag, body, design, depth_diff=lambda y: 3) -> None: 
         super().__init__(f'{self.__class__.__name__}_{tag}')
 
         design = design['sleeve']
@@ -190,10 +190,13 @@ class Sleeve(pyp.Component):
         connecting_width = design['connecting_width']['v']
         smoothing_coeff = design['smoothing_coeff']['v']
 
+        # DEBUG
+        print('depth diff: ', depth_diff(connecting_width), connecting_width)
+
         # --- Define sleeve opening shapes ----
         armhole = globals()[design['armhole_shape']['v']]
         front_project, front_opening = armhole(
-            inclination + depth_diff, connecting_width, 
+            inclination + depth_diff(connecting_width), connecting_width, 
             angle=rest_angle, 
             incl_coeff=smoothing_coeff, 
             w_coeff=smoothing_coeff, 
