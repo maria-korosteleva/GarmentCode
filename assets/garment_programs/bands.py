@@ -63,30 +63,42 @@ class FittedWB(pyp.Component):
     """
     def __init__(self, body, design) -> None:
         super().__init__(self.__class__.__name__)
+
+        # TODO Dependency on rise value
+        # Measurements
         self.waist = design['waistband']['waist']['v'] * body['waist']
-        self.width = design['waistband']['width']['v'] * body['hips_line']
         waist_back_frac = body['waist_back_width'] / body['waist']
-        
         hips = body['hips'] * design['waistband']['waist']['v']
-        hip_line = body['hips_line']
         hips_back_frac = body['hip_back_width'] / body['hips']
 
+        # Params
+        self.width = design['waistband']['width']['v'] 
+        self.rise = design['waistband']['rise']['v']
+        # Check correct values
+        if self.rise + self.width > 1:
+            self.rise = 1 - self.width
+
+        top_width = pyp.utils.lin_interpolation(
+            hips, self.waist, self.rise + self.width)
+        top_back_fraction = pyp.utils.lin_interpolation(
+            hips_back_frac, waist_back_frac, self.rise + self.width)
+
         bottom_width = pyp.utils.lin_interpolation(
-            self.waist, hips, self.width / hip_line)
+            hips, self.waist, self.rise)
         bottom_back_fraction = pyp.utils.lin_interpolation(
-            waist_back_frac, hips_back_frac, self.width / hip_line)
+            hips_back_frac, waist_back_frac, self.rise)
 
         self.front = CircleArcPanel.from_all_length(
             'wb_front', 
-            self.width, 
-            self.waist * (1 - waist_back_frac), 
+            self.width * body['hips_line'], 
+            top_width * (1 - top_back_fraction), 
             bottom_width * (1 - bottom_back_fraction))
         self.front.translate_by([0, body['_waist_level'], 20])  
         
         self.back = CircleArcPanel.from_all_length(
             'wb_back', 
-            self.width, 
-            self.waist * waist_back_frac, 
+            self.width * body['hips_line'], 
+            top_width * top_back_fraction, 
             bottom_width * bottom_back_fraction)     
         self.back.translate_by([0, body['_waist_level'], -15])  
 

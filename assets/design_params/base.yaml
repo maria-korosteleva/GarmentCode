@@ -12,7 +12,7 @@ design:
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
-      v: null
+      v: FittedWB
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
@@ -33,8 +33,14 @@ design:
       range: [1., 2]   # 1 == waist length
       type: float
     width: 
-      v: 0.3
+      v: 0.1
       range: [0.1, 1]
+      type: float
+    rise:
+      v: 0.7
+      range:
+      - 0.1
+      - 1.
       type: float
 
   shirt: 
@@ -456,7 +462,7 @@ design:
       range: [0.2, 1]
       type: float 
     rise:
-      v: 1
+      v: 0.7
       range: [0.5, 1]
       type: float
     flare:   # coefficient may depend on length
