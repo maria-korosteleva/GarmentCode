@@ -1,5 +1,36 @@
 import pypattern as pyp
 
+class BaseBodicePanel(pyp.Panel):
+    """Base class for bodice panels that defines expected interfaces and common functions"""
+    def __init__(self, name, body, design) -> None:
+        super().__init__(name)
+        self.body = body
+        self.design = design
+        
+        self.interfaces = {
+            'outside': object(),
+            'inside': object(),
+            'shoulder': object(),
+            'bottom': object(),
+
+            'shoulder_corner': object(),
+            'collar_corner': object(),
+        }
+
+    def get_width(self, level):
+        """Return the panel width at a given level (excluding darts)
+           * Level is counted from the top of the panel
+        
+        NOTE: for fitted bodice, the request is only valid for values between 0 and bust_level
+        """
+        # NOTE: this evaluation assumes that the top edge width is the same as bodice shoulder width 
+        side_edge = self.interfaces['outside'].edges[-1]
+
+        x = abs(side_edge.start[0] - side_edge.end[0])
+        y = abs(side_edge.start[1] - side_edge.end[1])
+
+        return (level * x / y) + self.body['sholder_w'] / 2
+
 
 class BaseBottoms(pyp.Component):
     """A base class for all the bottom components.

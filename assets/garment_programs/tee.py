@@ -8,8 +8,10 @@ import numpy as np
 # Custom
 import pypattern as pyp
 
-# FIXME Length measured from the shoulder point as in bodice
-class TorsoFrontHalfPanel(pyp.Panel):
+# other assets
+from .base_classes import BaseBodicePanel
+
+class TorsoFrontHalfPanel(BaseBodicePanel):
     """Half of a simple non-fitted upper garment (e.g. T-Shirt)
     
         Fits to the bust size
@@ -17,7 +19,7 @@ class TorsoFrontHalfPanel(pyp.Panel):
     def __init__(self, name, body, design) -> None:
         """ Front = True, provides the adjustments necessary for the front panel
         """
-        super().__init__(name)
+        super().__init__(name, body, design)
 
         design = design['shirt']
         # account for ease in basic measurements
@@ -62,7 +64,7 @@ class TorsoFrontHalfPanel(pyp.Panel):
         self.translate_by([0, body['height'] - body['head_l'] - length, 0])
 
 
-class TorsoBackHalfPanel(pyp.Panel):
+class TorsoBackHalfPanel(BaseBodicePanel):
     """Half of a simple non-fitted upper garment (e.g. T-Shirt)
     
         Fits to the bust size
@@ -70,7 +72,7 @@ class TorsoBackHalfPanel(pyp.Panel):
     def __init__(self, name, body, design) -> None:
         """ Front = True, provides the adjustments necessary for the front panel
         """
-        super().__init__(name)
+        super().__init__(name, body, design)
 
         design = design['shirt']
         # account for ease in basic measurements
@@ -83,7 +85,7 @@ class TorsoBackHalfPanel(pyp.Panel):
         self.width = frac * m_width
         b_width = frac * b_width
 
-        shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
+        shoulder_incl = (np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
         length = design['length']['v'] * body['waist_line']
 
         self.edges = pyp.esf.from_verts(

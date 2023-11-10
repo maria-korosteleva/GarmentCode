@@ -8,7 +8,7 @@
 design: 
   meta: 
     upper: 
-      v: FittedShirt
+      v: Shirt
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
@@ -65,11 +65,11 @@ design:
       range: [-0.5, 1]   # 0 = a neck width, 1 = max possible width
       type: float
     fc_depth:   # Front collar depth
-      v: 0.25
+      v: 0.45  # 0.25
       range: [0, 1]   # 0 = min possible, 1 = bust line
       type: float
     bc_depth:   # back collar depth
-      v: 0.2
+      v: 0.45  # 0.2
       range: [0, 1]   # 0 = min possible, 1 = bust line
       type: float
     fc_angle:    # Used in Trapesoid and CircleArc collars (differently)
@@ -128,7 +128,7 @@ design:
      
   sleeve:
     sleeveless: 
-      v: True
+      v: False
       range: [True, False]
       type: bool
     armhole_shape: 
@@ -136,20 +136,20 @@ design:
       range: [ArmholeSquare, ArmholeAngle, ArmholeCurve]
       type: select
     length: 
-      v: 0.5  # 30
+      v: 0.2  # 30
       range: [0.05, 1]
       type: float
     connecting_width:
-      v: 0.50 
+      v: 0.4  # 0.50 
       range: [0, 1]   # 0 = armscue_depth, 1 = as big as the shirt side
       type: float
     end_width:
-      v: 0.55 #  0.55
+      v: 1. #  0.55
       range: [0.2, 2]   # 1 = same as arm opening
       type: float
 
     sleeve_angle:  # the rest angle of a sleeve, created at connected point
-      v: 60  # deg   
+      v: 20  # deg   
       range: [10, 50]
       type: int
     opening_dir_mix:   # Detailed control over shape of sleeve opening 
@@ -169,7 +169,7 @@ design:
 
     # Ruffle
     connect_ruffle:
-      v: 1.7
+      v: 1.
       range: [1, 2]
       type: float
     
@@ -535,7 +535,7 @@ design:
     
   pants: 
     length: 
-      v: 0.5
+      v: 0.25
       range: [0.1, 1.5]   # 0 == hip line, 1 == floor length
       type: float
     width: 
