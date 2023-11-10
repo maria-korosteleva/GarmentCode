@@ -231,7 +231,7 @@ class Sleeve(pyp.Component):
             # The rest is not needed!
             return
         
-        if front_w(connecting_width) != back_w(connecting_width): 
+        if front_w != back_w: 
             front_opening, back_opening = pyp.ops.even_armhole_openings(
                 front_opening, back_opening, 
                 tol=0.2 / front_opening.length()  # ~2mm tolerance as a fraction of length
