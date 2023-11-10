@@ -1,4 +1,3 @@
-import svgpathtools as svgpath
 from copy import deepcopy
 import numpy as np
 
@@ -9,8 +8,6 @@ import pypattern as pyp
 from . import bands
 from .base_classes import BaseBottoms
 
-
-# TODO Cuffs
 
 class PantPanel(pyp.Panel):
     def __init__(
@@ -89,19 +86,6 @@ class PantPanel(pyp.Panel):
             initial_guess=[0.5, -0.5] 
         )
 
-        # DRAFT left = pyp.CurveEdge(
-        #     crotch_bottom.end,    
-        #     [
-        #         # NOTE "Magic value" which we use to define default width:
-        #         #   just a little behing the crotch point
-        #         # NOTE: Ensuring same distance from the crotch point in both 
-        #         #   front and back for matching curves
-        #         crotch_bottom.end[0] - 2 + flare,   # DRAFT 
-        #         min(0, length - crotch_depth_diff)
-        #     ], 
-        #     control_points=[[0.1, -0.1]],
-        #     relative=True
-        # )
         left = pyp.esf.curve_from_tangents(
             crotch_bottom.end,    
             [
@@ -109,7 +93,7 @@ class PantPanel(pyp.Panel):
                 #   just a little behing the crotch point
                 # NOTE: Ensuring same distance from the crotch point in both 
                 #   front and back for matching curves
-                crotch_bottom.end[0] - 2 + flare,   # DRAFT 
+                crotch_bottom.end[0] - 2 + flare, 
                 y:=min(0, length - crotch_depth_diff)
             ], 
             target_tan1=[flare, y - crotch_bottom.end[1]],

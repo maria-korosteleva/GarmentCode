@@ -535,15 +535,15 @@ design:
     
   pants: 
     length: 
-      v: 0.8
+      v: 0.6
       range: [0.1, 1.5]   # 0 == hip line, 1 == floor length
       type: float
     width: 
-      v: 1.5
+      v: 1.
       range: [1., 1.5]   # 1 = fits the hips
       type: float
     flare: 
-      v: 1.2
+      v: 1.
       range: [0.5, 1.2]   # 1 = same as hips
       type: float
     rise:
@@ -552,7 +552,7 @@ design:
       type: float
     cuff: 
       type:
-        v: null
+        v: CuffBand
         range: [CuffBand, CuffSkirt, CuffBandSkirt]
         type: select_null
       top_ruffle: 
