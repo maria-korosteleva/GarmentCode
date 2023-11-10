@@ -21,6 +21,7 @@ class PantPanel(pyp.Panel):
             hips_depth,
             crotch_width,
             dart_position,
+            hipline_ext=1,
             double_dart=False) -> None:
         """
             Basic pant panel with option to be fitted (with darts) or ruffled at waist area.
@@ -33,11 +34,13 @@ class PantPanel(pyp.Panel):
         flare = design['flare']['v'] 
         # TODO Low width w.r.t. leg_circ??
         low_width = design['width']['v'] * body['hips'] * (flare - 1) / 4  + hips
+        hips_depth = hips_depth * hipline_ext
 
         hip_side_incl = np.deg2rad(body['hip_inclination'])
         dart_depth = hips_depth * 0.8  # FIXME check
 
         # Crotch cotrols
+        # TODO Check if I need to add the ease here (avg woman needs +2 cm)
         crotch_depth_diff =  body['crotch_hip_diff']
         crotch_extention = crotch_width
 
@@ -99,7 +102,7 @@ class PantPanel(pyp.Panel):
             crotch_bottom.end,    
             [
                 # DRAFT min(pant_width, pant_width - (pant_width - low_width) / 2), 
-                crotch_bottom.end[0] - 5,   # DRAFT 
+                crotch_bottom.end[0] - 2,   # DRAFT 
                 min(0, length - crotch_depth_diff)
             ], 
             target_tan1=np.array([0, -1]),
@@ -120,7 +123,10 @@ class PantPanel(pyp.Panel):
 
         # Out interfaces (easier to define before adding a dart)
         self.interfaces = {
-            'outside': pyp.Interface(self, pyp.EdgeSequence(right_bottom, right_top)),
+            'outside': pyp.Interface(
+                self, 
+                pyp.EdgeSequence(right_bottom, right_top), 
+                ruffle=[1, hipline_ext]),
             'crotch': pyp.Interface(self, pyp.EdgeSequence(crotch_top, crotch_bottom)),
             'inside': pyp.Interface(self, left),
             'bottom': pyp.Interface(self, bottom)
@@ -187,21 +193,21 @@ class PantsHalf(BaseBottoms):
         # Max: pant leg falls flat from the back
         # Mostly from the back side
         # => This controls the foundation width of the pant
-        min_ext = body['leg_circ'] - body['hips'] / 2 + 5  # 2 inch "ease"
-        max_ext = 22  # Measured max
-        tmp_width = 0.2
-        front_frac = 0.4   # 0.3 = 6.5 = front/4 for the max width, 0.4 = 6.5 for 0.5
+        min_ext = body['leg_circ'] - body['hips'] / 2 + 5 # 5  # 2 inch "ease"
+        max_ext =  22  # 22  # Measured max
+        tmp_width = 0.1
+        front_frac = 0.3   # 0.3 = 6.5 = front/4 for the max width, 0.4 = 6.5 for 0.5
 
         # DEBUG
         print('min ext', min_ext)
 
         # DEBUG Note: measurement for the crotch width is 22/25
         front_hip = (body['hips'] - body['hip_back_width']) / 2
-        crotch_extention = max_ext * tmp_width + (1 - tmp_width) * min_ext  # DRAFT  16 # 22 -- culotte   
-        front_extention = front_frac * crotch_extention  # DRAFT front_hip / 4  #  
+        crotch_extention = max_ext * tmp_width + (1 - tmp_width) * min_ext  
+        front_extention = front_hip / 4  # DRAFT front_frac * crotch_extention  # DRAFT 
         back_extention = crotch_extention - front_extention
 
-         # DEBUG
+        # DEBUG
         print('Crotch extention ', crotch_extention, front_extention, back_extention)
         print('Crotch extention ', front_extention / crotch_extention, back_extention / crotch_extention)
 
@@ -218,6 +224,7 @@ class PantsHalf(BaseBottoms):
             waist=waist_back / 2,
             hips=body['hip_back_width'] / 2,
             hips_depth=hips_depth,
+            hipline_ext=1.1,
             dart_position = body['bum_points'] / 2,
             crotch_width=back_extention,
             double_dart=True
