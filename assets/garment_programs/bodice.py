@@ -193,7 +193,7 @@ class BodiceHalf(pyp.Component):
         # Sleeves/collar cuts
         self.eval_dep_params(body, design)
         if design['shirt']['strapless']['v']:
-            self.make_strapless(design)
+            self.make_strapless(body, design)
         else:
             # Sleeves and collars 
             self.add_sleeves(name, body, design)
@@ -233,11 +233,9 @@ class BodiceHalf(pyp.Component):
         # Collar depth is given w.r.t. length.
         # adjust for the shoulder inclination
         tg = np.tan(np.deg2rad(body['shoulder_incl']))
-        # TODO This might now be the same value!
         f_depth_adj = tg * (self.ftorso.width(0) - width / 2)
         b_depth_adj = tg * (self.btorso.width(0) - width / 2)
 
-        # TODO these might be the same now as well
         max_f_len = self.ftorso.interfaces['collar_corner'].edges[1].length() - tg * self.ftorso.width(0) - 1  # cm
         max_b_len = self.btorso.interfaces['collar_corner'].edges[1].length() - tg * self.btorso.width(0) - 1  # cm
 
@@ -319,7 +317,7 @@ class BodiceHalf(pyp.Component):
                 self.btorso.interfaces['inside'], self.interfaces['back_collar']
             )
 
-    def make_strapless(self, design):
+    def make_strapless(self, body, design):
 
         out_depth = design['sleeve']['connecting_width']['v']
         f_in_depth = design['collar']['f_strapless_depth']['v']
@@ -334,10 +332,12 @@ class BodiceHalf(pyp.Component):
         self._adjust_top_level(self.ftorso, out_depth, f_in_depth)
         self._adjust_top_level(self.btorso, out_depth - diff, b_in_depth)
 
+        self.translate_by([0, out_depth - body['armscye_depth'] * 0.75, 0])   # adjust for better localisation
+
     def _adjust_top_level(self, panel, out_level, in_level):
-        """NOTE: Assumes the top of the panel is a single edge
-            and adjustment can be made vertically
+        """Crops the top of the bodice front/back panel for strapless style
         """
+        # TODOLOW Should this be the panel's function?
 
         panel_top = panel.interfaces['shoulder'].edges[0]
         min_y = min(panel_top.start[1], panel_top.end[1])  
@@ -346,8 +346,17 @@ class BodiceHalf(pyp.Component):
         ins, out = panel_top.start, panel_top.end
         if panel_top.start[1] < panel_top.end[1]:
             ins, out = out, ins
-  
+    
+        # Inside is a simple vertical line and can be adjusted by chaning Y value
         ins[1] = min_y - in_level
+
+        # Outside could be inclined, so needs further calculations
+        outside_edge = panel.interfaces['outside'].edges[-1]
+        bot, top = outside_edge.start, outside_edge.end
+        if bot is out:
+            bot, top = top, bot
+        
+        out[0] += out_level * (bot[0] - out[0]) / (out[1] - bot[1])
         out[1] = min_y - out_level
 
 
