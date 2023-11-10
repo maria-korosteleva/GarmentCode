@@ -8,7 +8,7 @@
 design: 
   meta: 
     upper: 
-      v: Shirt
+      v: null  
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
@@ -16,7 +16,7 @@ design:
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
-      v: null # SkirtManyPanels  
+      v: Pants 
       range: 
         - SkirtCircle
         - GodetSkirt
@@ -43,7 +43,7 @@ design:
       range: [True, False]
       type: bool
     length: 
-      v: 1.
+      v: 1.8
       range: [0.5, 4.5]   # 1 == waistline
       type: float
     width:   # Around the body 
@@ -65,11 +65,11 @@ design:
       range: [-0.5, 1]   # 0 = a neck width, 1 = max possible width
       type: float
     fc_depth:   # Front collar depth
-      v: 0.45  # 0.25
+      v: 0.2  # 0.25
       range: [0, 1]   # 0 = min possible, 1 = bust line
       type: float
     bc_depth:   # back collar depth
-      v: 0.45  # 0.2
+      v: 0.2  # 0.2
       range: [0, 1]   # 0 = min possible, 1 = bust line
       type: float
     fc_angle:    # Used in Trapesoid and CircleArc collars (differently)
@@ -128,7 +128,7 @@ design:
      
   sleeve:
     sleeveless: 
-      v: False
+      v: True
       range: [True, False]
       type: bool
     armhole_shape: 
@@ -535,15 +535,15 @@ design:
     
   pants: 
     length: 
-      v: 0.25
+      v: 0.8
       range: [0.1, 1.5]   # 0 == hip line, 1 == floor length
       type: float
     width: 
-      v: 1.
+      v: 1.5
       range: [1., 1.5]   # 1 = fits the hips
       type: float
     flare: 
-      v: 1.
+      v: 1.2
       range: [0.5, 1.2]   # 1 = same as hips
       type: float
     rise:

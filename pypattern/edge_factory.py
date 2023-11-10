@@ -388,6 +388,8 @@ class EdgeSeqFactory:
     def curve_from_tangents(start, end, target_tan0=None, target_tan1=None, initial_guess=None):
         """Create Quadratic Bezier curve connecting given points with the target tangents
             (both or any of the two can be specified)
+        
+            NOTE: Target tangent vectors are automatically normalized
         """
 
         if target_tan0 is not None:
