@@ -179,24 +179,33 @@ class Sleeve(pyp.Component):
     """Trying to do a proper sleeve"""
 
 
-    def __init__(self, tag, body, design, depth_diff=lambda y: 3) -> None: 
+    def __init__(self, tag, body, design, front_w, back_w): 
+        """Defintion of a sleeve: 
+            * front_w, back_w: the width front and the back of the top 
+            the sleeve will attach to -- needed for correct share calculations
+                They may be
+                * Specified as scalar numbers
+                * Specified as functions w.r.t. the requested vertical level (=> 
+                    calculated width of a horizontal slice)
+        """
         super().__init__(f'{self.__class__.__name__}_{tag}')
 
         design = design['sleeve']
-        inclination = body['_base_armhole_incline']
+        sleeve_balance = body['_base_sleeve_balance'] / 2
 
         rest_angle = max(np.deg2rad(design['sleeve_angle']['v']), np.deg2rad(body['shoulder_incl']))
 
         connecting_width = design['connecting_width']['v']
         smoothing_coeff = design['smoothing_coeff']['v']
 
-        # DEBUG
-        print('depth diff: ', depth_diff(connecting_width), connecting_width)
+        front_w = front_w(connecting_width) if callable(front_w) else front_w
+        back_w = back_w(connecting_width) if callable(back_w) else back_w
 
         # --- Define sleeve opening shapes ----
         armhole = globals()[design['armhole_shape']['v']]
         front_project, front_opening = armhole(
-            inclination + depth_diff(connecting_width), connecting_width, 
+            front_w - sleeve_balance,
+            connecting_width, 
             angle=rest_angle, 
             incl_coeff=smoothing_coeff, 
             w_coeff=smoothing_coeff, 
@@ -204,7 +213,8 @@ class Sleeve(pyp.Component):
             bottom_angle_mix=design['opening_dir_mix']['v']
         )
         back_project, back_opening = armhole(
-            inclination, connecting_width, 
+            back_w - sleeve_balance,
+            connecting_width, 
             angle=rest_angle, 
             incl_coeff=smoothing_coeff, 
             w_coeff=smoothing_coeff,
@@ -221,7 +231,7 @@ class Sleeve(pyp.Component):
             # The rest is not needed!
             return
         
-        if depth_diff != 0: 
+        if front_w(connecting_width) != back_w(connecting_width): 
             front_opening, back_opening = pyp.ops.even_armhole_openings(
                 front_opening, back_opening, 
                 tol=0.2 / front_opening.length()  # ~2mm tolerance as a fraction of length

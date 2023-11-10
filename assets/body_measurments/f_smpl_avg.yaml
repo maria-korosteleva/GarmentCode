@@ -28,7 +28,7 @@ body:
   hips_line:  22      # From the waist
   hip_inclination: 6  
   bum_points: 16
-  crotch_hip_diff: 3  # 9 # 5  #7  # 10 # 12 # 14  # NOTE Waist-crotch = 25  # NOTE vertical projection of the level
+  crotch_hip_diff: 5  #  3   # NOTE Waist-crotch = 25  # NOTE vertical projection of the level
   leg_circ: 64
   
   
