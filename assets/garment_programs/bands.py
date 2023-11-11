@@ -27,18 +27,42 @@ class StraightBandPanel(pyp.Panel):
 
 class StraightWB(pyp.Component):
     """Simple 2 panel waistband"""
-    def __init__(self, body, design, **kwargs) -> None:
+    def __init__(self, body, design, rise=1.) -> None:
+        """Simple 2 panel waistband
+
+            * rise -- the rise value of the bottoms that the WB is attached to 
+                Adapts the shape of the waistband to sit tight on top 
+                of the given rise level (top measurement). If 1. or anything less than waistband width, 
+                the rise is ignored and the StraightWB is created to sit well on the waist
+        
+        """
         super().__init__(self.__class__.__name__)
 
+        # Measurements
         self.waist = design['waistband']['waist']['v'] * body['waist']
-        self.width = design['waistband']['width']['v'] * body['hips_line']
-        back_width = design['waistband']['waist']['v'] * body['waist_back_width']
+        self.waist_back_frac = body['waist_back_width'] / body['waist']
+        self.hips = body['hips'] * design['waistband']['waist']['v']
+        self.hips_back_frac = body['hip_back_width'] / body['hips']
 
-        self.front = StraightBandPanel('wb_front', self.waist - back_width, self.width)
-        self.front.translate_by([0, body['_waist_level'], 20])  
-        self.back = StraightBandPanel('wb_back', back_width, self.width)
-        self.back.translate_by([0, body['_waist_level'], -15])  
+        # Params
+        self.width = design['waistband']['width']['v'] 
+        self.rise = rise
+        # Check correct values
+        if self.rise + self.width > 1:
+            self.rise = 1 - self.width
 
+        self.top_width = pyp.utils.lin_interpolation(
+            self.hips, self.waist, self.rise + self.width)
+        self.top_back_fraction = pyp.utils.lin_interpolation(
+            self.hips_back_frac, self.waist_back_frac, self.rise + self.width)
+        
+        self.width = self.width * body['hips_line']
+
+        self.define_panels()
+
+        self.front.translate_by([0, body['_waist_level'], 20])
+        self.back.translate_by([0, body['_waist_level'], -15]) 
+        
         self.stitching_rules = pyp.Stitches(
             (self.front.interfaces['right'], self.back.interfaces['right']),
             (self.front.interfaces['left'], self.back.interfaces['left'])
@@ -48,7 +72,6 @@ class StraightWB(pyp.Component):
             'bottom_f': self.front.interfaces['bottom'],  
             'bottom_b': self.back.interfaces['bottom'],
 
-            
             'top_f': self.front.interfaces['top'],
             'top_b': self.back.interfaces['top'],
 
@@ -56,8 +79,21 @@ class StraightWB(pyp.Component):
             'top': pyp.Interface.from_multiple(self.front.interfaces['top'], self.back.interfaces['top']),
         }
 
+    def define_panels(self):
+        back_width = self.top_width * self.top_back_fraction
 
-class FittedWB(pyp.Component):
+        # TODO check in 3D -- fitting to top or to the bottom of the lowered bottoms??
+        self.front = StraightBandPanel(
+            'wb_front', 
+            self.top_width - back_width, 
+            self.width)
+          
+        self.back = StraightBandPanel(
+            'wb_back', 
+            back_width, 
+            self.width)
+
+class FittedWB(StraightWB):
     """Also known as Yoke: a waistband that ~follows the body curvature, and hence sits tight
         Made out of two circular arc panels
     """
@@ -69,65 +105,26 @@ class FittedWB(pyp.Component):
                 of the given rise level. If 1. or anything less than waistband width, 
                 the rise is ignored and the FittedWB is created to sit well on the waist
         """
-        super().__init__(self.__class__.__name__)
+        super().__init__(body, design, rise)
 
-        # TODO Remove rise from the parameters
-
-        # Measurements
-        self.waist = design['waistband']['waist']['v'] * body['waist']
-        waist_back_frac = body['waist_back_width'] / body['waist']
-        hips = body['hips'] * design['waistband']['waist']['v']
-        hips_back_frac = body['hip_back_width'] / body['hips']
-
-        # Params
-        self.width = design['waistband']['width']['v'] 
-        self.rise = rise
-        # Check correct values
-        if self.rise + self.width > 1:
-            self.rise = 1 - self.width
-
-        top_width = pyp.utils.lin_interpolation(
-            hips, self.waist, self.rise + self.width)
-        top_back_fraction = pyp.utils.lin_interpolation(
-            hips_back_frac, waist_back_frac, self.rise + self.width)
-
-        bottom_width = pyp.utils.lin_interpolation(
-            hips, self.waist, self.rise)
-        bottom_back_fraction = pyp.utils.lin_interpolation(
-            hips_back_frac, waist_back_frac, self.rise)
-
+    def define_panels(self):
+        self.bottom_width = pyp.utils.lin_interpolation(
+            self.hips, self.waist, self.rise)
+        self.bottom_back_fraction = pyp.utils.lin_interpolation(
+            self.hips_back_frac, self.waist_back_frac, self.rise)
+        
         self.front = CircleArcPanel.from_all_length(
             'wb_front', 
-            self.width * body['hips_line'], 
-            top_width * (1 - top_back_fraction), 
-            bottom_width * (1 - bottom_back_fraction))
-        self.front.translate_by([0, body['_waist_level'], 20])  
+            self.width, 
+            self.top_width * (1 - self.top_back_fraction), 
+            self.bottom_width * (1 - self.bottom_back_fraction))
         
         self.back = CircleArcPanel.from_all_length(
             'wb_back', 
-            self.width * body['hips_line'], 
-            top_width * top_back_fraction, 
-            bottom_width * bottom_back_fraction)     
-        self.back.translate_by([0, body['_waist_level'], -15])  
+            self.width, 
+            self.top_width * self.top_back_fraction, 
+            self.bottom_width * self.bottom_back_fraction)     
 
-        # ---
-        self.stitching_rules = pyp.Stitches(
-            (self.front.interfaces['right'], self.back.interfaces['right']),
-            (self.front.interfaces['left'], self.back.interfaces['left'])
-        )
-
-        # ---
-        self.interfaces = {
-            'bottom_f': self.front.interfaces['bottom'],  
-            'bottom_b': self.back.interfaces['bottom'],
-
-            
-            'top_f': self.front.interfaces['top'],
-            'top_b': self.back.interfaces['top'],
-
-            'bottom': pyp.Interface.from_multiple(self.front.interfaces['bottom'], self.back.interfaces['bottom']),
-            'top': pyp.Interface.from_multiple(self.front.interfaces['top'], self.back.interfaces['top']),
-        }
 
 class CuffBand(pyp.Component):
     """ Cuff class for sleeves or pants
