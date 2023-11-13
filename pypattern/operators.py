@@ -407,8 +407,8 @@ def even_armhole_openings(front_opening, back_opening, tol=1e-2):
     intersect_t = target_segment.intersect(inter_segment)
     if len(intersect_t) != 1:
         print(
-            f'Sleeve Opening Inversion::Error::{len(intersect_t)} intersection points instead of one. '
-            'Check the quality of supplied curves'
+            f'Redistribute Sleeve Openings::Error::{len(intersect_t)} intersection points instead of one. '
+            f'Front and back opening curves might be the same with lengths: {cfront.length()}, {cback.length()}'
         )
     
     if (len(intersect_t) >= 1 
