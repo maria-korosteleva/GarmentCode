@@ -482,7 +482,7 @@ class GUIState():
                         default_value=design_params[param]['v'],  
                         orientation='horizontal',
                         relief=sg.RELIEF_FLAT, 
-                        resolution=1 if p_type == 'int' else 0.05, 
+                        resolution=1 if p_type == 'int' else 0.025, 
                         key=f'{pre_key}#{param}', 
                         # DRAFT enable_events=True # comment to only send events when slider is released
                     )
