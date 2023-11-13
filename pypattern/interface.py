@@ -64,7 +64,8 @@ class Interface:
 
         # Corener cases
         if i == 0:
-            next, next_panel = self.edges[(i+1 % len(self.edges))], self.panel[(i+1) % len(self.edges)]
+            next, next_panel = (self.edges[(i+1 % len(self.edges))],
+                                self.panel[(i+1) % len(self.edges)])
             next_3d = next_panel.point_to_3D(next.midpoint())
 
             # check by start vertex
@@ -82,7 +83,8 @@ class Interface:
         # Utilize distance from the end vertex to the next panel 
         # start -> prev + end -> next or other way around  
         prev, prev_panel = self.edges[i-1], self.panel[i-1]
-        next, next_panel = self.edges[(i+1 % len(self.edges))], self.panel[(i+1) % len(self.edges)]
+        next, next_panel = (self.edges[(i+1 % len(self.edges))],
+                            self.panel[(i+1) % len(self.edges)])
 
         # Optimal order in 3D
         prev_3d = prev_panel.point_to_3D(prev.midpoint())
