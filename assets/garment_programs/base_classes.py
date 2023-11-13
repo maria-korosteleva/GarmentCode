@@ -26,8 +26,13 @@ class BaseBodicePanel(pyp.Panel):
         # NOTE: this evaluation assumes that the top edge width is the same as bodice shoulder width 
         side_edge = self.interfaces['outside'].edges[-1]
 
-        x = abs(side_edge.start[0] - side_edge.end[0])
-        y = abs(side_edge.start[1] - side_edge.end[1])
+        x = side_edge.end[0] - side_edge.start[0]
+        y = side_edge.end[1] - side_edge.start[1]
+
+        # If the orientation of the edge is "looking down"
+        # instead of "looking up" as calculations above expect, flip the values
+        if y < 0:
+            x, y = -x, -y
 
         return (level * x / y) + self.body['sholder_w'] / 2
 
