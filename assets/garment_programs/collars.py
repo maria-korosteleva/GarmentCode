@@ -25,7 +25,7 @@ def SquareNeckHalf(depth, width, **kwargs):
     
     return edges
 
-def TrapezoidNeckHalf(depth, width, angle=90, **kwargs):
+def TrapezoidNeckHalf(depth, width, angle=90, verbose=True, **kwargs):
     """Trapesoid neck design"""
 
     # Special case when angle = 180 (sin = 0)
@@ -34,9 +34,18 @@ def TrapezoidNeckHalf(depth, width, angle=90, **kwargs):
         # degrades into VNeck
         return VNeckHalf(depth, width)
 
-    angle = np.deg2rad(angle)
+    rad_angle = np.deg2rad(angle)
 
-    edges = pyp.esf.from_verts([0, 0], [-depth * np.cos(angle) / np.sin(angle), -depth], [width / 2, -depth])
+    bottom_x = -depth * np.cos(rad_angle) / np.sin(rad_angle)
+    if bottom_x > width / 2:  # Invalid angle/depth/width combination resulted in invalid shape
+        if verbose:
+            print('TrapezoidNeckHalf::Warning::Parameters are invalid and create overlap: '
+                  f'{bottom_x} > {width / 2}. '
+                  'The collar is reverted to VNeck')
+
+        return VNeckHalf(depth, width)
+
+    edges = pyp.esf.from_verts([0, 0], [bottom_x, -depth], [width / 2, -depth])
 
     return edges
 
