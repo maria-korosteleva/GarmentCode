@@ -20,7 +20,7 @@ class Insert(pyp.Panel):
 
 class GodetSkirt(BaseBottoms):
     def __init__(self, body, design) -> None:
-        super().__init__(f'{self.__class__.__name__}')
+        super().__init__(body, design)
 
         gdesign = design['godet-skirt']
         ins_w = gdesign['insert_w']['v']
