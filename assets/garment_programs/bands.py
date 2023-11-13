@@ -130,16 +130,19 @@ class CuffBand(pyp.Component):
     """ Cuff class for sleeves or pants
         band-like piece of fabric with optional "skirt"
     """
-    def __init__(self, tag, design) -> None:
+    def __init__(self, tag, design, length=None) -> None:
         super().__init__(self.__class__.__name__)
 
-        design = design['cuff']
+        self.design = design['cuff']
+
+        if length is None:
+            length = self.design['b_depth']['v']
 
         self.front = StraightBandPanel(
-            f'{tag}_cuff_f', design['b_width']['v'] / 2, design['b_depth']['v'])
+            f'{tag}_cuff_f', self.design['b_width']['v'] / 2, length)
         self.front.translate_by([0, 0, 15])  
         self.back = StraightBandPanel(
-            f'{tag}_cuff_b', design['b_width']['v'] / 2, design['b_depth']['v'])
+            f'{tag}_cuff_b', self.design['b_width']['v'] / 2, length)
         self.back.translate_by([0, 0, -15])  
 
         self.stitching_rules = pyp.Stitches(
@@ -155,25 +158,28 @@ class CuffBand(pyp.Component):
             'top': pyp.Interface.from_multiple(
                 self.front.interfaces['top'], self.back.interfaces['top']),
         }
-
+    
 class CuffSkirt(pyp.Component):
     """A skirt-like flared cuff """
 
-    def __init__(self, tag, design) -> None:
+    def __init__(self, tag, design, length=None) -> None:
         super().__init__(self.__class__.__name__)
 
-        design = design['cuff']
-        width = design['b_width']['v']
-        flare_diff = (design['skirt_flare']['v'] - 1) * width / 2
+        self.design = design['cuff']
+        width = self.design['b_width']['v']
+        flare_diff = (self.design['skirt_flare']['v'] - 1) * width / 2
+
+        if length is None:
+            length = self.design['b_depth']['v']
 
         self.front = skirt_paneled.SkirtPanel(
-            f'{tag}_cuff_skirt_f', ruffles=design['skirt_ruffle']['v'], 
-            waist_length=width, length=design['skirt_length']['v'], 
+            f'{tag}_cuff_skirt_f', ruffles=self.design['skirt_ruffle']['v'], 
+            waist_length=width, length=length, 
             flare=flare_diff)
         self.front.translate_by([0, 0, 15])  
         self.back = skirt_paneled.SkirtPanel(
-            f'{tag}_cuff_skirt_b', ruffles=design['skirt_ruffle']['v'], 
-            waist_length=width, length=design['skirt_length']['v'], 
+            f'{tag}_cuff_skirt_b', ruffles=self.design['skirt_ruffle']['v'], 
+            waist_length=width, length=length, 
             flare=flare_diff)
         self.back.translate_by([0, 0, -15])  
 
@@ -198,8 +204,16 @@ class CuffBandSkirt(pyp.Component):
     def __init__(self, tag, design) -> None:
         super().__init__(self.__class__.__name__)
 
-        self.cuff = CuffBand(tag, design)
-        self.skirt = CuffSkirt(tag, design)
+        self.cuff = CuffBand(
+            tag, 
+            design, 
+            length=design['cuff']['b_depth']['v'] * (1 - design['cuff']['skirt_fraction']['v'])
+        )
+        self.skirt = CuffSkirt(
+            tag, 
+            design, 
+            length=design['cuff']['b_depth']['v'] * design['cuff']['skirt_fraction']['v']
+        )
 
         # Align
         self.skirt.place_below(self.cuff)

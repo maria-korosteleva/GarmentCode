@@ -256,12 +256,12 @@ design:
         - 1
         - 20
         type: int
-      skirt_length:
-        v: 10
+      skirt_fraction:
+        v: 0.5
         range:
-        - 5
-        - 50
-        type: int
+        - 0.1
+        - 0.9
+        type: float
       skirt_flare:
         v: 1.2
         range:
@@ -480,12 +480,12 @@ design:
           - 1
           - 20
           type: int
-        skirt_length:
-          v: 10
+        skirt_fraction:
+          v: 0.5
           range:
-          - 5
-          - 50
-          type: int
+          - 0.1
+          - 0.9
+          type: float
         skirt_flare:
           v: 1.2
           range:
@@ -765,12 +765,12 @@ design:
         - 1
         - 20
         type: int
-      skirt_length:
-        v: 10
+      skirt_fraction:
+        v: 0.5
         range:
-        - 5
-        - 50
-        type: int
+        - 0.1
+        - 0.9
+        type: float
       skirt_flare:
         v: 1.2
         range:
