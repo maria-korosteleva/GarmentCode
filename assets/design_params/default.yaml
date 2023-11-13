@@ -58,6 +58,12 @@ design:
       - 1.0
       - 1.4
       type: float
+    flare: 
+      v: 1.0
+      range: 
+      - 0.7
+      - 1.7
+      type: float
   collar:
     f_collar:
       v: CircleNeckHalf
@@ -293,6 +299,12 @@ design:
         range:
         - 1.0
         - 1.4
+        type: float
+      flare: 
+        v: 1.0
+        range: 
+        - 0.7
+        - 1.7
         type: float
     collar:
       f_collar:

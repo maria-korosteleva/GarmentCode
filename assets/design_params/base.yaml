@@ -8,15 +8,15 @@
 design: 
   meta: 
     upper: 
-      v: null  
+      v: Shirt
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
-      v: FittedWB
+      v: null 
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
-      v: Pants 
+      v: null 
       range: 
         - SkirtCircle
         - GodetSkirt
@@ -49,6 +49,12 @@ design:
     width:   # Around the body 
       v: 1.
       range: [1., 1.4]    # 1 == bust size
+      type: float
+    flare: 
+      v: 1.4
+      range: 
+      - 0.7
+      - 1.4
       type: float
 
   collar:
@@ -128,7 +134,7 @@ design:
      
   sleeve:
     sleeveless: 
-      v: True
+      v: False
       range: [True, False]
       type: bool
     armhole_shape: 
@@ -182,7 +188,7 @@ design:
     # Cuff
     cuff: 
       type:
-        v: null
+        v: CuffBand
         range: [CuffBand, CuffSkirt, CuffBandSkirt]
         type: select_null
       top_ruffle: 
@@ -221,6 +227,12 @@ design:
       width:   # Around the body 
         v: 1.
         range: [1., 1.4]    # 1 == bust size
+        type: float
+      flare: 
+        v: 1.0
+        range: 
+        - 0.7
+        - 1.4
         type: float
 
     collar:
@@ -547,7 +559,7 @@ design:
       range: [1., 1.5]   # 1 = fits the hips
       type: float
     flare: 
-      v: 1.
+      v: 1
       range: [0.5, 1.2]   # 1 = same as hips
       type: float
     rise:
@@ -560,7 +572,7 @@ design:
         range: [CuffBand, CuffSkirt, CuffBandSkirt]
         type: select_null
       top_ruffle: 
-        v: 1.5     # TODO Depend on body measurements?
+        v: 1.    # TODO Depend on body measurements?
         range: [1, 2]
         type: float
       cuff_len: 

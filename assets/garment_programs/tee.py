@@ -22,9 +22,10 @@ class TorsoFrontHalfPanel(BaseBodicePanel):
         super().__init__(name, body, design)
 
         design = design['shirt']
-        # account for ease in basic measurements
+
+        # width
         m_width = design['width']['v'] * body['bust']
-        b_width = m_width
+        b_width = design['flare']['v'] * m_width
 
         # sizes 
         body_width = (body['bust'] - body['back_width']) / 2 
@@ -79,7 +80,7 @@ class TorsoBackHalfPanel(BaseBodicePanel):
         design = design['shirt']
         # account for ease in basic measurements
         m_width = design['width']['v'] * body['bust']
-        b_width = m_width
+        b_width = design['flare']['v'] * m_width
 
         # sizes 
         body_width = body['back_width'] / 2
