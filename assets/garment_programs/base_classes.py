@@ -34,7 +34,7 @@ class BaseBodicePanel(pyp.Panel):
         if y < 0:
             x, y = -x, -y
 
-        return (level * x / y) + self.body['sholder_w'] / 2
+        return (level * x / y) + self.body['shoulder_w'] / 2
 
 
 class BaseBottoms(pyp.Component):

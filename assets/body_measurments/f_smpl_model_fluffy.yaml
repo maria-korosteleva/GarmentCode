@@ -16,7 +16,7 @@ body:
   hip_inclination: 9  # TODO Check
   leg_circ: 78.0
   neck_w: 16
-  sholder_w: 35
+  shoulder_w: 35
   shoulder_incl: 10
   underbust: 103
   waist: 103  # 100.0

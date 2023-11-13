@@ -29,13 +29,13 @@ class BodiceFrontHalf(BaseBodicePanel):
 
         # Adjust to make sure length is measured from the shoulder
         # and not the de-fact side of the garment
-        adjustment = sh_tan * (self.width - body['sholder_w'] / 2)
+        adjustment = sh_tan * (self.width - body['shoulder_w'] / 2)
         max_len = body['waist_over_bust_line'] - adjustment
 
         # side length is adjusted due to shoulder inclination
         # for the correct sleeve fitting
         fb_diff = (front_frac - (0.5 - front_frac)) * body['bust']
-        back_adjustment = sh_tan * (body['back_width'] / 2 - body['sholder_w'] / 2)
+        back_adjustment = sh_tan * (body['back_width'] / 2 - body['shoulder_w'] / 2)
         side_len = body['waist_line'] - back_adjustment - sh_tan * fb_diff 
 
         self.edges = pyp.esf.from_verts(
@@ -57,7 +57,7 @@ class BodiceFrontHalf(BaseBodicePanel):
         self.edges.substitute(1, s_edge)
 
         # Take some fabric from the top to match the shoulder width
-        s_edge[-1].end[0] += (x_upd:=self.width - body['sholder_w'] / 2)
+        s_edge[-1].end[0] += (x_upd:=self.width - body['shoulder_w'] / 2)
         s_edge[-1].end[1] += (sh_tan * x_upd)
 
         # Bottom dart
@@ -102,7 +102,7 @@ class BodiceBackHalf(BaseBodicePanel):
 
         # Adjust to make sure length is measured from the shoulder
         # and not the de-fact side of the garment
-        back_adjustment = sh_tan * (self.width - body['sholder_w'] / 2)
+        back_adjustment = sh_tan * (self.width - body['shoulder_w'] / 2)
         length = body['waist_line'] - back_adjustment
 
         # Base edge loop
@@ -115,7 +115,7 @@ class BodiceBackHalf(BaseBodicePanel):
             loop=True)
         
         # Take some fabric from the top to match the shoulder width
-        self.edges[2].end[0] += (x_upd:=self.width - body['sholder_w'] / 2)
+        self.edges[2].end[0] += (x_upd:=self.width - body['shoulder_w'] / 2)
         self.edges[2].end[1] += (sh_tan * x_upd)
 
         self.interfaces = {

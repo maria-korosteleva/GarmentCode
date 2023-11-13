@@ -172,7 +172,7 @@ class SleevePanel(pyp.Panel):
         # Default placement
         self.set_pivot(self.edges[1].end)
         self.translate_to(
-            [- body['sholder_w'] / 2,
+            [- body['shoulder_w'] / 2,
             body['height'] - body['head_l'] - body['armscye_depth'],
             0]) 
         # NOTE: Extra 5 deg account for the fact that the arm is ~conic shape

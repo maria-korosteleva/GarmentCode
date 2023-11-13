@@ -65,7 +65,7 @@ class TorsoFrontHalfPanel(BaseBodicePanel):
         self.translate_by([0, body['height'] - body['head_l'] - length, 0])
 
     def get_width(self, level):
-        return super().get_width(level) + self.width - self.body['sholder_w'] / 2
+        return super().get_width(level) + self.width - self.body['shoulder_w'] / 2
 
 class TorsoBackHalfPanel(BaseBodicePanel):
     """Half of a simple non-fitted upper garment (e.g. T-Shirt)
@@ -115,4 +115,4 @@ class TorsoBackHalfPanel(BaseBodicePanel):
         self.translate_by([0, body['height'] - body['head_l'] - length, 0])
 
     def get_width(self, level):
-        return super().get_width(level) + self.width - self.body['sholder_w'] / 2
+        return super().get_width(level) + self.width - self.body['shoulder_w'] / 2
