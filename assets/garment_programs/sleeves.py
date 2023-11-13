@@ -103,7 +103,11 @@ def ArmholeCurve(incl, width, angle, bottom_angle_mix=0, invert=True, **kwargs):
 class SleevePanel(pyp.Panel):
     """Trying proper sleeve panel"""
 
-    def __init__(self, name, body, design, open_shape):
+    def __init__(self, name, body, design, open_shape, length_shift=0):
+        """Define a standard sleeve panel (half a sleeve)
+            * length_shift -- force upd sleeve length by this amount. 
+                Can be used to adjust length evaluation to fit the cuff
+        """
         super().__init__(name)
 
         # TODO end_width to be not less then the width of the arm??
@@ -126,6 +130,8 @@ class SleevePanel(pyp.Panel):
         arm_width = abs(open_shape[0].start[1] - open_shape[-1].end[1]) 
         # Length from the border of the opening to the end of the sleeve
         length = design['length']['v'] * (body['arm_length'] - opening_length)
+        if length + length_shift > 0:  # NOTE: Avoid incorrect state (but it makes the result less precise)
+            length += length_shift
         self.edges = pyp.esf.from_verts(
             [0, 0], [0, -end_width], [length, -arm_width]
         )
@@ -239,9 +245,13 @@ class Sleeve(pyp.Component):
 
         # ----- Get sleeve panels -------
         self.f_sleeve = SleevePanel(
-            f'{tag}_sleeve_f', body, design, front_opening).translate_by([0, 0, 15])
+            f'{tag}_sleeve_f', body, design, front_opening,
+            length_shift=-design['cuff']['cuff_len']['v'] if design['cuff']['type']['v'] else 0
+            ).translate_by([0, 0, 15])
         self.b_sleeve = SleevePanel(
-            f'{tag}_sleeve_b', body, design, back_opening).translate_by([0, 0, -15])
+            f'{tag}_sleeve_b', body, design, back_opening,
+            length_shift=-design['cuff']['cuff_len']['v'] if design['cuff']['type']['v'] else 0
+            ).translate_by([0, 0, -15])
 
         # Connect panels
         self.stitching_rules = pyp.Stitches(

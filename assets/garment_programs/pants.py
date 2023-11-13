@@ -12,6 +12,7 @@ from .base_classes import BaseBottoms
 class PantPanel(pyp.Panel):
     def __init__(
             self, name, body, design, 
+            length,
             waist, 
             hips,
             hips_depth,
@@ -24,7 +25,6 @@ class PantPanel(pyp.Panel):
         """
         super().__init__(name)
 
-        length = design['length']['v'] * body['_leg_length']
         flare = body['leg_circ'] * (design['flare']['v']  - 1) / 4 
         hips_depth = hips_depth * hipline_ext
 
@@ -182,8 +182,16 @@ class PantsHalf(BaseBottoms):
         front_extention = front_hip / 4    # From pattern making book
         back_extention = crotch_extention - front_extention
 
+        length = design['length']['v'] * body['_leg_length']
+        if design['cuff']['type']['v'] and length > design['cuff']['cuff_len']['v']:
+            # Include the cuff into the overall length, 
+            # unless the requested length is too short to fit the cuff 
+            # (to avoid negative length)
+            length -= design['cuff']['cuff_len']['v']
+
         self.front = PantPanel(
             f'pant_f_{tag}', body, design,
+            length=length,
             waist=(waist - waist_back) / 2,
             hips=(body['hips'] - body['hip_back_width']) / 2,
             hips_depth=hips_depth,
@@ -192,6 +200,7 @@ class PantsHalf(BaseBottoms):
             ).translate_by([0, body['_waist_level'] - 5, 25])
         self.back = PantPanel(
             f'pant_b_{tag}', body, design,
+            length=length,
             waist=waist_back / 2,
             hips=body['hip_back_width'] / 2,
             hips_depth=hips_depth,
