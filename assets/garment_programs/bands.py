@@ -174,12 +174,12 @@ class CuffSkirt(pyp.Component):
 
         self.front = skirt_paneled.SkirtPanel(
             f'{tag}_cuff_skirt_f', ruffles=self.design['skirt_ruffle']['v'], 
-            waist_length=width, length=length, 
+            waist_length=width / 2, length=length, 
             flare=flare_diff)
         self.front.translate_by([0, 0, 15])  
         self.back = skirt_paneled.SkirtPanel(
             f'{tag}_cuff_skirt_b', ruffles=self.design['skirt_ruffle']['v'], 
-            waist_length=width, length=length, 
+            waist_length=width / 2, length=length, 
             flare=flare_diff)
         self.back.translate_by([0, 0, -15])  
 
