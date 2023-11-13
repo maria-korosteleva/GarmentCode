@@ -14,6 +14,7 @@ design:
       - FittedWB
       - null
       type: select_null
+      default_prob: 0.5
     bottom:
       v: null
       range:
