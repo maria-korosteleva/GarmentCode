@@ -250,7 +250,7 @@ design:
         - 1
         - 3
         type: float
-      b_depth:
+      cuff_len:
         v: 3
         range:
         - 1
@@ -474,7 +474,7 @@ design:
           - 1
           - 2
           type: float
-        b_depth:
+        cuff_len:
           v: 3
           range:
           - 1
@@ -759,7 +759,7 @@ design:
         - 1
         - 2
         type: float
-      b_depth:
+      cuff_len:
         v: 5
         range:
         - 1

@@ -136,7 +136,7 @@ class CuffBand(pyp.Component):
         self.design = design['cuff']
 
         if length is None:
-            length = self.design['b_depth']['v']
+            length = self.design['cuff_len']['v']
 
         self.front = StraightBandPanel(
             f'{tag}_cuff_f', self.design['b_width']['v'] / 2, length)
@@ -170,7 +170,7 @@ class CuffSkirt(pyp.Component):
         flare_diff = (self.design['skirt_flare']['v'] - 1) * width / 2
 
         if length is None:
-            length = self.design['b_depth']['v']
+            length = self.design['cuff_len']['v']
 
         self.front = skirt_paneled.SkirtPanel(
             f'{tag}_cuff_skirt_f', ruffles=self.design['skirt_ruffle']['v'], 
@@ -207,12 +207,12 @@ class CuffBandSkirt(pyp.Component):
         self.cuff = CuffBand(
             tag, 
             design, 
-            length=design['cuff']['b_depth']['v'] * (1 - design['cuff']['skirt_fraction']['v'])
+            length=design['cuff']['cuff_len']['v'] * (1 - design['cuff']['skirt_fraction']['v'])
         )
         self.skirt = CuffSkirt(
             tag, 
             design, 
-            length=design['cuff']['b_depth']['v'] * design['cuff']['skirt_fraction']['v']
+            length=design['cuff']['cuff_len']['v'] * design['cuff']['skirt_fraction']['v']
         )
 
         # Align
