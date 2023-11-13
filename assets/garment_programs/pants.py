@@ -183,11 +183,12 @@ class PantsHalf(BaseBottoms):
         back_extention = crotch_extention - front_extention
 
         length = design['length']['v'] * body['_leg_length']
-        if design['cuff']['type']['v'] and length > design['cuff']['cuff_len']['v']:
+        cuff_len = design['cuff']['cuff_len']['v'] * body['_leg_length']
+        if design['cuff']['type']['v'] and length > cuff_len:
             # Include the cuff into the overall length, 
             # unless the requested length is too short to fit the cuff 
             # (to avoid negative length)
-            length -= design['cuff']['cuff_len']['v'] * body['_leg_length']
+            length -= cuff_len
 
         self.front = PantPanel(
             f'pant_f_{tag}', body, design,
