@@ -246,11 +246,11 @@ class Sleeve(pyp.Component):
         # ----- Get sleeve panels -------
         self.f_sleeve = SleevePanel(
             f'{tag}_sleeve_f', body, design, front_opening,
-            length_shift=-design['cuff']['cuff_len']['v'] if design['cuff']['type']['v'] else 0
+            length_shift=-design['cuff']['cuff_len']['v'] * body['arm_length'] if design['cuff']['type']['v'] else 0
             ).translate_by([0, 0, 15])
         self.b_sleeve = SleevePanel(
             f'{tag}_sleeve_b', body, design, back_opening,
-            length_shift=-design['cuff']['cuff_len']['v'] if design['cuff']['type']['v'] else 0
+            length_shift=-design['cuff']['cuff_len']['v'] * body['arm_length'] if design['cuff']['type']['v'] else 0
             ).translate_by([0, 0, -15])
 
         # Connect panels
@@ -278,6 +278,7 @@ class Sleeve(pyp.Component):
             cdesign = deepcopy(design)
             cdesign['cuff']['b_width'] = {}
             cdesign['cuff']['b_width']['v'] = self.interfaces['out'].edges.length() / design['cuff']['top_ruffle']['v']
+            cdesign['cuff']['cuff_len']['v'] = design['cuff']['cuff_len']['v'] * body['arm_length']
 
             cuff_class = getattr(bands, cdesign['cuff']['type']['v'])
             self.cuff = cuff_class(f'sl_{tag}', cdesign)

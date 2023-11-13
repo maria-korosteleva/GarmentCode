@@ -187,7 +187,7 @@ class PantsHalf(BaseBottoms):
             # Include the cuff into the overall length, 
             # unless the requested length is too short to fit the cuff 
             # (to avoid negative length)
-            length -= design['cuff']['cuff_len']['v']
+            length -= design['cuff']['cuff_len']['v'] * body['_leg_length']
 
         self.front = PantPanel(
             f'pant_f_{tag}', body, design,
@@ -226,6 +226,7 @@ class PantsHalf(BaseBottoms):
             cdesign = deepcopy(design)
             cdesign['cuff']['b_width'] = {}
             cdesign['cuff']['b_width']['v'] = pant_bottom.edges.length() / design['cuff']['top_ruffle']['v']
+            cdesign['cuff']['cuff_len']['v'] = design['cuff']['cuff_len']['v'] * body['_leg_length']
 
             # Init
             cuff_class = getattr(bands, cdesign['cuff']['type']['v'])

@@ -257,11 +257,11 @@ design:
         - 3
         type: float
       cuff_len:
-        v: 3
+        v: 0.05
         range:
-        - 1
-        - 20
-        type: int
+        - 0.05
+        - 0.9
+        type: float
       skirt_fraction:
         v: 0.5
         range:
@@ -487,11 +487,11 @@ design:
           - 2
           type: float
         cuff_len:
-          v: 3
+          v: 0.05
           range:
-          - 1
-          - 20
-          type: int
+          - 0.05
+          - 0.9
+          type: float
         skirt_fraction:
           v: 0.5
           range:
@@ -772,11 +772,11 @@ design:
         - 2
         type: float
       cuff_len:
-        v: 5
+        v: 0.05
         range:
-        - 1
-        - 20
-        type: int
+        - 0.05
+        - 0.9
+        type: float
       skirt_fraction:
         v: 0.5
         range:
