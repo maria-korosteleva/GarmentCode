@@ -1,23 +1,197 @@
-
 from copy import copy
+
 import numpy as np
 from numpy.linalg import norm
 import svgpathtools as svgpath
 from scipy.optimize import minimize
 
-# Custom
-from .edge import EdgeSequence, Edge, CurveEdge
-from .generic_utils import vector_angle, close_enough, c_to_list, list_to_c, bbox_paths
-from .interface import Interface
-from . import flags
+from pypattern.edge import EdgeSequence, Edge, CurveEdge
+from pypattern.edge import CircleEdge
+from pypattern.generic_utils import vector_angle
+from pypattern.generic_utils import bbox_paths
+from pypattern.generic_utils import close_enough
+from pypattern.generic_utils import c_to_list
+from pypattern.generic_utils import list_to_c
+from pypattern.interface import Interface
+
+
+class CircleEdgeFactory:
+    @staticmethod
+    def from_points_angle(start, end, arc_angle, right=True):
+        """Construct circle arc from two fixed points and an angle
+
+            arc_angle:
+
+            NOTE: Might fail on angles close to 2pi
+        """
+        # Big or small arc
+        if arc_angle > np.pi:
+            arc_angle = 2 * np.pi - arc_angle
+            to_sum = True
+        else:
+            to_sum = False
+
+        radius = 1 / np.sin(arc_angle / 2) / 2
+        h = 1 / np.tan(arc_angle / 2) / 2
+
+        control_y = radius + h if to_sum else radius - h  # relative control point
+        control_y *= -1 if right else 1
+
+        return CircleEdge(start, end, cy=control_y)
+
+    @staticmethod
+    def from_points_radius(start, end, radius, large_arc=False, right=True):
+        """Construct circle arc relative representation
+            from two fixed points and an (absolute) radius
+        """
+        # Find circle center
+        str_dist = norm(np.asarray(end) - np.asarray(start))
+        center_r = np.sqrt(radius ** 2 - str_dist ** 2 / 4)
+
+        # Find the absolute value of Y
+        control_y = radius + center_r if large_arc else radius - center_r
+
+        # Convert to relative
+        control_y = control_y / str_dist
+
+        # Flip sight according to "right" parameter
+        control_y *= -1 if right else 1
+
+        return CircleEdge(start, end, cy=control_y)
+
+    @staticmethod
+    def from_rad_length(rad, length, right=True, start=None):
+        """NOTE: if start vertex is not provided, both vertices will be created
+            to match desired radius and length
+        """
+        max_len = 2 * np.pi * rad
+
+        if length > max_len:
+            raise ValueError(
+                f'CircleEdge::ERROR::Incorrect length for specified radius')
+
+        large_arc = length > max_len / 2
+        if large_arc:
+            length = max_len - length
+
+        w_half = rad * np.sin(length / rad / 2)
+
+        edge = CircleEdgeFactory.from_points_radius(
+            [-w_half, 0], [w_half, 0],
+            radius=rad,
+            large_arc=large_arc,
+            right=right
+        )
+
+        if start:
+            edge.snap_to(start)
+            edge.start = start
+
+        return edge
+
+    @staticmethod
+    def from_svg_curve(seg: svgpath.Arc):
+        """Create object from svgpath arc"""
+        start, end = c_to_list(seg.start), c_to_list(seg.end)
+        # NOTE: assuming circular arc (same radius in both directoins)
+        radius = seg.radius.real
+
+        return CircleEdgeFactory.from_points_radius(
+            start, end, radius, seg.large_arc, seg.sweep
+        )
+
+    @staticmethod
+    def from_three_points(start, end, point_on_arc):
+        """Create a circle arc from 3 points (start, end and any point on an arc)
+
+            NOTE: Control point specified in the same coord system as start and end
+            NOTE: points should not be on the same line
+        """
+
+        nstart, nend, npoint_on_arc = np.asarray(start), np.asarray(
+            end), np.asarray(point_on_arc)
+
+        # https://stackoverflow.com/a/28910804
+        # Using complex numbers to calculate the center & radius
+        x, y, z = list_to_c([start, point_on_arc, end])
+        w = z - x
+        w /= y - x
+        c = (x - y) * (w - abs(w) ** 2) / 2j / w.imag - x
+        # NOTE center = [c.real, c.imag]
+        rad = abs(c + x)
+
+        # Large/small arc
+        mid_dist = norm(npoint_on_arc - ((nstart + nend) / 2))
+
+        # Orientation
+        angle = vector_angle(npoint_on_arc - nstart, nend - nstart)  # +/-
+
+        return CircleEdgeFactory.from_points_radius(
+            start, end, radius=rad,
+            large_arc=mid_dist > rad, right=angle > 0)
+
+
+class CurveEdgeFactory:
+    @staticmethod
+    def from_svg_curve(seg):
+        """Create CurveEdge object from svgpath bezier objects"""
+
+        start, end = c_to_list(seg.start), c_to_list(seg.end)
+        if isinstance(seg, svgpath.QuadraticBezier):
+            cp = [c_to_list(seg.control)]
+        elif isinstance(seg, svgpath.CubicBezier):
+            cp = [c_to_list(seg.control1), c_to_list(seg.control2)]
+        else:
+            raise NotImplementedError(
+                f'CurveEdge::Error::Incorrect curve type supplied {seg.type}')
+
+        return CurveEdge(start, end, cp, relative=False)
+
 
 class EdgeSeqFactory:
-    """Create EdgeSequence objects for some common edge seqeunce patterns
+    """Create EdgeSequence objects for some common edge sequence patterns
     """
 
     @staticmethod
+    def from_svg_path(path: svgpath.Path, dist_tol=0.05, verbose=False):
+        """Convert SVG path given as svgpathtool Path object to an EdgeSequence
+
+        * dist_tol: tolerance for vertex closeness to be considered the same
+            vertex
+            NOTE: Assumes that the path can be chained
+        """
+        # Convert as is
+        edges = []
+        for seg in path._segments:
+            # skip segments of length zero
+            if close_enough(seg.length(), tol=dist_tol):
+                if verbose:
+                    print('Skipped: ', seg)
+                continue
+            if isinstance(seg, svgpath.Line):
+                edges.append(Edge(
+                    c_to_list(seg.start), c_to_list(seg.end)))
+            elif isinstance(seg, svgpath.Arc):
+                edges.append(CircleEdgeFactory.from_svg_curve(seg))
+            else:
+                edges.append(CurveEdgeFactory.from_svg_curve(seg))
+
+        # Chain the edges
+        if len(edges) > 1:
+            for i in range(1, len(edges)):
+
+                if not all(close_enough(s, e, tol=dist_tol)
+                           for s, e in zip(edges[i].start, edges[i - 1].end)):
+                    raise ValueError(
+                        'EdgeSequence::from_svg_path::input path is not chained')
+
+                edges[i].start = edges[i - 1].end
+        return EdgeSequence(*edges, verbose=verbose)
+
+    @staticmethod
     def from_verts(*verts, loop=False):
-        """Generate edge sequence from given vertices. If loop==True, the method also closes the edge sequence as a loop
+        """Generate edge sequence from given vertices. If loop==True,
+         the method also closes the edge sequence as a loop
         """
         # TODO Curvatures -- on the go
 
@@ -28,20 +202,20 @@ class EdgeSeqFactory:
         if loop:
             seq.append(Edge(seq[-1].end, seq[0].start))
         
-        seq.isChained()
+        seq.isChained()  # TODO: ami - why do we check this here and not use it ?
         return seq
 
     @staticmethod
-    def from_fractions(start, end, frac=[1]):
+    def from_fractions(start, end, frac=None):
         """A sequence of edges between start and end wich lengths are distributed
             as specified in frac list 
         Parameters:
             * frac -- list of legth fractions. Every entry is in (0, 1], 
                 all entries sums up to 1
         """
-        # TODOLOW Deprecated? 
+        # TODOLOW Deprecated?
         frac = [abs(f) for f in frac]
-        if not close_enough(fsum:=sum(frac), 1, 1e-4):
+        if not close_enough(fsum := sum(frac), 1, 1e-4):
             raise RuntimeError(f'EdgeSequence::Error::fraction is incorrect. The sum {fsum} is not 1')
 
         vec = np.asarray(end) - np.asarray(start)
@@ -56,7 +230,7 @@ class EdgeSeqFactory:
         return EdgeSeqFactory.from_verts(*verts)
 
     @staticmethod
-    def side_with_cut(start=(0,0), end=(1,0), start_cut=0, end_cut=0):
+    def side_with_cut(start=(0, 0), end=(1, 0), start_cut=0, end_cut=0):
         """ Edge with internal vertices that allows to stitch only part of the border represented
             by the long side edge
 
@@ -78,16 +252,26 @@ class EdgeSeqFactory:
     # ------ Darts ------
     #DRAFT
     @staticmethod
-    def side_with_dart_by_width(start=(0,0), end=(100,0), width=5, depth=10, dart_position=50, opening_angle=180, right=True, modify='both', panel=None):
-        """Create a seqence of edges that represent a side with a dart with given parameters
+    def side_with_dart_by_width(
+            start=(0, 0), end=(100, 0), width=5, depth=10, dart_position=50,
+            opening_angle=180, right=True, modify='both', panel=None):
+        """Create a sequence of edges that represent a side with a dart with
+            given parameters
         Parameters:
-            * start and end -- vertices between which side with a dart is located
+            * start and end -- vertices between which side with a dart is
+                located
             * width -- width of a dart opening
-            * depth -- depth of a dart (distance between the opening and the farthest vertex)
+            * depth -- depth of a dart (distance between the opening and the
+                farthest vertex)
             * dart_position -- position along the edge (from the start vertex)
-            * opening angle (deg) -- angle between side edges after the dart is stitched (as evaluated opposite from the dart). default = 180 (straight line)
-            * right -- whether the dart is created on the right from the edge direction (otherwise created on the left). Default - Right (True)
-            * modify -- which vertex position to update to accomodate for contraints: 'start', 'end', or 'both'. Default: 'both'
+            * opening angle (deg) -- angle between side edges after the dart
+                is stitched (as evaluated opposite to the dart). default =
+                180 (straight line)
+            * right -- whether the dart is created on the right from the edge
+                direction (otherwise created on the left).
+                Default - Right (True)
+            * modify -- which vertex position to update to accommodate for
+             constraints: 'start', 'end', or 'both'. Default: 'both'
 
         Returns: 
             * Full edge with a dart
@@ -95,8 +279,10 @@ class EdgeSeqFactory:
             * References to non-dart edges
             * Suggested dart stitch
 
-        NOTE: (!!) the end of the edge might shift to accomodate the constraints
-        NOTE: The routine makes sure that the the edge is straight after the dart is stitched
+        NOTE: (!!) the end of the edge might shift to accommodate the
+            constraints
+        NOTE: The routine makes sure that the edge is straight after the dart
+            is stitched
         NOTE: Darts always have the same length on the sides
         """
         # TODO Curvatures?? -- on edges, dart sides
@@ -188,14 +374,19 @@ class EdgeSeqFactory:
         return dart_shape, dart_shape[1:-1], out_interface, dart_stitch
 
     @staticmethod
-    def side_with_dart_by_len(start=(0,0), end=(50,0), target_len=35, depth=10, dart_position=25, dart_angle=90, right=True, panel=None, tol=1e-4):
-        """Create a seqence of edges that represent a side with a dart with given parameters
+    def side_with_dart_by_len(
+            start=(0,0), end=(50,0), target_len=35, depth=10,
+            dart_position=25, dart_angle=90, right=True, panel=None, tol=1e-4):
+        """Create a seqence of edges that represent a side with a dart with
+            given parameters
         Parameters:
             * start and end -- vertices between which side with a dart is located
             * target_len 
-            * depth -- depth of a dart (distance between the opening and the farthest vertex)
+            * depth -- depth of a dart (distance between the opening and the
+                farthest vertex)
             * dart_position -- position along the edge (from the start vertex)
-            * right -- whether the dart is created on the right from the edge direction (otherwise created on the left). Default - Right (True)
+            * right -- whether the dart is created on the right from the edge
+                direction (otherwise created on the left). Default - Right (True)
 
         Returns: 
             * Full edge with a dart
@@ -203,8 +394,10 @@ class EdgeSeqFactory:
             * References to non-dart edges
             * Suggested dart stitch
 
-        NOTE: (!!) the end of the edge might shift to accomodate the constraints
-        NOTE: The routine makes sure that the the edge is straight after the dart is stitched
+        NOTE: (!!) the end of the edge might shift to accommodate the
+            constraints
+        NOTE: The routine makes sure that the edge is straight after the dart
+            is stitched
         NOTE: Darts always have the same length on the sides
         """
         # TODO Curvatures?? -- on edges, dart sides
@@ -282,13 +475,16 @@ class EdgeSeqFactory:
     def halfs_from_svg(svg_filepath, target_height=None):
         """Load a shape from an SVG and split it in half (vertically)
 
-        * target_height -- scales the shape s.t. it's hight matches the given number
+        * target_height -- scales the shape s.t. it's height matches the given
+            number
         
         Shapes restrictions: 
-            1) every path in the provided SVG is assumed to form a closed loop that has 
-            exactly 2 intersection points with a vetrical line passing though the middle of the shape
+            1) every path in the provided SVG is assumed to form a closed loop
+                that has exactly 2 intersection points with a vertical line
+                passing though the middle of the shape
             2) The paths should not be nested (inside each other) or intersect
-                as to not create disconnected pieces of the edge when used in shape projection
+                as to not create disconnected pieces of the edge when used in
+                shape projection
         """
         paths, _ = svgpath.svg2paths(svg_filepath)
 
@@ -302,15 +498,17 @@ class EdgeSeqFactory:
         left, right = split_half_svg_paths(paths)
 
         # Turn into Edge Sequences
-        left_seqs = [EdgeSequence.from_svg_path(p) for p in left]  
-        right_seqs = [EdgeSequence.from_svg_path(p) for p in right]
+        left_seqs = [EdgeSeqFactory.from_svg_path(p) for p in left]
+        right_seqs = [EdgeSeqFactory.from_svg_path(p) for p in right]
 
         # In SVG OY is looking downward, we are using OY looking upward
         # Flip the shape to align
         bbox = bbox_paths(paths)
         center_y = (bbox[2] + bbox[3]) / 2
-        left_seqs = [p.reflect([bbox[0], center_y], [bbox[1], center_y]) for p in left_seqs]  
-        right_seqs = [p.reflect([bbox[0], center_y], [bbox[1], center_y]) for p in right_seqs]  
+        left_seqs = [p.reflect([bbox[0], center_y],
+                               [bbox[1], center_y]) for p in left_seqs]
+        right_seqs = [p.reflect([bbox[0], center_y],
+                                [bbox[1], center_y]) for p in right_seqs]
 
         # Edge orientation s.t. the shortcut directions align with OY
         # It preserves the correct relative placement of the shapes later
@@ -327,7 +525,7 @@ class EdgeSeqFactory:
     # DRAFT: previous fitting strategy 
     # TODO remove if all works!
     @staticmethod
-    def curve_from_extreme(start, end, target):
+    def curve_from_extreme(start, end, target, verbose=False):
         """Create (Quadratic) curve edge that 
             has an extreme point as close as possible to target_extreme
             with extreme point aligned with it
@@ -342,15 +540,15 @@ class EdgeSeqFactory:
 
         if not out.success:
             print('Curve From Extreme::WARNING::Optimization not successful')
-            if flags.VERBOSE:
+            if verbose:
                 print(out)
 
         cp = [rel_target[0], out.x.item()]
 
         return CurveEdge(start, end, control_points=[cp], relative=True)
-    
+
     @staticmethod
-    def curve_3_points(start, end, target):
+    def curve_3_points(start, end, target, verbose=False):
         """Create (Quadratic) curve edge between start and end that
             passes through the target point 
         """
@@ -372,7 +570,7 @@ class EdgeSeqFactory:
 
         if not out.success:
             print('Curve From Extreme::WARNING::Optimization not successful')
-            if flags.VERBOSE:
+            if verbose:
                 print(out)
 
         cp = out.x.tolist()
@@ -385,7 +583,8 @@ class EdgeSeqFactory:
         pass
 
     @staticmethod
-    def curve_from_tangents(start, end, target_tan0=None, target_tan1=None, initial_guess=None):
+    def curve_from_tangents(start, end, target_tan0=None, target_tan1=None,
+                            initial_guess=None, verbose=False):
         """Create Quadratic Bezier curve connecting given points with the target tangents
             (both or any of the two can be specified)
         
@@ -410,7 +609,7 @@ class EdgeSeqFactory:
 
         if not out.success:
             print('Curve From Tangents::WARNING::Optimization not successful')
-            if flags.VERBOSE:
+            if verbose:
                 print(out)
 
         cp = out.x.tolist()
@@ -418,20 +617,20 @@ class EdgeSeqFactory:
         return CurveEdge(start, end, control_points=[cp], relative=True)
 
 
-# Utils
-# TODOLOW Move to generic_utils
 def _rel_to_abs_coords(start, end, vrel):
-    """Convert coordinates specified relative to vector v2 - v1 to world coords"""
+    """Convert coordinates specified relative to vector v2 - v1 to world
+    coords"""
     # TODOLOW It's in the edges?
     start, end, vrel = np.asarray(start), np.asarray(end), np.asarray(vrel)
     vec = end - start
     vec = vec / norm(vec)
     vec_perp = np.array([-vec[1], vec[0]])
-    
+
     new_start = start + vrel[0] * vec
     new_point = new_start + vrel[1] * vec_perp
 
-    return new_point 
+    return new_point
+
 
 def _abs_to_rel_2d(start, end, point):
     """Convert control points coordinates from absolute to relative"""
@@ -445,17 +644,18 @@ def _abs_to_rel_2d(start, end, point):
     converted = [None, None]
     # X
     # project control_vec on edge by dot product properties
-    projected_len = edge.dot(point_vec) / edge_len 
+    projected_len = edge.dot(point_vec) / edge_len
     converted[0] = projected_len / edge_len
     # Y
     control_projected = edge * converted[0]
-    vert_comp = point_vec - control_projected  
+    vert_comp = point_vec - control_projected
     converted[1] = norm(vert_comp) / edge_len
 
     # Distinguish left&right curvature
-    converted[1] *= -np.sign(np.cross(point_vec, edge)) 
-    
+    converted[1] *= -np.sign(np.cross(point_vec, edge))
+
     return np.asarray(converted)
+
 
 def _abs_to_rel_2d_vector(start, end, vec):
     """Convert control points coordinates from absolute to relative"""
@@ -479,6 +679,7 @@ def _abs_to_rel_2d_vector(start, end, vec):
     
     return np.asarray(converted)
 
+
 def _fit_dart(coords, v0, v1, d0, d1, depth, theta=90):
     """Placements of three dart points respecting the constraints"""
     p0, p_tip, p1 = coords[:2], coords[2:4], coords[4:]
@@ -492,8 +693,9 @@ def _fit_dart(coords, v0, v1, d0, d1, depth, theta=90):
     error['depth0'] = (norm(p0 - p_tip) - depth)**2
     error['depth1'] = (norm(p1 - p_tip) - depth)**2
 
-    # Angle constraint 
-    # allows for arbitraty angle of the dart tip w.r.t. edge side after stitching
+    # Angle constraint
+    # allows for arbitraty angle of the dart tip w.r.t. edge side after
+    # stitching
     theta = np.deg2rad(theta)
     error['angle0'] = (np.dot(p_tip - p0, v0 - p0) - np.cos(theta) * d0 * depth)**2
     # cos(pi - theta) = - cos(theta)
@@ -504,9 +706,11 @@ def _fit_dart(coords, v0, v1, d0, d1, depth, theta=90):
 
     return sum(error.values())
 
+
 # --- For Curves ---
 def _softsign(x):
     return x / (abs(x) + 1)
+
 
 def _extreme_points(curve, on_x=False, on_y=True):
     """Return extreme points of the current edge
@@ -515,38 +719,40 @@ def _extreme_points(curve, on_x=False, on_y=True):
     # TODOLOW it repeats code from Edge() class in a way
     # Variation of https://github.com/mathandy/svgpathtools/blob/5c73056420386753890712170da602493aad1860/svgpathtools/bezier.py#L197
     poly = svgpath.bezier2polynomial(curve, return_poly1d=True)
-    
+
     x_extremizers, y_extremizers = [], []
     if on_y:
         y = svgpath.imag(poly)
         dy = y.deriv()
-        
+
         y_extremizers = svgpath.polyroots(dy, realroots=True,
-                                            condition=lambda r: 0 < r < 1)
+                                          condition=lambda r: 0 < r < 1)
     if on_x:
         x = svgpath.real(poly)
         dx = x.deriv()
         x_extremizers = svgpath.polyroots(dx, realroots=True,
-                                    condition=lambda r: 0 < r < 1)
+                                          condition=lambda r: 0 < r < 1)
     all_extremizers = x_extremizers + y_extremizers
 
-    extreme_points = np.array([c_to_list(curve.point(t)) for t in all_extremizers])
+    extreme_points = np.array([c_to_list(curve.point(t))
+                               for t in all_extremizers])
 
     return extreme_points
 
+
 def _fit_y_extremum(cp_y, target_location):
-    """ Fit the control point of basic [[0, 0] -> [1, 0]] Quadratic Bezier s.t. 
+    """ Fit the control point of basic [[0, 0] -> [1, 0]] Quadratic Bezier s.t.
         it's expremum is close to target location.
 
         * cp_y - initial guess for Quadratic Bezier control point y coordinate
             (relative to the edge)
-        * target_location -- target to fit extremum to -- 
+        * target_location -- target to fit extremum to --
             expressed in RELATIVE coordinates to your desired edge
     """
 
     control_bezier = np.array([
-        [0, 0], 
-        [target_location[0], cp_y[0]], 
+        [0, 0],
+        [target_location[0], cp_y[0]],
         [1, 0]
     ])
     params = list_to_c(control_bezier)
@@ -558,8 +764,8 @@ def _fit_y_extremum(cp_y, target_location):
         raise RuntimeError('No extreme points!!')
 
     diff = np.linalg.norm(extremum - target_location)
-
     return diff**2 
+
 
 def _fit_pass_point(cp, target_location):
     """ Fit the control point of basic [[0, 0] -> [1, 0]] Quadratic Bezier s.t. 
@@ -567,12 +773,12 @@ def _fit_pass_point(cp, target_location):
 
         * cp - initial guess for Quadratic Bezier control point coordinates
             (relative to the edge)
-        * target_location -- target to fit extremum to -- 
+        * target_location -- target to fit extremum to --
             expressed in RELATIVE coordinates to your desired edge
     """
     control_bezier = np.array([
-        [0, 0], 
-        cp, 
+        [0, 0],
+        cp,
         [1, 0]
     ])
     params = list_to_c(control_bezier)
@@ -588,7 +794,8 @@ def _fit_pass_point(cp, target_location):
 
     diff = abs(point - list_to_c(target_location))
 
-    return diff**2 
+    return diff**2
+
 
 def _fit_tangents(cp, target_tangent_start, target_tangent_end, reg_strength=0.01):
     """ Fit the control point of basic [[0, 0] -> [1, 0]] Quadratic Bezier s.t. 
@@ -626,20 +833,24 @@ def _fit_tangents(cp, target_tangent_start, target_tangent_end, reg_strength=0.0
 # ---- For SVG Loading ----
 
 def split_half_svg_paths(paths):
-    """Sepate SVG paths in half over the vertical line -- for insertion into a edge side
-    
-        Paths shapes restrictions: 
-        1) every path in the provided list is assumed to form a closed loop that has 
-        exactly 2 intersection points with a vetrical line passing though the middle of the shape
+    """Sepate SVG paths in half over the vertical line -- for insertion into an
+        edge side
+
+        Paths shapes restrictions:
+        1) every path in the provided list is assumed to form a closed loop
+            that has
+        exactly 2 intersection points with a vetrical line passing though the
+            middle of the shape
         2) The paths geometry should not be nested
-            as to not create disconnected pieces of the edge when used in shape projection
+            as to not create disconnected pieces of the edge when used in
+                shape projection
 
     """
     # Shape Bbox
     bbox = bbox_paths(paths)
     center_x = (bbox[0] + bbox[1]) / 2
 
-    # Mid-Intersection 
+    # Mid-Intersection
     inter_segment = svgpath.Line(
             center_x + 1j * bbox[2],
             center_x + 1j * bbox[3]
@@ -650,7 +861,7 @@ def split_half_svg_paths(paths):
         # Intersect points
         intersect_t = p.intersect(inter_segment)
 
-        if len(intersect_t) != 2: 
+        if len(intersect_t) != 2:
             raise ValueError(f'SplitSVGHole::ERROR::Each Provided Svg path should cross vertical like exactly 2 times')
 
         # Split
@@ -660,13 +871,15 @@ def split_half_svg_paths(paths):
 
         side_1 = p.cropped(from_T, to_T)
         # This order should preserve continuity
-        side_2 = svgpath.Path(*p.cropped(to_T, 1)._segments, *p.cropped(0, from_T)._segments)
+        side_2 = svgpath.Path(
+            *p.cropped(to_T, 1)._segments,
+            *p.cropped(0, from_T)._segments)
 
         # Collect correctly
         if side_1.bbox()[2] > center_x:
             side_1, side_2 = side_2, side_1
-        
-        right.append(side_2)  
-        left.append(side_1)  
+
+        right.append(side_2)
+        left.append(side_1)
 
     return left, right

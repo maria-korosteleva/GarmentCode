@@ -1,12 +1,7 @@
-
+from assets.garment_programs.circle_skirt import *
+from assets.garment_programs.skirt_paneled import *
 from copy import deepcopy
-from scipy.spatial.transform import Rotation as R
 
-# Custom
-import pypattern as pyp
-from .skirt_paneled import *
-from .circle_skirt import *
-from .base_classes import BaseBottoms
 
 class SkirtLevels(BaseBottoms):
     """Skirt constiting of multuple stitched skirts"""
@@ -31,8 +26,7 @@ class SkirtLevels(BaseBottoms):
             rise=ldesign['rise']['v'],
             slit=False))
 
-        # Skirt angle for correct placement
-        if (hasattr(base:=self.subs[0], 'design') 
+        if (hasattr(base := self.subs[0], 'design')
                 and 'low_angle' in base.design):
             self.angle = base.design['low_angle']['v']
         else:
@@ -55,7 +49,8 @@ class SkirtLevels(BaseBottoms):
 
             # Placement
             # Rotation if base is assymetric
-            self.subs[-1].rotate_by(R.from_euler('XYZ', [0, 0, -self.angle], degrees=True))
+            self.subs[-1].rotate_by(R.from_euler(
+                'XYZ', [0, 0, -self.angle], degrees=True))
 
             self.subs[-1].place_by_interface(
                 self.subs[-1].interfaces['top'],
@@ -84,3 +79,4 @@ class SkirtLevels(BaseBottoms):
 
         # Add hip_line (== zero length)
         self.base_len = body['hips_line'] * ldesign['rise']['v'] + self.base_len
+

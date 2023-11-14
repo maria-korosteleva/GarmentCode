@@ -6,18 +6,20 @@
 """
 
 # Building blocks
-from .component import Component
-from .panel import Panel
-from .edge import *
-from .connector import Stitches
-from .interface import Interface
-from .edge_factory import EdgeSeqFactory as esf
+from pypattern.component import Component
+from pypattern.panel import Panel
+from pypattern.edge import *
+from pypattern.connector import Stitches
+from pypattern.interface import Interface
+from pypattern.edge_factory import EdgeSeqFactory
+from pypattern.edge_factory import CircleEdgeFactory
+from pypattern.edge_factory import CurveEdgeFactory
+
 
 # Operations
 import pypattern.operators as ops
 import pypattern.generic_utils as utils
-import pypattern.flags as flags
 
 # Parameter support
-from .params import *
+from pypattern.params import *
 

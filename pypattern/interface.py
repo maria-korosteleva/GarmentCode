@@ -1,12 +1,13 @@
 from copy import copy
+
 from numpy.linalg import norm
 import numpy as np
 
-# Custom
-from .edge import Edge, EdgeSequence
-from .generic_utils import close_enough
+from pypattern.edge import EdgeSequence, Edge
+from pypattern.generic_utils import close_enough
 
-class Interface():
+
+class Interface:
     """Description of an interface of a panel or component
         that can be used in stitches as a single unit
     """
@@ -14,10 +15,12 @@ class Interface():
         """
         Parameters:
             * panel - Panel object
-            * edges - Edge or EdgeSequence -- edges in the panel that are allowed to connect to
-            * ruffle - ruffle coefficient (number or a per-edge list). If a number is provided, the ruffle is applied to the whole sequence. 
-              Interface object will supply projecting_edges() shape
-                s.t. the ruffles with the given rate are created. Default = 1. (no ruffles, smooth connection)
+            * edges - Edge or EdgeSequence -- edges in the panel that are
+                allowed to connect to
+            * ruffle - ruffle coefficient for a particular edge. Interface
+                object will supply projecting_edges() shape
+                s.t. the ruffles with the given rate are created. Default = 1.
+                    (no ruffles, smooth connection)
         """
 
         self.edges = edges if isinstance(edges, EdgeSequence) else EdgeSequence(edges)
@@ -47,8 +50,10 @@ class Interface():
             self.ruffle = [dict(coeff=ruffle, sec=[0, len(self.edges)])]
 
     def projecting_edges(self, on_oriented=False) -> EdgeSequence:
-        """Return edges shape that should be used when projecting interface onto another panel
-            NOTE: reflects current state of the edge object. Call this function again if egdes change (e.g. their direction)
+        """Return edges shape that should be used when projecting interface
+            onto another panel
+            NOTE: reflects current state of the edge object. Call this function
+                again if egdes change (e.g. their direction)
         """
         # Per edge set ruffle application
         projected = self.edges.copy() if not on_oriented else self.oriented_edges()
@@ -59,7 +64,8 @@ class Interface():
         return projected
 
     def needsFlipping(self, i):
-        """ Check if particular edge should be re-oriented to follow the general direction of the interface
+        """ Check if particular edge should be re-oriented to follow the
+            general direction of the interface
         """
         if self.edges_flipping[i]:
             return True
@@ -72,7 +78,8 @@ class Interface():
 
         # Corener cases
         if i == 0:
-            next, next_panel = self.edges[(i+1 % len(self.edges))], self.panel[(i+1)  % len(self.edges)]
+            next, next_panel = (self.edges[(i+1 % len(self.edges))],
+                                self.panel[(i+1) % len(self.edges)])
             next_3d = next_panel.point_to_3D(next.midpoint())
 
             # check by start vertex
@@ -90,7 +97,8 @@ class Interface():
         # Utilize distance from the end vertex to the next panel 
         # start -> prev + end -> next or other way around  
         prev, prev_panel = self.edges[i-1], self.panel[i-1]
-        next, next_panel = self.edges[(i+1) % len(self.edges)], self.panel[(i+1) % len(self.edges)]
+        next, next_panel = (self.edges[(i+1 % len(self.edges))],
+                            self.panel[(i+1) % len(self.edges)])
 
         # Optimal order in 3D
         prev_3d = prev_panel.point_to_3D(prev.midpoint())
@@ -103,9 +111,11 @@ class Interface():
 
     # ANCHOR --- Info ----
     def oriented_edges(self):
-        """ Orient the edges withing the interface sequence along the general direction of the interface
+        """ Orient the edges withing the interface sequence along the general
+            direction of the interface
 
-            Creates a copy of the interface s.t. not to disturb the original edge objects
+            Creates a copy of the interface s.t. not to disturb the original
+                edge objects
         """
         # NOTE we cannot we do the same for the edge sub-sequences:
         #  - midpoint of a sequence is less representative
@@ -123,7 +133,8 @@ class Interface():
         return oriented
 
     def verts_3d(self):
-        """Return 3D locations of all vertices that participate in the interface"""
+        """Return 3D locations of all vertices that participate in the
+            interface"""
 
         verts_2d = []
         matching_panels = []
@@ -167,7 +178,8 @@ class Interface():
         """Reverse the order of edges in the interface
             (without updating the edge objects)
 
-            Reversal is useful for reordering interface edges for correct matching in the multi-stitches
+            Reversal is useful for reordering interface edges for correct
+                matching in the multi-stitches
         """
         self.edges.edges.reverse()   # TODOLOW Condition on edge sequence reverse 
         self.panel.reverse()
@@ -186,10 +198,11 @@ class Interface():
         return self
 
     def reorder(self, curr_edge_ids, projected_edge_ids):
-        """Change the order of edges from curr_edge_ids to projected_edge_ids in the interface
+        """Change the order of edges from curr_edge_ids to projected_edge_ids
+            in the interface
 
-            Note that the input should prescrive new ordering for all affected edges
-            e.g. if moving 0 -> 1, specify the new location for 1 as well
+            Note that the input should prescrive new ordering for all affected
+            edges e.g. if moving 0 -> 1, specify the new location for 1 as well
         """
         
         # TODOLOW Edge Sequence Function wrapper?
@@ -217,11 +230,14 @@ class Interface():
 
     def substitute(self, orig, new_edges, new_panels):
         """Update the interface edges with correct correction of panels
-            * orig -- could be an edge object or the id of edges that need substitution
+            * orig -- could be an edge object or the id of edges that need
+                substitution
             * new_edges -- new edges to insert in place of orig
-            * new_panels -- per-edge panel objects indicating where each of new_edges belong to
+            * new_panels -- per-edge panel objects indicating where each of
+                new_edges belong to
         
-        NOTE: the ruffle indicator for the new_edges is expected to be the same as for orig edge
+        NOTE: the ruffle indicator for the new_edges is expected to be the
+            same as for orig edge
         Specifying new indicators is not yet supported
 
         """
@@ -285,7 +301,8 @@ class Interface():
 
     @staticmethod
     def _is_order_matching(panel_s, vert_s, panel_1, vert1, panel_2, vert2) -> bool:
-        """Check which of the two vertices vert1 (panel_1) or vert2 (panel_2) is closer to the vert_s 
+        """Check which of the two vertices vert1 (panel_1) or vert2 (panel_2)
+            is closer to the vert_s
             from panel_s in 3D"""
         s_3d = panel_s.point_to_3D(vert_s)
         v1_3d = panel_1.point_to_3D(vert1)

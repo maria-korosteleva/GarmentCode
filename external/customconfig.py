@@ -1,7 +1,3 @@
-"""
-    The module contain Porperties class to manage paramters & stats in various parts of the system
-"""
-
 from datetime import timedelta
 import json
 import yaml
@@ -10,19 +6,20 @@ import traceback
 import sys
 from pathlib import Path
 
-# for system info
 import platform
 import psutil
-if 'win' in platform.system() or 'Win' in platform.system():
+
+
+if 'windows' in platform.system() or 'Windows' in platform.system():
     import wmi  # pip install wmi
 
 
-class Properties():
-    """Keeps, loads, and saves cofiguration & statistic information
+class Properties:
+    """Keeps, loads, and saves configuration & statistic information
         Supports gets&sets as a dictionary
         Provides shortcuts for batch-init configurations
 
-        One of the usages -- store system-dependent basic cofiguration
+        One of the usages -- store system-dependent basic configuration
     """
     def __init__(self, filename="", clean_stats=False):
         self.properties = {}
@@ -36,11 +33,12 @@ class Properties():
 
     # ---- Base utils ----
     def has(self, key):
-        """Used to quety if a top-level property/section is already defined"""
+        """Used to query if a top-level property/section is already defined"""
         return key in self.properties
 
     def serialize(self, filename, backup=None):
-        """Log current props to file. If logging failed, at least restore provided backup or originally loaded props
+        """Log current props to file. If logging failed, at least restore
+        provided backup or originally loaded props
             * backup is expected to be a Properties object
         """
         try:
@@ -62,20 +60,25 @@ class Properties():
         except Exception as e:
             print('Exception occured while saving properties:')
             traceback.print_exception(*sys.exc_info()) 
-            # save backup, s.t. the data is not lost due to interruption of the file override
+            # save backup, s.t. the data is not lost due to interruption of
+            # the file override
 
             if backup is not None: 
                 backup.serialize(filename)
             else:
                 with open(filename, 'w') as f_json:
-                    json.dump(self.properties_on_load, f_json, indent=2, sort_keys=True)
+                    json.dump(self.properties_on_load, f_json,
+                              indent=2, sort_keys=True)
             raise RuntimeError('Error occured while saving properties. Backup version is saved instead')
 
-    def merge(self, filename="", clean_stats=False, re_write=True, adding_tag='added'):
+    def merge(self, filename="", clean_stats=False, re_write=True,
+              adding_tag='added'):
         """Merge current set of properties with the one from file
-            * re_write=True sets the default merging of Python dicts, values from new props overrite 
+            * re_write=True sets the default merging of Python dicts, values
+            from new props overrite
                 the one from old one if keys are the same
-            * re_write=False will keep both properties if their values are different (imported one marked with adding_tag)
+            * re_write=False will keep both properties if their values are
+            different (imported one marked with adding_tag)
         """
         new_props = self._from_file(filename)
         if clean_stats:

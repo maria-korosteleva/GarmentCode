@@ -1,10 +1,9 @@
-
-
 import pypattern as pyp
 
+
 class BodyParameters(pyp.BodyParametrizationBase):
-    """Custom class that defines calculated body parameters
-    """
+    """Custom class that defines calculated body parameters"""
+
     def __init__(self, param_file='') -> None:
         super().__init__(param_file)
 
@@ -19,10 +18,10 @@ class BodyParameters(pyp.BodyParametrizationBase):
             # than the true shoulder width
             self.params['_base_sleeve_balance'] = self.params['shoulder_w'] - 4
 
+
+# TODO: - ami - do we need this function ?
 if __name__ == "__main__":
 
     body_file = './assets/body_measurments/f_smpl_avg.yaml'
-
     body = BodyParameters(body_file)
-
     body.save('./Logs')

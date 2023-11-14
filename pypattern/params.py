@@ -1,16 +1,14 @@
 """Parameter class wrappers around parameter files allowing definition of computed parameters
 """
-
 import yaml
 from pathlib import Path
 from copy import deepcopy
 import random 
 
-# Custom
-from .generic_utils import nested_get, nested_set, close_enough
+from pypattern.generic_utils import nested_get, nested_set, close_enough
 
 
-class BodyParametrizationBase():
+class BodyParametrizationBase:
     """Base class for body parametrization wrappers that allows definition of 
         dependent parameters
     """
@@ -61,7 +59,7 @@ class BodyParametrizationBase():
             )
 
 
-class DesignSampler():
+class DesignSampler:
     """Base class for design parameters sampling """
 
     def __init__(self, param_file='') -> None:

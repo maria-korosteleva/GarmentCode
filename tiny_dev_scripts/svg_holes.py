@@ -1,9 +1,7 @@
 import numpy as np
 import svgpathtools as svgpath
+from pypattern.edge_factory import EdgeSeqFactory
 
-from pypattern.generic_utils import vector_angle, close_enough, c_to_list, c_to_np, list_to_c
-
-import pypattern as pyp
 
 def bbox_paths(paths):
     """Bounding box of a set of paths"""
@@ -71,8 +69,8 @@ paths = [p.scaled(scale) for p in paths]
 left, right = split_half_svg_paths(paths)
 
 # Turn into Edge Sequences
-left_seqs = [pyp.EdgeSequence.from_svg_path(p) for p in left]
-right_seqs = [pyp.EdgeSequence.from_svg_path(p) for p in right]
+left_seqs = [EdgeSeqFactory.from_svg_path(p) for p in left]
+right_seqs = [EdgeSeqFactory.from_svg_path(p) for p in right]
 
 # DEBUG
 print(len(left_seqs), len(right_seqs))

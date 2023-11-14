@@ -1,39 +1,44 @@
 """Shortcuts for common operations on panels and components"""
-
 from copy import deepcopy, copy
+
 import numpy as np
 from numpy.linalg import norm
 from scipy.spatial.transform import Rotation as R
 from scipy.optimize import minimize
-import matplotlib.pyplot as plt
 import svgpathtools as svgpath
 
-# Custom 
-from .edge import Edge, CurveEdge, CircleEdge, EdgeSequence
-from .interface import Interface
-from .generic_utils import vector_angle, close_enough, c_to_list, c_to_np, list_to_c, bbox_paths
-from .base import BaseComponent
-from . import flags
+from pypattern.edge import Edge, CurveEdge, EdgeSequence
+from pypattern.interface import Interface
+from pypattern.generic_utils import vector_angle, close_enough, c_to_list, c_to_np
+from pypattern.generic_utils import list_to_c
+from pypattern.base import BaseComponent
+
 
 # ANCHOR ----- Edge Sequences Modifiers ----
-def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
+def cut_corner(target_shape: EdgeSequence, target_interface: Interface,
+               verbose: bool = False):
     """ Cut the corner made of edges 1 and 2 following the shape of target_shape
         This routine updated the panel geometry and interfaces appropriately
 
         Parameters:
-        * 'target_shape' is an EdgeSequence that is expected to contain one Edge or sequence of chained Edges 
+        * 'target_shape' is an EdgeSequence that is expected to contain one
+            Edge or sequence of chained Edges
             (next one starts from the end vertex of the one before)
-            # NOTE: 'target_shape' might be scaled (along the main direction) to fit the corner size
+            # NOTE: 'target_shape' might be scaled (along the main direction)
+                to fit the corner size
         * Panel to modify
-        * target_interface -- the chained pairs of edges that form the corner to cut, s.t. the end vertex of eid1 is at the corner
+        * target_interface -- the chained pairs of edges that form the corner
+            to cut, s.t. the end vertex of eid1 is at the corner
             # NOTE: Onto edges are expected to be straight lines for simplicity
 
-        # NOTE There might be slight computational errors in the resulting shape, 
-                that are more pronounced on svg visualizations due to scaling and rasterization
+        # NOTE There might be slight computational errors in the resulting
+            shape, that are more pronounced on svg visualizations due to
+            scaling and rasterization
 
         Side-Effects:
             * Modified the panel shape to insert new edges
-            * Adds new interface object corresponding to new edges to the panel interface list
+            * Adds new interface object corresponding to new edges to the
+                panel interface list
 
         Returns:
             * Newly inserted edges
@@ -66,8 +71,8 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
     curve1 = target_edges[0].as_curve()
     curve2 = target_edges[1].as_curve()
 
-    # align order with the a projecting shape, s.t. 
-    # curve2 is alawys the lower one
+    # align order with the projecting shape, s.t.
+    # curve2 is always the lower one
     swaped = False
     if target_edges[0].start[1] > target_edges[-1].end[1]:
         curve1, curve2 = curve2, curve1
@@ -81,11 +86,11 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
        args=(shortcut[1] - shortcut[0], curve1, curve2),
        bounds=[(0, 1), (0, 1)])
     
-    if flags.VERBOSE and not out.success:
+    if verbose and not out.success:
         print(f'Cut_corner::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
         print(out)
 
-    if flags.VERBOSE and not close_enough(out.fun):
+    if verbose and not close_enough(out.fun):
         print(f'Cut_corner::Warning::projection on {target_interface} finished with fun={out.fun}')
         print(out) 
 
@@ -136,21 +141,29 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
 
     return corner_shape[1:-1], new_int
 
-def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, flip_target=False, tol=1e-2):
-    """ Insert edges of the target_shape into the given base_edge, starting from offset
-        edges in target shape are rotated s.t. start -> end vertex vector is aligned with the edge 
 
-        NOTE: Supports making multiple cuts in one go maintaining the relative distances between cuts
+def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True,
+                  flip_target=False, tol=1e-4):
+    """ Insert edges of the target_shape into the given base_edge, starting
+        from offset edges in target shape are rotated s.t. start -> end
+        vertex vector is aligned with the edge
+
+        NOTE: Supports making multiple cuts in one go maintaining the relative
+            distances between cuts
             provided that 
             * they are all specified in the same coordinate system  
-            * (for now) the openings (shortcuts) of each cut are aligned with OY direction
+            * (for now) the openings (shortcuts) of each cut are aligned with
+                OY direction
 
         Parameters:
-        * target_shape -- list of single edge, chained edges, or mutiple chaindes EdgeSequences to be inserted in the edge. 
+        * target_shape -- list of single edge, chained edges, or multiple
+            chaind EdgeSequences to be inserted in the edge.
         * base_edge -- edge object, defining the border
         * Offset -- position of the center of the target shape along the edge.  
-        * right -- which direction the cut should be oriented w.r.t. the direction of base edge
-        * flip_target -- reflect the shape w.r.t its central perpendicular (default=False, no action taken)
+        * right -- which direction the cut should be oriented w.r.t. the
+            direction of base edge
+        * flip_target -- reflect the shape w.r.t its central perpendicular
+            (default=False, no action taken)
 
         Returns:
         * Newly created edges that accomodate the cut
@@ -174,7 +187,8 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, flip_targe
     if flip_target:
         target_shape = [s.copy() for s in target_shape]
         # Flip
-        target_shape = [s.reflect([0, median_y], [1, median_y]) for s in target_shape] 
+        target_shape = [s.reflect([0, median_y], [1, median_y])
+                        for s in target_shape]
         # Flip the order as well to reflect orientation change
         target_shape = [s.reverse() for s in target_shape] 
 
@@ -199,18 +213,24 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, flip_targe
     
     return all_new_edges, new_in_edges, int_edges
 
-def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-2):
-    """ Insert edges of the target_shape into the given base_edge, starting from offset
-        edges in target shape are rotated s.t. start -> end vertex vector is aligned with the edge 
+
+def cut_into_edge_single(target_shape, base_edge: Edge, offset=0, right=True,
+                         tol=1e-2, verbose: bool = False):
+    """ Insert edges of the target_shape into the given base_edge, starting
+            from offset
+        edges in target shape are rotated s.t. start -> end vertex vector is
+            aligned with the edge
 
         Parameters:
-        * target_shape -- list of single edge or chained edges to be inserted in the edge. 
+        * target_shape -- list of single edge or chained edges to be inserted
+            in the edge.
         * base_edge -- edge object, defining the border
-        * right -- which direction the cut should be oriented w.r.t. the direction of base edge
+        * right -- which direction the cut should be oriented w.r.t. the
+            direction of base edge
         * Offset -- position of the center of the target shape along the edge.  
 
         Returns:
-        * Newly created edges that accomodate the cut
+        * Newly created edges that accommodate the cut
         * Edges corresponding to the target shape
         * Edges that lie on the original base edge 
     """
@@ -240,11 +260,11 @@ def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True, tol
     shift = out.x  
 
     # Error checks
-    if flags.VERBOSE and not out.success:
+    if verbose and not out.success:
         print(f'Cut_edge::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
 
     if not close_enough(out.fun, tol=0.01):
-        if flags.VERBOSE:
+        if verbose:
             print(out) 
         raise RuntimeError(f'Cut_edge::ERROR::projection on {base_edge} finished with fun={out.fun}')
     
@@ -300,29 +320,36 @@ def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True, tol
         
     return new_edges, new_edges[start_id:end_id], base_edge_leftovers
 
-def _fit_location_corner(l, diff_target, curve1, curve2):
-    """Find the points on two curves s.t. vector between them is the same as shortcut"""
+
+def _fit_location_corner(l, diff_target, curve1, curve2,
+                         verbose: bool = False):
+    """Find the points on two curves s.t. vector between them is the same as
+    shortcut"""
 
     # Current points on curves
     point1 = c_to_np(curve1.point(l[0]))
     point2 = c_to_np(curve2.point(l[1]))
     diff_curr = point2 - point1
 
-    if flags.VERBOSE:
-        print('Location Progression: ', (diff_curr[0] - diff_target[0])**2, (diff_curr[1] - diff_target[1])**2)
+    if verbose:
+        print('Location Progression: ', (diff_curr[0] - diff_target[0])**2,
+              (diff_curr[1] - diff_target[1])**2)
 
     return ((diff_curr[0] - diff_target[0])**2 
             + (diff_curr[1] - diff_target[1])**2)
 
-def _fit_location_edge(shift, location, width_target, curve):
-    """Find the points on two curves s.t. vector between them is the same as shortcut"""
+
+def _fit_location_edge(shift, location, width_target, curve,
+                       verbose: bool = False):
+    """Find the points on two curves s.t. vector between them is the same as
+    shortcut"""
 
     # Current points on curves
     pointc = c_to_np(curve.point(location))   # TODO this is constant
     point1 = c_to_np(curve.point(location + shift[0]))
     point2 = c_to_np(curve.point(location - shift[1]))
 
-    if flags.VERBOSE:
+    if verbose:
         print('Location Progression: ', (_dist(point1, point2) - width_target)**2)
 
     # regularize points to be at the same distance from center
@@ -353,8 +380,10 @@ def distribute_Y(component, n_copies, odd_copy_shift=0):
         
     return copies
 
+
 def distribute_horisontally(component, n_copies, stride=20, name_tag='panel'):
-    """Distribute copies of component over the straight horisontal line perpendicular to the norm"""
+    """Distribute copies of component over the straight horisontal line
+    perpendicular to the norm"""
     copies = [ component ]
     component.name = f'{name_tag}_0'   # Unique
 
@@ -436,6 +465,7 @@ def even_armhole_openings(front_opening, back_opening, tol=1e-2):
 
     return front_opening, back_opening
 
+
 # ANCHOR ----- Curve tools -----
 def _avg_curvature(curve, points_estimates=100):
     """Average curvature in a curve"""
@@ -446,6 +476,7 @@ def _avg_curvature(curve, points_estimates=100):
     t_space = np.linspace(0, 1, points_estimates)
     return sum([curve.curvature(t) for t in t_space]) / points_estimates
 
+
 def _max_curvature(curve, points_estimates=100):
     """Average curvature in a curve"""
     # NOTE: this work slow, but direct evaluation seems
@@ -453,6 +484,7 @@ def _max_curvature(curve, points_estimates=100):
     # Some hints here: https://math.stackexchange.com/questions/1954845/bezier-curvature-extrema
     t_space = np.linspace(0, 1, points_estimates)
     return max([curve.curvature(t) for t in t_space])
+
 
 def _bend_extend_2_tangent(
         shift, cp, target_len, direction, 
@@ -487,8 +519,10 @@ def _bend_extend_2_tangent(
     end_expantion_reg = 0.001*shift[-1]**2 
 
     return length_diff + tan_0_diff + tan_1_diff + curvature_reg + end_expantion_reg
-      
-def curve_match_tangents(curve, target_tan0, target_tan1, return_as_edge=False):
+
+
+def curve_match_tangents(curve, target_tan0, target_tan1,
+                         return_as_edge=False, verbose: bool = False):
     """Update the curve to have the desired tangent directions at endpoints 
         while preserving curve length and overall direction
 
@@ -513,7 +547,7 @@ def curve_match_tangents(curve, target_tan0, target_tan1, return_as_edge=False):
 
     # match tangents with the requested ones while preserving length
     out = minimize(
-        _bend_extend_2_tangent, # with tangent matching
+        _bend_extend_2_tangent,  # with tangent matching
         [0, 0, 0, 0, 0], 
         args=(
             curve_cps, 
@@ -527,7 +561,7 @@ def curve_match_tangents(curve, target_tan0, target_tan1, return_as_edge=False):
     )
     if not out.success:
         print(f'Curve_match_tangents::WARNING::optimization not successfull')
-        if flags.VERBOSE:
+        if verbose:
             print(out)
 
     shift = out.x

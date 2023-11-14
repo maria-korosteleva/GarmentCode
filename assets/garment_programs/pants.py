@@ -1,12 +1,9 @@
 from copy import deepcopy
 import numpy as np
 
-# Custom
 import pypattern as pyp
-
-# other assets
-from . import bands
-from .base_classes import BaseBottoms
+from assets.garment_programs.base_classes import BaseBottoms
+from assets.garment_programs import bands
 
 
 class PantPanel(pyp.Panel):
@@ -21,7 +18,8 @@ class PantPanel(pyp.Panel):
             hipline_ext=1,
             double_dart=False) -> None:
         """
-            Basic pant panel with option to be fitted (with darts) or ruffled at waist area.
+            Basic pant panel with option to be fitted (with darts) or ruffled
+            at waist area.
         """
         super().__init__(name)
 
@@ -54,18 +52,18 @@ class PantPanel(pyp.Panel):
                 [0, length]
             )
         else:
-            right_bottom = pyp.esf.curve_from_tangents(
+            right_bottom = pyp.EdgeSeqFactory.curve_from_tangents(
                 [-flare, 0], 
                 [0, length],
                 target_tan1=np.array([0, 1]), 
                 # initial guess places control point closer to the hips 
                 initial_guess=[0.75, 0]
             )
-        right_top = pyp.esf.curve_from_tangents(
+        right_top = pyp.EdgeSeqFactory.curve_from_tangents(
             right_bottom.end,    
             [hw_shift, length + hips_depth],
             target_tan0=np.array([0, 1]),
-            initial_guess=[0.5, 0] 
+            initial_guess=[0.5, 0]
         )
        
         top = pyp.Edge(
@@ -78,7 +76,7 @@ class PantPanel(pyp.Panel):
             [hips, length + 0.45 * hips_depth]  # A bit higher than hip line
             # NOTE: The point should be lower than the minimum rise value (0.5)
         )
-        crotch_bottom = pyp.esf.curve_from_tangents(
+        crotch_bottom = pyp.EdgeSeqFactory.curve_from_tangents(
             crotch_top.end,
             [hips + crotch_extention, length - crotch_depth_diff], 
             target_tan0=np.array([0, -1]),
@@ -86,7 +84,7 @@ class PantPanel(pyp.Panel):
             initial_guess=[0.5, -0.5] 
         )
 
-        left = pyp.esf.curve_from_tangents(
+        left = pyp.EdgeSeqFactory.curve_from_tangents(
             crotch_bottom.end,    
             [
                 # NOTE "Magic value" which we use to define default width:
@@ -120,7 +118,7 @@ class PantPanel(pyp.Panel):
             'bottom': pyp.Interface(self, bottom)
         }
 
-        # Add top dart 
+        # Add top dart
         dart_width = w_diff - hw_shift  
         if w_diff > hw_shift:
             top_edges, int_edges = self.add_darts(
@@ -141,15 +139,15 @@ class PantPanel(pyp.Panel):
             ]
 
             darts = [
-                pyp.esf.dart_shape(dart_width / 2, dart_depth * 0.9), # smaller
-                pyp.esf.dart_shape(dart_width / 2, dart_depth)  
+                pyp.EdgeSeqFactory.dart_shape(dart_width / 2, dart_depth * 0.9), # smaller
+                pyp.EdgeSeqFactory.dart_shape(dart_width / 2, dart_depth)
             ]
         else:
             offsets_mid = [
                 - dart_position - dart_width / 2,
             ]
             darts = [
-                pyp.esf.dart_shape(dart_width, dart_depth)
+                pyp.EdgeSeqFactory.dart_shape(dart_width, dart_depth)
             ]
         top_edges, int_edges = pyp.EdgeSequence(top), pyp.EdgeSequence(top)
 
@@ -221,7 +219,8 @@ class PantsHalf(BaseBottoms):
         if design['cuff']['type']['v']:
             
             pant_bottom = pyp.Interface.from_multiple(
-                    self.front.interfaces['bottom'], self.back.interfaces['bottom'])
+                self.front.interfaces['bottom'],
+                self.back.interfaces['bottom'])
 
             # Copy to avoid editing original design dict
             cdesign = deepcopy(design)
@@ -252,6 +251,7 @@ class PantsHalf(BaseBottoms):
             'top_f': self.front.interfaces['top'],
             'top_b': self.back.interfaces['top'],
         }
+
 
 class Pants(BaseBottoms):
     def __init__(self, body, design) -> None:

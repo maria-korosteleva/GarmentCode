@@ -1,16 +1,20 @@
 import math
 import numpy as np
 
-# Custom
 import pypattern as pyp
-from . import skirt_paneled as skirts
-from .base_classes import BaseBottoms
+
+from assets.garment_programs.base_classes import BaseBottoms
+from assets.garment_programs import skirt_paneled as skirts
+
 
 class Insert(pyp.Panel):
     def __init__(self, id, width=30, depth=30) -> None:
         super().__init__(f'Insert_{id}')
 
-        self.edges = pyp.esf.from_verts([0, 0], [width/2, depth], [width, 0], loop=True)
+        self.edges = pyp.EdgeSeqFactory.from_verts(
+            [0, 0],
+            [width/2, depth],
+            [width, 0], loop=True)
 
         self.interfaces = [
             pyp.Interface(self, self.edges[:2])
@@ -18,7 +22,9 @@ class Insert(pyp.Panel):
         self.top_center_pivot()
         self.center_x()
 
+
 class GodetSkirt(BaseBottoms):
+
     def __init__(self, body, design) -> None:
         super().__init__(body, design)
 
@@ -34,14 +40,13 @@ class GodetSkirt(BaseBottoms):
         bintr = self.base.interfaces['bottom']
         for edge, panel in zip(bintr.edges, bintr.panel):
             self.inserts(
-                edge, panel, ins_w, ins_depth , 
+                edge, panel, ins_w, ins_depth,
                 num_inserts=gdesign['num_inserts']['v'] / len(bintr), 
                 cuts_dist=gdesign['cuts_distance']['v'])
 
         self.interfaces = {
             'top': self.base.interfaces['top']
         }
-
 
     def inserts(
             self, bottom_edge, panel, ins_w, ins_depth,
@@ -70,12 +75,13 @@ class GodetSkirt(BaseBottoms):
         # Insert panels
         insert = Insert(0, width=ins_w, depth=ins_depth).translate_by([
             x_shift - num_inserts * ins_w / 2 + ins_w / 2, y_base + ins_depth, z_transl])
-        self.subs += pyp.ops.distribute_horisontally(insert, num_inserts, -ins_w, panel.name)
+        self.subs += pyp.ops.distribute_horisontally(
+            insert, num_inserts, -ins_w, panel.name)
 
         # make appropriate cuts and stitches
         side_len = math.sqrt((ins_w / 2)**2 + ins_depth**2)  # should be the same on the skirt and the insert
 
-        if side_len > cut_width / 2: # Normal case
+        if side_len > cut_width / 2:  # Normal case
             cut_depth = math.sqrt(side_len**2 - (cut_width / 2)**2)
         else:
             old_cut_width = cut_width
@@ -85,7 +91,8 @@ class GodetSkirt(BaseBottoms):
                   'is too wide for given inserts. '
                   f'Using the maximum possible width ({cut_width:.2f})')
         
-        cut_shape = pyp.esf.from_verts([0,0], [cut_width / 2, cut_depth], [cut_width, 0])  
+        cut_shape = pyp.EdgeSeqFactory.from_verts(
+            [0, 0], [cut_width / 2, cut_depth], [cut_width, 0])
 
         right = z_transl < 0    # NOTE: heuristic corresponding to skirts in our collection
 
@@ -104,7 +111,6 @@ class GodetSkirt(BaseBottoms):
             self.stitching_rules.append(
                 (self.subs[-1-i if right else -(num_inserts-i)].interfaces[0], 
                 cut_interface))
-       
 
     def get_rise(self):
         return self.base.get_rise()

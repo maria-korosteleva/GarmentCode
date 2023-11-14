@@ -11,7 +11,7 @@ import os
 import random
 
 # My
-from pattern import rotation as rotation_tools
+from external.pattern import rotation as rotation_tools
 
 standard_filenames = [
     'specification',  # e.g. used by dataset generation

@@ -1,22 +1,14 @@
-
-""" Sample panels/components without a role to test stuff
-"""
-
-from copy import copy
-import numpy as np
-
-# Custom
+""" Sample panels/components without a role to test stuff"""
 import pypattern as pyp
-from . import sleeves
-from . import collars
 
-# Curvy shape to try projections on
 
 class CurvyPanel(pyp.Panel):
+    """Curvy shape to try projections on"""
+
     def __init__(self, name, size=40) -> None:
         super().__init__(name)
 
-        # self.edges = pyp.esf.from_verts(
+        # self.edges = pyp.EdgeSeqFactory.from_verts(
         #     [0, 0], [0, size], [size, size], [size, 0]
         # )
         # self.edges.append(pyp.CurveEdge([0, 0], [0, size], [[0.2, 0.3], [0.4, -0.2]]))
@@ -43,7 +35,7 @@ class CurvyPanel(pyp.Panel):
 
         print('DART')  # DEBUG
         b_edge, b_dart_edges, b_interface = pyp.ops.cut_into_edge(
-            pyp.esf.dart_shape(5, 15), self.edges[-1], 
+            pyp.EdgeSeqFactory.dart_shape(5, 15), self.edges[-1], 
             offset=self.edges[-1].length() / 2, right=True)
         
         # DEBUG
@@ -54,11 +46,12 @@ class CurvyPanel(pyp.Panel):
         # DEBUG
         print(self.edges)
 
+
 class StraightPanel(pyp.Panel):
     def __init__(self, name, size=40) -> None:
         super().__init__(name)
 
-        self.edges = pyp.esf.from_verts(
+        self.edges = pyp.EdgeSeqFactory.from_verts(
             [0, 0], [0, size], [size, size], [size, 0], 
             loop=True
         )
@@ -70,7 +63,7 @@ class StraightPanel(pyp.Panel):
 
         print('SHAPE')  # DEBUG
 
-        left_seq, right_seq = pyp.esf.halfs_from_svg(
+        left_seq, right_seq = pyp.EdgeSeqFactory.halfs_from_svg(
             './assets/img/logo_cropped.svg',   #'./assets/img/test_shape.svg', './assets/img/logo_cropped.svg',  # './assets/img/Logo_adjusted.svg', 
             target_height=size / 2)
 
@@ -102,7 +95,6 @@ class StraightPanel(pyp.Panel):
                 offset=base_edge.length() / 2, right=True)
 
         self.edges.substitute(base_edge, new_edge)
-
 
 
 class CurvyProjection(pyp.Component):

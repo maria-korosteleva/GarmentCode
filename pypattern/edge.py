@@ -1,27 +1,36 @@
 from copy import deepcopy, copy
+
 import numpy as np
 from numpy.linalg import norm
 import svgpathtools as svgpath  # https://github.com/mathandy/svgpathtools
 
-# Custom
-from .generic_utils import vector_angle, R2D, close_enough, c_to_list, list_to_c
-from .flags import VERBOSE
+from pypattern.generic_utils import R2D
+from pypattern.generic_utils import close_enough
+from pypattern.generic_utils import c_to_list
+from pypattern.generic_utils import list_to_c
 
-class Edge():
-    """Edge -- an individual segement of a panel border connecting two panel vertices, 
-     the basic building block of panels
 
-    Edges are defined on 2D coordinate system with Start vertex as an origin and (End-Start) as Ox axis
+class Edge:
+    """Edge an individual segment of a panel border connecting two panel
+    vertices, the basic building block of panels
+
+    Edges are defined on 2D coordinate system with Start vertex as an origin
+        and (End-Start) as Ox axis
     """
 
-    def __init__(self, start=[0,0], end=[0,0]) -> None:
-        """ Simple edge inititalization.
+    def __init__(self, start=None, end=None) -> None:
+        """ Simple edge initialization.
         Parameters: 
-            * start, end: from/to vertcies that the edge connectes, describing the _interface_ of an edge
+            * start, end: from/to vertices that the edge connects,
+                describing the _interface_ of an edge
 
-            # TODOLOW Add support for fold schemes to allow guided folds at the edge (e.g. pleats)
+            # TODOLOW Add support for fold schemes to allow guided folds at
+            the edge (e.g. pleats)
         """
-
+        if start is None:
+            start = [0, 0]
+        if end is None:
+            end = [0, 0]
         assert not all(close_enough(s, e) for s, e in zip(start, end)), 'Start and end of an edge should differ'
 
         self.start = start  # NOTE: careful with references to vertex objects
@@ -31,10 +40,10 @@ class Edge():
         # Filled out at the panel assembly time
         self.geometric_id = 0
 
-    # Info
     def length(self):
         """Return current length of an edge.
-            Since vertices may change their locations externally, the length is dynamically evaluated
+            Since vertices may change their locations externally, the length
+            is dynamically evaluated
         """
         return self._straight_len()
 
@@ -43,11 +52,14 @@ class Edge():
         return norm(np.asarray(self.end) - np.asarray(self.start))
 
     def __eq__(self, __o: object, tol=1e-2) -> bool:
-        """Special implementation of comparison: same edges == edges can be connected by flat stitch
-            Edges are the same if their length is the same (if their flattened representation is the same)
-                => vertices do not have to be on the same locations
+        """Special implementation of comparison: same edges == edges can be
+        connected by flat stitch
+        Edges are the same if their length is the same (if their flattened
+        representation is the same) => vertices do not have to be on the
+        same locations
 
-            NOTE: The edges may not have the same curvature and still be considered equal ("connectible")
+            NOTE: The edges may not have the same curvature and still be
+            considered equal ("connectible")
         """
 
         if not isinstance(__o, Edge):
@@ -75,7 +87,7 @@ class Edge():
 
     def shortcut(self):
         """Return straight shortcut for an edge, 
-            as np.array
+            as `np.array`
         
             For straight edges it's the same as the edge itself
         """
@@ -114,8 +126,8 @@ class Edge():
 
     def to_edge_sequence(self, edge_verts):
         """
-        Returns the edge as a sequence of STRAIGHT edges based on points sampled on the edge
-        between self.start and self.end (edge_verts).
+        Returns the edge as a sequence of STRAIGHT edges based on points
+        sampled on the edge between `self.start` and `self.end` (edge_verts).
         """
         seq = EdgeSequence(Edge(self.start, edge_verts[0]))
         for i in range(1, len(edge_verts)):
@@ -171,12 +183,14 @@ class Edge():
         # Nothing to do for straight edge
         return self
 
-    def snap_to(self, new_start=[0, 0]):
+    def snap_to(self, new_start=None):
         """Translate the edge vertices s.t. the start is at new_start
         """
+        if new_start is None:
+            new_start = [0, 0]
+
         self.end[0] = self.end[0] - self.start[0] + new_start[0]
         self.end[1] = self.end[1] - self.start[1] + new_start[1]
-
         self.start[:] = new_start
         return self
 
@@ -196,14 +210,16 @@ class Edge():
         self.snap_to(curr_start)
 
         return self
-        
+
     def subdivide_len(self, fractions: list, connect_internal_verts=True):
         """Add intermediate vertices to an edge, 
-            splitting it's length according to fractions
+            splitting its length according to fractions
             while preserving the overall shape
 
-            * merge_internal -- if False, the newly inserted vertices would be defined
-                as independent objects for each edge. If True, vertex objects will be shared
+            * merge_internal -- if False, the newly inserted vertices would be
+                defined
+                as independent objects for each edge. If True, vertex objects
+                    will be shared
         """
         # Parametrized by length
         new_edges = self._subdivide(fractions, by_length=True)
@@ -228,7 +244,6 @@ class Edge():
         
         return new_edges
 
-
     # DRAFT This will not work for curves though
     #  def subdivide_point(self, point:list):
     #     """Subdivide the edge into two at the given point
@@ -248,7 +263,7 @@ class Edge():
         """
 
         frac = [abs(f) for f in fractions]
-        if not close_enough(fsum:=sum(frac), 1, 1e-4):
+        if not close_enough(fsum := sum(frac), 1, 1e-4):
             raise RuntimeError(f'Edge Subdivision::Error::fraction is incorrect. The sum {fsum} is not 1')
 
         vec = np.asarray(self.end) - np.asarray(self.start)
@@ -308,27 +323,33 @@ class Edge():
 class CircleEdge(Edge):
     """Curvy edge as circular arc"""
 
-    def __init__(self, start=[0, 0], end=[0, 0], cy=None) -> None:
+    def __init__(self, start=None, end=None, cy=None) -> None:
         """
             Define a circular arc edge
-            * start, end: from/to vertcies that the edge connectes
+            * start, end: from/to vertices that the edge connects
             * cy: third point on a circle arc (= control point). 
                 Expressed relatively w.r.t. distance between start and end. 
-                X value for control point is fixed at x=0.5 (edge center) to avoid ambiguity
+                X value for control point is fixed at x=0.5 (edge center) to
+                avoid ambiguity
             
-            NOTE: represening control point in relative coordinates
-            allows preservation of curvature (arc angle, relative raidus w.r.t. straight edge length)
+            NOTE: representing control point in relative coordinates
+            allows preservation of curvature (arc angle, relative radius
+            w.r.t. straight edge length)
             When distance between vertices shrinks / extends
 
             NOTE: full circle not supported: start & end should differ
         """
+        if start is None:
+            start = [0, 0]
+        if end is None:
+            end = [1, 0]
         super().__init__(start, end)
-        
         self.control_y = cy
 
     def length(self):
         """Return current length of an edge.
-            Since vertices may change their locations externally, the length is dynamically evaluated
+            Since vertices may change their locations externally, the length
+            is dynamically evaluated
         """
         return self._rel_radius() * self._straight_len() * self._arc_angle()
 
@@ -355,7 +376,7 @@ class CircleEdge(Edge):
         return self
     
     def reflect_features(self):
-        """Reflect edge fetures from one side of the edge to the other"""
+        """Reflect edge features from one side of the edge to the other"""
 
         self.control_y *= -1
 
@@ -363,7 +384,7 @@ class CircleEdge(Edge):
 
     def _subdivide(self, fractions: list, by_length=False):
         """Add intermediate vertices to an edge, 
-            splitting it's parametrization according to fractions
+            splitting its parametrization according to fractions
             while preserving the overall shape
         
             NOTE: param subdiv == length subdiv for circle arcs
@@ -371,8 +392,10 @@ class CircleEdge(Edge):
         # NOTE: subdivide_param() is the same as subdivide_len()
         # So parent implementation is ok
         # TODOLOW Implementation is very similar to CurveEdge param-based subdivision
+
+        from pypattern.edge_factory import CircleEdgeFactory  # TODO: ami - better solution?
         frac = [abs(f) for f in fractions]
-        if not close_enough(fsum:=sum(frac), 1, 1e-4):
+        if not close_enough(fsum := sum(frac), 1, 1e-4):
             raise RuntimeError(f'Edge Subdivision::Error::fraction is incorrect. The sum {fsum} is not 1')
 
         curve = self.as_curve()
@@ -386,7 +409,7 @@ class CircleEdge(Edge):
         # Convert to CircleEdge objects
         subedges = EdgeSequence()
         for curve in subcurves:
-            subedges.append(Edge.from_svg_curve(curve))
+            subedges.append(CircleEdgeFactory.from_svg_curve(curve))
         # Reference the first/last vertices correctly
         subedges[0].start = self.start
         subedges[-1].end = self.end
@@ -438,7 +461,8 @@ class CircleEdge(Edge):
     # NOTE: The following values are calculated at runtime to allow 
     # changes to control point after the edge definition
     def _rel_radius(self, abs_radius=None):
-        """Eval relative radius (w.r.t. straight distance) from 3-point representation"""
+        """Eval relative radius (w.r.t. straight distance) from 3-point
+        representation"""
 
         if abs_radius: 
             return abs_radius / self._straight_len()
@@ -446,7 +470,8 @@ class CircleEdge(Edge):
         # Using the formula for radius of circumscribed circle
         # https://en.wikipedia.org/wiki/Circumscribed_circle#Other_properties
 
-        # triangle sides, assuming the begginning and end of an edge are at (0, 0) and (1, 0)
+        # triangle sides, assuming the begginning and end of an edge are at
+        # (0, 0) and (1, 0)
         # accordingly
         a = 1
         b = norm([0.5, self.control_y])
@@ -470,111 +495,7 @@ class CircleEdge(Edge):
     def _is_large_arc(self):
         """Indicate if the arc sweeps the large or small angle"""
         return abs(self.control_y) > self._rel_radius()
-    
-    # Factories
-    @staticmethod
-    def from_points_angle(start, end, arc_angle, right=True):
-        """Construct circle arc from two fixed points and an angle
-        
-            arc_angle: 
-            
-            NOTE: Might fail on angles close to 2pi
-        """
-        # Big or small arc
-        if arc_angle > np.pi:
-            arc_angle = 2*np.pi - arc_angle
-            to_sum = True
-        else: 
-            to_sum = False
 
-        radius = 1 / np.sin(arc_angle / 2) / 2
-        h = 1 / np.tan(arc_angle / 2) / 2
-
-        control_y = radius + h if to_sum else radius - h  # relative control point
-        control_y *= -1 if right else 1
-
-        return CircleEdge(start, end, cy=control_y)
-
-    @staticmethod
-    def from_points_radius(start, end, radius, large_arc=False, right=True):
-        """Construct circle arc relative representation
-            from two fixed points and an (absolute) radius
-        """
-        # Find circle center
-        str_dist = norm(np.asarray(end) - np.asarray(start))
-        center_r = np.sqrt(radius**2 - str_dist**2 / 4)
-
-        # Find the absolute value of Y
-        control_y = radius + center_r if large_arc else radius - center_r
-
-        # Convert to relative
-        control_y = control_y / str_dist
-
-        # Flip sight according to "right" parameter
-        control_y *= -1 if right else 1 
-
-        return CircleEdge(start, end, cy=control_y)
-
-    @staticmethod
-    def from_rad_length(rad, length, right=True, start=None):
-        """NOTE: if start vertex is not provided, both vertices will be created
-            to match desired radius and length
-        """
-        max_len = 2 * np.pi * rad
-
-        if length > max_len:
-            raise ValueError(f'CircleEdge::ERROR::Incorrect length for specified radius')
-
-        large_arc = length > max_len / 2
-        if large_arc:
-            length = max_len - length
-
-        w_half = rad * np.sin(length / rad / 2)
-
-        edge = CircleEdge.from_points_radius(
-            [-w_half, 0], [w_half, 0], 
-            radius=rad, 
-            large_arc=large_arc,
-            right=right
-        )
-
-        if start: 
-            edge.snap_to(start)
-            edge.start = start
-
-        return edge
-
-
-    @staticmethod
-    def from_three_points(start, end, point_on_arc):
-        """Create a circle arc from 3 points (start, end and any point on an arc)
-        
-            NOTE: Control point specified in the same coord system as start and end
-            NOTE: points should not be on the same line
-        """
-
-        nstart, nend, npoint_on_arc = np.asarray(start), np.asarray(end), np.asarray(point_on_arc)
-
-        # https://stackoverflow.com/a/28910804
-        # Using complex numbers to calculate the center & radius
-        x, y, z = list_to_c([start, point_on_arc, end]) 
-        w = z - x
-        w /= y - x
-        c = (x - y)*(w - abs(w)**2)/2j/w.imag - x
-        # NOTE center = [c.real, c.imag]
-        rad = abs(c + x)
-
-        # Large/small arc
-        mid_dist = norm(npoint_on_arc - ((nstart + nend) / 2))
-
-        # Orientation
-        angle = vector_angle(npoint_on_arc - nstart, nend - nstart)  # +/-
-
-        return CircleEdge.from_points_radius(
-            start, end, radius=rad, 
-            large_arc=mid_dist > rad, right=angle > 0) 
-
-    # Finally
     def assembly(self):
         """Returns the dict-based representation of edges, 
             compatible with core -> BasePattern JSON (dict) 
@@ -599,18 +520,26 @@ class CircleEdge(Edge):
 class CurveEdge(Edge):
     """Curvy edge as Besier curve / B-spline"""
 
-    def __init__(self, start=[0, 0], end=[0, 0], control_points=[], relative=True) -> None:
-        """Define a Besier curve edge
-            * start, end: from/to vertcies that the edge connectes
+    def __init__(self, start=None, end=None, control_points=None,
+                 relative=True) -> None:
+        """Define a Bezier curve edge
+            * start, end: from/to vertices that the edge connects
             * control_points: coordinated of Bezier control points.
                 Specification of One control point creates the Quadratic Bezier, 
                 Specification of 2 control points creates Cubic Bezier. 
                 Other degrees are not supported.
 
             * relative: specify whether the control point coordinated are given 
-            relative to the edge length (True) or in 2D coordinate system of a panel (False)
+            relative to the edge length (True) or in 2D coordinate system of a
+                panel (False)
 
         """
+        if control_points is None:
+            control_points = []
+        if start is None:
+            start = [0, 0]
+        if end is None:
+            end = [0, 0]
         super().__init__(start, end)
 
         # FIXME Self-intersections tests
@@ -620,10 +549,11 @@ class CurveEdge(Edge):
         if len(self.control_points) > 2:
             raise NotImplementedError(f'{self.__class__.__name__}::Error::Up to 2 control points (cubic Bezier) are supported')
 
-        # Storing control points as relative since it preserves overall curve shape during
-        # edge extention/contration
+        # Storing control points as relative since it preserves overall curve
+        # shape during edge extension/contraction
         if not relative:
-            self.control_points = [self._abs_to_rel_2d(c).tolist() for c in self.control_points]
+            self.control_points = [self._abs_to_rel_2d(c).tolist()
+                                   for c in self.control_points]
 
     def length(self):
         """Length of Bezier curve edge"""
@@ -652,6 +582,7 @@ class CurveEdge(Edge):
             splitting its curve parametrization or overall length according to 
             fractions while preserving the overall shape
         """
+        from pypattern.edge_factory import CurveEdgeFactory  # TODO: ami - better solution?
         curve = self.as_curve()
 
         # Sub-curves
@@ -670,7 +601,7 @@ class CurveEdge(Edge):
         # Convert to CurveEdge objects
         subedges = EdgeSequence()
         for curve in subcurves:
-            subedges.append(Edge.from_svg_curve(curve))
+            subedges.append(CurveEdgeFactory.from_svg_curve(curve))
         # Reference the first/last vertices correctly
         subedges[0].start = self.start
         subedges[-1].end = self.end
@@ -719,7 +650,7 @@ class CurveEdge(Edge):
 
         return svgpath.QuadraticBezier(*params) if len(cp) < 2 else svgpath.CubicBezier(*params)
 
-    def linearize(self, n_verts_inside = 9):
+    def linearize(self, n_verts_inside=9):
         """Return a linear approximation of an edge using the same vertex objects
            NOTE: n_verts_inside = number of vertices (excluding the start
            and end vertices) used to create a linearization of the edge
@@ -750,11 +681,12 @@ class CurveEdge(Edge):
         poly = svgpath.bezier2polynomial(curve, return_poly1d=True)
         y = svgpath.imag(poly)
         dy = y.deriv()
-        y_extremizers = svgpath.polyroots(dy, realroots=True,
-                                          condition=lambda r: 0 < r < 1)
+        y_extremizers = svgpath.polyroots(
+            dy, realroots=True, condition=lambda r: 0 < r < 1)
 
         extreme_points = np.array(
-            [self._rel_to_abs_2d(c_to_list(curve.point(t))) for t in y_extremizers]
+            [self._rel_to_abs_2d(c_to_list(curve.point(t)))
+             for t in y_extremizers]
         )
 
         return extreme_points
@@ -776,43 +708,16 @@ class CurveEdge(Edge):
             })
 
     
-class EdgeSequence():
-    """Represents a sequence of (possibly chained) edges (e.g. every next edge starts from the same vertex that the previous edge ends with
-        and allows building some typical edge sequences
+class EdgeSequence:
+    """Represents a sequence of (possibly chained) edges (e.g. every next edge
+        starts from the same vertex that the previous edge ends with and
+        allows building some typical edge sequences
     """
-    def __init__(self, *args) -> None:
+    def __init__(self, *args, verbose: bool = False) -> None:
         self.edges = []
+        self.verbose = verbose
         for arg in args:
             self.append(arg)
-
-    @staticmethod
-    def from_svg_path(path:svgpath.Path, dist_tol=0.05):
-        """Convert SVG path given as svgpathtool Path object to an EdgeSequence
-            
-        * dist_tol: tolerance for vertex closeness to be considered the same vertex
-            NOTE: Assumes that the path can be chained
-        """
-        # Convert as is
-        edges = []
-        for seg in path._segments:
-            # skip segments of length zero
-            if close_enough(seg.length(), tol=dist_tol):
-                if VERBOSE:
-                    print('Skipped: ', seg)  
-                continue
-            edges.append(Edge.from_svg_curve(seg))
-
-        # Chain the edges
-        if len(edges) > 1: 
-            for i in range(1, len(edges)):
-
-                if not all(close_enough(s, e, tol=dist_tol) for s, e in zip(edges[i].start, edges[i - 1].end)):
-                    raise ValueError('EdgeSequence::from_svg_path::input path is not chained')
-
-                edges[i].start = edges[i - 1].end
-
-
-        return EdgeSequence(*edges)
 
     # ANCHOR Properties
     def __getitem__(self, i):
@@ -857,7 +762,7 @@ class EdgeSequence():
 
         for i in range(1, len(self.edges)):
             if self.edges[i].start is not self.edges[i-1].end:
-                if VERBOSE:
+                if self.verbose:
                     # This should be helpful to catch bugs
                     print(f'{self.__class__.__name__}::Warning!::Edge sequence is not properly chained')
                 return False
@@ -889,18 +794,20 @@ class EdgeSequence():
     def shortcut(self):
         """Opening of an edge sequence as a vector
         
-            # NOTE May not reflect true shortcut if the egdes were flipped but the order remained
+            # NOTE May not reflect true shortcut if the egdes were flipped but
+                the order remained
         """
         return np.array([self[0].start, self[-1].end]) 
 
     def bbox(self):
         """
-        This function evaluates the 2D bounding box of the current panel and returns the panel vertices which are
-        located on the bounding box (b_points).
+        This function evaluates the 2D bounding box of the current panel and
+        returns the panel vertices which are located on the bounding box (
+        b_points).
         Output:
             * bbox (list): [min_x, max_x, min_y, max_y] of verts_2d
-            * b_points (list): list of 2D vertices representing the b_points, i.e.,
-              the vertices of verts_2d located on the bounding box
+            * b_points (list): list of 2D vertices representing the b_points,
+            i.e., the vertices of verts_2d located on the bounding box
         """
         # Take linear version of the edges
         # To correctly process edges with extreme curvatures
@@ -909,8 +816,8 @@ class EdgeSequence():
         verts_2d = np.asarray(lin_edges.verts())
         mi = verts_2d.min(axis=0)
         ma = verts_2d.max(axis=0)
-        xs = [mi[0],ma[0]]
-        ys = [mi[1],ma[1]]
+        xs = [mi[0], ma[0]]
+        ys = [mi[1], ma[1]]
         #return points on bounding box
         b_points = []
         for v in verts_2d:
@@ -987,9 +894,11 @@ class EdgeSequence():
             v[1] += shift[1]
         return self
 
-    def snap_to(self, new_origin=[0, 0]):
+    def snap_to(self, new_origin=None):
         """Translate the edge seq vertices s.t. the first vertex is at new_origin
         """
+        if new_origin is None:
+            new_origin = [0, 0]
         start = copy(self[0].start)
         shift = [new_origin[0] - start[0], new_origin[1] - start[1]]
         self.translate_by(shift)
@@ -1024,8 +933,8 @@ class EdgeSequence():
         return self
 
     def extend(self, factor):
-        """Extend or shrink the edges along the line from start of the first edge to the 
-        end of the last edge in sequence
+        """Extend or shrink the edges along the line from start of the first
+        edge to the end of the last edge in sequence
         """
         # TODOLOW Version With preservation of total length?
         # TODOLOW Base extention factor on change in total length of edges rather
@@ -1072,8 +981,8 @@ class EdgeSequence():
 
         # https://demonstrations.wolfram.com/ReflectionMatrixIn2D/#more
         Ref = np.array([
-            [ 1 - 2 * vec[1]**2,  2*vec[0]*vec[1]],
-            [ 2*vec[0]*vec[1],    - 1 + 2 * vec[1]**2 ]
+            [1 - 2 * vec[1]**2,  2*vec[0]*vec[1]],
+            [2*vec[0]*vec[1],    - 1 + 2 * vec[1]**2]
             ])
         
         # translate -> reflect -> translate back
@@ -1088,11 +997,12 @@ class EdgeSequence():
 
     # ANCHOR New sequences & versions
     def copy(self):
-        """Create a copy of a current edge sequence preserving the chaining property of edge sequences"""
+        """Create a copy of a current edge sequence preserving the chaining
+        property of edge sequences"""
         new_seq = deepcopy(self)
 
         # deepcopy recreates the vertex objects on both sides of the edges
-        # in chaned edges those vertex objects are supposed to be shared
+        # in changed edges those vertex objects are supposed to be shared
         # by neighbor edges
 
         for i in range(1, len(new_seq)):
@@ -1106,8 +1016,10 @@ class EdgeSequence():
 
     def chained_order(self):
         """ Attempt to restore a chain in the EdgeSequence
-            The chained edge sequence may loose it's property if the edges were reveresed externally. 
-            This routine created a copy of the currect sequence with aligned the order of edges,
+            The chained edge sequence may lose its property if the edges
+                were reversed externally.
+            This routine created a copy of the correct sequence with aligned
+                the order of edges,
 
             It might be useful for various calculations
         

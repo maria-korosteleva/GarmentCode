@@ -1,23 +1,25 @@
-
 import numpy as np
 from copy import copy
 from argparse import Namespace
 from scipy.spatial.transform import Rotation as R
 
-# Custom
-from pattern.core import BasicPattern
-from .base import BaseComponent
-from .edge import Edge, EdgeSequence
-from .generic_utils import close_enough, vector_align_3D
-from .operators import cut_into_edge
-from .interface import Interface
+from external.pattern.core import BasicPattern
+from pypattern.base import BaseComponent
+from pypattern.edge import Edge, EdgeSequence
+from pypattern.generic_utils import close_enough, vector_align_3D
+from pypattern.operators import cut_into_edge
+from pypattern.interface import Interface
+
 
 class Panel(BaseComponent):
-    """ A Base class for defining a Garment component corresponding to a single flat fiece of fabric
+    """ A Base class for defining a Garment component corresponding to a single
+        flat fiece of fabric
     
-    Defined as a collection of edges on a 2D grid with specified 3D placement (world coordinates)
+    Defined as a collection of edges on a 2D grid with specified 3D placement
+        (world coordinates)
     
-    NOTE: All operations methods return 'self' object to allow sequential applications
+    NOTE: All operations methods return 'self' object to allow sequential
+        applications
 
     """
     def __init__(self, name) -> None:
@@ -26,11 +28,11 @@ class Panel(BaseComponent):
         self.translation = np.zeros(3)
         self.rotation = R.from_euler('XYZ', [0, 0, 0])  # zero rotation
         # NOTE: initiating with empty sequence allows .append() to it safely
-        self.edges =  EdgeSequence() 
+        self.edges = EdgeSequence()
 
     # Info
     # DRAFT 
-    def is_right_inside_edge(self, edge:Edge):
+    def is_right_inside_edge(self, edge: Edge):
         """ Check if the inside of the panel is on the right side
             of an edge
         """
@@ -43,14 +45,15 @@ class Panel(BaseComponent):
             # so it's enough to chech just one
             test_edge = test_edge[0]
 
-        test_edge_3d = [self.point_to_3D(test_edge.start), self.point_to_3D(test_edge.end)]
+        test_edge_3d = [self.point_to_3D(test_edge.start),
+                        self.point_to_3D(test_edge.end)]
         test_vec_3d = test_edge_3d[1] - test_edge_3d[0]
 
         center_of_mass = self.point_to_3D(self._center_2D())
 
         # We can determine the side based on relationship between the norm and 
-        # the edge
-        # Knowing that the norm is defined by counterclockwise direction of edges
+        # the edge knowing that the norm is defined by counterclockwise
+        # direction of edges
         cross = np.cross(test_vec_3d, center_of_mass - test_edge_3d[0])
 
         return np.dot(cross, norm) < 0
@@ -87,8 +90,10 @@ class Panel(BaseComponent):
             to be used as pivot for translation and rotation
 
         Parameters:
-            * point_2d -- desired point 2D point w.r.t current pivot (origin) of panel local space
-            * replicate_placement -- will replicate the location of the panel as it was before pivot change
+            * point_2d -- desired point 2D point w.r.t current pivot (origin)
+                of panel local space
+            * replicate_placement -- will replicate the location of the panel
+                as it was before pivot change
                 default - False (no adjustment, the panel may "jump" in 3D)
         """
         point_2d = copy(point_2d)  # Remove unwanted object reference 
@@ -108,7 +113,8 @@ class Panel(BaseComponent):
         """
         vertices = np.asarray(self.edges.verts())
 
-        # out of 2D bounding box sides' midpoints choose the one that is highest in 3D
+        # out of 2D bounding box sides' midpoints choose the one that is
+        # highest in 3D
         top_right = vertices.max(axis=0)
         low_left = vertices.min(axis=0)
         mid_x = (top_right[0] + low_left[0]) / 2
@@ -125,7 +131,6 @@ class Panel(BaseComponent):
         top_mid_point = mid_points_3D[:, 1].argmax()
 
         self.set_pivot(mid_points_2D[top_mid_point])
-
         return self
 
     def translate_by(self, delta_vector):
@@ -133,14 +138,12 @@ class Panel(BaseComponent):
         self.translation = self.translation + np.array(delta_vector)
         # NOTE: One may also want to have autonorm only on the assembly?
         self.autonorm()
-
         return self
     
     def translate_to(self, new_translation):
         """Set panel translation to be exactly that vector"""
         self.translation = np.asarray(new_translation)
         self.autonorm()
-
         return self
     
     def rotate_by(self, delta_rotation: R):
@@ -149,7 +152,6 @@ class Panel(BaseComponent):
         """
         self.rotation = delta_rotation * self.rotation
         self.autonorm()
-
         return self
 
     def rotate_to(self, new_rot: R):
@@ -160,34 +162,35 @@ class Panel(BaseComponent):
             raise ValueError(f'{self.__class__.__name__}::Error::Only accepting rotations in scipy format')
         self.rotation = new_rot
         self.autonorm()
-
         return self
 
     def rotate_align(self, vector):
-        """Set panel rotation s.t. it's norm is aligned with a given 3D vector"""
+        """Set panel rotation s.t. it's norm is aligned with a given 3D
+        vector"""
 
         vector = np.asarray(vector)
         vector = vector / np.linalg.norm(vector)
         n = self.norm()
         self.rotate_by(vector_align_3D(n, vector))
-
         return self
 
     def center_x(self):
-        """Adjust translation over x s.t. the center of the panel is aligned with the Y axis (center of the body)"""
+        """Adjust translation over x s.t. the center of the panel is aligned
+        with the Y axis (center of the body)"""
 
         center_3d = self.point_to_3D(self._center_2D())
         self.translation[0] += -center_3d[0]
-
         return self
 
     def autonorm(self):
-        """Update right/wrong side orientation, s.t. the normal of the surface looks outside of the world origin, 
+        """Update right/wrong side orientation, s.t. the normal of the surface
+            looks outside he world origin,
             taking into account the shape and the global position.
         
             This should provide correct panel orientation in most cases.
 
-            NOTE: for best results, call autonorm after translation specification
+            NOTE: for best results, call autonorm after translation
+                specification
         """
         norm_dr = self.norm()
         
@@ -196,14 +199,13 @@ class Panel(BaseComponent):
             # Swap if wrong  
             self.edges.reverse()
 
-        return self
-
-    def mirror(self, axis=[0, 1]):
-        """Swap this panel with it's mirror image
+    def mirror(self, axis=None):
+        """Swap this panel with its mirror image
         
             Axis specifies 2D axis to swap around: Y axis by default
         """
-
+        if axis is None:
+            axis = [0, 1]
         # Case Around Y
         if close_enough(axis[0], tol=1e-4):  # reflection around Y
 
@@ -224,7 +226,6 @@ class Panel(BaseComponent):
         else:
             # TODO Any other axis
             raise NotImplementedError(f'{self.name}::Error::Mirrowing over arbitrary axis is not implemented')
-
         return self
 
     def add_dart(self, dart_shape, edge, offset, right=True, edge_seq=None, int_edge_seq=None, ):
@@ -259,7 +260,7 @@ class Panel(BaseComponent):
     # ANCHOR - Build the panel -- get serializable representation
     def assembly(self):
         """Convert panel into serialazable representation
-        
+
          NOTE: panel EdgeSequence is assumed to be a single loop of edges
         """
         # always start from zero for consistency between panels
@@ -302,7 +303,6 @@ class Panel(BaseComponent):
 
         # Assembly stitching info (panel might have inner stitches)
         spattern.pattern['stitches'] = self.stitching_rules.assembly()
-            
         return spattern
 
     # ANCHOR utils
@@ -314,7 +314,8 @@ class Panel(BaseComponent):
             and end vertices) used to create a linearization of an edge
         """
         # NOTE: assuming that edges are organized in a loop and share vertices
-        lin_edges = EdgeSequence([e.linearize(n_verts_inside) for e in self.edges])
+        lin_edges = EdgeSequence([e.linearize(n_verts_inside)
+                                  for e in self.edges])
         verts = lin_edges.verts()
 
         return np.mean(verts, axis=0)
@@ -327,16 +328,14 @@ class Panel(BaseComponent):
 
         point_3d = self.rotation.apply(point_2d)
         point_3d += self.translation
-
         return point_3d
-
 
     def norm(self):
         """Normal direction for the current panel using bounding box"""
 
         # To make norm evaluation work for non-convex panels
-        # Determine points located on bounding box (b_verts_2d),
-        # compute norm of consecutive b_verts_3d and the b_verts_3d mean (b_center_3d),
+        # Determine points located on bounding box (b_verts_2d), compute
+        # norm of consecutive b_verts_3d and the b_verts_3d mean (b_center_3d),
         # then weight the norms.
         # The dominant norm direction should be the correct one
 

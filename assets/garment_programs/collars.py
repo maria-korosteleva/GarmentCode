@@ -1,28 +1,24 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-# Custom
 import pypattern as pyp
 
-# Other assets
-
-from .bands import StraightBandPanel
-from .circle_skirt import CircleArcPanel
+from assets.garment_programs.bands import StraightBandPanel
+from assets.garment_programs.circle_skirt import CircleArcPanel
 
 
-# Collar shapes withough extra panels
+# # ------ Collar shapes withough extra panels ------
+
 def VNeckHalf(depth, width, **kwargs):
     """Simple VNeck design"""
 
-    edges = pyp.EdgeSequence(pyp.Edge([0, 0], [width / 2,-depth]))
-    
+    edges = pyp.EdgeSequence(pyp.Edge([0, 0], [width / 2, -depth]))
     return edges
 
 def SquareNeckHalf(depth, width, **kwargs):
     """Square design"""
 
-    edges = pyp.esf.from_verts([0, 0], [0, -depth], [width / 2, -depth])
-    
+    edges = pyp.EdgeSeqFactory.from_verts([0, 0], [0, -depth], [width / 2, -depth])
     return edges
 
 def TrapezoidNeckHalf(depth, width, angle=90, verbose=True, **kwargs):
@@ -45,8 +41,7 @@ def TrapezoidNeckHalf(depth, width, angle=90, verbose=True, **kwargs):
 
         return VNeckHalf(depth, width)
 
-    edges = pyp.esf.from_verts([0, 0], [bottom_x, -depth], [width / 2, -depth])
-
+    edges = pyp.EdgeSeqFactory.from_verts([0, 0], [bottom_x, -depth], [width / 2, -depth])
     return edges
 
 def CurvyNeckHalf(depth, width, flip=False, **kwargs):
@@ -62,21 +57,23 @@ def CurvyNeckHalf(depth, width, flip=False, **kwargs):
 def CircleArcNeckHalf(depth, width, angle=90, flip=False, **kwargs):
     """Collar with a side represented by a circle arc"""
     # 1/4 of a circle
-    edges = pyp.EdgeSequence(pyp.CircleEdge.from_points_angle(
+    edges = pyp.EdgeSequence(pyp.CircleEdgeFactory.from_points_angle(
         [0, 0], [width / 2,-depth], arc_angle=np.deg2rad(angle),
         right=(not flip)
     ))
 
     return edges
 
+
 def CircleNeckHalf(depth, width, **kwargs):
     """Collar that forms a perfect circle arc when halfs are stitched"""
 
     # Take a full desired arc and half it!
-    circle = pyp.CircleEdge.from_three_points([0, 0], [width, 0], [width / 2, -depth])
-
+    circle = pyp.CircleEdgeFactory.from_three_points(
+        [0, 0],
+        [width, 0],
+        [width / 2, -depth])
     subdiv = circle.subdivide_len([0.5, 0.5])
-
     return pyp.EdgeSequence(subdiv[0])
 
 def Bezier2NeckHalf(depth, width, flip=False, x=0.5, y=0.3, **kwargs):
@@ -92,7 +89,7 @@ def Bezier2NeckHalf(depth, width, flip=False, x=0.5, y=0.3, **kwargs):
 # # ------ Collars with panels ------
 
 class NoPanelsCollar(pyp.Component):
-    """Face collar class that only only forms the projected shapes """
+    """Face collar class that only forms the projected shapes """
     
     def __init__(self, name, body, design) -> None:
         super().__init__(name)
@@ -149,9 +146,11 @@ class Turtle(pyp.Component):
         height_p = body['height'] - body['head_l'] + depth
 
         self.front = StraightBandPanel(
-            f'{tag}_turtle_front', length_f, depth).translate_by([-length_f / 2, height_p, 10])
+            f'{tag}_turtle_front', length_f, depth).translate_by(
+            [-length_f / 2, height_p, 10])
         self.back = StraightBandPanel(
-            f'{tag}_turtle_back', length_b, depth).translate_by([-length_b / 2, height_p, -10])
+            f'{tag}_turtle_back', length_b, depth).translate_by(
+            [-length_b / 2, height_p, -10])
 
         self.stitching_rules.append((
             self.front.interfaces['right'], 
@@ -167,12 +166,13 @@ class Turtle(pyp.Component):
             )
         })
 
+
 class SimpleLapelPanel(pyp.Panel):
     """A panel for the front part of simple Lapel"""
     def __init__(self, name, length, max_depth) -> None:
         super().__init__(name)
 
-        self.edges = pyp.esf.from_verts(
+        self.edges = pyp.EdgeSeqFactory.from_verts(
             [0, 0], [max_depth, 0], [max_depth, -length]
         )
 
@@ -221,11 +221,13 @@ class SimpleLapel(pyp.Component):
         height_p = body['height'] - body['head_l'] + depth * 2
         
         self.front = SimpleLapelPanel(
-            f'{tag}_lapel_front', length_f, depth).translate_by([-depth * 2, height_p, 30])
+            f'{tag}_lapel_front', length_f, depth).translate_by(
+            [-depth * 2, height_p, 30])
 
         if standing:
             self.back = StraightBandPanel(
-                f'{tag}_lapel_back', length_b, depth).translate_by([-length_b / 2, height_p, -10])
+                f'{tag}_lapel_back', length_b, depth).translate_by(
+                [-length_b / 2, height_p, -10])
         else:
             # A curved back panel that follows the collar opening
             rad, angle, _ = b_collar[0].as_radius_angle()
@@ -233,7 +235,6 @@ class SimpleLapel(pyp.Component):
                 f'{tag}_lapel_back', rad, depth, angle  
             ).translate_by([-length_b, height_p, -10])
             self.back.rotate_by(R.from_euler('XYZ', [90, 45, 0], degrees=True))
-
 
         self.stitching_rules.append((
             self.front.interfaces['to_collar'], 

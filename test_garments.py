@@ -1,25 +1,12 @@
-
 from datetime import datetime
+import shutil
 from pathlib import Path
 import yaml
-import sys
-import shutil 
 
-sys.path.insert(0, './external/')
-sys.path.insert(1, './')
-
-# Custom
-from customconfig import Properties
-from assets.garment_programs.skirt_paneled import *
-from assets.garment_programs.tee import *
-from assets.garment_programs.godet import *
-from assets.garment_programs.bodice import *
-from assets.garment_programs.pants import *
-from assets.garment_programs.meta_garment import *
-from assets.garment_programs.bands import *
-from assets.garment_programs.random_tests import *   # DEBUG
-
+from assets.garment_programs.meta_garment import MetaGarment
 from assets.body_measurments.body_params import BodyParameters
+from external.customconfig import Properties
+
 
 if __name__ == '__main__':
 
@@ -38,6 +25,7 @@ if __name__ == '__main__':
         # 'our_dress': r"G:\My Drive\GarmentCode\sewing_siggraph_garment\designs\dress_design_params.yaml"
         # 'debug': './Logs/rand_C3EXMEK4MK_design_params.yaml'   #    
         #'default': './assets/design_params/default.yaml',
+
         # 'modern': './assets/design_params/modern.yaml',
         # 'Dress_20s': './assets/design_params/dress_20s.yaml',
         # 'Dress_30s': './assets/design_params/dress_30s_header.yaml',
@@ -63,7 +51,7 @@ if __name__ == '__main__':
         test_garments.append(MetaGarment(df, body, designs[df]))
 
     for piece in test_garments:
-        pattern = piece()
+        pattern = piece.assembly()
 
         if piece.is_self_intersecting():
             print(f'{piece.name} is Self-intersecting')

@@ -1,33 +1,30 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-# Custom
-from pattern.wrappers import VisPattern
-from .base import BaseComponent
+from pypattern.base import BaseComponent
+from external.pattern.wrappers import VisPattern
+
 
 class Component(BaseComponent):
-    """Garment element (or whole piece) composed of simpler connected garment elements"""
+    """Garment element (or whole piece) composed of simpler connected garment
+    elements"""
 
     # TODOLOW Overload copy -- respecting edge sequences -- never had any problems though
 
     def __init__(self, name) -> None:
         super().__init__(name)
 
-        self.subs = []  # list of generative sub-components
+        self.subs = []  # list of generative subcomponents
 
-    # Operations -- update object in-place
-    # All return self object to allow chained operations
-
-    # Placements
     def pivot_3D(self):
         """Pivot of a component as a block
 
-            NOTE: The relation of pivots of subblocks needs to be 
+            NOTE: The relation of pivots of sub-blocks needs to be
             preserved in any placement operations on components
         """
         mins, maxes = self.bbox3D()
-
-        return np.array(((mins[0] + maxes[0]) / 2, maxes[1], (mins[-1] + maxes[-1]) / 2))
+        return np.array(((mins[0] + maxes[0]) / 2, maxes[1],
+                         (mins[-1] + maxes[-1]) / 2))
 
     def translate_by(self, delta_vector):
         """Translate component by a vector"""
@@ -43,7 +40,7 @@ class Component(BaseComponent):
             subs.translate_to(np.asarray(new_translation) + (sub_pivot - pivot))
         return self
 
-    def rotate_by(self, delta_rotation:R):
+    def rotate_by(self, delta_rotation: R):
         """Rotate component by a given rotation"""
         pivot = self.pivot_3D()
         for subs in self._get_subcomponents():
@@ -61,10 +58,9 @@ class Component(BaseComponent):
             f'Component::Error::rotate_to is not supported on component level.'
             'Use relative <rotate_by()> method instead')
 
-
-    # Mirror
     def mirror(self, axis=[0, 1]):
-        """Swap this component with it's mirror image by recursively mirroring sub-components
+        """Swap this component with its mirror image by recursively mirroring
+        subcomponents
         
             Axis specifies 2D axis to swap around: Y axis by default
         """
@@ -72,10 +68,10 @@ class Component(BaseComponent):
             subs.mirror(axis)
         return self
 
-    # Build the component -- get serializable representation
     def assembly(self):
         """Construction process of the garment component
-        
+
+        get serializable representation
         Returns: simulator friendly description of component sewing pattern
         """
         spattern = VisPattern()
@@ -85,21 +81,20 @@ class Component(BaseComponent):
         if not subs:
             return spattern
 
-        # Simple merge of sub-component representations
+        # Simple merge of subcomponent representations
         for sub in subs:
-            sub_raw = sub().pattern
+            sub_raw = sub.assembly().pattern
 
             # simple merge of panels
-            spattern.pattern['panels'] = {**spattern.pattern['panels'], **sub_raw['panels']}
+            spattern.pattern['panels'] = {**spattern.pattern['panels'],
+                                          **sub_raw['panels']}
 
             # of stitches
             spattern.pattern['stitches'] += sub_raw['stitches']
 
         spattern.pattern['stitches'] += self.stitching_rules.assembly()
-
         return spattern   
 
-    # Utilities
     def bbox3D(self):
         """Evaluate 3D bounding box of the current component"""
         
@@ -121,8 +116,15 @@ class Component(BaseComponent):
 
     # Subcomponents
     def _get_subcomponents(self):
-        """Unique set of subcomponents defined in the self.subs list or as attributes of the object"""
+        """Unique set of subcomponents defined in the `self.subs` list or as
+        attributes of the object"""
 
-        all_attrs = [getattr(self, name) for name in dir(self) if name[:2] != '__' and name[-2:] != '__']
-        return list(set([att for att in all_attrs if isinstance(att, BaseComponent)] + self.subs))
+        # TODO: ami - is this the right way to do it? what if we start using
+        #  other attributes?
+        all_attrs = [getattr(self, name)
+                     for name in dir(self)
+                     if name[:2] != '__' and name[-2:] != '__']
+        return list(set([att
+                         for att in all_attrs
+                         if isinstance(att, BaseComponent)] + self.subs))
 

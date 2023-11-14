@@ -1,7 +1,7 @@
-# Custom
 import pypattern as pyp
-from . import skirt_paneled
-from .circle_skirt import CircleArcPanel
+from assets.garment_programs.circle_skirt import CircleArcPanel
+from assets.garment_programs import skirt_paneled
+
 
 class StraightBandPanel(pyp.Panel):
     """One panel for a panel skirt"""
@@ -10,7 +10,8 @@ class StraightBandPanel(pyp.Panel):
         super().__init__(name)
 
         # define edge loop
-        self.edges = pyp.esf.from_verts([0,0], [0, depth], [width, depth], [width, 0], loop=True)
+        self.edges = pyp.EdgeSeqFactory.from_verts(
+            [0, 0], [0, depth], [width, depth], [width, 0], loop=True)
 
         # define interface
         self.interfaces = {
@@ -75,8 +76,12 @@ class StraightWB(pyp.Component):
             'top_f': self.front.interfaces['top'],
             'top_b': self.back.interfaces['top'],
 
-            'bottom': pyp.Interface.from_multiple(self.front.interfaces['bottom'], self.back.interfaces['bottom']),
-            'top': pyp.Interface.from_multiple(self.front.interfaces['top'], self.back.interfaces['top']),
+            'bottom': pyp.Interface.from_multiple(
+                self.front.interfaces['bottom'],
+                self.back.interfaces['bottom']),
+            'top': pyp.Interface.from_multiple(
+                self.front.interfaces['top'], 
+                self.back.interfaces['top']),
         }
 
     def define_panels(self):
@@ -93,8 +98,10 @@ class StraightWB(pyp.Component):
             back_width, 
             self.width)
 
+
 class FittedWB(StraightWB):
-    """Also known as Yoke: a waistband that ~follows the body curvature, and hence sits tight
+    """Also known as Yoke: a waistband that ~follows the body curvature,
+            and hence sits tight
         Made out of two circular arc panels
     """
     def __init__(self, body, design, rise=1.) -> None:
@@ -105,6 +112,8 @@ class FittedWB(StraightWB):
                 of the given rise level. If 1. or anything less than waistband width, 
                 the rise is ignored and the FittedWB is created to sit well on the waist
         """
+        self.bottom_width = None
+        self.bottom_back_fraction = None
         super().__init__(body, design, rise)
 
     def define_panels(self):
@@ -123,7 +132,7 @@ class FittedWB(StraightWB):
             'wb_back', 
             self.width, 
             self.top_width * self.top_back_fraction, 
-            self.bottom_width * self.bottom_back_fraction)     
+            self.bottom_width * self.bottom_back_fraction)
 
 
 class CuffBand(pyp.Component):
@@ -152,13 +161,16 @@ class CuffBand(pyp.Component):
 
         self.interfaces = {
             'bottom': pyp.Interface.from_multiple(
-                self.front.interfaces['bottom'], self.back.interfaces['bottom']),
+                self.front.interfaces['bottom'], 
+                self.back.interfaces['bottom']),
             'top_front': self.front.interfaces['top'],
             'top_back': self.back.interfaces['top'],
             'top': pyp.Interface.from_multiple(
-                self.front.interfaces['top'], self.back.interfaces['top']),
+                self.front.interfaces['top'], 
+                self.back.interfaces['top']),
         }
-    
+
+
 class CuffSkirt(pyp.Component):
     """A skirt-like flared cuff """
 
@@ -194,8 +206,10 @@ class CuffSkirt(pyp.Component):
             'top_front': self.front.interfaces['top'],
             'top_back': self.back.interfaces['top'],
             'bottom': pyp.Interface.from_multiple(
-                self.front.interfaces['bottom'], self.back.interfaces['bottom']),
+                self.front.interfaces['bottom'], 
+                self.back.interfaces['bottom']),
         }
+
 
 class CuffBandSkirt(pyp.Component):
     """ Cuff class for sleeves or pants

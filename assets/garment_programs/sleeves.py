@@ -1,12 +1,11 @@
+from copy import deepcopy
+
 import numpy as np
 from scipy.spatial.transform import Rotation as R
-from scipy.optimize import minimize
-import svgpathtools as svgpath
-from copy import copy, deepcopy
 
-# Custom
+from assets.garment_programs import bands
 import pypattern as pyp
-from . import bands
+
 
 # ------  Armhole shapes ------
 def ArmholeSquare(incl, width, angle,  invert=True, **kwargs):
@@ -18,13 +17,13 @@ def ArmholeSquare(incl, width, angle,  invert=True, **kwargs):
         returns edge sequence and part to be preserved  inverted 
     """
 
-    edges = pyp.esf.from_verts([0, 0], [incl, 0],  [incl, width])
+    edges = pyp.EdgeSeqFactory.from_verts([0, 0], [incl, 0],  [incl, width])
     if not invert:
         return edges, None
     
     sina, cosa = np.sin(angle), np.cos(angle)
     l = edges[0].length()
-    sleeve_edges = pyp.esf.from_verts(
+    sleeve_edges = pyp.EdgeSeqFactory.from_verts(
         [incl + l*sina, - l*cosa], 
         [incl, 0],  [incl, width])
     
@@ -34,16 +33,18 @@ def ArmholeSquare(incl, width, angle,  invert=True, **kwargs):
     return edges, sleeve_edges
 
 
-def ArmholeAngle(incl, width, angle, incl_coeff=0.2, w_coeff=0.2,  invert=True, **kwargs):
+def ArmholeAngle(incl, width, angle, incl_coeff=0.2, w_coeff=0.2,
+                 invert=True, **kwargs):
     """Piece-wise smooth armhole shape"""
     diff_incl = incl * (1 - incl_coeff)
-    edges = pyp.esf.from_verts([0, 0], [diff_incl, w_coeff * width],  [incl, width])
+    edges = pyp.EdgeSeqFactory.from_verts(
+        [0, 0], [diff_incl, w_coeff * width], [incl, width])
     if not invert:
         return edges, None
 
     sina, cosa = np.sin(angle), np.cos(angle)
     l = edges[0].length()
-    sleeve_edges = pyp.esf.from_verts(
+    sleeve_edges = pyp.EdgeSeqFactory.from_verts(
         [diff_incl + l*sina, w_coeff * width - l*cosa], 
         [diff_incl, w_coeff * width],  [incl, width])
     # TODOLOW Bend instead of rotating to avoid sharp connection
@@ -113,7 +114,8 @@ class SleevePanel(pyp.Panel):
         # TODO end_width to be not less then the width of the arm??
 
         shoulder_angle = np.deg2rad(body['shoulder_incl'])
-        rest_angle = max(np.deg2rad(design['sleeve_angle']['v']), shoulder_angle)
+        rest_angle = max(np.deg2rad(design['sleeve_angle']['v']),
+                         shoulder_angle)
         standing = design['standing_shoulder']['v']
 
         # Calculating extension size & end size before applying ruffles
@@ -127,12 +129,12 @@ class SleevePanel(pyp.Panel):
             open_shape.extend(design['connect_ruffle']['v'])
 
         # -- Main body of a sleeve --
-        arm_width = abs(open_shape[0].start[1] - open_shape[-1].end[1]) 
+        arm_width = abs(open_shape[0].start[1] - open_shape[-1].end[1])
         # Length from the border of the opening to the end of the sleeve
         length = design['length']['v'] * (body['arm_length'] - opening_length)
         if length + length_shift > 0:  # NOTE: Avoid incorrect state (but it makes the result less precise)
             length += length_shift
-        self.edges = pyp.esf.from_verts(
+        self.edges = pyp.EdgeSeqFactory.from_verts(
             [0, 0], [0, -end_width], [length, -arm_width]
         )
 
@@ -159,7 +161,6 @@ class SleevePanel(pyp.Panel):
 
             self.edges.substitute(top_edge, [standing_edge, top_edge])
 
-
         # Interfaces
         self.interfaces = {
             # NOTE: interface needs reversing because the open_shape was reversed for construction
@@ -173,8 +174,7 @@ class SleevePanel(pyp.Panel):
         self.set_pivot(self.edges[1].end)
         self.translate_to(
             [- body['shoulder_w'] / 2,
-            body['height'] - body['head_l'] - body['armscye_depth'],
-            0]) 
+            body['height'] - body['head_l'] - body['armscye_depth'], 0])
         # NOTE: Extra 5 deg account for the fact that the arm is ~conic shape
         # Makes draping of sleeves less problematic
         self.rotate_to(R.from_euler(
@@ -183,8 +183,6 @@ class SleevePanel(pyp.Panel):
 
 class Sleeve(pyp.Component):
     """Trying to do a proper sleeve"""
-
-
     def __init__(self, tag, body, design, front_w, back_w): 
         """Defintion of a sleeve: 
             * front_w, back_w: the width front and the back of the top 
@@ -199,7 +197,8 @@ class Sleeve(pyp.Component):
         design = design['sleeve']
         sleeve_balance = body['_base_sleeve_balance'] / 2
 
-        rest_angle = max(np.deg2rad(design['sleeve_angle']['v']), np.deg2rad(body['shoulder_incl']))
+        rest_angle = max(np.deg2rad(design['sleeve_angle']['v']),
+                         np.deg2rad(body['shoulder_incl']))
 
         connecting_width = design['connecting_width']['v']
         smoothing_coeff = design['smoothing_coeff']['v']
@@ -246,17 +245,21 @@ class Sleeve(pyp.Component):
         # ----- Get sleeve panels -------
         self.f_sleeve = SleevePanel(
             f'{tag}_sleeve_f', body, design, front_opening,
-            length_shift=-design['cuff']['cuff_len']['v'] * body['arm_length'] if design['cuff']['type']['v'] else 0
+            length_shift=-design['cuff']['cuff_len']['v'] * body['arm_length']
+            if design['cuff']['type']['v'] else 0
             ).translate_by([0, 0, 15])
         self.b_sleeve = SleevePanel(
             f'{tag}_sleeve_b', body, design, back_opening,
-            length_shift=-design['cuff']['cuff_len']['v'] * body['arm_length'] if design['cuff']['type']['v'] else 0
+            length_shift=-design['cuff']['cuff_len']['v'] * body['arm_length']
+            if design['cuff']['type']['v'] else 0
             ).translate_by([0, 0, -15])
 
         # Connect panels
         self.stitching_rules = pyp.Stitches(
-            (self.f_sleeve.interfaces['top'], self.b_sleeve.interfaces['top']),
-            (self.f_sleeve.interfaces['bottom'], self.b_sleeve.interfaces['bottom']),
+            (self.f_sleeve.interfaces['top'],
+             self.b_sleeve.interfaces['top']),
+            (self.f_sleeve.interfaces['bottom'],
+             self.b_sleeve.interfaces['bottom']),
         )
 
         # Interfaces
@@ -287,7 +290,7 @@ class Sleeve(pyp.Component):
             self.cuff.rotate_by(
                 R.from_euler(
                     'XYZ', 
-                    [0, 0, -90 + body['arm_pose_angle']],   # from -Ox direction
+                    [0, 0, -90 + body['arm_pose_angle']],  # from -Ox direction
                     degrees=True
                 )
             )
