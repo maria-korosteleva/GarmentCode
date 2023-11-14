@@ -4,7 +4,7 @@ body:
   height: 129
   head_l: 24.7    # nape of the neck to the top -- ok to use some average value
 
-  sholder_w: 33.4   
+  shoulder_w: 33.4   
   armscye_depth: 14  # Nape of the Neck to armscye depth on the back
   shoulder_incl: 10  # degrees  
 

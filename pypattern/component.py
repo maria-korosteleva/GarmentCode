@@ -2,15 +2,13 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 # Custom
-from pattern.core import BasicPattern
 from pattern.wrappers import VisPattern
 from .base import BaseComponent
-from .interface import Interface
 
 class Component(BaseComponent):
     """Garment element (or whole piece) composed of simpler connected garment elements"""
 
-    # TODO Overload copy -- respecting edge sequences
+    # TODOLOW Overload copy -- respecting edge sequences -- never had any problems though
 
     def __init__(self, name) -> None:
         super().__init__(name)

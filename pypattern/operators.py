@@ -39,7 +39,6 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
             * Newly inserted edges
             * New interface object corresponding to new edges
     """
-    # TODO specifying desired 2D rotation of target_shape?
     # TODO Support any number of edges in the target corner edges
 
     # ---- Evaluate optimal projection of the target shape onto the corner
@@ -133,7 +132,7 @@ def cut_corner(target_shape:EdgeSequence, target_interface:Interface):
     if isinstance(panel.interfaces, list):
         panel.interfaces.append(new_int)
     else:
-        panel.interfaces[f'int_{len(panel.interfaces)}'] = new_int   # TODO Uniqueness of the name?
+        panel.interfaces[f'int_{len(panel.interfaces)}'] = new_int  
 
     return corner_shape[1:-1], new_int
 
@@ -159,11 +158,13 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, flip_targe
         * Edges that lie on the original base edge 
     """
 
-    # TODO Not only for Y-aligned shapes
+    # TODOLOW Not only for Y-aligned shapes
+    # TODOLOW Add a parameter: Align target_shape by center or from the start of the offset
+        # NOTE: the optimization routine might be different for the two options
 
     if isinstance(target_shape, EdgeSequence):
         return cut_into_edge_single(
-            target_shape, base_edge, offset, right, flip_target, tol)
+            target_shape, base_edge, offset, right, tol)
 
     # center of the shape
     shortcuts = np.asarray([e.shortcut() for e in target_shape])
@@ -198,12 +199,9 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True, flip_targe
     
     return all_new_edges, new_in_edges, int_edges
 
-    
-def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True, flip_target=False, tol=1e-2):
+def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True, tol=1e-2):
     """ Insert edges of the target_shape into the given base_edge, starting from offset
         edges in target shape are rotated s.t. start -> end vertex vector is aligned with the edge 
-
-        NOTE: for now the base_edge is treated as straight edge
 
         Parameters:
         * target_shape -- list of single edge or chained edges to be inserted in the edge. 
@@ -216,8 +214,6 @@ def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True, fli
         * Edges corresponding to the target shape
         * Edges that lie on the original base edge 
     """
-
-    # TODO shape flipping 
 
     target_shape = EdgeSequence(target_shape)
     new_edges = target_shape.copy().snap_to([0, 0])  # copy and normalize translation of vertices
@@ -233,7 +229,7 @@ def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True, fli
 
     # find starting vertex for insertion & place edges there
     curve = base_edge.as_curve()
-    rel_offset = curve.ilength(offset)   # TODO methods of an Edge class? 
+    rel_offset = curve.ilength(offset)
 
     # ----- OPTIMIZATION --- 
     start = [0.1, 0.1]
@@ -253,7 +249,6 @@ def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True, fli
         raise RuntimeError(f'Cut_edge::ERROR::projection on {base_edge} finished with fun={out.fun}')
     
     if rel_offset + shift[0] > 1 + tol or (rel_offset - shift[1]) < 0 - tol:
-        # TODO Adjust offset if projection is breaking?
         raise RuntimeError(
             f'Cut_edge::ERROR::projection on {base_edge} is out of edge bounds: '
             f'[{rel_offset - shift[1], rel_offset + shift[0]}].'
@@ -287,7 +282,7 @@ def cut_into_edge_single(target_shape, base_edge:Edge, offset=0, right=True, fli
     if ins_point is base_edge.start:
         new_edges[0].start = base_edge.start   # Connect into the original edge
     else:
-        # TODO more elegant subroutine
+        # TODOLOW more elegant subroutine
         start_part = base_edge.subdivide_param([rel_offset - shift[1], 1 - (rel_offset - shift[1])])[0]
         start_part.end = new_edges[0].start
         new_edges.insert(0, start_part)
@@ -313,16 +308,6 @@ def _fit_location_corner(l, diff_target, curve1, curve2):
     point2 = c_to_np(curve2.point(l[1]))
     diff_curr = point2 - point1
 
-    # DEBUG
-    # points = np.vstack((point1, point2))
-    # points = points.transpose()
-    # ax1 = curve1.plot(40)
-    # _ = curve2.plot(40, ax=ax1)
-    # lines = ax1.plot(  
-    #     points[0, :], points[1, :],
-    #     marker="o", linestyle="None", color="black")
-    # plt.show()
-
     if flags.VERBOSE:
         print('Location Progression: ', (diff_curr[0] - diff_target[0])**2, (diff_curr[1] - diff_target[1])**2)
 
@@ -336,16 +321,6 @@ def _fit_location_edge(shift, location, width_target, curve):
     pointc = c_to_np(curve.point(location))   # TODO this is constant
     point1 = c_to_np(curve.point(location + shift[0]))
     point2 = c_to_np(curve.point(location - shift[1]))
-    diff_curr = point2 - point1
-
-    # DEBUG
-    # points = np.vstack((point1, point2))
-    # points = points.transpose()
-    # ax1 = curve.plot(40)
-    # lines = ax1.plot(  
-    #     points[0, :], points[1, :],
-    #     marker="o", linestyle="None", color="black")
-    # plt.show()
 
     if flags.VERBOSE:
         print('Location Progression: ', (_dist(point1, point2) - width_target)**2)
@@ -357,7 +332,7 @@ def _fit_location_edge(shift, location, width_target, curve):
 
 
 # ANCHOR ----- Panel operations ------
-def distribute_Y(component, n_copies, odd_copy_shift=10):
+def distribute_Y(component, n_copies, odd_copy_shift=0):
     """Distribute copies of component over the circle around Oy"""
     copies = [ component ]
     delta_rotation = R.from_euler('XYZ', [0, 360 / n_copies, 0], degrees=True)
@@ -432,8 +407,8 @@ def even_armhole_openings(front_opening, back_opening, tol=1e-2):
     intersect_t = target_segment.intersect(inter_segment)
     if len(intersect_t) != 1:
         print(
-            f'Sleeve Opening Inversion::Error::{len(intersect_t)} intersection points instead of one. '
-            'Check the quality of supplied curves'
+            f'Redistribute Sleeve Openings::Error::{len(intersect_t)} intersection points instead of one. '
+            f'Front and back opening curves might be the same with lengths: {cfront.length()}, {cback.length()}'
         )
     
     if (len(intersect_t) >= 1 

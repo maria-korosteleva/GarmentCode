@@ -7,7 +7,7 @@ from copy import deepcopy
 import random 
 
 # Custom
-from .generic_utils import nested_del, nested_get, nested_set
+from .generic_utils import nested_get, nested_set, close_enough
 
 
 class BodyParametrizationBase():
@@ -32,7 +32,7 @@ class BodyParametrizationBase():
     # Updates
     def __setitem__(self, key, value):
         self.params[key] = value
-        self.eval_dependencies()
+        self.eval_dependencies(key)
 
     def load(self, param_file):
         """Load new values from file"""
@@ -42,10 +42,12 @@ class BodyParametrizationBase():
         self.eval_dependencies()  # Parameters have been updated
 
     # Processing
-    def eval_dependencies(self):
+    def eval_dependencies(self, key=None):
         """Evaluate dependent attributes, e.g. after a new value has been set
         
             Define your dependent parameters in the overload of this function
+
+            * key -- the information on what field is being updated
         """
         pass
         
@@ -106,15 +108,46 @@ class DesignSampler():
         p_type = nested_get(random_params, path + ['type'])
         
         # TODO Add various options for sampling distribution
-        if 'select' in p_type or p_type == 'bool' or 'file' in p_type:  # All discrete types
-            if p_type == 'select_null' and None not in range:
-                range.append(None)
-            new_val = random.choice(range)
-        elif p_type == 'int':
-            new_val = random.randint(*range)
-        elif p_type == 'float':
-            new_val = random.uniform(*range)
+
+        # Check Defaults
+        try: 
+            def_prob = nested_get(random_params, path + ['default_prob'])
+        except KeyError as e:   # Default probability not given  -> Sample uniformly
+            def_prob = None
+
+        def_value = nested_get(self.params, path + ['v'])
+        if self.__use_default(def_prob):
+            new_val = def_value
+        else:
+            if 'select' in p_type or p_type == 'bool' or 'file' in p_type:  # All discrete types
+                if p_type == 'select_null' and None not in range:
+                    range.append(None)
+                # Exclude default
+                if def_prob is not None:
+                    range.remove(def_value) 
+                new_val = random.choice(range)
+            elif p_type == 'int':
+                new_val = self.__randint_exclude(range, None if def_prob is None else def_value)
+            elif p_type == 'float':
+                new_val = self.__uniform_exclude(range, None if def_prob is None else def_value)
 
         nested_set(random_params, path + ['v'], new_val)
 
+    def __use_default(self, probability):
+        if probability is None:
+            return False
+        return random.random() < probability
+    
+    def __randint_exclude(self, range, exclude):
+        rand_v = random.randint(*range)
+        if exclude is not None and rand_v == exclude:
+            return self.__randint_exclude(range, exclude)
+    
+        return rand_v
+    
+    def __uniform_exclude(self, range, exclude):
+        rand_v = random.uniform(*range)
+        if exclude is not None and close_enough(rand_v, exclude):
+            return self.__randint_exclude(range, exclude)  
         
+        return rand_v 

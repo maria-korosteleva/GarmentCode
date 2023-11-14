@@ -6,7 +6,6 @@ import numpy as np
 from .edge import Edge, EdgeSequence
 from .generic_utils import close_enough
 
-# TODO as EdgeSequence wrapper??
 class Interface():
     """Description of an interface of a panel or component
         that can be used in stitches as a single unit
@@ -16,7 +15,8 @@ class Interface():
         Parameters:
             * panel - Panel object
             * edges - Edge or EdgeSequence -- edges in the panel that are allowed to connect to
-            * ruffle - ruffle coefficient for a particular edge. Interface object will supply projecting_edges() shape
+            * ruffle - ruffle coefficient (number or a per-edge list). If a number is provided, the ruffle is applied to the whole sequence. 
+              Interface object will supply projecting_edges() shape
                 s.t. the ruffles with the given rate are created. Default = 1. (no ruffles, smooth connection)
         """
 
@@ -29,7 +29,22 @@ class Interface():
 
         # Ruffles are applied to sections
         # Since extending a chain of edges != extending each edge individually
-        self.ruffle = [dict(coeff=ruffle, sec=[0, len(self.edges)])]
+        if isinstance(ruffle, list):
+            assert len(ruffle) == len(edges), "Ruffles and Edges don't match"
+            self.ruffle = []
+            last_coef = None
+            last_start = 0
+            for i, coef in enumerate(ruffle):
+                if coef == last_coef or last_coef is None:
+                    last_coef = coef  # Making sure to overwrite None
+                    continue
+                self.ruffle.append(dict(coeff=last_coef, sec=[last_start, i]))
+                last_start, last_coef = i, coef
+
+            self.ruffle.append(dict(coeff=last_coef, sec=[last_start, len(ruffle)]))
+                
+        else:
+            self.ruffle = [dict(coeff=ruffle, sec=[0, len(self.edges)])]
 
     def projecting_edges(self, on_oriented=False) -> EdgeSequence:
         """Return edges shape that should be used when projecting interface onto another panel
@@ -138,7 +153,6 @@ class Interface():
         return len(self.edges)
     
     def __str__(self) -> str:
-        # TODO More clear priting? Verbose level options?
         return f'Interface: {[p.name for p in self.panel]}: {str(self.oriented_edges())}'
     
     def __repr__(self) -> str:
@@ -155,7 +169,7 @@ class Interface():
 
             Reversal is useful for reordering interface edges for correct matching in the multi-stitches
         """
-        self.edges.edges.reverse()   # TODO Condition on edge sequence reverse 
+        self.edges.edges.reverse()   # TODOLOW Condition on edge sequence reverse 
         self.panel.reverse()
         self.edges_flipping.reverse()
         if with_edge_dir_reverse:
@@ -178,7 +192,7 @@ class Interface():
             e.g. if moving 0 -> 1, specify the new location for 1 as well
         """
         
-        # TODO Edge Sequence Function wrapper?
+        # TODOLOW Edge Sequence Function wrapper?
         for i, j in zip(curr_edge_ids, projected_edge_ids):
             for r in self.ruffle:
                 if (i >= r['sec'][0] and i < r['sec'][1] 

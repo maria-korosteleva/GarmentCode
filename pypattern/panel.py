@@ -6,11 +6,11 @@ from scipy.spatial.transform import Rotation as R
 
 # Custom
 from pattern.core import BasicPattern
-from pattern.wrappers import VisPattern
 from .base import BaseComponent
 from .edge import Edge, EdgeSequence
-from .connector import Stitches
 from .generic_utils import close_enough, vector_align_3D
+from .operators import cut_into_edge
+from .interface import Interface
 
 class Panel(BaseComponent):
     """ A Base class for defining a Garment component corresponding to a single flat fiece of fabric
@@ -64,8 +64,7 @@ class Panel(BaseComponent):
 
         edge_curves = [e.as_curve() for e in self.edges]
 
-        # TODOLOW Edge vs. the rest of the path -- could be faster!
-        # simple pairwise checks of edges
+        # NOTE: simple pairwise checks of edges
         for i1 in range(0, len(edge_curves)):
            for i2 in range(i1 + 1, len(edge_curves)):
                 intersect_t = edge_curves[i1].intersect(edge_curves[i2])
@@ -132,7 +131,7 @@ class Panel(BaseComponent):
     def translate_by(self, delta_vector):
         """Translate panel by a vector"""
         self.translation = self.translation + np.array(delta_vector)
-        # TODO Autonorm only on the assembly?
+        # NOTE: One may also want to have autonorm only on the assembly?
         self.autonorm()
 
         return self
@@ -227,13 +226,41 @@ class Panel(BaseComponent):
             raise NotImplementedError(f'{self.name}::Error::Mirrowing over arbitrary axis is not implemented')
 
         return self
+
+    def add_dart(self, dart_shape, edge, offset, right=True, edge_seq=None, int_edge_seq=None, ):
+        """ Shortcut for adding a dart to a panel: 
+            * Performs insertion of the dart_shape in the given edge (parameters are the same 
+                as in pyp.ops.cut_into_edge)
+            * Creates stitch to connect the dart sides
+            * Modifies edge_sequnces with full set (edge_seq) or only the interface part (int_edge_seq) 
+                of the created edges, if those are provided
+            
+            Returns new edges after insertion, and the interface part (excludes dart edges)
+        """
+        edges_new, dart_edges, int_new = cut_into_edge(
+            dart_shape, 
+            edge, 
+            offset=offset,
+            right=right)
         
+        self.stitching_rules.append(
+            (Interface(self, dart_edges[0]), Interface(self, dart_edges[1])))
+        
+        # Update the edges if given
+        if edge_seq is not None: 
+            edge_seq.substitute(edge, edges_new)
+            edges_new = edge_seq
+        if int_edge_seq is not None:
+            int_edge_seq.substitute(edge, int_new)
+            int_new = int_edge_seq
+
+        return edges_new, int_new
+
     # ANCHOR - Build the panel -- get serializable representation
     def assembly(self):
         """Convert panel into serialazable representation
         
-         # SIM Note that Qualoth simulator does not support internal loops in panels,
-            hence panel EdgeSequence is assumed to be a single loop of edges
+         NOTE: panel EdgeSequence is assumed to be a single loop of edges
         """
         # always start from zero for consistency between panels
         self.set_pivot(self.edges[0].start, replicate_placement=True)
