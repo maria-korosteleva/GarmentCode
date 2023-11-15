@@ -67,8 +67,12 @@ class Panel(BaseComponent):
         # NOTE: simple pairwise checks of edges
         for i1 in range(0, len(edge_curves)):
            for i2 in range(i1 + 1, len(edge_curves)):
+                # NOTE: Intersections for Arcs (Circle edge) may fail:
+                # They are not well implemented in svgpathtools, see
+                # https://github.com/mathandy/svgpathtools/issues/121
+                # https://github.com/mathandy/svgpathtools/blob/fcb648b9bb9591d925876d3b51649fa175b40524/svgpathtools/path.py#L1960
                 intersect_t = edge_curves[i1].intersect(edge_curves[i2])
-
+                
                 if len(intersect_t) == 1: # Check exeption -- intersection at the vertex
                     t1, t2 = intersect_t[0]
                     if t2 < t1:
