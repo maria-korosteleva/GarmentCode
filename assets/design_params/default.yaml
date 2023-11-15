@@ -235,7 +235,7 @@ design:
       - 50
       type: int
     opening_dir_mix:  
-      v: 0.2
+      v: 0.1
       range: 
       - -0.9
       - 0.8
