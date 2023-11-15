@@ -130,7 +130,9 @@ class BodiceBackHalf(BaseBodicePanel):
 
         # Bottom dart as cutout -- for straight line
         if waist < self.get_width(self.edges[2].end[1] - self.edges[2].start[1]):
-            bottom_d_width = waist_width - waist
+            w_diff = waist_width - waist
+            side_adj = 0  if w_diff < 4 else w_diff / 6  # NOTE: don't take from sides if the difference is too small
+            bottom_d_width = w_diff - side_adj
             bottom_d_width /= 2   # double darts
             bottom_d_depth = 0.9 * (length - body['bust_line'])  # calculated value
             bottom_d_position = body['bum_points'] / 2
@@ -153,13 +155,11 @@ class BodiceBackHalf(BaseBodicePanel):
             self.edges.substitute(0, b_edge)
             self.interfaces['bottom'] = pyp.Interface(self, b_interface)
 
-            # TODO Remove fabric from the sides if the diff is big enough
-            # DRAFT b_edge[-1].end[0] += 2 
+            # Remove fabric from the sides if the diff is big enough
+            b_edge[-1].end[0] += side_adj
 
         # default placement
         self.translate_by([0, body['height'] - body['head_l'] - length, 0])
-
-        
 
 class BodiceHalf(pyp.Component):
     """Definition of a half of an upper garment with sleeves and collars"""
