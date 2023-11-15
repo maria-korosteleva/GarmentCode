@@ -121,6 +121,8 @@ class SleevePanel(pyp.Panel):
         # sleeve length in 3D
         opening_length = abs(open_shape[0].start[0] - open_shape[-1].end[0])
         end_width = design['end_width']['v'] * abs(open_shape[0].start[1] - open_shape[-1].end[1]) 
+        # Ensure it fits regardless of parameters
+        end_width = max(end_width, body['wrist'] / 2)
 
         # Ruffles at opening
         if not pyp.utils.close_enough(design['connect_ruffle']['v'], 1):
@@ -276,8 +278,11 @@ class Sleeve(pyp.Component):
             # Class
             # Copy to avoid editing original design dict
             cdesign = deepcopy(design)
-            cdesign['cuff']['b_width'] = {}
-            cdesign['cuff']['b_width']['v'] = self.interfaces['out'].edges.length() / design['cuff']['top_ruffle']['v']
+            cuff_circ = self.interfaces['out'].edges.length() / design['cuff']['top_ruffle']['v']
+            # Ensure it fits regardless of parameters
+            cuff_circ = max(cuff_circ, body['wrist'])
+            cdesign['cuff']['b_width'] = dict(v=cuff_circ)
+            
             cdesign['cuff']['cuff_len']['v'] = design['cuff']['cuff_len']['v'] * body['arm_length']
 
             cuff_class = getattr(bands, cdesign['cuff']['type']['v'])
