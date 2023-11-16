@@ -209,7 +209,7 @@ class BodiceHalf(pyp.Component):
         max_cwidth = self.ftorso.interfaces['shoulder_corner'].edges[0].length() - 1  # cm
         min_cwidth = body['armscye_depth']
         v = design['sleeve']['connecting_width']['v']
-        design['sleeve']['connecting_width']['v'] = min_cwidth + v * (max_cwidth - min_cwidth)
+        design['sleeve']['connecting_width']['v'] = min(min_cwidth + min_cwidth * v, max_cwidth)
 
         # Collars
         # NOTE: Assuming the first is the top edge
@@ -234,13 +234,17 @@ class BodiceHalf(pyp.Component):
         max_f_len = self.ftorso.interfaces['collar_corner'].edges[1].length() - tg * self.ftorso.get_width(0) - 1  # cm
         max_b_len = self.btorso.interfaces['collar_corner'].edges[1].length() - tg * self.btorso.get_width(0) - 1  # cm
 
-        
         design['collar']['f_strapless_depth'] = {}
-        design['collar']['f_strapless_depth']['v'] = design['collar']['fc_depth']['v'] * max_f_len
+        design['collar']['f_strapless_depth']['v'] = min(
+            design['collar']['fc_depth']['v'] * body['bust_line'], 
+            max_f_len)
         design['collar']['fc_depth']['v'] = design['collar']['f_strapless_depth']['v'] + f_depth_adj
         
+
         design['collar']['b_strapless_depth'] = {}
-        design['collar']['b_strapless_depth']['v'] = design['collar']['bc_depth']['v'] * max_b_len
+        design['collar']['b_strapless_depth']['v'] =  min(
+            design['collar']['bc_depth']['v'] * body['bust_line'], 
+            max_b_len)
         design['collar']['bc_depth']['v'] = design['collar']['b_strapless_depth']['v'] + b_depth_adj 
 
     def add_sleeves(self, name, body, design):
