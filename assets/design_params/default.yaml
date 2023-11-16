@@ -53,7 +53,7 @@ design:
     length:
       v: 1.2
       range:
-      - 0.5
+      - 0.5   # TODO Check minimum length in 3D
       - 4.5
       type: float
       default_prob: 0.7
@@ -104,17 +104,17 @@ design:
       type: float
       default_prob: 0.4
     fc_depth:
-      v: 0.15
+      v: 0.2  
       range:
       - 0
-      - 1
+      - 2    
       type: float
       default_prob: 0.3
     bc_depth:
       v: 0
       range:
       - 0
-      - 1
+      - 2
       type: float
       default_prob: 0.4
     fc_angle:
@@ -215,10 +215,10 @@ design:
       - 1.2
       type: float
     connecting_width:
-      v: 0.2
+      v: 0.2  
       range:
       - 0
-      - 1
+      - 2
       type: float
       default_prob: 0.6
     end_width:
@@ -471,7 +471,7 @@ design:
         v: 0.2
         range:
         - 0
-        - 1
+        - 2
         type: float
         default_prob: 0.6
       end_width:
