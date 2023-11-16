@@ -148,6 +148,6 @@ class DesignSampler():
     def __uniform_exclude(self, range, exclude):
         rand_v = random.uniform(*range)
         if exclude is not None and close_enough(rand_v, exclude):
-            return self.__randint_exclude(range, exclude)  
+            return self.__uniform_exclude(range, exclude)  
         
         return rand_v 
