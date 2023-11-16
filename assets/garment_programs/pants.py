@@ -89,12 +89,15 @@ class PantPanel(pyp.Panel):
         left = pyp.esf.curve_from_tangents(
             crotch_bottom.end,    
             [
-                # NOTE "Magic value" which we use to define default width:
+                # NOTE "Magic value" (-2 cm) which we use to define default width:
                 #   just a little behing the crotch point
                 # NOTE: Ensuring same distance from the crotch point in both 
                 #   front and back for matching curves
                 crotch_bottom.end[0] - 2 + flare, 
-                y:=min(0, length - crotch_depth_diff)
+                # NOTE: The inside edge either matches the length of the outside (0, normal case)
+                # or when the inteded length is smaller than crotch depth,
+                # inside edge covers of the inside leg a bit below the crotch (panties-like shorts)
+                y:=min(0, length - crotch_depth_diff * 1.5)
             ], 
             target_tan1=[flare, y - crotch_bottom.end[1]],
             initial_guess=[0.3, 0]
