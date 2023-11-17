@@ -81,11 +81,11 @@ class SkirtCircle(StackableSkirtComponent):
 
         # panels
         self.front = CircleArcPanel.from_w_length_suns(
-            f'front_{tag}' if tag else 'front', 
+            f'skirt_front_{tag}' if tag else 'skirt_front', 
             length, waist / 2, suns / 2).translate_by([0, body['_waist_level'], 15])
 
         self.back = CircleArcPanel.from_w_length_suns(
-            f'back_{tag}'  if tag else 'back', 
+            f'skirt_back_{tag}'  if tag else 'skirt_back', 
             length, waist / 2, suns / 2).translate_by([0, body['_waist_level'], -15])
 
         # Add a cut

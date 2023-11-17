@@ -233,7 +233,7 @@ class PantsHalf(BaseBottoms):
 
             # Init
             cuff_class = getattr(bands, cdesign['cuff']['type']['v'])
-            self.cuff = cuff_class(tag, cdesign)
+            self.cuff = cuff_class(f'pant_{tag}', cdesign)
 
             # Position
             self.cuff.place_by_interface(

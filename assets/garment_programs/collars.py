@@ -146,10 +146,10 @@ class Turtle(pyp.Component):
         height_p = body['height'] - body['head_l'] + depth
 
         self.front = StraightBandPanel(
-            f'{tag}_turtle_front', length_f, depth).translate_by(
+            f'{tag}_collar_front', length_f, depth).translate_by(
             [-length_f / 2, height_p, 10])
         self.back = StraightBandPanel(
-            f'{tag}_turtle_back', length_b, depth).translate_by(
+            f'{tag}_collar_back', length_b, depth).translate_by(
             [-length_b / 2, height_p, -10])
 
         self.stitching_rules.append((
@@ -221,18 +221,18 @@ class SimpleLapel(pyp.Component):
         height_p = body['height'] - body['head_l'] + depth * 2
         
         self.front = SimpleLapelPanel(
-            f'{tag}_lapel_front', length_f, depth).translate_by(
+            f'{tag}_collar_front', length_f, depth).translate_by(
             [-depth * 2, height_p, 30])
 
         if standing:
             self.back = StraightBandPanel(
-                f'{tag}_lapel_back', length_b, depth).translate_by(
+                f'{tag}_collar_back', length_b, depth).translate_by(
                 [-length_b / 2, height_p, -10])
         else:
             # A curved back panel that follows the collar opening
             rad, angle, _ = b_collar[0].as_radius_angle()
             self.back = CircleArcPanel(
-                f'{tag}_lapel_back', rad, depth, angle  
+                f'{tag}_collar_back', rad, depth, angle  
             ).translate_by([-length_b, height_p, -10])
             self.back.rotate_by(R.from_euler('XYZ', [90, 45, 0], degrees=True))
 

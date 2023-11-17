@@ -359,14 +359,15 @@ def _fit_location_edge(shift, location, width_target, curve,
 
 
 # ANCHOR ----- Panel operations ------
-def distribute_Y(component, n_copies, odd_copy_shift=0):
+def distribute_Y(component, n_copies, odd_copy_shift=0, name_tag='panel'):
     """Distribute copies of component over the circle around Oy"""
     copies = [ component ]
+    component.name = f'{name_tag}_0'   # Unique
     delta_rotation = R.from_euler('XYZ', [0, 360 / n_copies, 0], degrees=True)
     
     for i in range(n_copies - 1):
         new_component = deepcopy(copies[-1])
-        new_component.name = f'panel_{i}'   # Unique
+        new_component.name = f'{name_tag}_{i + 1}'   # Unique
         new_component.rotate_by(delta_rotation)
         new_component.translate_to(delta_rotation.apply(new_component.translation))
 

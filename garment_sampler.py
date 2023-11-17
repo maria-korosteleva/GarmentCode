@@ -173,7 +173,7 @@ if __name__ == '__main__':
             True)
 
     # Generator
-    generate(system_props['datasets_path'], props, verbose=True)
+    generate(system_props['datasets_path'], props, verbose=False)
 
     # Gather the pattern images separately
     gather_visuals(Path(system_props['datasets_path']) / props['data_folder'])

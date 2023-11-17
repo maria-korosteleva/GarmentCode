@@ -21,9 +21,9 @@ if __name__ == '__main__':
     body = BodyParameters(body_file)
 
     design_files = {
-        # 'base': './assets/design_params/base.yaml',
+        'base': './assets/design_params/base.yaml',
         # 'our_dress': r"G:\My Drive\GarmentCode\sewing_siggraph_garment\designs\dress_design_params.yaml"
-        'debug': './Logs/Configured_design__231117-17-17-27/design_params.yaml' 
+        # 'debug': './Logs/Configured_design__231117-17-17-27/design_params.yaml' 
         #'default': './assets/design_params/default.yaml',
         # 'modern': './assets/design_params/modern.yaml',
         # 'Dress_20s': './assets/design_params/dress_20s.yaml',
@@ -62,7 +62,7 @@ if __name__ == '__main__':
             Path(sys_props['output']), 
             tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
             to_subfolder=False, 
-            with_3d=False, with_text=False, view_ids=False)
+            with_3d=False, with_text=True, view_ids=False)
 
         body.save(folder)
         if piece.name in design_files:

@@ -305,7 +305,7 @@ class PencilSkirt(StackableSkirtComponent):
             length = length - hips_depth
 
         self.front = FittedSkirtPanel(
-            f'skirt_f',   
+            f'skirt_front',   
             body,
             design,
             (waist - back_waist) / 2,
@@ -321,7 +321,7 @@ class PencilSkirt(StackableSkirtComponent):
         ).translate_to([0, body['_waist_level'], 25])
 
         self.back = FittedSkirtPanel(
-            f'skirt_b', 
+            f'skirt_back', 
             body,
             design,
             back_waist / 2,
@@ -376,7 +376,7 @@ class Skirt2(StackableSkirtComponent):
             length = hip_line + design['length']['v'] * body['_leg_length']  # Depends on leg length
 
         self.front = SkirtPanel(
-            f'front_{tag}' if tag else 'front', 
+            f'skirt_front_{tag}' if tag else 'skirt_front', 
             waist_length=waist - back_waist, 
             length=length,
             ruffles=design['ruffle']['v'] if top_ruffles else 1,   # Only if on waistband
@@ -384,7 +384,7 @@ class Skirt2(StackableSkirtComponent):
             bottom_cut=design['bottom_cut']['v'] * design['length']['v'] if slit else 0
         ).translate_to([0, body['_waist_level'], 25])
         self.back = SkirtPanel(
-            f'back_{tag}'  if tag else 'back', 
+            f'skirt_back_{tag}'  if tag else 'skirt_back', 
             waist_length=back_waist, 
             length=length,
             ruffles=design['ruffle']['v'] if top_ruffles else 1,   # Only if on waistband
@@ -445,7 +445,7 @@ class SkirtManyPanels(BaseBottoms):
         self.front.rotate_align([-dist, 0, panel_w / 2])
 
         # Create new panels
-        self.subs = pyp.ops.distribute_Y(self.front, n_panels)
+        self.subs = pyp.ops.distribute_Y(self.front, n_panels, name_tag='skirt_panel')
 
         # Stitch new components
         for i in range(1, n_panels):

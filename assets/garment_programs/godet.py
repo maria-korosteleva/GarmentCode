@@ -76,7 +76,7 @@ class GodetSkirt(BaseBottoms):
         insert = Insert(0, width=ins_w, depth=ins_depth).translate_by([
             x_shift - num_inserts * ins_w / 2 + ins_w / 2, y_base + ins_depth, z_transl])
         self.subs += pyp.ops.distribute_horisontally(
-            insert, num_inserts, -ins_w, panel.name)
+            insert, num_inserts, -ins_w, 'ins_' + panel.name)
 
         # make appropriate cuts and stitches
         side_len = math.sqrt((ins_w / 2)**2 + ins_depth**2)  # should be the same on the skirt and the insert
