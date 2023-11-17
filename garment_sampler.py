@@ -16,7 +16,7 @@ sys.path.insert(0, './external/')
 sys.path.insert(1, './')
 
 # Custom
-from customconfig import Properties
+from external.customconfig import Properties
 from assets.garment_programs.skirt_paneled import *
 from assets.garment_programs.tee import *
 from assets.garment_programs.godet import *
@@ -24,40 +24,39 @@ from assets.garment_programs.bodice import *
 from assets.garment_programs.pants import *
 from assets.garment_programs.meta_garment import *
 from assets.garment_programs.bands import *
-
 from assets.body_measurments.body_params import BodyParameters
-
 import pypattern as pyp
 
 # TODO Logging formatting
 
-def _create_data_folder(path='', props=''):
+
+def _create_data_folder(properties, path=Path('')):
     """ Create a new directory to put dataset in 
         & generate appropriate name & update dataset properties
     """
-    if 'data_folder' in props:  # will this work?
+    if 'data_folder' in properties:  # will this work?
         # => regenerating from existing data
-        props['name'] = props['data_folder'] + '_regen'
-        data_folder = props['name']
+        properties['name'] = properties['data_folder'] + '_regen'
+        data_folder = properties['name']
     else:
-        data_folder = props['name']
+        data_folder = properties['name']
 
     # make unique
     data_folder += '_' + datetime.now().strftime('%y%m%d-%H-%M-%S')
-    props['data_folder'] = data_folder
-    path_with_dataset = Path(path) / data_folder
+    properties['data_folder'] = data_folder
+    path_with_dataset = path / data_folder
     path_with_dataset.mkdir(parents=True)
-
     return path_with_dataset
 
-def _id_generator(size=10,
-                  chars=string.ascii_uppercase + string.digits):
+
+def _id_generator(size=10, chars=string.ascii_uppercase + string.digits):
         """Generate a random string of a given size, see
         https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits
         """
         return ''.join(random.choices(chars, k=size))
 
-def generate(path, props, verbose=False):
+
+def generate(path, properties, verbose=False):
     """Generates a synthetic dataset of patterns with given properties
         Params:
             path : path to folder to put a new dataset into
@@ -65,25 +64,26 @@ def generate(path, props, verbose=False):
                     requested properties of the dataset
     """
     path = Path(path)
-    gen_config = props['generator']['config']
-    gen_stats = props['generator']['stats']
+    gen_config = properties['generator']['config']
+    gen_stats = properties['generator']['stats']
 
     # create data folder
-    data_folder = _create_data_folder(path, props)
+    data_folder = _create_data_folder(properties, path)
     samples_folder = data_folder / 'data'
 
     # init random seed
     if 'random_seed' not in gen_config or gen_config['random_seed'] is None:
         gen_config['random_seed'] = int(time.time())
+    print(f'Random seed is {gen_config["random_seed"]}')
     random.seed(gen_config['random_seed'])
 
     # generate data
     start_time = time.time()
 
     # TODO Body sampling as well?
-    body = BodyParameters(props['body_file'])
-    sampler = pyp.params.DesignSampler(props['design_file'])
-    for i in range(props['size']):
+    body = BodyParameters(properties['body_file'])
+    sampler = pyp.params.DesignSampler(properties['design_file'])
+    for i in range(properties['size']):
         # Redo sampling untill success
         for _ in range(100):  # Putting a limit on re-tries to avoid infinite loops
             new_design = sampler.randomize()
@@ -101,7 +101,7 @@ def generate(path, props, verbose=False):
                     )
 
                 piece = MetaGarment(name, body, new_design) 
-                pattern = piece()
+                pattern = piece.assembly()
 
                 if piece.is_self_intersecting():
                     if verbose:
@@ -138,7 +138,8 @@ def generate(path, props, verbose=False):
     gen_stats['generation_time'] = f'{elapsed:.3f} s'
 
     # log properties
-    props.serialize(data_folder / 'dataset_properties.yaml') 
+    properties.serialize(data_folder / 'dataset_properties.yaml')
+
 
 def gather_visuals(path, verbose=False):
     vis_path = Path(path) / 'patterns_vis'
@@ -151,6 +152,7 @@ def gather_visuals(path, verbose=False):
             if verbose:
                 print('File {} already exists'.format(p.name))
             pass
+
 
 if __name__ == '__main__':
 
@@ -168,9 +170,10 @@ if __name__ == '__main__':
         props.set_section_config('generator')
     else:
         props = Properties(
-            Path(system_props['datasets_path']) / 'data_30_230802-12-25-09/dataset_properties.yaml', 
+            Path(system_props['datasets_path']) / 'data_30_230802-12-25-09/dataset_properties.yaml',
             True)
 
+    props['data_folder'] = system_props['data_folder'] + "/sampled/"
     # Generator
     generate(system_props['datasets_path'], props, verbose=False)
 
