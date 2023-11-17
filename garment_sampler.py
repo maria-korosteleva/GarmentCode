@@ -177,7 +177,6 @@ if __name__ == '__main__':
             Path(system_props['datasets_path']) / 'data_30_231116-17-26-02/dataset_properties.yaml',
             True)
 
-    props['data_folder'] = system_props['data_folder'] + "/sampled/"
     # Generator
     generate(system_props['datasets_path'], props, verbose=False)
 
