@@ -143,7 +143,7 @@ class CurveEdgeFactory:
             cp = [c_to_list(seg.control1), c_to_list(seg.control2)]
         else:
             raise NotImplementedError(
-                f'CurveEdge::Error::Incorrect curve type supplied {seg.type}')
+                f'CurveEdge::ERROR::Incorrect curve type supplied {seg.type}')
 
         return CurveEdge(start, end, cp, relative=False)
 
@@ -216,7 +216,7 @@ class EdgeSeqFactory:
         # TODOLOW Deprecated?
         frac = [abs(f) for f in frac]
         if not close_enough(fsum := sum(frac), 1, 1e-4):
-            raise RuntimeError(f'EdgeSequence::Error::fraction is incorrect. The sum {fsum} is not 1')
+            raise RuntimeError(f'EdgeSequence::ERROR::fraction is incorrect. The sum {fsum} is not 1')
 
         vec = np.asarray(end) - np.asarray(start)
         verts = [start]
@@ -298,7 +298,7 @@ class EdgeSeqFactory:
         dart_side = depth
 
         if d1 < 0:
-            raise ValueError(f'EdgeFactory::Error::Invalid value supplied for dart position: {d0} out of {L}')
+            raise ValueError(f'EdgeFactory::ERROR::Invalid value supplied for dart position: {d0} out of {L}')
 
         # Extended triangle -- sides
         delta_l = dart_side * width / (2 * depth_perp)  # extention of edge length beyong the dart points
@@ -411,7 +411,7 @@ class EdgeSeqFactory:
         d0, d1 = dart_position, target_len - dart_position
 
         if (d0 + d1) >= L:
-            raise ValueError(f'EdgeFactory::Error::Invalid value supplied for dart position: {d0} does not satisfy triangle inequality for edge length {norm(v0 - v1)}')
+            raise ValueError(f'EdgeFactory::ERROR::Invalid value supplied for dart position: {d0} does not satisfy triangle inequality for edge length {norm(v0 - v1)}')
 
         # Initial guess
         v = (v1 - v0) / L
@@ -425,7 +425,7 @@ class EdgeSeqFactory:
         out = minimize(_fit_dart, guess, args=(v0, v1, d0, d1, depth, dart_angle))
         if not close_enough(out.fun, tol=tol):
             print(out)
-            raise ValueError(f'EdgeFactory::Error::Solving dart was unsuccessful for L: {L}, Ds: {d0, d1}, Depth: {depth}')
+            raise ValueError(f'EdgeFactory::ERROR::Solving dart was unsuccessful for L: {L}, Ds: {d0, d1}, Depth: {depth}')
 
         p0, p_tip, p1 = out.x[:2], out.x[2:4], out.x[4:]
 
@@ -457,14 +457,14 @@ class EdgeSeqFactory:
 
         if side_len is None and depth is None:
             raise ValueError(
-                'EdgeFactory::Error::dart shape is not fully specified.'
+                'EdgeFactory::ERROR::dart shape is not fully specified.'
                 ' Add dart side length or dart perpendicular'
             )
 
         if depth is None:
             if width / 2 > side_len: 
                 raise ValueError(
-                    f'EdgeFactory::Error::Requested dart shape (w={width}, side={side_len}) '
+                    f'EdgeFactory::ERROR::Requested dart shape (w={width}, side={side_len}) '
                     'does not form a valid triangle')
             depth = np.sqrt((side_len**2 - (width / 2)**2))
 

@@ -76,7 +76,7 @@ class MayaGarment(wrappers.VisPattern):
             # FIXME self-intersection detection fires falsely on circle skirts
             # raise PatternLoadingError('{}::{}::Provided pattern has self-intersecting panels. Nothing is loaded'.format(
             #    self.__class__.__name__, self.name))
-            print('{}::Warning::{}::Provided pattern has self-intersecting panels. Simulation might crash'.format(
+            print('{}::WARNING::{}::Provided pattern has self-intersecting panels. Simulation might crash'.format(
                 self.__class__.__name__, self.name))
     
         if self.loaded_to_maya:
@@ -157,7 +157,7 @@ class MayaGarment(wrappers.VisPattern):
             to the folder with the pattern if not given.
         """
         if not self.loaded_to_maya:
-            print('MayaGarmentWarning::Pattern is not yet loaded. Nothing saved')
+            print('MayaGarmentWARNING::Pattern is not yet loaded. Nothing saved')
             return
 
         if folder:
@@ -351,7 +351,7 @@ class MayaGarment(wrappers.VisPattern):
         """If caching is enabled -> saves current geometry to cache folder
             Does nothing otherwise """
         if not self.loaded_to_maya:
-            print('MayaGarmentWarning::Pattern is not yet loaded. Nothing cached')
+            print('MayaGarmentWARNING::Pattern is not yet loaded. Nothing cached')
             return
 
         if hasattr(self, 'cache_path') and self.cache_path:
@@ -1220,7 +1220,7 @@ class MayaGarmentWithUI(MayaGarment):
         if self.is_self_intersecting():
             result = cmds.confirmDialog( 
                 title='Restore from broken state', 
-                message=('Warning: Some of the panels contain intersected edges after applying value {} to {}.' 
+                message=('WARNING: Some of the panels contain intersected edges after applying value {} to {}.' 
                          '\nDo you want to revert to previous state?' 
                          '\n\nNote: simulation in broken state might result in Maya crashing').format(new_value, param_name), 
                 button=['Yes', 'No'], 

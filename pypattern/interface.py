@@ -211,7 +211,7 @@ class Interface:
                 if (i >= r['sec'][0] and i < r['sec'][1] 
                         and (j < r['sec'][0] or j >= r['sec'][1])):
                     raise NotImplementedError(
-                        f'{self.__class__.__name__}::Error::reordering between panel-related sub-segments is not supported')
+                        f'{self.__class__.__name__}::ERROR::reordering between panel-related sub-segments is not supported')
         
         new_edges = EdgeSequence()
         new_panel_list = []

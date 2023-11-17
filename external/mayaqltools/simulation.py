@@ -74,7 +74,7 @@ def batch_sim(resources, data_path, dataset_props,
     # ----- Init -----
     if 'frozen' in dataset_props and dataset_props['frozen']:
         # avoid accidential re-runs of data
-        print('Warning: dataset is frozen, processing is skipped')
+        print('WARNING: dataset is frozen, processing is skipped')
         return True
 
     resume = init_sim_props(dataset_props, batch_run=True, force_restart=force_restart)

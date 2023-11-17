@@ -33,7 +33,7 @@ class StitchingRule:
                 len2 := int2.projecting_edges().length(),
                 tol=0.3):   # NOTE = 3 mm
             print(
-                f'{self.__class__.__name__}::Warning::Projected edges do not match in the stitch: \n'
+                f'{self.__class__.__name__}::WARNING::Projected edges do not match in the stitch: \n'
                 f'{len1}: {int1}\n{len2}: {int2}')
 
     def isMatching(self, tol=0.05):
@@ -141,7 +141,7 @@ class StitchingRule:
                 add_id += 1
 
         if add_id != len(to_add):
-            raise RuntimeError(f'{self.__class__.__name__}::Error::Projection failed')
+            raise RuntimeError(f'{self.__class__.__name__}::ERROR::Projection failed')
 
     def assembly(self):
         """Produce a stitch that connects two interfaces

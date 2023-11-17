@@ -109,7 +109,7 @@ class Properties:
                     for key in section['stats']['fails']:
                         if not isinstance(section['stats']['fails'][key], list):
                             raise NotImplementedError(
-                                'Properties::Error:: Fails subsections of the type {} is not supported'.format(
+                                'Properties::ERROR:: Fails subsections of the type {} is not supported'.format(
                                     type(section['stats']['fails'][key])))
                                     
                         fails += section['stats']['fails'][key]  # expects a list as value
@@ -117,7 +117,7 @@ class Properties:
                 elif isinstance(section['stats']['fails'], list):
                     fails += section['stats']['fails']
                 else:
-                    raise NotImplementedError('Properties::Error:: Fails subsections of the type {} is not supported'.format(type(section['stats']['fails'])))
+                    raise NotImplementedError('Properties::ERROR:: Fails subsections of the type {} is not supported'.format(type(section['stats']['fails'])))
 
         fails = list(set(fails))
 
@@ -225,7 +225,7 @@ class Properties:
         updated_scan_faces = self.summarize_stats('faces_removed', log_avg=True)
 
         if not (updated_frames and updated_render and updated_sim_time and updated_spf):
-            print('CustomConfig::Warning::Sim stats summary requested, but not all sections were updated')
+            print('CustomConfig::WARNING::Sim stats summary requested, but not all sections were updated')
 
     # ---- Private utils ----
     def _from_file(self, filename):

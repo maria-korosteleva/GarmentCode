@@ -87,11 +87,11 @@ def cut_corner(target_shape: EdgeSequence, target_interface: Interface,
        bounds=[(0, 1), (0, 1)])
     
     if verbose and not out.success:
-        print(f'Cut_corner::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
+        print(f'Cut_corner::ERROR::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
         print(out)
 
     if verbose and not close_enough(out.fun):
-        print(f'Cut_corner::Warning::projection on {target_interface} finished with fun={out.fun}')
+        print(f'Cut_corner::WARNING::projection on {target_interface} finished with fun={out.fun}')
         print(out) 
 
     loc = out.x
@@ -245,7 +245,7 @@ def cut_into_edge_single(target_shape, base_edge: Edge, offset=0, right=True,
 
     if offset < target_shape_w / 2  - tol or offset > (edge_len - target_shape_w / 2) + tol:   
         # NOTE: This is not a definitive check, and the cut might still not fit, depending on the base_edge curvature
-        raise ValueError(f'Operators-CutingIntoEdge::Error::offset value is not within the base_edge length')
+        raise ValueError(f'Operators-CutingIntoEdge::ERROR::offset value is not within the base_edge length')
 
     # find starting vertex for insertion & place edges there
     curve = base_edge.as_curve()
@@ -261,7 +261,7 @@ def cut_into_edge_single(target_shape, base_edge: Edge, offset=0, right=True,
 
     # Error checks
     if verbose and not out.success:
-        print(f'Cut_edge::Error::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
+        print(f'Cut_edge::ERROR::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
 
     if not close_enough(out.fun, tol=0.01):
         if verbose:
@@ -534,7 +534,7 @@ def curve_match_tangents(curve, target_tan0, target_tan1,
     """
     if not isinstance(curve, svgpath.CubicBezier):
         raise NotImplementedError(
-            f'Curve_match_tangents::Error::Only Cubic Bezier curves are supported ', 
+            f'Curve_match_tangents::ERROR::Only Cubic Bezier curves are supported ', 
             f'(got {type(curve)})')
 
     curve_cps = c_to_np(curve.bpoints())

@@ -163,7 +163,7 @@ class Panel(BaseComponent):
             * new_rot: scipy rotation object
         """   
         if not isinstance(new_rot, R):
-            raise ValueError(f'{self.__class__.__name__}::Error::Only accepting rotations in scipy format')
+            raise ValueError(f'{self.__class__.__name__}::ERROR::Only accepting rotations in scipy format')
         self.rotation = new_rot
         self.autonorm()
         return self
@@ -229,7 +229,7 @@ class Panel(BaseComponent):
             self.autonorm()
         else:
             # TODO Any other axis
-            raise NotImplementedError(f'{self.name}::Error::Mirrowing over arbitrary axis is not implemented')
+            raise NotImplementedError(f'{self.name}::ERROR::Mirrowing over arbitrary axis is not implemented')
         return self
 
     def add_dart(self, dart_shape, edge, offset, right=True, edge_seq=None, int_edge_seq=None, ):

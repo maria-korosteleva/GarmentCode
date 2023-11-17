@@ -35,7 +35,7 @@ def TrapezoidNeckHalf(depth, width, angle=90, verbose=True, **kwargs):
     bottom_x = -depth * np.cos(rad_angle) / np.sin(rad_angle)
     if bottom_x > width / 2:  # Invalid angle/depth/width combination resulted in invalid shape
         if verbose:
-            print('TrapezoidNeckHalf::Warning::Parameters are invalid and create overlap: '
+            print('TrapezoidNeckHalf::WARNING::Parameters are invalid and create overlap: '
                   f'{bottom_x} > {width / 2}. '
                   'The collar is reverted to VNeck')
 

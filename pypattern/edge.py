@@ -264,7 +264,7 @@ class Edge:
 
         frac = [abs(f) for f in fractions]
         if not close_enough(fsum := sum(frac), 1, 1e-4):
-            raise RuntimeError(f'Edge Subdivision::Error::fraction is incorrect. The sum {fsum} is not 1')
+            raise RuntimeError(f'Edge Subdivision::ERROR::fraction is incorrect. The sum {fsum} is not 1')
 
         vec = np.asarray(self.end) - np.asarray(self.start)
         verts = [self.start]
@@ -307,7 +307,7 @@ class Edge:
         elif isinstance(seg, svgpath.CubicBezier):
             cp = [c_to_list(seg.control1), c_to_list(seg.control2)]
         else:
-            raise NotImplementedError(f'CurveEdge::Error::Incorrect curve type supplied {seg.type}')
+            raise NotImplementedError(f'CurveEdge::ERROR::Incorrect curve type supplied {seg.type}')
         
         return CurveEdge(start, end, cp, relative=False)
 
@@ -396,7 +396,7 @@ class CircleEdge(Edge):
         from pypattern.edge_factory import CircleEdgeFactory  # TODO: ami - better solution?
         frac = [abs(f) for f in fractions]
         if not close_enough(fsum := sum(frac), 1, 1e-4):
-            raise RuntimeError(f'Edge Subdivision::Error::fraction is incorrect. The sum {fsum} is not 1')
+            raise RuntimeError(f'Edge Subdivision::ERROR::fraction is incorrect. The sum {fsum} is not 1')
 
         curve = self.as_curve()
         # Sub-curves
@@ -547,7 +547,7 @@ class CurveEdge(Edge):
         self.control_points = control_points
 
         if len(self.control_points) > 2:
-            raise NotImplementedError(f'{self.__class__.__name__}::Error::Up to 2 control points (cubic Bezier) are supported')
+            raise NotImplementedError(f'{self.__class__.__name__}::ERROR::Up to 2 control points (cubic Bezier) are supported')
 
         # Storing control points as relative since it preserves overall curve
         # shape during edge extension/contraction
@@ -764,7 +764,7 @@ class EdgeSequence:
             if self.edges[i].start is not self.edges[i-1].end:
                 if self.verbose:
                     # This should be helpful to catch bugs
-                    print(f'{self.__class__.__name__}::Warning!::Edge sequence is not properly chained')
+                    print(f'{self.__class__.__name__}::WARNING!::Edge sequence is not properly chained')
                 return False
         return True
 
@@ -846,7 +846,7 @@ class EdgeSequence:
         elif isinstance(item, EdgeSequence):
             self.edges += item.edges
         else:
-            raise ValueError(f'{self.__class__.__name__}::Error::Trying to add object of incompatible type {type(item)}')
+            raise ValueError(f'{self.__class__.__name__}::ERROR::Trying to add object of incompatible type {type(item)}')
         return self
 
     def insert(self, i, item):
@@ -856,7 +856,7 @@ class EdgeSequence:
             for j in range(len(item)):
                 self.edges.insert(i + j, item[j])
         else:
-            raise NotImplementedError(f'{self.__class__.__name__}::Error::incerting object of {type(item)} not suported (yet)')
+            raise NotImplementedError(f'{self.__class__.__name__}::ERROR::incerting object of {type(item)} not suported (yet)')
         return self
     
     def pop(self, i):
@@ -947,7 +947,7 @@ class EdgeSequence:
             chained_edges = self.chained_order()
             chained_edges.isChained()
             if chained_edges.isLoop():
-                print(f'{self.__class__.__name__}::Warning::Extending looped edge sequences is not available')
+                print(f'{self.__class__.__name__}::WARNING::Extending looped edge sequences is not available')
                 return self
         else: 
             chained_edges = self

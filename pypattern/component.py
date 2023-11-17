@@ -55,7 +55,7 @@ class Component(BaseComponent):
         # TODOLOW Implement with correct preservation of relative placement
         # of subcomponents
         raise NotImplementedError(
-            f'Component::Error::rotate_to is not supported on component level.'
+            f'Component::ERROR::rotate_to is not supported on component level.'
             'Use relative <rotate_by()> method instead')
 
     def mirror(self, axis=[0, 1]):
