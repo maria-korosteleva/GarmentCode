@@ -27,9 +27,6 @@ from assets.garment_programs.bands import *
 from assets.body_measurments.body_params import BodyParameters
 import pypattern as pyp
 
-# TODO Logging formatting
-
-
 def _create_data_folder(properties, path=Path('')):
     """ Create a new directory to put dataset in 
         & generate appropriate name & update dataset properties
@@ -93,7 +90,6 @@ def generate(path, properties, verbose=False):
             properties.serialize(data_folder / 'dataset_properties.yaml')
             
             try:
-                # DEBUG
                 if verbose:
                     print(f'{name} saving design params for debug')
                 with open(Path('./Logs') / f'{name}_design_params.yaml', 'w') as f:
@@ -135,7 +131,6 @@ def generate(path, properties, verbose=False):
                 traceback.print_exc()
                 print(e)
                 
-                # TODO Examine the errors -- probably there is something there
                 continue
 
     elapsed = time.time() - start_time
@@ -178,7 +173,7 @@ if __name__ == '__main__':
             True)
 
     # Generator
-    generate(system_props['datasets_path'], props, verbose=False)
+    generate(system_props['datasets_path'], props, verbose=True)
 
     # Gather the pattern images separately
     gather_visuals(Path(system_props['datasets_path']) / props['data_folder'])
