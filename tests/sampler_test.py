@@ -30,7 +30,6 @@ def sample_data():
 
 
 class RandomSamplerTest(unittest.TestCase):
-
     def test_sampler(self):
         for _ in range(1000):
             sample_data()

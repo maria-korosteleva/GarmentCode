@@ -90,7 +90,7 @@ def generate(path, properties, verbose=False):
             name = f'rand_{_id_generator()}'
             
             # log properties every time
-            props.serialize(data_folder / 'dataset_properties.yaml') 
+            properties.serialize(data_folder / 'dataset_properties.yaml')
             
             try:
                 # DEBUG
