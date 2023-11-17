@@ -6,15 +6,18 @@ body:
 
   neck_w: 15
 
-  sholder_w: 27   
+  shoulder_w: 27   
   armscye_depth: 10.5  # Nape of the Neck to armscye depth on the back
   shoulder_incl: 10  # degrees 
+  arm_length: 80  # TODO Check
+  wrist: 17  # TODO Check
 
   arm_pose_angle: 40  # Degrees
 
   waist: 53  # 
   waist_line:  33.3  # 31.3    # Nape of the Neck to waist (on the back)
   waist_over_bust_line: 37.5   # -- measurement + addition for the shoulder
+  waist_back_width: 25  # TODO Check
 
   bust_line: 19  #18.5  #18
   bust: 72   #  76
@@ -24,6 +27,8 @@ body:
 
   hips: 82  
   hips_line: 17.4    # From the waist
+  hip_back_width: 45  # TODO Check
+  hip_inclination: 9  # TODO Check
   bum_points: 13 
   crotch_hip_diff: 8   # NOTE vertical projection of the level
   leg_circ: 49

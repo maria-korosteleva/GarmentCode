@@ -15,6 +15,7 @@ import yaml
 import shutil 
 import numpy as np
 import PySimpleGUI as sg
+import traceback 
 
 
 # Custom 
@@ -80,7 +81,6 @@ class GUIPattern():
     # Updates
     def new_body_file(self, path):
         self.body_file = path
-        # FIXME Update instead of re-writing
         self.body_params = BodyParameters(path)
         self.reload_garment()
 
@@ -137,17 +137,31 @@ class GUIPattern():
             # https://stackoverflow.com/a/37704379
             for key in param_path[:-1]:
                 dic = dic.setdefault(key, {})
-
-            dic[param]['v'] = new_value
+            if param in dic:  # Some parameters may not be present
+                dic[param]['v'] = new_value
 
         if reload:
             self.reload_garment()
 
     def sample_design(self):
         """Random design parameters"""
-        new_design = self.design_sampler.randomize()
-        self.design_params.update(new_design)
-        self.reload_garment()
+
+        while True:
+            new_design = self.design_sampler.randomize()
+            self.design_params.update(new_design)
+            self.reload_garment()
+
+            if self.sew_pattern.is_self_intersecting():
+                # Let the user know
+                out = sg.popup_yes_no(
+                    'A sampled design is self-intersecting. Generate a new one?', 
+                    title='Self-Intersecting',
+                    icon=icon_image_b64)
+
+                if out == 'No':
+                    break
+            else:
+                break
 
     def restore_design(self):
         """Restore design values to match the current loaded file"""
@@ -338,6 +352,10 @@ class GUIState():
         # For now will only show the name of the file that was chosen
         viewer_column = [
             [
+                sg.Text(
+                    '', 
+                    text_color='red', 
+                    key='TEXT-SELF-INTERSECTION'),
                 sg.Push(),
                 sg.Checkbox(
                     'Display Reference Silhouette', 
@@ -394,7 +412,7 @@ class GUIState():
         for param in body:
             param_input_col.append([
                 sg.Text(
-                    param + ':', 
+                    param.strip('_') + ':', 
                     justification='right', 
                     expand_x=True), 
 
@@ -402,7 +420,8 @@ class GUIState():
                     str(body[param]), 
                     enable_events=False,  # Events enabled outside: only on Enter 
                     key=f'BODY#{param}', 
-                    size=7) 
+                    size=7,
+                    disabled=True if param[0] == '_' else False) 
                 ])
             
         layout = [
@@ -463,7 +482,7 @@ class GUIState():
                         default_value=design_params[param]['v'],  
                         orientation='horizontal',
                         relief=sg.RELIEF_FLAT, 
-                        resolution=1 if p_type == 'int' else 0.05, 
+                        resolution=1 if p_type == 'int' else 0.025, 
                         key=f'{pre_key}#{param}', 
                         # DRAFT enable_events=True # comment to only send events when slider is released
                     )
@@ -680,6 +699,14 @@ class GUIState():
                     f'{pre_key}#{param}'
                 )
 
+    def upd_self_intersecting(self):
+        """Indicate if the current pattern is self-intersecting"""
+        if self.pattern_state.sew_pattern.is_self_intersecting():
+            self.window['TEXT-SELF-INTERSECTION'].update(
+                'WARNING: Some of the panels are self-intersecting')
+        else:
+            self.window['TEXT-SELF-INTERSECTION'].update('')
+
     # Modifiers after window finalization
     def input_text_on_enter(self, tag):
         """Modify input text elements to only send events when Enter is pressed"""
@@ -812,12 +839,19 @@ class GUIState():
                         print(
                             'PatternConfigurator::INFO::New output path: ', 
                             self.pattern_state.save_path)
+                        
+                # Check self-intersection
+                self.upd_self_intersecting()
             
             except BaseException as e:
+                # To command line
+                print('Application ERROR detected: ')
+                traceback.print_exc() 
+                # To the user
                 sg.popup_error_with_traceback(
                     'Application ERROR detected (see below)', 
-                    str(e),
-                    '',
+                    traceback.format_exc(),
+                    ''
                     'Most likely, the generated pattern is in incorrect state due to current parameter values',
                     '   Undo your last change to return to correct garment state and click "Close"',
                     ''

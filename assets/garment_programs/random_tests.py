@@ -19,7 +19,6 @@ class CurvyPanel(pyp.Panel):
         # self.edges = pyp.esf.from_verts(
         #     [0, 0], [0, size], [size, size], [size, 0]
         # )
-        # TODO Creation shortcut
         # self.edges.append(pyp.CurveEdge([0, 0], [0, size], [[0.2, 0.3], [0.4, -0.2]]))
         self.edges.append(pyp.Edge([0, 0], [0, size]))
         # self.edges.append(pyp.CurveEdge(self.edges[-1].end, [size, size], [[0.5, 0.3]]))

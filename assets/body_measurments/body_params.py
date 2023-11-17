@@ -8,11 +8,16 @@ class BodyParameters(pyp.BodyParametrizationBase):
     def __init__(self, param_file='') -> None:
         super().__init__(param_file)
 
-    def eval_dependencies(self):
-        super().eval_dependencies()
+    def eval_dependencies(self, key=None):
+        super().eval_dependencies(key)
 
-        self.params['waist_level'] = self.params['height'] - self.params['head_l'] - self.params['waist_line']
-        self.params['leg_length'] = self.params['waist_level'] - self.params['hips_line']
+        if key in ['height', 'head_l', 'waist_line', 'hips_line', None]:
+            self.params['_waist_level'] = self.params['height'] - self.params['head_l'] - self.params['waist_line']
+            self.params['_leg_length'] = self.params['_waist_level'] - self.params['hips_line']
+        if key in ['shoulder_w', None]:
+            # Correct sleeve line location is a little closer to the neck
+            # than the true shoulder width
+            self.params['_base_sleeve_balance'] = self.params['shoulder_w'] - 4
 
 if __name__ == "__main__":
 

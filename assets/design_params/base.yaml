@@ -12,11 +12,11 @@ design:
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
-      v: null
+      v: null 
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
-      v: SkirtCircle  
+      v: null 
       range: 
         - SkirtCircle
         - GodetSkirt
@@ -25,7 +25,6 @@ design:
         - SkirtManyPanels
         - PencilSkirt
         - SkirtLevels
-        - MinimalALine   # For testing only
       type: select_null
 
   waistband:
@@ -44,33 +43,39 @@ design:
       range: [True, False]
       type: bool
     length: 
-      v: 2.
+      v: 1.8
       range: [0.5, 4.5]   # 1 == waistline
       type: float
     width:   # Around the body 
       v: 1.
-      range: [1., 2]    # 1 == bust size
+      range: [1., 1.4]    # 1 == bust size
+      type: float
+    flare: 
+      v: 1.4
+      range: 
+      - 0.7
+      - 1.4
       type: float
 
   collar:
     f_collar: 
-      v: VNeckHalf
-      range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf]
+      v: Bezier2NeckHalf
+      range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf, Bezier2NeckHalf]
       type: select_null
     b_collar: 
-      v: CircleNeckHalf
-      range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf]
+      v: Bezier2NeckHalf
+      range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf, Bezier2NeckHalf]
       type: select_null
     width: 
       v: 0.5
       range: [-0.5, 1]   # 0 = a neck width, 1 = max possible width
       type: float
     fc_depth:   # Front collar depth
-      v: 0.2
+      v: 0.2  # 0.25
       range: [0, 1]   # 0 = min possible, 1 = bust line
       type: float
     bc_depth:   # back collar depth
-      v: 0
+      v: 0.2  # 0.2
       range: [0, 1]   # 0 = min possible, 1 = bust line
       type: float
     fc_angle:    # Used in Trapesoid and CircleArc collars (differently)
@@ -81,6 +86,30 @@ design:
       v: 90
       range: [30, 180]
       type: int
+    f_bezier_x: 
+      v: 0.5
+      range:
+      - 0.05
+      - 0.95
+      type: float
+    f_bezier_y: 
+      v: 0.3
+      range:
+      - 0.05
+      - 0.95
+      type: float
+    b_bezier_x: 
+      v: 0.85
+      range:
+      - 0.05
+      - 0.95
+      type: float
+    b_bezier_y: 
+      v: 0.1
+      range:
+      - 0.05
+      - 0.95
+      type: float
     f_flip_curve:
       v: False
       range: [True, False]
@@ -91,7 +120,7 @@ design:
       type: bool
     component:
       style: 
-        v: SimpleLapel
+        v: null
         range: [Turtle, SimpleLapel]
         type: select_null
       depth: 
@@ -105,30 +134,34 @@ design:
      
   sleeve:
     sleeveless: 
-      v: True
+      v: False
       range: [True, False]
       type: bool
     armhole_shape: 
-      v: ArmholeSquare
+      v: ArmholeCurve
       range: [ArmholeSquare, ArmholeAngle, ArmholeCurve]
       type: select
     length: 
-      v: 30
-      range: [3, 80]
-      type: int
+      v: 0.2  # 30
+      range: [0.05, 1]
+      type: float
     connecting_width:
-      v: 0.2  
+      v: 0.4  # 0.50 
       range: [0, 1]   # 0 = armscue_depth, 1 = as big as the shirt side
       type: float
     end_width:
-      v: 0.8
+      v: 1. #  0.55
       range: [0.2, 2]   # 1 = same as arm opening
       type: float
 
     sleeve_angle:  # the rest angle of a sleeve, created at connected point
-      v: 10  # deg   
+      v: 20  # deg   
       range: [10, 50]
       type: int
+    opening_dir_mix:   # Detailed control over shape of sleeve opening 
+      v: 0.2  # deg   
+      range: [-0.9, 1.4]
+      type: float
     
     # Shoulder shape
     standing_shoulder: 
@@ -142,7 +175,7 @@ design:
 
     # Ruffle
     connect_ruffle:
-      v: 1
+      v: 1.
       range: [1, 2]
       type: float
     
@@ -151,29 +184,29 @@ design:
       v: 0.25
       range: [0.1, 0.4]
       type: float
-    inclination:   # How much intro the shoulder the sleeve will cut
-      v: 3
-      range: [2, 6]
-      type: float
 
     # Cuff
     cuff: 
       type:
-        v: null
+        v: CuffBand
         range: [CuffBand, CuffSkirt, CuffBandSkirt]
         type: select_null
       top_ruffle: 
         v: 1
         range: [1, 3]
         type: float
-      b_depth: 
-        v: 3
-        range: [1, 20]
-        type: int
-      skirt_length: 
-        v: 10
-        range: [5, 50]
-        type: int
+      cuff_len: 
+        v: 0.1
+        range:
+        - 0.05
+        - 0.9
+        type: float
+      skirt_fraction:
+        v: 0.5
+        range:
+        - 0.1
+        - 0.9
+        type: float
       skirt_flare:
         v: 1.5
         range: [1, 2]
@@ -190,38 +223,64 @@ design:
       type: bool
     shirt: 
       strapless: 
-        v: False
+        v: True
         range: [True, False]
         type: bool
-      length: 
-        v: 1.
-        range: [0.5, 4.5]   # 1 == waistline
-        type: float
       width:   # Around the body 
         v: 1.
-        range: [1., 2]    # 1 == bust size
+        range: [1., 1.4]    # 1 == bust size
+        type: float
+      flare: 
+        v: 1.0
+        range: 
+        - 0.7
+        - 1.4
         type: float
 
     collar:
       f_collar: 
         v: VNeckHalf
-        range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf]
+        range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf, Bezier2NeckHalf]
         type: select_null
       b_collar: 
         v: VNeckHalf
-        range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf]
+        range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf, Bezier2NeckHalf]
         type: select_null
       width: 
         v: 0.5
         range: [0, 1]   # 0 = a neck width, 1 = max possible width
         type: float
       fc_depth:   # Front collar depth
-        v: 0.2
+        v: 0.25
         range: [0, 1]   # 0 = min possible, 1 = bust line
         type: float
       bc_depth:   # back collar depth
-        v: 0
+        v: 0.2
         range: [0, 1]   # 0 = min possible, 1 = bust line
+        type: float
+      f_bezier_x: 
+        v: 0.5
+        range:
+        - 0.05
+        - 0.95
+        type: float
+      f_bezier_y: 
+        v: 0.3
+        range:
+        - 0.05
+        - 0.95
+        type: float
+      b_bezier_x: 
+        v: 0.5
+        range:
+        - 0.05
+        - 0.95
+        type: float
+      b_bezier_y: 
+        v: 0.3
+        range:
+        - 0.05
+        - 0.95
         type: float
       fc_angle:    # Used in Trapesoid and CircleArc collars (differently)
         v: 90
@@ -264,9 +323,9 @@ design:
         type: select
 
       length: 
-        v: 30
-        range: [3, 100]
-        type: int
+        v: 0.5
+        range: [0.1, 1]
+        type: float
       connecting_width:
         v: 0.2  
         range: [0, 1]   # 0 = armscue_depth, 1 = as big as the shirt side
@@ -280,6 +339,10 @@ design:
         v: 30  # deg   
         range: [10, 50]
         type: int
+      opening_dir_mix:
+        v: 0.2  # deg   
+        range: [-0.9, 1.4]
+        type: float
     
       # Shoulder shape
       standing_shoulder: 
@@ -302,10 +365,6 @@ design:
         v: 0.25
         range: [0.1, 0.4]
         type: float
-      inclination:   # How much intro the shoulder the sleeve will cut
-        v: 3
-        range: [2, 6]
-        type: float
 
       # Cuff
       cuff: 
@@ -317,14 +376,18 @@ design:
           v: 1
           range: [1, 3s]
           type: float
-        b_depth: 
-          v: 3
-          range: [1, 20]
-          type: int
-        skirt_length: 
-          v: 10
-          range: [5, 20]
-          type: int
+        cuff_len: 
+          v: 0.1
+          range:
+          - 0.05
+          - 0.9
+          type: float
+        skirt_fraction:
+          v: 0.5
+          range:
+          - 0.1
+          - 0.9
+          type: float
         skirt_flare:
           v: 1.5
           range: [1, 2]
@@ -336,11 +399,17 @@ design:
     
   skirt: 
     length:
-      v: 30
-      range: [5, 150]
-      type: int
+      v: 0.2
+      range:
+      - -0.2
+      - 1
+      type: float
+    rise:
+      v: 0.7
+      range: [0.5, 1]
+      type: float
     ruffle: 
-      v: 1.5
+      v: 1.
       range: [1, 2]
       type: float 
     bottom_cut: 
@@ -357,6 +426,10 @@ design:
       v: 0.3
       range: [-0.2, 1]
       type: float 
+    rise:
+      v: 0.7
+      range: [0.5, 1]
+      type: float
     n_panels:
       v: 8
       range: [4, 15]
@@ -386,7 +459,7 @@ design:
   godet-skirt: 
     base: 
       v: PencilSkirt
-      range: [Skirt2, PencilSkirt, SkirtWB]
+      range: [Skirt2, PencilSkirt]
       type: select
     insert_w: 
       v: 30
@@ -407,7 +480,7 @@ design:
 
   pencil-skirt: 
     length:
-      v: 0.4
+      v: 0.5
       range: [0.2, 1]
       type: float 
     rise:
@@ -415,19 +488,27 @@ design:
       range: [0.5, 1]
       type: float
     flare:   # coefficient may depend on length
-      v: 1.
+      v: 0.9
       range: [0.3, 1.1]   
       type: float
     low_angle: 
       v: 0
       range: [-30, 30]
       type: int
-    front_cut: # TODO Not to be used with low_angle!
+    front_slit: # TODO Not to be used with low_angle!
       v: 0
       range: [0, 0.9]   # 1 = length
       type: float
-    back_cut: 
+    back_slit: 
       v: 0
+      range: [0, 0.9]   # 1 = length
+      type: float
+    left_slit:
+      v: 0.4
+      range: [0, 0.9]   # 1 = length
+      type: float
+    right_slit: 
+      v: 0.4
       range: [0, 0.9]   # 1 = length
       type: float
     style_side_cut:
@@ -443,7 +524,7 @@ design:
   levels-skirt:
     base:    # NOTE Takes parameters from corresponding sections
       v: PencilSkirt
-      range: [Skirt2, PencilSkirt, SkirtWB, SkirtCircle]
+      range: [Skirt2, PencilSkirt, SkirtCircle]
       type: select
     level:   # NOTE Takes parameters from corresponding sections
       v: Skirt2
@@ -454,13 +535,27 @@ design:
       range: [1, 5]
       type: int 
     level_ruffle:   # NOTE: it will multiple the ruffle setup in the level setting, if any
-      v: 1.3
+      v: 1.
       range: [1, 2]
+      type: float
+    length: 
+      v: 0.8
+      range: [0.2, 1]
+      type: float
+    rise:
+      v: 0.7
+      range:
+      - 0.5
+      - 1
+      type: float
+    base_length_frac: 
+      v: 0.5
+      range: [0.2, 0.8]
       type: float
     
   pants: 
     length: 
-      v: 0.5
+      v: 0.6
       range: [0.1, 1.5]   # 0 == hip line, 1 == floor length
       type: float
     width: 
@@ -468,30 +563,34 @@ design:
       range: [1., 1.5]   # 1 = fits the hips
       type: float
     flare: 
-      v: 1.
+      v: 1
       range: [0.5, 1.2]   # 1 = same as hips
       type: float
     rise:
-      v: 0.8
+      v: 1.
       range: [0.5, 1]
       type: float
     cuff: 
       type:
-        v: null
+        v: CuffBand
         range: [CuffBand, CuffSkirt, CuffBandSkirt]
         type: select_null
       top_ruffle: 
-        v: 1.5     # TODO Depend on body measurements?
+        v: 1.    # TODO Depend on body measurements?
         range: [1, 2]
         type: float
-      b_depth: 
-        v: 10
-        range: [1, 20]
-        type: int
-      skirt_length: 
-        v: 10
-        range: [5, 20]
-        type: int
+      cuff_len: 
+        v: 0.1
+        range:
+        - 0.05
+        - 0.9
+        type: float
+      skirt_fraction:
+        v: 0.5
+        range:
+        - 0.1
+        - 0.9
+        type: float
       skirt_flare:
         v: 1.5
         range: [1, 2]

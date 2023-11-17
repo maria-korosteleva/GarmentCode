@@ -52,7 +52,7 @@ def ArmholeAngle(incl, width, angle, incl_coeff=0.2, w_coeff=0.2,  invert=True, 
     return edges, sleeve_edges
 
 
-def ArmholeCurve(incl, width, angle, invert=True, **kwargs):
+def ArmholeCurve(incl, width, angle, bottom_angle_mix=0, invert=True, **kwargs):
     """ Classic sleeve opening on Cubic Bezier curves
     """
     # Curvature as parameters?
@@ -81,12 +81,17 @@ def ArmholeCurve(incl, width, angle, invert=True, **kwargs):
     shortcut = inv_edge.shortcut()
     rotated_direction = shortcut[-1] - shortcut[0]
     rotated_direction /= np.linalg.norm(rotated_direction)
+    left_direction = np.array([-1, 0]) 
+    mix_factor = bottom_angle_mix  
+                                                          
+    dir = (1 - mix_factor) * rotated_direction + (
+        mix_factor * down_direction if mix_factor > 0 else (- mix_factor * left_direction))
 
     # TODOLOW Remember relative curvature results and reuse them? (speed)
     fin_inv_edge = pyp.ops.curve_match_tangents(
         inv_edge.as_curve(), 
-        down_direction, 
-        rotated_direction, 
+        down_direction,  # Full opening is vertically aligned
+        dir,
         return_as_edge=True
     )
 
@@ -98,7 +103,11 @@ def ArmholeCurve(incl, width, angle, invert=True, **kwargs):
 class SleevePanel(pyp.Panel):
     """Trying proper sleeve panel"""
 
-    def __init__(self, name, body, design, open_shape):
+    def __init__(self, name, body, design, open_shape, length_shift=0):
+        """Define a standard sleeve panel (half a sleeve)
+            * length_shift -- force upd sleeve length by this amount. 
+                Can be used to adjust length evaluation to fit the cuff
+        """
         super().__init__(name)
 
         # TODO end_width to be not less then the width of the arm??
@@ -107,16 +116,24 @@ class SleevePanel(pyp.Panel):
         rest_angle = max(np.deg2rad(design['sleeve_angle']['v']), shoulder_angle)
         standing = design['standing_shoulder']['v']
 
-        length = design['length']['v']
+        # Calculating extension size & end size before applying ruffles
+        # Since ruffles add to pattern length & width, but not to de-facto 
+        # sleeve length in 3D
+        opening_length = abs(open_shape[0].start[0] - open_shape[-1].end[0])
+        end_width = design['end_width']['v'] * abs(open_shape[0].start[1] - open_shape[-1].end[1]) 
+        # Ensure it fits regardless of parameters
+        end_width = max(end_width, body['wrist'] / 2)
 
         # Ruffles at opening
         if not pyp.utils.close_enough(design['connect_ruffle']['v'], 1):
             open_shape.extend(design['connect_ruffle']['v'])
 
+        # -- Main body of a sleeve --
         arm_width = abs(open_shape[0].start[1] - open_shape[-1].end[1]) 
-        end_width = design['end_width']['v'] * arm_width
-
-        # Main body of a sleeve 
+        # Length from the border of the opening to the end of the sleeve
+        length = design['length']['v'] * (body['arm_length'] - opening_length)
+        if length + length_shift > 0:  # NOTE: Avoid incorrect state (but it makes the result less precise)
+            length += length_shift
         self.edges = pyp.esf.from_verts(
             [0, 0], [0, -end_width], [length, -arm_width]
         )
@@ -157,44 +174,60 @@ class SleevePanel(pyp.Panel):
         # Default placement
         self.set_pivot(self.edges[1].end)
         self.translate_to(
-            [- body['sholder_w'] / 2,
+            [- body['shoulder_w'] / 2,
             body['height'] - body['head_l'] - body['armscye_depth'],
             0]) 
+        # NOTE: Extra 5 deg account for the fact that the arm is ~conic shape
+        # Makes draping of sleeves less problematic
         self.rotate_to(R.from_euler(
-            'XYZ', [0, 0, body['arm_pose_angle']], degrees=True))
+            'XYZ', [0, 0, body['arm_pose_angle'] + 5], degrees=True))
 
 
 class Sleeve(pyp.Component):
     """Trying to do a proper sleeve"""
 
 
-    def __init__(self, tag, body, design, depth_diff=3) -> None: 
+    def __init__(self, tag, body, design, front_w, back_w): 
+        """Defintion of a sleeve: 
+            * front_w, back_w: the width front and the back of the top 
+            the sleeve will attach to -- needed for correct share calculations
+                They may be
+                * Specified as scalar numbers
+                * Specified as functions w.r.t. the requested vertical level (=> 
+                    calculated width of a horizontal slice)
+        """
         super().__init__(f'{self.__class__.__name__}_{tag}')
 
         design = design['sleeve']
-        inclination = design['inclination']['v']
+        sleeve_balance = body['_base_sleeve_balance'] / 2
 
         rest_angle = max(np.deg2rad(design['sleeve_angle']['v']), np.deg2rad(body['shoulder_incl']))
 
         connecting_width = design['connecting_width']['v']
         smoothing_coeff = design['smoothing_coeff']['v']
 
+        front_w = front_w(connecting_width) if callable(front_w) else front_w
+        back_w = back_w(connecting_width) if callable(back_w) else back_w
+
         # --- Define sleeve opening shapes ----
         armhole = globals()[design['armhole_shape']['v']]
         front_project, front_opening = armhole(
-            inclination + depth_diff, connecting_width, 
+            front_w - sleeve_balance,
+            connecting_width, 
             angle=rest_angle, 
             incl_coeff=smoothing_coeff, 
             w_coeff=smoothing_coeff, 
-            invert=not design['sleeveless']['v']
+            invert=not design['sleeveless']['v'],
+            bottom_angle_mix=design['opening_dir_mix']['v']
         )
-        
         back_project, back_opening = armhole(
-            inclination, connecting_width, 
+            back_w - sleeve_balance,
+            connecting_width, 
             angle=rest_angle, 
             incl_coeff=smoothing_coeff, 
             w_coeff=smoothing_coeff,
-            invert=not design['sleeveless']['v']
+            invert=not design['sleeveless']['v'],
+            bottom_angle_mix=design['opening_dir_mix']['v']
         )
         
         self.interfaces = {
@@ -206,7 +239,7 @@ class Sleeve(pyp.Component):
             # The rest is not needed!
             return
         
-        if depth_diff != 0: 
+        if front_w != back_w: 
             front_opening, back_opening = pyp.ops.even_armhole_openings(
                 front_opening, back_opening, 
                 tol=0.2 / front_opening.length()  # ~2mm tolerance as a fraction of length
@@ -214,9 +247,13 @@ class Sleeve(pyp.Component):
 
         # ----- Get sleeve panels -------
         self.f_sleeve = SleevePanel(
-            f'{tag}_sleeve_f', body, design, front_opening).translate_by([0, 0, 15])
+            f'{tag}_sleeve_f', body, design, front_opening,
+            length_shift=-design['cuff']['cuff_len']['v'] * body['arm_length'] if design['cuff']['type']['v'] else 0
+            ).translate_by([0, 0, 15])
         self.b_sleeve = SleevePanel(
-            f'{tag}_sleeve_b', body, design, back_opening).translate_by([0, 0, -15])
+            f'{tag}_sleeve_b', body, design, back_opening,
+            length_shift=-design['cuff']['cuff_len']['v'] * body['arm_length'] if design['cuff']['type']['v'] else 0
+            ).translate_by([0, 0, -15])
 
         # Connect panels
         self.stitching_rules = pyp.Stitches(
@@ -241,8 +278,12 @@ class Sleeve(pyp.Component):
             # Class
             # Copy to avoid editing original design dict
             cdesign = deepcopy(design)
-            cdesign['cuff']['b_width'] = {}
-            cdesign['cuff']['b_width']['v'] = self.interfaces['out'].edges.length() / design['cuff']['top_ruffle']['v']
+            cuff_circ = self.interfaces['out'].edges.length() / design['cuff']['top_ruffle']['v']
+            # Ensure it fits regardless of parameters
+            cuff_circ = max(cuff_circ, body['wrist'])
+            cdesign['cuff']['b_width'] = dict(v=cuff_circ)
+            
+            cdesign['cuff']['cuff_len']['v'] = design['cuff']['cuff_len']['v'] * body['arm_length']
 
             cuff_class = getattr(bands, cdesign['cuff']['type']['v'])
             self.cuff = cuff_class(f'sl_{tag}', cdesign)

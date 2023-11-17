@@ -1,8 +1,5 @@
 """A decorative shapes"""
 
-import numpy as np
-import matplotlib.pyplot as plt  # DEBUG
-
 # Custom
 import pypattern as pyp
 
@@ -47,7 +44,7 @@ def SIGGRAPH_logo(width, depth=None, **kwargs):
     """Shape of SIGGRAPH Logo (split vertically)"""
 
     filename='./assets/img/Logo_adjusted.svg'   # NOTE assumes the script is run from the root
-    # TODO path w.r.t. current file
+    # TODOLOW path w.r.t. current file
     left_seq, right_seq = pyp.esf.halfs_from_svg(filename, target_height=width)
 
     return left_seq, right_seq

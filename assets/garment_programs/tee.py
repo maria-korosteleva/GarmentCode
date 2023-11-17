@@ -8,7 +8,10 @@ import numpy as np
 # Custom
 import pypattern as pyp
 
-class TorsoFrontHalfPanel(pyp.Panel):
+# other assets
+from .base_classes import BaseBodicePanel
+
+class TorsoFrontHalfPanel(BaseBodicePanel):
     """Half of a simple non-fitted upper garment (e.g. T-Shirt)
     
         Fits to the bust size
@@ -16,19 +19,19 @@ class TorsoFrontHalfPanel(pyp.Panel):
     def __init__(self, name, body, design) -> None:
         """ Front = True, provides the adjustments necessary for the front panel
         """
-        super().__init__(name)
+        super().__init__(name, body, design)
 
         design = design['shirt']
-        # account for ease in basic measurements
+
+        # width
         m_width = design['width']['v'] * body['bust']
-        b_width = m_width
+        b_width = design['flare']['v'] * m_width
 
         # sizes 
         body_width = (body['bust'] - body['back_width']) / 2 
         frac = body_width / body['bust'] 
         self.width = frac * m_width
         b_width = frac * b_width
-        connecting_point =  b_width * (m_width / 4 / self.width)
 
         shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
         length = design['length']['v'] * body['waist_line']
@@ -40,7 +43,6 @@ class TorsoFrontHalfPanel(pyp.Panel):
 
         self.edges = pyp.esf.from_verts(
             [0, 0], 
-            [-connecting_point, 0],   # Extra vertex to connect with front-back symmetric bottoms correctly
             [-b_width, 0], 
             [-self.width, length], 
             [0, length + shoulder_incl], 
@@ -49,11 +51,10 @@ class TorsoFrontHalfPanel(pyp.Panel):
 
         # Interfaces
         self.interfaces = {
-            'outside':  pyp.Interface(self, self.edges[2]),   
+            'outside':  pyp.Interface(self, self.edges[1]),   
             'inside': pyp.Interface(self, self.edges[-1]),
             'shoulder': pyp.Interface(self, self.edges[-2]),
-            'bottom_front': pyp.Interface(self, self.edges[0]),
-            'bottom_back': pyp.Interface(self, self.edges[1]),
+            'bottom': pyp.Interface(self, self.edges[0]),
             
             # Reference to the corner for sleeve and collar projections
             'shoulder_corner': pyp.Interface(self, [self.edges[-3], self.edges[-2]]),
@@ -63,8 +64,10 @@ class TorsoFrontHalfPanel(pyp.Panel):
         # default placement
         self.translate_by([0, body['height'] - body['head_l'] - length, 0])
 
+    def get_width(self, level):
+        return super().get_width(level) + self.width - self.body['shoulder_w'] / 2
 
-class TorsoBackHalfPanel(pyp.Panel):
+class TorsoBackHalfPanel(BaseBodicePanel):
     """Half of a simple non-fitted upper garment (e.g. T-Shirt)
     
         Fits to the bust size
@@ -72,12 +75,12 @@ class TorsoBackHalfPanel(pyp.Panel):
     def __init__(self, name, body, design) -> None:
         """ Front = True, provides the adjustments necessary for the front panel
         """
-        super().__init__(name)
+        super().__init__(name, body, design)
 
         design = design['shirt']
         # account for ease in basic measurements
         m_width = design['width']['v'] * body['bust']
-        b_width = m_width
+        b_width = design['flare']['v'] * m_width
 
         # sizes 
         body_width = body['back_width'] / 2
@@ -85,7 +88,7 @@ class TorsoBackHalfPanel(pyp.Panel):
         self.width = frac * m_width
         b_width = frac * b_width
 
-        shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
+        shoulder_incl = (np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
         length = design['length']['v'] * body['waist_line']
 
         self.edges = pyp.esf.from_verts(
@@ -111,3 +114,5 @@ class TorsoBackHalfPanel(pyp.Panel):
         # default placement
         self.translate_by([0, body['height'] - body['head_l'] - length, 0])
 
+    def get_width(self, level):
+        return super().get_width(level) + self.width - self.body['shoulder_w'] / 2

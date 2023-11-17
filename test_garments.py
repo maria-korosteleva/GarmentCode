@@ -23,7 +23,9 @@ from assets.body_measurments.body_params import BodyParameters
 
 if __name__ == '__main__':
 
+    # 
     body_file = './assets/body_measurments/f_smpl_avg.yaml'
+    # body_file = r"G:\My Drive\GarmentCode\sewing_siggraph_garment\measurements\Maria.yaml"
     # body_file = './assets/body_measurments/f_avatar.yaml'
     # body_file = './assets/body_measurments/f_smpl_model.yaml'
     # body_file = './assets/body_measurments/f_smpl_model_fluffy.yaml'
@@ -33,7 +35,8 @@ if __name__ == '__main__':
 
     design_files = {
         'base': './assets/design_params/base.yaml',
-        # 'debug': './Logs/rand_0URAVX1P0H_design_params.yaml'
+        # 'our_dress': r"G:\My Drive\GarmentCode\sewing_siggraph_garment\designs\dress_design_params.yaml"
+        # 'debug': './Logs/rand_C3EXMEK4MK_design_params.yaml'   #    
         #'default': './assets/design_params/default.yaml',
         # 'modern': './assets/design_params/modern.yaml',
         # 'Dress_20s': './assets/design_params/dress_20s.yaml',
@@ -68,10 +71,11 @@ if __name__ == '__main__':
         # Save as json file
         sys_props = Properties('./system.json')
         folder = pattern.serialize(
+            # Path(r"G:\My Drive\GarmentCode\sewing_siggraph_garment\Fits"),  #   
             Path(sys_props['output']), 
             tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
             to_subfolder=False, 
-            with_3d=False, with_text=True, view_ids=True)
+            with_3d=False, with_text=False, view_ids=False)
 
         body.save(folder)
         if piece.name in design_files:

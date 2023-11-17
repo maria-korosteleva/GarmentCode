@@ -4,6 +4,7 @@ import numpy as np
 # Custom
 import pypattern as pyp
 from . import skirt_paneled as skirts
+from .base_classes import BaseBottoms
 
 class Insert(pyp.Panel):
     def __init__(self, id, width=30, depth=30) -> None:
@@ -17,18 +18,19 @@ class Insert(pyp.Panel):
         self.top_center_pivot()
         self.center_x()
 
-class GodetSkirt(pyp.Component):
+class GodetSkirt(BaseBottoms):
     def __init__(self, body, design) -> None:
-        super().__init__(f'{self.__class__.__name__}')
+        super().__init__(body, design)
 
         gdesign = design['godet-skirt']
         ins_w = gdesign['insert_w']['v']
         ins_depth = gdesign['insert_depth']['v']
 
         base_skirt = getattr(skirts, gdesign['base']['v'])
-        self.base = base_skirt(body, design)
+        # NOTE: godets currently don't like slits on the front/back 
+        # of the base skirt => Forcing to remove any slits
+        self.base = base_skirt(body, design, slit=False)  
 
-        # TODO resolve collisions on inserts placement
         bintr = self.base.interfaces['bottom']
         for edge, panel in zip(bintr.edges, bintr.panel):
             self.inserts(
@@ -38,7 +40,6 @@ class GodetSkirt(pyp.Component):
 
         self.interfaces = {
             'top': self.base.interfaces['top']
-            # TODO Add bottom interface? Can be done with interface.substitute func
         }
 
 
@@ -86,9 +87,7 @@ class GodetSkirt(pyp.Component):
         
         cut_shape = pyp.esf.from_verts([0,0], [cut_width / 2, cut_depth], [cut_width, 0])  
 
-        right = z_transl < 0    # FIXME: heuristic corresponding to skirts in our collection
-
-        # DRAFT right = panel.is_right_inside_edge(bottom_edge) =( Does not work reliably!
+        right = z_transl < 0    # NOTE: heuristic corresponding to skirts in our collection
 
         for i in range(num_inserts):
             offset = cut_width / 2 + (cuts_dist / 2 if i == 0 else cuts_dist)   #  start_offest + i * stride
@@ -106,3 +105,6 @@ class GodetSkirt(pyp.Component):
                 (self.subs[-1-i if right else -(num_inserts-i)].interfaces[0], 
                 cut_interface))
        
+
+    def get_rise(self):
+        return self.base.get_rise()
