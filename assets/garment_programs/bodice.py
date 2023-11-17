@@ -132,7 +132,9 @@ class BodiceBackHalf(BaseBodicePanel):
 
         # Bottom dart as cutout -- for straight line
         if waist < self.get_width(self.edges[2].end[1] - self.edges[2].start[1]):
-            bottom_d_width = waist_width - waist
+            w_diff = waist_width - waist
+            side_adj = 0  if w_diff < 4 else w_diff / 6  # NOTE: don't take from sides if the difference is too small
+            bottom_d_width = w_diff - side_adj
             bottom_d_width /= 2   # double darts
             bottom_d_depth = 0.9 * (length - body['bust_line'])  # calculated value
             bottom_d_position = body['bum_points'] / 2
@@ -155,8 +157,8 @@ class BodiceBackHalf(BaseBodicePanel):
             self.edges.substitute(0, b_edge)
             self.interfaces['bottom'] = pyp.Interface(self, b_interface)
 
-            # TODO Remove fabric from the sides if the diff is big enough
-            # DRAFT b_edge[-1].end[0] += 2 
+            # Remove fabric from the sides if the diff is big enough
+            b_edge[-1].end[0] += side_adj
 
         # default placement
         self.translate_by([0, body['height'] - body['head_l'] - length, 0])
@@ -216,7 +218,7 @@ class BodiceHalf(pyp.Component):
         max_cwidth = self.ftorso.interfaces['shoulder_corner'].edges[0].length() - 1  # cm
         min_cwidth = body['armscye_depth']
         v = design['sleeve']['connecting_width']['v']
-        design['sleeve']['connecting_width']['v'] = min_cwidth + v * (max_cwidth - min_cwidth)
+        design['sleeve']['connecting_width']['v'] = min(min_cwidth + min_cwidth * v, max_cwidth)
 
         # Collars
         # NOTE: Assuming the first is the top edge
@@ -242,11 +244,16 @@ class BodiceHalf(pyp.Component):
         max_b_len = self.btorso.interfaces['collar_corner'].edges[1].length() - tg * self.btorso.get_width(0) - 1  # cm
 
         design['collar']['f_strapless_depth'] = {}
-        design['collar']['f_strapless_depth']['v'] = design['collar']['fc_depth']['v'] * max_f_len
+        design['collar']['f_strapless_depth']['v'] = min(
+            design['collar']['fc_depth']['v'] * body['bust_line'], 
+            max_f_len)
         design['collar']['fc_depth']['v'] = design['collar']['f_strapless_depth']['v'] + f_depth_adj
         
+
         design['collar']['b_strapless_depth'] = {}
-        design['collar']['b_strapless_depth']['v'] = design['collar']['bc_depth']['v'] * max_b_len
+        design['collar']['b_strapless_depth']['v'] =  min(
+            design['collar']['bc_depth']['v'] * body['bust_line'], 
+            max_b_len)
         design['collar']['bc_depth']['v'] = design['collar']['b_strapless_depth']['v'] + b_depth_adj 
 
     def add_sleeves(self, name, body, design):

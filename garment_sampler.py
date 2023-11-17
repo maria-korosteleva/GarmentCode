@@ -88,6 +88,10 @@ def generate(path, properties, verbose=False):
         for _ in range(100):  # Putting a limit on re-tries to avoid infinite loops
             new_design = sampler.randomize()
             name = f'rand_{_id_generator()}'
+            
+            # log properties every time
+            props.serialize(data_folder / 'dataset_properties.yaml') 
+            
             try:
                 # DEBUG
                 if verbose:
@@ -170,7 +174,7 @@ if __name__ == '__main__':
         props.set_section_config('generator')
     else:
         props = Properties(
-            Path(system_props['datasets_path']) / 'data_30_230802-12-25-09/dataset_properties.yaml',
+            Path(system_props['datasets_path']) / 'data_30_231116-17-26-02/dataset_properties.yaml',
             True)
 
     props['data_folder'] = system_props['data_folder'] + "/sampled/"
