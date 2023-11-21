@@ -316,8 +316,6 @@ class Hood2Panels(pyp.Component):
     def __init__(self, tag, body, design) -> None:
         super().__init__(f'Hood_{tag}')
 
-        # TODO design parameters
-
         # --Projecting shapes--
         width = design['collar']['width']['v']
         f_collar = CircleNeckHalf(
@@ -333,17 +331,15 @@ class Hood2Panels(pyp.Component):
         }
 
         # -- Panel --
-        length_f, length_b = f_collar.length(), b_collar.length()
-        
         self.panel = HoodPanel(
             f'{tag}_hood', 
             design['collar']['fc_depth']['v'],
             design['collar']['bc_depth']['v'],
-            f_length=length_f,
-            b_length=length_b,
+            f_length=f_collar.length(),
+            b_length=b_collar.length(),
             width=width,
-            in_length=body['head_l'],
-            depth=width / 2
+            in_length=body['head_l'] * design['collar']['component']['hood_length']['v'],
+            depth=width / 2 * design['collar']['component']['hood_depth']['v']
         ).translate_by(
             [0, body['height'] - body['head_l'] + 10, 0])
 

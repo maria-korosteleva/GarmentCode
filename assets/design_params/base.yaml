@@ -67,11 +67,11 @@ design:
       range: [CircleNeckHalf, CurvyNeckHalf, VNeckHalf, SquareNeckHalf, TrapezoidNeckHalf, CircleArcNeckHalf, Bezier2NeckHalf]
       type: select_null
     width: 
-      v: 0.1
+      v: 0.5
       range: [-0.5, 1]   # 0 = a neck width, 1 = max possible width
       type: float
     fc_depth:   # Front collar depth
-      v: 0.15  # 0.25
+      v: 0.2  # 0.25
       range: [0, 1]   # 0 = min possible, 1 = bust line
       type: float
     bc_depth:   # back collar depth
@@ -131,6 +131,14 @@ design:
         v: False
         range: [True, False]
         type: bool
+      hood_depth: 
+        v: 1.2
+        range: [1, 2]
+        type: float
+      hood_length: 
+        v: 1.2
+        range: [1, 1.5]
+        type: float
      
   sleeve:
     sleeveless: 
@@ -311,7 +319,15 @@ design:
           v: False
           range: [True, False]
           type: bool
-      
+        hood_depth: 
+          v: 1.2
+          range: [1, 2]
+          type: float
+        hood_length: 
+          v: 1.2
+          range: [1, 1.5]
+          type: float
+        
     sleeve:
       sleeveless: 
         v: False
