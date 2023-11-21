@@ -522,16 +522,17 @@ def _bend_extend_2_tangent(
     return length_diff + tan_0_diff + tan_1_diff + curvature_reg + end_expantion_reg
 
 
-def curve_match_tangents(curve, target_tan0, target_tan1,
+def curve_match_tangents(curve, target_tan0, target_tan1, target_len=None,
                          return_as_edge=False, verbose: bool = False):
     """Update the curve to have the desired tangent directions at endpoints 
-        while preserving curve length and overall direction
+        while preserving curve length or desired target length ('target_len') and overall direction
 
         Returns 
         * control points for the final CubicBezier curves
         * Or CurveEdge instance, if return_as_edge=True
 
         NOTE: Only Cubic Bezier curves are supported
+        NOTE: Expects good enough initialization ('curve') that approximated desired solution
     """
     if not isinstance(curve, svgpath.CubicBezier):
         raise NotImplementedError(
@@ -552,7 +553,7 @@ def curve_match_tangents(curve, target_tan0, target_tan1,
         [0, 0, 0, 0, 0], 
         args=(
             curve_cps, 
-            curve.length(),
+            curve.length() if target_len is None else target_len,
             direction,
             list_to_c(target_tan0),  
             list_to_c(target_tan1), 

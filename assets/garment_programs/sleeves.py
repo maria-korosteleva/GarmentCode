@@ -93,6 +93,7 @@ def ArmholeCurve(incl, width, angle, bottom_angle_mix=0, invert=True, **kwargs):
         inv_edge.as_curve(), 
         down_direction,  # Full opening is vertically aligned
         dir,
+        target_len=edge.length(),
         return_as_edge=True
     )
 
