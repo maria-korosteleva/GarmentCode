@@ -253,18 +253,33 @@ class SimpleLapel(pyp.Component):
 
 class HoodPanel(pyp.Panel):
     """A panel for the side of the hood"""
-    def __init__(self, name, f_depth, b_depth, width, in_length, depth) -> None:
+    def __init__(self, name, f_depth, b_depth, f_length, b_length, width, in_length, depth) -> None:
         super().__init__(name)
 
         width = width / 2  # Panel covers one half only
-        length = in_length + width / 2    # DRAFT np.sqrt(in_length**2 + width**2)  # Account for "flattening" in the neck area
+        length = in_length + width / 2  
 
         # DEBUG
         print(in_length, length, width, in_length**2 + width**2)
 
-        self.edges = pyp.EdgeSeqFactory.from_verts(
-            [-width, -b_depth], [0, 0], [width, -f_depth], [width * 1.2, length], [width * 1.2 - depth, length]
-        )
+        # TODO Match the length with the collar!
+        # TODO Vary curvature to match the length?? & Fix some of the tangents
+        # Bottom-back
+        self.edges.append(pyp.CurveEdge(
+            [-width, -b_depth], 
+            [0, 0],
+            [[0.3, -0.2], [0.6, 0.2]]
+        ))
+        self.edges.append(pyp.CurveEdge(
+            self.edges[-1].end, 
+            [width, -f_depth],
+            [[0.3, 0.2], [0.6, -0.2]]
+        ))
+
+        self.edges.append(pyp.EdgeSeqFactory.from_verts(
+            self.edges[-1].end,
+            [width * 1.2, length], [width * 1.2 - depth, length]
+        ))
         self.edges.append(
             pyp.CurveEdge(
                 self.edges[-1].end, 
@@ -279,41 +294,24 @@ class HoodPanel(pyp.Panel):
         }
 
         self.rotate_by(R.from_euler('XYZ', [0, -90, 0], degrees=True))
-        self.translate_by([-width * 1.5, 0, 0])
+        self.translate_by([-width, 0, 0])
 
 class Hood2Panels(pyp.Component):
 
     def __init__(self, tag, body, design) -> None:
         super().__init__(f'Hood_{tag}')
 
-        depth = design['collar']['component']['depth']['v'] 
-
-        # TODO circle back
         # TODO arbitraty front? 
         # TODO design parameters
 
         # --Projecting shapes--
-        # DRAFT 
-        # Any front one!
-        # collar_type = globals()[design['collar']['f_collar']['v']]
-        # 
-        # f_collar = collar_type(
-        #     design['collar']['fc_depth']['v'],
-        #     design['collar']['width']['v'], 
-        #     angle=design['collar']['fc_angle']['v'], 
-        #     flip=design['collar']['f_flip_curve']['v'])
-        
-        # b_collar = CircleNeckHalf(
-        #     design['collar']['bc_depth']['v'],
-        #     design['collar']['width']['v'])
-
         width = design['collar']['width']['v']
-        f_collar = VNeckHalf(
-            design['collar']['fc_depth']['v'],
-            width)
-        b_collar = VNeckHalf(
-            design['collar']['bc_depth']['v'],
-            width)
+        f_collar = CircleNeckHalf(
+            design['collar']['fc_depth']['v'],   
+            design['collar']['width']['v'])
+        b_collar = CircleNeckHalf(
+            design['collar']['bc_depth']['v'],   
+            design['collar']['width']['v'])
         
         self.interfaces = {
             'front_proj': pyp.Interface(self, f_collar),
@@ -327,8 +325,10 @@ class Hood2Panels(pyp.Component):
             f'{tag}_hood', 
             design['collar']['fc_depth']['v'],
             design['collar']['bc_depth']['v'],
-            width,
-            body['head_l'], # DRAFT + body['neck_w'] / 2,  # DRAFT  * 1.4,  # TODOLOW It would be better to use head width measurement
+            f_length=length_f,
+            b_length=length_b,
+            width=width,
+            in_length=body['head_l'],
             depth=width / 2
         ).translate_by(
             [0, body['height'] - body['head_l'] + 10, 0])
