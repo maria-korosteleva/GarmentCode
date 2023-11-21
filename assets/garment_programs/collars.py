@@ -259,27 +259,42 @@ class HoodPanel(pyp.Panel):
         width = width / 2  # Panel covers one half only
         length = in_length + width / 2  
 
-        # DEBUG
-        print(in_length, length, width, in_length**2 + width**2)
-
-        # TODO Match the length with the collar!
-        # TODO Vary curvature to match the length?? & Fix some of the tangents
         # Bottom-back
-        self.edges.append(pyp.CurveEdge(
+        bottom_back_in = pyp.CurveEdge(
             [-width, -b_depth], 
             [0, 0],
             [[0.3, -0.2], [0.6, 0.2]]
-        ))
-        self.edges.append(pyp.CurveEdge(
+        )
+        bottom_back = pyp.ops.curve_match_tangents(
+            bottom_back_in.as_curve(), 
+            [1, 0],  # Full opening is vertically aligned
+            [1, 0],
+            target_len=b_length,
+            return_as_edge=True
+        )
+        self.edges.append(bottom_back)
+
+        # Bottom front
+        bottom_front_in = pyp.CurveEdge(
             self.edges[-1].end, 
             [width, -f_depth],
             [[0.3, 0.2], [0.6, -0.2]]
-        ))
+        )
+        bottom_front = pyp.ops.curve_match_tangents(
+            bottom_front_in.as_curve(), 
+            [1, 0],  # Full opening is vertically aligned
+            [1, 0],
+            target_len=f_length,
+            return_as_edge=True
+        )
+        self.edges.append(bottom_front)
 
+        # Front-top straight section 
         self.edges.append(pyp.EdgeSeqFactory.from_verts(
             self.edges[-1].end,
             [width * 1.2, length], [width * 1.2 - depth, length]
         ))
+        # Back of the hood
         self.edges.append(
             pyp.CurveEdge(
                 self.edges[-1].end, 
@@ -301,7 +316,6 @@ class Hood2Panels(pyp.Component):
     def __init__(self, tag, body, design) -> None:
         super().__init__(f'Hood_{tag}')
 
-        # TODO arbitraty front? 
         # TODO design parameters
 
         # --Projecting shapes--
