@@ -75,7 +75,7 @@ design:
       range: [0, 1]   # 0 = min possible, 1 = bust line
       type: float
     bc_depth:   # back collar depth
-      v: 0.2  # 0.2
+      v: 0  # 0.2
       range: [0, 1]   # 0 = min possible, 1 = bust line
       type: float
     fc_angle:    # Used in Trapesoid and CircleArc collars (differently)
@@ -120,8 +120,8 @@ design:
       type: bool
     component:
       style: 
-        v: null
-        range: [Turtle, SimpleLapel]
+        v: Hood2Panels
+        range: [Turtle, SimpleLapel, Hood2Panels]
         type: select_null
       depth: 
         v: 7
@@ -131,10 +131,18 @@ design:
         v: False
         range: [True, False]
         type: bool
+      hood_depth: 
+        v: 1.2
+        range: [1, 2]
+        type: float
+      hood_length: 
+        v: 1.2
+        range: [1, 1.5]
+        type: float
      
   sleeve:
     sleeveless: 
-      v: False
+      v: True
       range: [True, False]
       type: bool
     armhole_shape: 
@@ -298,20 +306,7 @@ design:
         v: False
         range: [True, False]
         type: bool
-      component:
-        style: 
-          v: null
-          range: [Turtle, SimpleLapel]
-          type: select_null
-        depth: 
-          v: 7
-          range: [2, 8]
-          type: int
-        lapel_standing:
-          v: False
-          range: [True, False]
-          type: bool
-      
+        
     sleeve:
       sleeveless: 
         v: False

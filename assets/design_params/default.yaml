@@ -177,6 +177,7 @@ design:
         range:
         - Turtle
         - SimpleLapel
+        - Hood2Panels
         - null
         type: select_null
         default_prob: 0.6
@@ -192,6 +193,20 @@ design:
         - true
         - false
         type: bool
+      hood_depth: 
+        v: 1
+        range: 
+        - 1
+        - 2
+        type: float
+        default_prob: 0.6
+      hood_length: 
+        v: 1
+        range: 
+        - 1
+        - 1.5
+        type: float
+        default_prob: 0.6
   sleeve:
     sleeveless:
       v: false
@@ -424,27 +439,6 @@ design:
         - false
         type: bool
         default_prob: 0.8
-      component:
-        style:
-          v: null
-          range:
-          - Turtle
-          - SimpleLapel
-          - null
-          type: select_null
-          default_prob: 0.6
-        depth:
-          v: 7
-          range:
-          - 2
-          - 8
-          type: int
-        lapel_standing:
-          v: false
-          range:
-          - true
-          - false
-          type: bool
     sleeve:
       sleeveless:
         v: false

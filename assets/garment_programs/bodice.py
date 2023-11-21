@@ -402,14 +402,14 @@ class Shirt(pyp.Component):
 
     def eval_dep_params(self, design):
         # NOTE: Support for full collars with partially strapless top
+        # or combination of paneled collar styles
         # requres further development
         # TODOLOW enable this one to work
         if design['left']['enable_asym']['v']:
-            if design['shirt']['strapless']['v'] != design['left']['shirt']['strapless']['v']:
-                # Force no collars
-                design = deepcopy(design)
-                design['collar']['component']['style']['v'] = None
-                design['left']['collar']['component']['style']['v'] = None
+            # Force no collars since they are not compatible with each other
+            design = deepcopy(design)
+            design['collar']['component']['style']['v'] = None
+            design['left']['collar']['component'] = dict(style=dict(v=None))
             
             # Left-right design compatibility 
             design['left']['shirt'].update(length={})
