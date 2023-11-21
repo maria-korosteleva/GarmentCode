@@ -306,27 +306,6 @@ design:
         v: False
         range: [True, False]
         type: bool
-      component:
-        style: 
-          v: null
-          range: [Turtle, SimpleLapel, Hood2Panels]
-          type: select_null
-        depth: 
-          v: 7
-          range: [2, 8]
-          type: int
-        lapel_standing:
-          v: False
-          range: [True, False]
-          type: bool
-        hood_depth: 
-          v: 1.2
-          range: [1, 2]
-          type: float
-        hood_length: 
-          v: 1.2
-          range: [1, 1.5]
-          type: float
         
     sleeve:
       sleeveless: 
