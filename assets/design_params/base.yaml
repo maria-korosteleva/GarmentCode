@@ -120,8 +120,8 @@ design:
       type: bool
     component:
       style: 
-        v: null
-        range: [Turtle, SimpleLapel]
+        v: Hood2Panels
+        range: [Turtle, SimpleLapel, Hood2Panels]
         type: select_null
       depth: 
         v: 7
@@ -134,7 +134,7 @@ design:
      
   sleeve:
     sleeveless: 
-      v: False
+      v: True
       range: [True, False]
       type: bool
     armhole_shape: 
@@ -301,7 +301,7 @@ design:
       component:
         style: 
           v: null
-          range: [Turtle, SimpleLapel]
+          range: [Turtle, SimpleLapel, Hood2Panels]
           type: select_null
         depth: 
           v: 7

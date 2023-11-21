@@ -251,3 +251,83 @@ class SimpleLapel(pyp.Component):
         })
 
 
+class HoodPanel(pyp.Panel):
+    """A panel for the side of the hood"""
+    def __init__(self, name, f_depth, b_depth, width, length) -> None:
+        super().__init__(name)
+
+        width = width / 2  # Panel covers one half only
+
+        self.edges = pyp.EdgeSeqFactory.from_verts(
+            [-width, -b_depth], [0, 0], [width, -f_depth], [width, length],
+        )
+        self.edges.append(
+            pyp.CurveEdge(
+                self.edges[-1].end, 
+                self.edges[0].start, 
+                [[0.3, -0.6]]
+            )
+        )
+
+        self.interfaces = {
+            'to_other_side': pyp.Interface(self, self.edges[-1]),
+            'to_bodice': pyp.Interface(self, self.edges[0:2]).reverse()
+        }
+
+        self.rotate_by(R.from_euler('XYZ', [0, -90, 0], degrees=True))
+        self.translate_by([0, 0, -width * 2])
+
+class Hood2Panels(pyp.Component):
+
+    def __init__(self, tag, body, design) -> None:
+        super().__init__(f'Hood_{tag}')
+
+        depth = design['collar']['component']['depth']['v']
+
+        # --Projecting shapes--
+        # DRAFT 
+        # Any front one!
+        # collar_type = globals()[design['collar']['f_collar']['v']]
+        # 
+        # f_collar = collar_type(
+        #     design['collar']['fc_depth']['v'],
+        #     design['collar']['width']['v'], 
+        #     angle=design['collar']['fc_angle']['v'], 
+        #     flip=design['collar']['f_flip_curve']['v'])
+        
+        # b_collar = CircleNeckHalf(
+        #     design['collar']['bc_depth']['v'],
+        #     design['collar']['width']['v'])
+
+        f_collar = VNeckHalf(
+            design['collar']['fc_depth']['v'],
+            design['collar']['width']['v'])
+        b_collar = VNeckHalf(
+            design['collar']['bc_depth']['v'],
+            design['collar']['width']['v'])
+        
+        self.interfaces = {
+            'front_proj': pyp.Interface(self, f_collar),
+            'back_proj': pyp.Interface(self, b_collar)
+        }
+
+        # -- Panel --
+        length_f, length_b = f_collar.length(), b_collar.length()
+        height_p = body['height'] - body['head_l'] + depth * 2
+        
+        self.panel = HoodPanel(
+            f'{tag}_hood', 
+            design['collar']['fc_depth']['v'],
+            design['collar']['bc_depth']['v'],
+            design['collar']['width']['v'],
+            body['head_l'] * 1.4
+        ).translate_by(
+            [-depth * 2, height_p, 30])
+
+        self.interfaces.update({
+            #'front': NOTE: no front interface here
+            'back': self.panel.interfaces['to_other_side'],
+            'bottom': self.panel.interfaces['to_bodice']
+        })
+
+

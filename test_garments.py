@@ -62,7 +62,7 @@ if __name__ == '__main__':
             Path(sys_props['output']), 
             tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
             to_subfolder=False, 
-            with_3d=False, with_text=True, view_ids=False)
+            with_3d=False, with_text=False, view_ids=False)
 
         body.save(folder)
         if piece.name in design_files:

@@ -177,6 +177,7 @@ design:
         range:
         - Turtle
         - SimpleLapel
+        - Hood2Panels
         - null
         type: select_null
         default_prob: 0.6
@@ -430,6 +431,7 @@ design:
           range:
           - Turtle
           - SimpleLapel
+          - Hood2Panels
           - null
           type: select_null
           default_prob: 0.6
