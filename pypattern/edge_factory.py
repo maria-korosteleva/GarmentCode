@@ -1,5 +1,3 @@
-from copy import copy
-
 import numpy as np
 from numpy.linalg import norm
 import svgpathtools as svgpath
@@ -12,7 +10,6 @@ from pypattern.generic_utils import bbox_paths
 from pypattern.generic_utils import close_enough
 from pypattern.generic_utils import c_to_list
 from pypattern.generic_utils import list_to_c
-from pypattern.interface import Interface
 
 
 class EdgeFactory:
@@ -382,21 +379,6 @@ class EdgeSeqFactory:
         return CurveEdge(start, end, control_points=[cp], relative=True)
 
 
-def _rel_to_abs_coords(start, end, vrel):
-    """Convert coordinates specified relative to vector v2 - v1 to world
-    coords"""
-    # TODOLOW It's in the edges?
-    start, end, vrel = np.asarray(start), np.asarray(end), np.asarray(vrel)
-    vec = end - start
-    vec = vec / norm(vec)
-    vec_perp = np.array([-vec[1], vec[0]])
-
-    new_start = start + vrel[0] * vec
-    new_point = new_start + vrel[1] * vec_perp
-
-    return new_point
-
-
 def _abs_to_rel_2d(start, end, point):
     """Convert control points coordinates from absolute to relative"""
     # TODOLOW It's in the edge class?
@@ -445,37 +427,7 @@ def _abs_to_rel_2d_vector(start, end, vec):
     return np.asarray(converted)
 
 
-def _fit_dart(coords, v0, v1, d0, d1, depth, theta=90):
-    """Placements of three dart points respecting the constraints"""
-    p0, p_tip, p1 = coords[:2], coords[2:4], coords[4:]
-    error = {}
-
-    # Distance constraints
-    error['d0'] = (norm(p0 - v0) - d0)**2
-    error['d1'] = (norm(p1 - v1) - d1)**2
-
-    # Depth constraint
-    error['depth0'] = (norm(p0 - p_tip) - depth)**2
-    error['depth1'] = (norm(p1 - p_tip) - depth)**2
-
-    # Angle constraint
-    # allows for arbitraty angle of the dart tip w.r.t. edge side after
-    # stitching
-    theta = np.deg2rad(theta)
-    error['angle0'] = (np.dot(p_tip - p0, v0 - p0) - np.cos(theta) * d0 * depth)**2
-    # cos(pi - theta) = - cos(theta)
-    error['angle1'] = (np.dot(p_tip - p1, v1 - p1) + np.cos(theta) * d1 * depth)**2
-
-    # Maintain P0, P1 on the same side w.r.t to v0-v1
-    error['side'] = (_softsign(np.cross(v1 - v0, p1 - v0)) - _softsign(np.cross(v1 - v0, p0 - v0)))**2 / 4
-
-    return sum(error.values())
-
-
 # --- For Curves ---
-def _softsign(x):
-    return x / (abs(x) + 1)
-
 def _fit_pass_point(cp, target_location):
     """ Fit the control point of basic [[0, 0] -> [1, 0]] Quadratic Bezier s.t. 
         it passes through the target location.
