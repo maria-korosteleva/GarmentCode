@@ -13,7 +13,7 @@ from pypattern.connector import Stitches
 from pypattern.interface import Interface
 from pypattern.edge_factory import EdgeSeqFactory
 from pypattern.edge_factory import CircleEdgeFactory
-from pypattern.edge_factory import CurveEdgeFactory
+from pypattern.edge_factory import EdgeFactory
 
 
 # Operations

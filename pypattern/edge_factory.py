@@ -15,6 +15,33 @@ from pypattern.generic_utils import list_to_c
 from pypattern.interface import Interface
 
 
+class EdgeFactory:
+    @staticmethod
+    def from_svg_curve(seg):
+        """Create Edge/CurveEdge/CircleEdge object from svgpath object
+            Type is determined by svgpath type
+        """
+
+        start, end = c_to_list(seg.start), c_to_list(seg.end)
+        if isinstance(seg, svgpath.Line):
+            return Edge(start, end)
+        if isinstance(seg, svgpath.Arc):
+            # NOTE: assuming circular arc (same radius in both directoins)
+            radius = seg.radius.real
+            return CircleEdgeFactory.from_points_radius(
+                start, end, radius, seg.large_arc, seg.sweep
+            )
+
+        # Only Bezier left
+        if isinstance(seg, svgpath.QuadraticBezier):
+            cp = [c_to_list(seg.control)]
+        elif isinstance(seg, svgpath.CubicBezier):
+            cp = [c_to_list(seg.control1), c_to_list(seg.control2)]
+        else:
+            raise NotImplementedError(f'CurveEdge::ERROR::Incorrect curve type supplied {seg.type}')
+        
+        return CurveEdge(start, end, cp, relative=False)
+
 class CircleEdgeFactory:
     @staticmethod
     def from_points_angle(start, end, arc_angle, right=True):
@@ -90,17 +117,6 @@ class CircleEdgeFactory:
         return edge
 
     @staticmethod
-    def from_svg_curve(seg: svgpath.Arc):
-        """Create object from svgpath arc"""
-        start, end = c_to_list(seg.start), c_to_list(seg.end)
-        # NOTE: assuming circular arc (same radius in both directoins)
-        radius = seg.radius.real
-
-        return CircleEdgeFactory.from_points_radius(
-            start, end, radius, seg.large_arc, seg.sweep
-        )
-
-    @staticmethod
     def from_three_points(start, end, point_on_arc):
         """Create a circle arc from 3 points (start, end and any point on an arc)
 
@@ -131,22 +147,6 @@ class CircleEdgeFactory:
             large_arc=mid_dist > rad, right=angle > 0)
 
 
-class CurveEdgeFactory:
-    @staticmethod
-    def from_svg_curve(seg):
-        """Create CurveEdge object from svgpath bezier objects"""
-
-        start, end = c_to_list(seg.start), c_to_list(seg.end)
-        if isinstance(seg, svgpath.QuadraticBezier):
-            cp = [c_to_list(seg.control)]
-        elif isinstance(seg, svgpath.CubicBezier):
-            cp = [c_to_list(seg.control1), c_to_list(seg.control2)]
-        else:
-            raise NotImplementedError(
-                f'CurveEdge::ERROR::Incorrect curve type supplied {seg.type}')
-
-        return CurveEdge(start, end, cp, relative=False)
-
 
 class EdgeSeqFactory:
     """Create EdgeSequence objects for some common edge sequence patterns
@@ -168,13 +168,7 @@ class EdgeSeqFactory:
                 if verbose:
                     print('Skipped: ', seg)
                 continue
-            if isinstance(seg, svgpath.Line):
-                edges.append(Edge(
-                    c_to_list(seg.start), c_to_list(seg.end)))
-            elif isinstance(seg, svgpath.Arc):
-                edges.append(CircleEdgeFactory.from_svg_curve(seg))
-            else:
-                edges.append(CurveEdgeFactory.from_svg_curve(seg))
+            edges.append(EdgeFactory.from_svg_curve(seg))
 
         # Chain the edges
         if len(edges) > 1:

@@ -275,30 +275,6 @@ class Edge:
             subdivision[i].start = subdivision[i-1].end
         return subdivision
 
-    @staticmethod
-    def from_svg_curve(seg):
-        """Create Edge object from svgpath object"""
-
-        start, end = c_to_list(seg.start), c_to_list(seg.end)
-        if isinstance(seg, svgpath.Line):
-            return Edge(start, end)
-        if isinstance(seg, svgpath.Arc):
-            # NOTE: assuming circular arc (same radius in both directoins)
-            radius = seg.radius.real
-            return CircleEdge.from_points_radius(
-                start, end, radius, seg.large_arc, seg.sweep
-            )
-
-        # Only Bezier left
-        if isinstance(seg, svgpath.QuadraticBezier):
-            cp = [c_to_list(seg.control)]
-        elif isinstance(seg, svgpath.CubicBezier):
-            cp = [c_to_list(seg.control1), c_to_list(seg.control2)]
-        else:
-            raise NotImplementedError(f'CurveEdge::ERROR::Incorrect curve type supplied {seg.type}')
-        
-        return CurveEdge(start, end, cp, relative=False)
-
     # Assembly into serializable object
     def assembly(self):
         """Returns the dict-based representation of edges, 
@@ -381,7 +357,7 @@ class CircleEdge(Edge):
         # So parent implementation is ok
         # TODOLOW Implementation is very similar to CurveEdge param-based subdivision
 
-        from pypattern.edge_factory import CircleEdgeFactory  # TODO: ami - better solution?
+        from pypattern.edge_factory import EdgeFactory  # TODO: ami - better solution?
         frac = [abs(f) for f in fractions]
         if not close_enough(fsum := sum(frac), 1, 1e-4):
             raise RuntimeError(f'Edge Subdivision::ERROR::fraction is incorrect. The sum {fsum} is not 1')
@@ -397,7 +373,7 @@ class CircleEdge(Edge):
         # Convert to CircleEdge objects
         subedges = EdgeSequence()
         for curve in subcurves:
-            subedges.append(CircleEdgeFactory.from_svg_curve(curve))
+            subedges.append(EdgeFactory.from_svg_curve(curve))
         # Reference the first/last vertices correctly
         subedges[0].start = self.start
         subedges[-1].end = self.end
@@ -570,7 +546,7 @@ class CurveEdge(Edge):
             splitting its curve parametrization or overall length according to 
             fractions while preserving the overall shape
         """
-        from pypattern.edge_factory import CurveEdgeFactory  # TODO: ami - better solution?
+        from pypattern.edge_factory import EdgeFactory  # TODO: ami - better solution?
         curve = self.as_curve()
 
         # Sub-curves
@@ -589,7 +565,7 @@ class CurveEdge(Edge):
         # Convert to CurveEdge objects
         subedges = EdgeSequence()
         for curve in subcurves:
-            subedges.append(CurveEdgeFactory.from_svg_curve(curve))
+            subedges.append(EdgeFactory.from_svg_curve(curve))
         # Reference the first/last vertices correctly
         subedges[0].start = self.start
         subedges[-1].end = self.end
