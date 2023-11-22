@@ -3,6 +3,7 @@ from typing import TypeVar, Generic, Sequence, Callable
 import numpy as np
 from numpy.linalg import norm
 from scipy.spatial.transform import Rotation
+import svgpathtools as svgpath
 
 
 
@@ -133,3 +134,32 @@ def nested_del(dic, keys):
     for key in keys[:-1]:
         dic = dic[key]
     del dic[keys[-1]]
+
+
+# ----- Curves ----- 
+def curve_extreme_points(curve, on_x=False, on_y=True):
+    """Return extreme points of the current edge
+        NOTE: this does NOT include the border vertices of an edge
+    """
+    # TODOLOW it repeats code from Edge() class in a way
+    # Variation of https://github.com/mathandy/svgpathtools/blob/5c73056420386753890712170da602493aad1860/svgpathtools/bezier.py#L197
+    poly = svgpath.bezier2polynomial(curve, return_poly1d=True)
+
+    x_extremizers, y_extremizers = [], []
+    if on_y:
+        y = svgpath.imag(poly)
+        dy = y.deriv()
+
+        y_extremizers = svgpath.polyroots(dy, realroots=True,
+                                          condition=lambda r: 0 < r < 1)
+    if on_x:
+        x = svgpath.real(poly)
+        dx = x.deriv()
+        x_extremizers = svgpath.polyroots(dx, realroots=True,
+                                          condition=lambda r: 0 < r < 1)
+    all_extremizers = x_extremizers + y_extremizers
+
+    extreme_points = np.array([c_to_list(curve.point(t))
+                               for t in all_extremizers])
+
+    return extreme_points
