@@ -101,8 +101,7 @@ class GUIPattern:
         # FIXME Updating should allows loading partial design files
         # Need nested updates
         self.design_params.update(des)
-
-        if 'left' in self.design_params and not self.design_params['left']['enable_asym']:
+        if 'left' in self.design_params and not self.design_params['left']['enable_asym']['v']:
             self.sync_left()
 
         # Update param sampler
@@ -157,6 +156,8 @@ class GUIPattern:
         while True:
             new_design = self.design_sampler.randomize()
             self.design_params.update(new_design)
+            if 'left' in self.design_params and not self.design_params['left']['enable_asym']['v']:
+                self.sync_left()
             self.reload_garment()
 
             if self.sew_pattern.is_self_intersecting():
