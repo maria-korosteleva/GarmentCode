@@ -19,6 +19,7 @@ design:
       v: null
       range:
       - SkirtCircle
+      - AsymmSkirtCircle
       - GodetSkirt
       - Pants
       - Skirt2
@@ -630,6 +631,13 @@ design:
       - 0.35
       - 0.45
       type: select
+    front_length:
+      v: 0.5
+      range:
+      - 0.1
+      - 0.9
+      type: float
+      default_prob: 0.4
     cut:
       add:
         v: false

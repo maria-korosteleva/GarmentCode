@@ -65,11 +65,48 @@ class CircleArcPanel(pyp.Panel):
         return CircleArcPanel(name, rad, length, arc)
 
 
-# TODO Add rise
-class SkirtCircle(StackableSkirtComponent):
+class AsymHalfCirclePanel(pyp.Panel):
+    """Panel for a asymmetrci circle skirt"""
 
+    def __init__(self, name, top_rad, length_f, length_s) -> None:
+        """ Half a shifted arc section
+        """
+        super().__init__(name)
+
+        dist_w = 2 * top_rad 
+        dist_out = 2 * (top_rad + length_s)
+
+        # DRAFT vert_len = length * np.cos(halfarc)
+
+        # top
+        self.edges.append(pyp.CircleEdgeFactory.from_points_radius(
+            [-dist_w/2, 0], [dist_w/2, 0], 
+            radius=top_rad, large_arc=False))
+
+        self.edges.append(pyp.Edge(
+            self.edges[-1].end, [dist_out / 2, 0]))
+        
+        # Bottom
+        self.edges.append(
+            pyp.CircleEdgeFactory.from_three_points(
+                self.edges[-1].end, [- dist_out / 2, 0], 
+                point_on_arc=[0, -(top_rad + length_f)]
+            )
+        )
+
+        self.edges.close_loop()
+
+        # Interfaces
+        self.interfaces = {
+            'top': pyp.Interface(self, self.edges[0]).reverse(True),
+            'bottom': pyp.Interface(self, self.edges[2]),
+            'left': pyp.Interface(self, self.edges[1]),
+            'right': pyp.Interface(self, self.edges[3])
+        }
+
+class SkirtCircle(StackableSkirtComponent):
     """Simple circle skirt"""
-    def __init__(self, body, design, tag='', length=None, rise=None, slit=True, **kwargs) -> None:
+    def __init__(self, body, design, tag='', length=None, rise=None, slit=True, asymm=False, **kwargs) -> None:
         super().__init__(body, design, tag)
 
         design = design['flare-skirt']
@@ -80,13 +117,29 @@ class SkirtCircle(StackableSkirtComponent):
             length = hips_depth + design['length']['v'] * body['_leg_length']
 
         # panels
-        self.front = CircleArcPanel.from_w_length_suns(
-            f'skirt_front_{tag}' if tag else 'skirt_front', 
-            length, waist / 2, suns / 2).translate_by([0, body['_waist_level'], 15])
+        if not asymm:  # Typical symmetric skirt
+            self.front = CircleArcPanel.from_w_length_suns(
+                f'skirt_front_{tag}' if tag else 'skirt_front', 
+                length, waist / 2, suns / 2).translate_by([0, body['_waist_level'], 15])
 
-        self.back = CircleArcPanel.from_w_length_suns(
-            f'skirt_back_{tag}'  if tag else 'skirt_back', 
-            length, waist / 2, suns / 2).translate_by([0, body['_waist_level'], -15])
+            self.back = CircleArcPanel.from_w_length_suns(
+                f'skirt_back_{tag}'  if tag else 'skirt_back', 
+                length, waist / 2, suns / 2).translate_by([0, body['_waist_level'], -15])
+        else:
+            # NOTE: Asymmetic front/back is only defined on full skirt (1 sun)
+            w_rad = waist / 4
+            f_length = design['front_length']['v'] * length
+            tot_len = waist / 2 + length + f_length
+            del_r = tot_len / 2 - f_length - w_rad
+            s_length = np.sqrt((tot_len / 2)**2 - del_r**2) - w_rad
+
+            self.front = AsymHalfCirclePanel(
+                f'skirt_front_{tag}' if tag else 'skirt_front', 
+                waist / 4, f_length, s_length).translate_by([0, body['_waist_level'], 15])
+
+            self.back = AsymHalfCirclePanel(
+                f'skirt_back_{tag}'  if tag else 'skirt_back', 
+                waist / 4, length, s_length).translate_by([0, body['_waist_level'], -15])
 
         # Add a cut
         if design['cut']['add']['v'] and slit:
@@ -140,3 +193,8 @@ class SkirtCircle(StackableSkirtComponent):
     def get_rise(self):
         return self.design['flare-skirt']['rise']['v']
 
+
+class AsymmSkirtCircle(SkirtCircle):
+    """Front/back asymmetric skirt"""
+    def __init__(self, body, design, tag='', length=None, rise=None, slit=True, **kwargs):
+        super().__init__(body, design, tag, length, rise, slit, asymm=True)
