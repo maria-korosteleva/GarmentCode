@@ -622,8 +622,14 @@ design:
       v: 0
       range:
       - -0.35
-      - 0.5
-      type: float
+      - -0.25
+      - -0.15
+      - 0
+      - 0.15
+      - 0.25
+      - 0.35
+      - 0.45
+      type: select
     cut:
       add:
         v: false
