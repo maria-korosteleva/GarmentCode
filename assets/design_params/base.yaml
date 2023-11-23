@@ -16,7 +16,7 @@ design:
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
-      v: AsymmSkirtCircle 
+      v: SkirtCircle 
       range: 
         - SkirtCircle
         - GodetSkirt
@@ -426,26 +426,28 @@ design:
       v: 1.
       range: [0.5, 1]
       type: float
-    n_panels:
-      v: 8
-      range: [4, 15]
-      type: int
-    panel_curve:
-      v: 0.5
-      range:
-      - -0.35
-      - 0.5
-      type: float
+    skirt-many-panels:
+      n_panels:
+        v: 8
+        range: [4, 15]
+        type: int
+      panel_curve:
+        v: 0.5
+        range:
+        - -0.35
+        - 0.5
+        type: float
     suns:     # one "sun" is 360 skirt
       v: 0.75
       range: [0.1, 1.95]
       type: float 
-    front_length:
-      v: 0.5
-      range:
-      - 0.1
-      - 1.
-      type: float
+    asymm:
+      front_length:
+        v: 0.5
+        range:
+        - 0.1
+        - 1.
+        type: float
     cut:
       add: 
         v: False

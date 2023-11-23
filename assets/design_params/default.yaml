@@ -607,37 +607,40 @@ design:
       - 1
       type: float
       default_prob: 0.3
-    n_panels:
-      v: 4
-      range:
-      - 4
-      - 15
-      type: int
+    
     suns:
       v: 0.75
       range:
       - 0.1
       - 1.95
       type: float
-    panel_curve:
-      v: 0
-      range:
-      - -0.35
-      - -0.25
-      - -0.15
-      - 0
-      - 0.15
-      - 0.25
-      - 0.35
-      - 0.45
-      type: select
-    front_length:
-      v: 0.5
-      range:
-      - 0.1
-      - 0.9
-      type: float
-      default_prob: 0.4
+    skirt-many-panels:
+      n_panels:
+        v: 4
+        range:
+        - 4
+        - 15
+        type: int
+      panel_curve:
+        v: 0
+        range:
+        - -0.35
+        - -0.25
+        - -0.15
+        - 0
+        - 0.15
+        - 0.25
+        - 0.35
+        - 0.45
+        type: select
+    asymm:
+      front_length:
+        v: 0.5
+        range:
+        - 0.1
+        - 0.9
+        type: float
+        default_prob: 0.4
     cut:
       add:
         v: false

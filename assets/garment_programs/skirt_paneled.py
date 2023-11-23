@@ -430,13 +430,13 @@ class SkirtManyPanels(BaseBottoms):
     """Round Skirt with many panels"""
 
     def __init__(self, body, design, tag='') -> None:
-        tag_extra = str(design["flare-skirt"]["n_panels"]["v"])
+        tag_extra = str(design['flare-skirt']['skirt-many-panels']['n_panels']['v'])
         tag = f'{tag}_{tag_extra}' if tag else tag_extra 
         super().__init__(body, design, tag=tag)
 
         design = design['flare-skirt']
         waist, hip_line, _ = self.eval_rise(design['rise']['v'])
-        n_panels = design['n_panels']['v']
+        n_panels = design['skirt-many-panels']['n_panels']['v']
 
         # Length is dependent on length of legs
         length = hip_line + design['length']['v'] * body['_leg_length']
@@ -447,7 +447,7 @@ class SkirtManyPanels(BaseBottoms):
                                     panel_w := waist / n_panels,
                                     bottom_width=panel_w * flare_coeff_pi,
                                     length=length,
-                                    b_curvature=design['panel_curve']['v'])
+                                    b_curvature=design['skirt-many-panels']['panel_curve']['v'])
         
         # Move far enough s.t. the widest part of the panels fit on the circle
         dist = self.front.interfaces['bottom'].edges.length() / (2 * np.tan(np.pi / n_panels))
