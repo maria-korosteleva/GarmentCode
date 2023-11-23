@@ -114,12 +114,14 @@ class CircleEdgeFactory:
         return edge
 
     @staticmethod
-    def from_three_points(start, end, point_on_arc):
+    def from_three_points(start, end, point_on_arc, relative=False):
         """Create a circle arc from 3 points (start, end and any point on an arc)
 
             NOTE: Control point specified in the same coord system as start and end
             NOTE: points should not be on the same line
         """
+        if relative:
+            point_on_arc = _rel_to_abs_coords(start, end, point_on_arc)
 
         nstart, nend, npoint_on_arc = np.asarray(start), np.asarray(
             end), np.asarray(point_on_arc)
@@ -378,6 +380,19 @@ class EdgeSeqFactory:
 
         return CurveEdge(start, end, control_points=[cp], relative=True)
 
+
+def _rel_to_abs_coords(start, end, vrel):
+    """Convert coordinates specified relative to vector v2 - v1 to world
+    coords"""
+    # TODOLOW It's in the edges?
+    start, end, vrel = np.asarray(start), np.asarray(end), np.asarray(vrel)
+    vec = end - start
+    vec_perp = np.array([-vec[1], vec[0]])
+
+    new_start = start + vrel[0] * vec
+    new_point = new_start + vrel[1] * vec_perp
+
+    return new_point
 
 def _abs_to_rel_2d(start, end, point):
     """Convert control points coordinates from absolute to relative"""

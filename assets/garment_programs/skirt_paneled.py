@@ -55,15 +55,26 @@ class SkirtPanel(pyp.Panel):
 class ThinSkirtPanel(pyp.Panel):
     """One panel of a panel skirt"""
 
-    def __init__(self, name, top_width=10, bottom_width=20, length=70) -> None:
+    def __init__(self, name, top_width=10, bottom_width=20, length=70, b_curvature=0) -> None:
         super().__init__(name)
 
         # define edge loop
         self.flare = (bottom_width - top_width) / 2
         self.edges = pyp.EdgeSeqFactory.from_verts(
             [0, 0], [self.flare, length], [self.flare + top_width, length],
-            [self.flare * 2 + top_width, 0],
-            loop=True)
+            [self.flare * 2 + top_width, 0])
+
+        if pyp.utils.close_enough(b_curvature, 0):
+            self.edges.close_loop()
+        else:
+            self.edges.append(
+                pyp.CircleEdgeFactory.from_three_points(
+                    self.edges[-1].end,
+                    self.edges[0].start,
+                    [0.5, b_curvature], 
+                    relative=True   # TODO Relative coordinate system!
+                )
+            )
 
         # w.r.t. top left point
         self.set_pivot(self.edges[0].end)
@@ -432,9 +443,11 @@ class SkirtManyPanels(BaseBottoms):
 
         flare_coeff_pi = 1 + design['suns']['v'] * length * 2 * np.pi / waist
 
-        self.front = ThinSkirtPanel('front', panel_w := waist / n_panels,
+        self.front = ThinSkirtPanel('front', 
+                                    panel_w := waist / n_panels,
                                     bottom_width=panel_w * flare_coeff_pi,
-                                    length=length )
+                                    length=length,
+                                    b_curvature=design['panel_curve']['v'])
         
         # Move far enough s.t. the widest part of the panels fit on the circle
         dist = self.front.interfaces['bottom'].edges.length() / (2 * np.tan(np.pi / n_panels))
