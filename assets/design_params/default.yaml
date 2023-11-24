@@ -607,7 +607,6 @@ design:
       - 1
       type: float
       default_prob: 0.3
-    
     suns:
       v: 0.75
       range:
@@ -640,7 +639,7 @@ design:
         - 0.1
         - 0.9
         type: float
-        default_prob: 0.4
+        default_prob: 0.5
     cut:
       add:
         v: false

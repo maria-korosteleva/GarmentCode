@@ -127,7 +127,7 @@ class SkirtCircle(StackableSkirtComponent):
                 length, waist / 2, suns / 2).translate_by([0, body['_waist_level'], -15])
         else:
             # NOTE: Asymmetic front/back is only defined on full skirt (1 sun)
-            w_rad = waist / 4
+            w_rad = waist / 2 / np.pi
             f_length = design['asymm']['front_length']['v'] * length
             tot_len = waist / 2 + length + f_length
             del_r = tot_len / 2 - f_length - w_rad
@@ -135,11 +135,11 @@ class SkirtCircle(StackableSkirtComponent):
 
             self.front = AsymHalfCirclePanel(
                 f'skirt_front_{tag}' if tag else 'skirt_front', 
-                waist / 4, f_length, s_length).translate_by([0, body['_waist_level'], 15])
+                w_rad, f_length, s_length).translate_by([0, body['_waist_level'], 15])
 
             self.back = AsymHalfCirclePanel(
                 f'skirt_back_{tag}'  if tag else 'skirt_back', 
-                waist / 4, length, s_length).translate_by([0, body['_waist_level'], -15])
+                w_rad, length, s_length).translate_by([0, body['_waist_level'], -15])
 
         # Add a cut
         if design['cut']['add']['v'] and slit:
