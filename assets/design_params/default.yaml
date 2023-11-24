@@ -59,7 +59,7 @@ design:
       type: float
       default_prob: 0.7
     width:
-      v: 1.0
+      v: 1.05
       range:
       - 1.0
       - 1.4
@@ -98,16 +98,16 @@ design:
       type: select
       default_prob: 0.8
     width:
-      v: 0.5
+      v: 0.2
       range:
       - -0.5
       - 1
       type: float
       default_prob: 0.4
     fc_depth:
-      v: 0.2  
+      v: 0.4  
       range:
-      - 0
+      - 0.3
       - 2    
       type: float
       default_prob: 0.3
@@ -772,7 +772,7 @@ design:
       - assets\img\Logo_adjusted.svg
       - assets\img\test_shape.svg  
       type: file_svg
-  levels-skirt:
+  levels-skirt:  
     base:
       v: PencilSkirt
       range:
