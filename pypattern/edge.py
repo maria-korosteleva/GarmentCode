@@ -113,7 +113,7 @@ class Edge:
         """
 
         if not n_verts_inside:
-            return self
+            return EdgeSequence(self)
         else:
             n = n_verts_inside + 1
             tvals = np.linspace(0, 1, n, endpoint=False)[1:]
