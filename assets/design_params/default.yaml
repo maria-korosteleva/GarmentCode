@@ -779,12 +779,14 @@ design:
       - Skirt2
       - PencilSkirt
       - SkirtCircle
+      - AsymmSkirtCircle
       type: select
     level:
       v: Skirt2
       range:
       - Skirt2
       - SkirtCircle
+      - AsymmSkirtCircle
       type: select
     num_levels:
       v: 1

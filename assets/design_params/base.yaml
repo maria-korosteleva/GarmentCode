@@ -12,11 +12,11 @@ design:
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
-      v: null 
+      v: StraightWB 
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
-      v: SkirtCircle 
+      v: AsymmSkirtCircle 
       range: 
         - SkirtCircle
         - GodetSkirt
@@ -534,11 +534,11 @@ design:
   levels-skirt:
     base:    # NOTE Takes parameters from corresponding sections
       v: PencilSkirt
-      range: [Skirt2, PencilSkirt, SkirtCircle]
+      range: [Skirt2, PencilSkirt, SkirtCircle, AsymmSkirtCircle]
       type: select
     level:   # NOTE Takes parameters from corresponding sections
       v: Skirt2
-      range: [Skirt2, SkirtCircle]
+      range: [Skirt2, SkirtCircle, AsymmSkirtCircle]
       type: select
     num_levels: 
       v: 1
