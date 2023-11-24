@@ -76,16 +76,17 @@ class Panel(BaseComponent):
                 # https://github.com/mathandy/svgpathtools/blob/fcb648b9bb9591d925876d3b51649fa175b40524/svgpathtools/path.py#L1960
                 intersect_t = edge_curves[i1].intersect(edge_curves[i2])
                 
-                if len(intersect_t) == 1: # Check exeption -- intersection at the vertex
-                    t1, t2 = intersect_t[0]
+                # Check exceptions -- intersection at the vertex
+                for i in range(len(intersect_t)): 
+                    t1, t2 = intersect_t[i]
                     if t2 < t1:
                         t1, t2 = t2, t1
                     if close_enough(t1, 0) and close_enough(t2, 1):
-                        continue
+                        intersect_t[i] = None
+                intersect_t = [el for el in intersect_t if el is not None]
 
                 if intersect_t:  # Any other case of intersections
                     return True      
-                
         return False
 
     # ANCHOR - Operations -- update object in-place 
