@@ -22,9 +22,9 @@ import svgpathtools as svgpath
 import matplotlib.pyplot as plt
 
 # my
-import external.customconfig
-from external.pattern import core
-from external.pattern.utils import *
+import customconfig
+from . import core
+from .utils import *
 
 
 class VisPattern(core.ParametrizedPattern):
