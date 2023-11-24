@@ -156,9 +156,18 @@ class Interface:
 
     def bbox_3d(self):
         """Return Interface bounding box"""
-        verts = self.verts_3d()
 
-        return [np.min(verts, axis=0), np.max(verts, axis=0)]
+        # NOTE: Vertex repetitions don't matter for bbox evaluation
+        verts_3d = []
+        for e, panel in zip(self.edges, self.panel):
+            # Using curve linearization for more accurate approximation of bbox
+            lin_edges = e.linearize()  
+            verts_2d = lin_edges.verts()
+            verts_3d += [panel.point_to_3D(v) for v in verts_2d]
+        verts_3d = np.asarray(verts_3d)
+
+        return verts_3d.min(axis=0), verts_3d.max(axis=0)
+        
 
     def __len__(self):
         return len(self.edges)
