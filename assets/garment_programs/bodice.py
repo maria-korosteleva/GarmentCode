@@ -37,7 +37,7 @@ class BodiceFrontHalf(BaseBodicePanel):
         side_len = body['waist_line'] - back_adjustment - sh_tan * fb_diff 
 
         self.edges = pyp.EdgeSeqFactory.from_verts(
-            [0, 0], 
+            [0, -shoulder_incl / 4],  # DRAFT   # TODO Make it soft with the curves!
             [-self.width, 0],
             [-self.width, max_len], 
             [0, max_len + shoulder_incl], 
@@ -60,7 +60,7 @@ class BodiceFrontHalf(BaseBodicePanel):
 
         # Bottom dart
         b_edge, b_interface = self.add_dart(
-            pyp.EdgeSeqFactory.dart_shape(bottom_d_width, 0.85 * bust_line),
+            pyp.EdgeSeqFactory.dart_shape(bottom_d_width, 0.9 * bust_line),
             self.edges[0], 
             offset=bust_point + bottom_d_width / 2
         )
@@ -106,7 +106,7 @@ class BodiceBackHalf(BaseBodicePanel):
 
         # Base edge loop
         self.edges = pyp.EdgeSeqFactory.from_verts(
-            [0, 0], 
+            [0, shoulder_incl / 4],  # DRAFT  
             [-waist_width, 0],
             [-self.width, body['waist_line'] - body['bust_line']],  # from the bottom
             [-self.width, length],   
@@ -114,8 +114,9 @@ class BodiceBackHalf(BaseBodicePanel):
             loop=True)
         
         # Take some fabric from the top to match the shoulder width
-        self.edges[2].end[0] += (x_upd:=self.width - body['shoulder_w'] / 2)
-        self.edges[2].end[1] += (sh_tan * x_upd)
+        # DRAFT
+        # self.edges[2].end[0] += (x_upd:=self.width - body['shoulder_w'] / 2)
+        # self.edges[2].end[1] += (sh_tan * x_upd)
 
         self.interfaces = {
             'outside': pyp.Interface(
@@ -130,13 +131,16 @@ class BodiceBackHalf(BaseBodicePanel):
                 self, pyp.EdgeSequence(self.edges[-2], self.edges[-1]))
         }
 
+        # DEBUG
+        print(waist, self.get_width(self.edges[2].end[1] - self.edges[2].start[1]), self.width)
+
         # Bottom dart as cutout -- for straight line
         if waist < self.get_width(self.edges[2].end[1] - self.edges[2].start[1]):
             w_diff = waist_width - waist
             side_adj = 0  if w_diff < 4 else w_diff / 6  # NOTE: don't take from sides if the difference is too small
             bottom_d_width = w_diff - side_adj
             bottom_d_width /= 2   # double darts
-            bottom_d_depth = 0.9 * (length - body['bust_line'])  # calculated value
+            bottom_d_depth = 1. * (length - body['bust_line'])  # calculated value
             bottom_d_position = body['bum_points'] / 2
 
             # TODOLOW Avoid hardcoding for matching with the bottoms?
@@ -163,6 +167,8 @@ class BodiceBackHalf(BaseBodicePanel):
         # default placement
         self.translate_by([0, body['height'] - body['head_l'] - length, 0])
 
+    def get_width(self, level):
+        return self.width
 
 class BodiceHalf(pyp.Component):
     """Definition of a half of an upper garment with sleeves and collars"""

@@ -1,3 +1,5 @@
+import numpy as np
+
 import pypattern as pyp
 
 
@@ -16,7 +18,25 @@ class BodyParameters(pyp.BodyParametrizationBase):
         if key in ['shoulder_w', None]:
             # Correct sleeve line location is a little closer to the neck
             # than the true shoulder width
-            self.params['_base_sleeve_balance'] = self.params['shoulder_w'] - 4
+            self.params['_base_sleeve_balance'] = self.params['shoulder_w'] - 2
+        
+        # TODO By key (for correct gui)
+        # TODO But check correct on file load
+        if 'vert_bust_line' in self.params:
+            self.params['bust_line'] = (1 - 1/3) * self.params['vert_bust_line'] + 1/3 * self.params['bust_line']
+        
+        self.params['hip_inclination'] /= 2
+        
+        diff = np.tan(np.deg2rad(self.params['shoulder_incl'] / 2)) * (
+            self.params['shoulder_w'] / 2 - self.params['neck_w'] / 2)
+        
+        print('Bust ', self.params['bust_line'], 'Back_diff ', diff)  # DEBUG
+        
+        # DRAFT 
+        # self.params['waist_line'] -= diff
+        # self.params['waist_over_bust_line'] += diff
+
+        # TODO add ease to the armhole
 
 
 # TODO: - ami - do we need this function ?
