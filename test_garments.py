@@ -11,12 +11,13 @@ from external.customconfig import Properties
 if __name__ == '__main__':
 
     # 
-    body_file = './assets/body_measurments/f_smpl_avg.yaml'
+    # body_file = './assets/body_measurments/f_smpl_avg.yaml'
     # body_file = r"G:\My Drive\GarmentCode\sewing_siggraph_garment\measurements\Maria.yaml"
     # body_file = './assets/body_measurments/f_avatar.yaml'
     # body_file = './assets/body_measurments/f_smpl_model.yaml'
     # body_file = './assets/body_measurments/f_smpl_model_fluffy.yaml'
     # body_file = './assets/body_measurments/m_smpl_avg.yaml'
+    body_file = r"C:\Users\mariako\Documents\Data\GarmentCodeData\garment-first-samples\measurements\00003.yaml"
 
     body = BodyParameters(body_file)
 
