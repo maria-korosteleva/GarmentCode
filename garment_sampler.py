@@ -173,7 +173,7 @@ def generate(path, properties, verbose=False):
                 rand_body = body_sample(
                     body_options,
                     Path(properties['body_samples_path']),
-                    straight=True)
+                    straight='Pants' not in new_design['meta']['bottom'])
                 piece_shaped = MetaGarment(name, rand_body, new_design) 
                 
                 if piece_default.is_self_intersecting() or piece_shaped.is_self_intersecting():
