@@ -168,10 +168,11 @@ class PantPanel(pyp.Panel):
         
 
 class PantsHalf(BaseBottoms):
-    def __init__(self, tag, body, design) -> None:
-        super().__init__(body, design, tag)
+    def __init__(self, tag, body, design, rise=None) -> None:
+        super().__init__(body, design, tag, rise=rise)
         design = design['pants']
-        waist, hips_depth, waist_back = self.eval_rise(design['rise']['v'])
+        self.rise = design['rise']['v'] if rise is None else rise
+        waist, hips_depth, waist_back = self.eval_rise(self.rise)
 
         # NOTE: min value = full sum > leg curcumference
         # Max: pant leg falls flat from the back
@@ -257,11 +258,11 @@ class PantsHalf(BaseBottoms):
 
 
 class Pants(BaseBottoms):
-    def __init__(self, body, design) -> None:
+    def __init__(self, body, design, rise=None) -> None:
         super().__init__(body, design)
 
-        self.right = PantsHalf('r', body, design)
-        self.left = PantsHalf('l', body, design).mirror()
+        self.right = PantsHalf('r', body, design, rise)
+        self.left = PantsHalf('l', body, design, rise).mirror()
 
         self.stitching_rules = pyp.Stitches(
             (self.right.interfaces['crotch_f'], self.left.interfaces['crotch_f']),
@@ -282,5 +283,5 @@ class Pants(BaseBottoms):
         }
 
     def get_rise(self):
-        return self.design['pants']['rise']['v']
+        return self.right.get_rise()
 

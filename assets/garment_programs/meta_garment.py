@@ -28,7 +28,8 @@ class MetaGarment(pyp.Component):
         lower_name = design['meta']['bottom']['v']
         if lower_name:
             Lower_class = globals()[lower_name]
-            Lower = Lower_class(body, design)
+            # NOTE: full rise for fitted tops
+            Lower = Lower_class(body, design, rise=1. if upper_name and 'Fitted' in upper_name else None)
         else: 
             Lower = None
 

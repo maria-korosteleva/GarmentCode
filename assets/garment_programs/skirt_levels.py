@@ -6,8 +6,8 @@ from copy import deepcopy
 class SkirtLevels(BaseBottoms):
     """Skirt constiting of multuple stitched skirts"""
 
-    def __init__(self, body, design) -> None:
-        super().__init__(body, design)
+    def __init__(self, body, design, rise=None) -> None:
+        super().__init__(body, design, rise=rise)
 
         ldesign = design['levels-skirt']
         lbody = deepcopy(body)  # We will modify the values, so need a copy
@@ -18,12 +18,13 @@ class SkirtLevels(BaseBottoms):
         self.eval_length(ldesign, body)
         
         # Definitions
+        self.rise = ldesign['rise']['v'] if rise is None else rise
         base_skirt_class = globals()[ldesign['base']['v']]
         self.subs.append(base_skirt_class(
             body, 
             design, 
             length=self.base_len, 
-            rise=ldesign['rise']['v'],
+            rise=self.rise,
             slit=False))
 
         if (hasattr(base := self.subs[0], 'design')
@@ -66,9 +67,6 @@ class SkirtLevels(BaseBottoms):
         self.interfaces = {
             'top': self.subs[0].interfaces['top']
         }
-
-    def get_rise(self):
-        return self.design['levels-skirt']['rise']['v']
 
     def eval_length(self, ldesign, body):
         

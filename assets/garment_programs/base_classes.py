@@ -43,7 +43,7 @@ class BaseBottoms(pyp.Component):
         * List of interfaces
         * Presence of the rise value
     """
-    def __init__(self, body, design, tag='') -> None:
+    def __init__(self, body, design, tag='', rise=None) -> None:
         """Base bottoms initialization
         """
         super().__init__(
@@ -51,6 +51,7 @@ class BaseBottoms(pyp.Component):
         
         self.body = body
         self.design = design
+        self.rise = rise
         
         # Set of interfaces that need to be implemented
         self.interfaces = {
@@ -59,7 +60,7 @@ class BaseBottoms(pyp.Component):
         
     def get_rise(self):
         """Return a rise value for a given component"""
-        return 1.
+        return self.rise
     
     def eval_rise(self, rise):
         """Evaluate updated hip and waist-related measurements, 
@@ -87,7 +88,7 @@ class StackableSkirtComponent(BaseBottoms):
             Extra parameters (length, sleets, top_ruffles) 
             can be used to overwrite parameters in design dictionary
         """
-        super().__init__(body, design, tag)
+        super().__init__(body, design, tag, rise=rise)
         
         pass
 

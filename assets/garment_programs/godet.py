@@ -25,8 +25,8 @@ class Insert(pyp.Panel):
 
 class GodetSkirt(BaseBottoms):
 
-    def __init__(self, body, design) -> None:
-        super().__init__(body, design)
+    def __init__(self, body, design, rise=None) -> None:
+        super().__init__(body, design, rise=rise)
 
         gdesign = design['godet-skirt']
         ins_w = gdesign['insert_w']['v']
@@ -35,7 +35,7 @@ class GodetSkirt(BaseBottoms):
         base_skirt = getattr(skirts, gdesign['base']['v'])
         # NOTE: godets currently don't like slits on the front/back 
         # of the base skirt => Forcing to remove any slits
-        self.base = base_skirt(body, design, slit=False)  
+        self.base = base_skirt(body, design, rise=rise, slit=False)  
 
         bintr = self.base.interfaces['bottom']
         for edge, panel in zip(bintr.edges, bintr.panel):
