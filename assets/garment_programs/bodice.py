@@ -36,13 +36,17 @@ class BodiceFrontHalf(BaseBodicePanel):
         back_adjustment = sh_tan * (body['back_width'] / 2 - body['shoulder_w'] / 2)
         side_len = body['waist_line'] - back_adjustment - sh_tan * fb_diff 
 
-        self.edges = pyp.EdgeSeqFactory.from_verts(
-            [0, -shoulder_incl / 4],  # DRAFT   # TODO Make it soft with the curves!
+        self.edges.append(pyp.EdgeSeqFactory.curve_from_tangents(
+            [0, -shoulder_incl / 4],  # front a little longer 
             [-self.width, 0],
+            target_tan0=[-1, 0]
+        ))
+        self.edges.append(pyp.EdgeSeqFactory.from_verts(
+            self.edges[-1].end,
             [-self.width, max_len], 
-            [0, max_len + shoulder_incl], 
-            loop=True
-        )
+            [0, max_len + shoulder_incl]
+        ))
+        self.edges.close_loop()
 
         # Side dart
         bust_line = body['waist_line'] - body['bust_line']
@@ -105,19 +109,21 @@ class BodiceBackHalf(BaseBodicePanel):
         length = body['waist_line'] - back_adjustment
 
         # Base edge loop
-        self.edges = pyp.EdgeSeqFactory.from_verts(
-            [0, shoulder_incl / 4],  # DRAFT  
-            [-waist_width, 0],
+        edge_0 = pyp.EdgeSeqFactory.curve_from_tangents(
+            start=[0, shoulder_incl / 4],  # back a little shorter 
+            end=[-waist_width, 0],
+            target_tan0=[-1, 0]
+        )
+        self.edges.append(edge_0)
+        self.edges.append(pyp.EdgeSeqFactory.from_verts(
+            edge_0.end,
             [-self.width, body['waist_line'] - body['bust_line']],  # from the bottom
             [-self.width, length],   
             [0, length + shoulder_incl],   # Add some fabric for the neck (inclination of shoulders)
-            loop=True)
+        ))
+        self.edges.close_loop()
         
         # Take some fabric from the top to match the shoulder width
-        # DRAFT
-        # self.edges[2].end[0] += (x_upd:=self.width - body['shoulder_w'] / 2)
-        # self.edges[2].end[1] += (sh_tan * x_upd)
-
         self.interfaces = {
             'outside': pyp.Interface(
                 self, [self.edges[1], self.edges[2]]),
@@ -130,9 +136,6 @@ class BodiceBackHalf(BaseBodicePanel):
             'collar_corner': pyp.Interface(
                 self, pyp.EdgeSequence(self.edges[-2], self.edges[-1]))
         }
-
-        # DEBUG
-        print(waist, self.get_width(self.edges[2].end[1] - self.edges[2].start[1]), self.width)
 
         # Bottom dart as cutout -- for straight line
         if waist < self.get_width(self.edges[2].end[1] - self.edges[2].start[1]):
