@@ -43,7 +43,35 @@ def _create_data_folder(properties, path=Path('')):
     properties['data_folder'] = data_folder
     path_with_dataset = path / data_folder
     path_with_dataset.mkdir(parents=True)
-    return path_with_dataset
+
+    default_folder = path_with_dataset / 'default_body'
+    body_folder = path_with_dataset / 'random_body'
+
+    default_folder.mkdir(parents=True, exist_ok=True)
+    body_folder.mkdir(parents=True, exist_ok=True)
+
+    return path_with_dataset, default_folder, body_folder
+
+def _gather_body_options(body_path: Path):
+    objs_path = body_path / 'meshes'
+
+    bodies = {}
+    for file in objs_path.iterdir():
+        
+        # Get name
+        b_name = file.stem.split('_')[0]
+        bodies[b_name] = {}
+
+        # TODO With or withough subpath? -- check integration with sim loading
+        # Get obj options
+        bodies[b_name]['objs'] = dict(
+            straight=f'meshes/{b_name}_straight.obj', 
+            apart=f'meshes/{b_name}_apart.obj', )
+
+        # Get measurements
+        bodies[b_name]['mes'] = f'measurements/{b_name}.yaml'
+    
+    return bodies
 
 
 def _id_generator(size=10, chars=string.ascii_uppercase + string.digits):
@@ -51,6 +79,42 @@ def _id_generator(size=10, chars=string.ascii_uppercase + string.digits):
         https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits
         """
         return ''.join(random.choices(chars, k=size))
+
+def body_sample(bodies: dict, path, straight=True):
+
+    rand_name = random.sample(list(bodies.keys()), k=1)
+    body_i = bodies[rand_name[0]]
+
+    mes_file = body_i['mes']
+    obj_file = body_i['objs']['straight'] if straight else body_i['objs']['apart']
+
+    body = BodyParameters(path / mes_file)
+    body.params['body_sample'] = obj_file
+
+    return body
+
+
+def _save_sample(piece, body, new_design, folder, verbose=False):
+
+    pattern = piece.assembly()
+    # Save as json file
+    folder = pattern.serialize(
+        folder, 
+        tag=datetime.now().strftime("%y%m%d-%H-%M-%S"),
+        to_subfolder=True,
+        with_3d=True, with_text=False, view_ids=False)
+
+    body.save(folder)
+    with open(Path(folder) / 'design_params.yaml', 'w') as f:
+        yaml.dump(
+            {'design': new_design}, 
+            f,
+            default_flow_style=False,
+            sort_keys=False
+        )
+    if verbose:
+        print(f'Saved {piece.name}')
+
 
 
 def generate(path, properties, verbose=False):
@@ -63,10 +127,12 @@ def generate(path, properties, verbose=False):
     path = Path(path)
     gen_config = properties['generator']['config']
     gen_stats = properties['generator']['stats']
+    body_options = _gather_body_options(Path(properties['body_samples_path']))
 
     # create data folder
-    data_folder = _create_data_folder(properties, path)
-    samples_folder = data_folder / 'data'
+    data_folder, default_path, body_sample_path = _create_data_folder(properties, path)
+    default_sample_data = default_path / 'data'
+    body_sample_data = body_sample_path / 'data'
 
     # init random seed
     if 'random_seed' not in gen_config or gen_config['random_seed'] is None:
@@ -77,8 +143,7 @@ def generate(path, properties, verbose=False):
     # generate data
     start_time = time.time()
 
-    # TODO Body sampling as well?
-    body = BodyParameters(properties['body_file'])
+    default_body = BodyParameters(properties['body_default'])  
     sampler = pyp.params.DesignSampler(properties['design_file'])
     for i in range(properties['size']):
         # Redo sampling untill success
@@ -92,39 +157,34 @@ def generate(path, properties, verbose=False):
             try:
                 if verbose:
                     print(f'{name} saving design params for debug')
-                with open(Path('./Logs') / f'{name}_design_params.yaml', 'w') as f:
-                    yaml.dump(
-                        {'design': new_design}, 
-                        f,
-                        default_flow_style=False,
-                        sort_keys=False
-                    )
+                    with open(Path('./Logs') / f'{name}_design_params.yaml', 'w') as f:
+                        yaml.dump(
+                            {'design': new_design}, 
+                            f,
+                            default_flow_style=False,
+                            sort_keys=False
+                        )
 
-                piece = MetaGarment(name, body, new_design) 
-                pattern = piece.assembly()
+                # On default body
+                piece_default = MetaGarment(name, default_body, new_design) 
 
-                if piece.is_self_intersecting():
+                # On random body shape
+                # TODO Straight vs apart -- needed??
+                rand_body = body_sample(
+                    body_options,
+                    Path(properties['body_samples_path']),
+                    straight=True)
+                piece_shaped = MetaGarment(name, rand_body, new_design) 
+                
+                if piece_default.is_self_intersecting() or piece_shaped.is_self_intersecting():
                     if verbose:
-                        print(f'{piece.name} is self-intersecting!!') 
+                        print(f'{piece_default.name} is self-intersecting!!') 
                     continue  # Redo the randomization
-
-                # Save as json file
-                folder = pattern.serialize(
-                    samples_folder, 
-                    tag=datetime.now().strftime("%y%m%d-%H-%M-%S"),
-                    to_subfolder=True,
-                    with_3d=True, with_text=False, view_ids=False)
-
-                body.save(folder)
-                with open(Path(folder) / 'design_params.yaml', 'w') as f:
-                    yaml.dump(
-                        {'design': new_design}, 
-                        f,
-                        default_flow_style=False,
-                        sort_keys=False
-                    )
-                if verbose:
-                    print(f'Saved {piece.name}')
+                
+                # Save samples
+                _save_sample(piece_default, default_body, new_design, default_sample_data, verbose=verbose)
+                _save_sample(piece_shaped, rand_body, new_design, body_sample_data, verbose=verbose)
+                
                 break  # Stop generation
             except BaseException as e:
                 print(f'{name} failed')
@@ -138,6 +198,8 @@ def generate(path, properties, verbose=False):
 
     # log properties
     properties.serialize(data_folder / 'dataset_properties.yaml')
+
+    return default_path, body_sample_path
 
 
 def gather_visuals(path, verbose=False):
@@ -162,9 +224,10 @@ if __name__ == '__main__':
         props = Properties()
         props.set_basic(
             design_file='./assets/design_params/default.yaml',
-            body_file='./assets/body_measurments/f_smpl_avg.yaml',
-            name='data_30',
-            size=30,
+            body_default='./assets/body_measurments/f_smpl_avg.yaml',
+            body_samples_path=str(Path(system_props['body_samples_path']) / 'garment-first-samples'),
+            name='data_3',
+            size=3,
             to_subfolders=True)
         props.set_section_config('generator')
     else:
@@ -173,10 +236,11 @@ if __name__ == '__main__':
             True)
 
     # Generator
-    generate(system_props['datasets_path'], props, verbose=False)
+    default_path, body_sample_path = generate(system_props['datasets_path'], props, verbose=False)
 
     # Gather the pattern images separately
-    gather_visuals(Path(system_props['datasets_path']) / props['data_folder'])
+    gather_visuals(default_path)
+    gather_visuals(body_sample_path)
 
     # At the end -- it takes some time to gather the info
     # DRAFT props.add_sys_info()  # update this info regardless of the basic config    
