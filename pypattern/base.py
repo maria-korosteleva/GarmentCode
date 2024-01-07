@@ -74,7 +74,7 @@ class BaseComponent(ABC):
         instruction
         """
         
-        # Alight translation
+        # Align translation
         self_bbox = self_interface.bbox_3d()
         out_bbox = out_interface.bbox_3d()
         mid_out = (out_bbox[1] + out_bbox[0]) / 2

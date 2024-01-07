@@ -47,7 +47,7 @@ class MetaGarment(pyp.Component):
                 self.subs[-1].place_by_interface(
                     self.subs[-1].interfaces['top'],
                     self.subs[-2].interfaces['bottom'], 
-                    gap=3
+                    gap=5
                 )
 
                 self.stitching_rules.append(
@@ -62,7 +62,7 @@ class MetaGarment(pyp.Component):
                 self.subs[-1].place_by_interface(
                     self.subs[-1].interfaces['top'],
                     self.subs[-2].interfaces['bottom'], 
-                    gap=3
+                    gap=5
                 )
                 self.stitching_rules.append(
                     (self.subs[-2].interfaces['bottom'],
