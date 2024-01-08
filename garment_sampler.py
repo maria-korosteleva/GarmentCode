@@ -143,7 +143,7 @@ def generate(path, properties, verbose=False):
     # generate data
     start_time = time.time()
 
-    default_body = BodyParameters(properties['body_default'])  
+    default_body = BodyParameters(Path(properties['bodies_default_path']) / (properties['body_default'] + '.yaml'))
     sampler = pyp.params.DesignSampler(properties['design_file'])
     for i in range(properties['size']):
         # Redo sampling untill success
@@ -224,10 +224,11 @@ if __name__ == '__main__':
         props = Properties()
         props.set_basic(
             design_file='./assets/design_params/default.yaml',
-            body_default='./assets/body_measurments/f_smpl_avg.yaml',
+            body_default= 'default0',
+            bodies_default_path= str(Path(system_props['bodies_default_path'])),
             body_samples_path=str(Path(system_props['body_samples_path']) / 'garment-first-samples'),
-            name='data_3',
-            size=3,
+            name='data_5',
+            size=5,
             to_subfolders=True)
         props.set_section_config('generator')
     else:
