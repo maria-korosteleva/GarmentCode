@@ -27,12 +27,11 @@ class BodyParameters(pyp.BodyParametrizationBase):
         
         self.params['hip_inclination'] /= 2
         
-        diff = np.tan(np.deg2rad(self.params['shoulder_incl'] / 2)) * (
-            self.params['shoulder_w'] / 2 - self.params['neck_w'] / 2)
-        
-        print('Bust ', self.params['bust_line'], 'Back_diff ', diff)  # DEBUG
-        
         # DRAFT 
+        # diff = np.tan(np.deg2rad(self.params['shoulder_incl'] / 2)) * (
+        #     self.params['shoulder_w'] / 2 - self.params['neck_w'] / 2)
+        
+        # print('Bust ', self.params['bust_line'], 'Back_diff ', diff)  # DEBUG
         # self.params['waist_line'] -= diff
         # self.params['waist_over_bust_line'] += diff
 
