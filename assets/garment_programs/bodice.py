@@ -36,13 +36,9 @@ class BodiceFrontHalf(BaseBodicePanel):
         back_adjustment = sh_tan * (body['back_width'] / 2 - body['shoulder_w'] / 2)
         side_len = body['waist_line'] - back_adjustment - sh_tan * fb_diff 
 
-        self.edges.append(pyp.EdgeSeqFactory.curve_from_tangents(
-            [0, -shoulder_incl / 4],  # front a little longer 
-            [-self.width, 0],
-            target_tan0=[-1, 0]
-        ))
         self.edges.append(pyp.EdgeSeqFactory.from_verts(
-            self.edges[-1].end,
+            [0, 0], 
+            [-self.width, 0],
             [-self.width, max_len], 
             [0, max_len + shoulder_incl]
         ))

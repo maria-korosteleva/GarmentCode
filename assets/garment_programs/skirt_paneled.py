@@ -309,7 +309,7 @@ class PencilSkirt(StackableSkirtComponent):
 
         # Force from arguments if given
         self.rise = design['rise']['v'] if rise is None else rise
-        waist, hips_depth, back_waist = self.eval_rise(rise)
+        waist, hips_depth, back_waist = self.eval_rise(self.rise)
         if length is None:
             length = design['length']['v'] * body['_leg_length']  # Depends on leg length
         else:

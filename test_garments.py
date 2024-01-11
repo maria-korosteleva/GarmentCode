@@ -12,12 +12,13 @@ if __name__ == '__main__':
 
     # 
     # body_file = './assets/body_measurments/f_smpl_avg.yaml'
+    body_file = './assets/default_bodies/mean_all.yaml'
     # body_file = r"G:\My Drive\GarmentCode\sewing_siggraph_garment\measurements\Maria.yaml"
     # body_file = './assets/body_measurments/f_avatar.yaml'
     # body_file = './assets/body_measurments/f_smpl_model.yaml'
     # body_file = './assets/body_measurments/f_smpl_model_fluffy.yaml'
     # body_file = './assets/body_measurments/m_smpl_avg.yaml'
-    body_file = r"C:\Users\mariako\Documents\Data\GarmentCodeData\garment-first-samples\measurements\00003.yaml"
+    # body_file = r"C:\Users\mariako\Documents\Data\GarmentCodeData\garment-first-samples\measurements\00003.yaml"
 
     body = BodyParameters(body_file)
 
@@ -25,7 +26,7 @@ if __name__ == '__main__':
         'base': './assets/design_params/base.yaml',
         # 'our_dress': r"G:\My Drive\GarmentCode\sewing_siggraph_garment\designs\dress_design_params.yaml"
         # 'debug': './Logs/Configured_design__231117-17-17-27/design_params.yaml' 
-        #'default': './assets/design_params/default.yaml',
+        # 'default': './assets/design_params/default.yaml',
         # 'modern': './assets/design_params/modern.yaml',
         # 'Dress_20s': './assets/design_params/dress_20s.yaml',
         # 'Dress_30s': './assets/design_params/dress_30s_header.yaml',
