@@ -227,8 +227,8 @@ if __name__ == '__main__':
             body_default='mean_all',
             bodies_default_path=str(Path(system_props['bodies_default_path'])),
             body_samples_path=str(Path(system_props['body_samples_path']) / 'garment-first-samples'),
-            name='data_5',
-            size=5,
+            name='data_50',
+            size=50,
             to_subfolders=True)
         props.set_section_config('generator')
     else:
