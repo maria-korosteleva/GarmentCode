@@ -54,6 +54,9 @@ class MetaGarment(pyp.Component):
                 self.stitching_rules.append(
                     (self.subs[-2].interfaces['bottom'],
                      self.subs[-1].interfaces['top']))
+            
+            # Add waist label
+            self.subs[-1].interfaces['top'].edges.propagate_label('lower_interface')
 
         # Attach Lower garment if present
         if lower_name:
@@ -68,3 +71,7 @@ class MetaGarment(pyp.Component):
                 self.stitching_rules.append(
                     (self.subs[-2].interfaces['bottom'],
                      self.subs[-1].interfaces['top']))
+            
+            # Add waist label
+            if not belt_name:
+                self.subs[-1].interfaces['top'].edges.propagate_label('lower_interface')

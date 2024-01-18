@@ -18,11 +18,12 @@ class Edge:
         and (End-Start) as Ox axis
     """
 
-    def __init__(self, start=None, end=None) -> None:
+    def __init__(self, start=None, end=None, label='') -> None:
         """ Simple edge initialization.
         Parameters: 
             * start, end: from/to vertices that the edge connects,
                 describing the _interface_ of an edge
+            * label: semantic label of the edge to be writted down as a property on assembly
 
             # TODOLOW Add support for fold schemes to allow guided folds at
             the edge (e.g. pleats)
@@ -35,6 +36,9 @@ class Edge:
 
         self.start = start  # NOTE: careful with references to vertex objects
         self.end = end
+
+        # Semantic label
+        self.label = label
 
         # ID w.r.t. other edges in a super-panel
         # Filled out at the panel assembly time
@@ -280,14 +284,19 @@ class Edge:
         """Returns the dict-based representation of edges, 
             compatible with core -> BasePattern JSON (dict) 
         """
+        # TODO Propagate to subclasses
+        properties = {"endpoints": [0, 1]}
+        if self.label:
+            properties['label'] = self.label
 
-        return [self.start, self.end], {"endpoints": [0, 1]}
+
+        return [self.start, self.end], properties
 
 
 class CircleEdge(Edge):
     """Curvy edge as circular arc"""
 
-    def __init__(self, start=None, end=None, cy=None) -> None:
+    def __init__(self, start=None, end=None, cy=None, label='') -> None:
         """
             Define a circular arc edge
             * start, end: from/to vertices that the edge connects
@@ -295,6 +304,7 @@ class CircleEdge(Edge):
                 Expressed relatively w.r.t. distance between start and end. 
                 X value for control point is fixed at x=0.5 (edge center) to
                 avoid ambiguity
+            * label: semantic label of the edge to be writted down as a property on assembly
             
             NOTE: representing control point in relative coordinates
             allows preservation of curvature (arc angle, relative radius
@@ -307,7 +317,7 @@ class CircleEdge(Edge):
             start = [0, 0]
         if end is None:
             end = [1, 0]
-        super().__init__(start, end)
+        super().__init__(start, end, label=label)
         self.control_y = cy
 
     def length(self):
@@ -471,30 +481,29 @@ class CircleEdge(Edge):
         # TODOLOW Try the 3-point representation in JSON? Might be more compact + more continious
         # How much human readible this one should be?
         # Even one number (Y axis) could be enough 
+        ends, props = super().assembly()
 
         rad, large_arc, right = self.as_radius_flag()
-        return (
-            [self.start, self.end], 
-            {
-                "endpoints": [0, 1], 
-                "curvature": {
+        props['curvature'] = {
                     "type": 'circle',
                     "params": [rad, int(large_arc), int(right)]
                 }
-            })
+        return ends, props
 
 
 class CurveEdge(Edge):
     """Curvy edge as Besier curve / B-spline"""
 
     def __init__(self, start=None, end=None, control_points=None,
-                 relative=True) -> None:
+                 relative=True, 
+                 label='') -> None:
         """Define a Bezier curve edge
             * start, end: from/to vertices that the edge connects
             * control_points: coordinated of Bezier control points.
                 Specification of One control point creates the Quadratic Bezier, 
                 Specification of 2 control points creates Cubic Bezier. 
                 Other degrees are not supported.
+            * label: semantic label of the edge to be writted down as a property on assembly
 
             * relative: specify whether the control point coordinated are given 
             relative to the edge length (True) or in 2D coordinate system of a
@@ -507,7 +516,7 @@ class CurveEdge(Edge):
             start = [0, 0]
         if end is None:
             end = [0, 0]
-        super().__init__(start, end)
+        super().__init__(start, end, label=label)
 
         # FIXME Self-intersections tests
 
@@ -664,15 +673,13 @@ class CurveEdge(Edge):
             compatible with core -> BasePattern JSON (dict) 
         """
 
-        return (
-            [self.start, self.end], 
-            {
-                "endpoints": [0, 1], 
-                "curvature": {
+        ends, props = super().assembly()
+
+        props['curvature'] = {
                     "type": 'quadratic' if len(self.control_points) == 1 else 'cubic',
                     "params": self.control_points
                 }
-            })
+        return ends, props
 
     
 class EdgeSequence:
@@ -961,6 +968,16 @@ class EdgeSequence:
             e.reflect_features()
 
         return self
+
+    def propagate_label(self, label):
+        """Propagate label to sub-edges
+        NOTE: Recommended to perform after all edge modification 
+            operations (stitching, cutting, inserting) were completed
+            Support for edge label propagation through those operations is not (yet) implemented
+        # TODO Edge labels on cuts/reassemble in the 
+        """
+        for e in self.edges:
+            e.label = label
 
     # ANCHOR New sequences & versions
     def copy(self):
