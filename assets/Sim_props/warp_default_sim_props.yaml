@@ -29,6 +29,7 @@ sim:
       global_damping_effective_velocity: 0.0
       global_max_velocity: 25.0
       enable_global_collision_filter: true
+      enable_attachment_constraint: true   
       enable_cloth_reference_drag: true
       cloth_reference_margin: 0.1
       enable_body_smoothing: false
