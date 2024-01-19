@@ -117,7 +117,7 @@ def _save_sample(piece, body, new_design, folder, verbose=False):
 
 
 
-def generate(path, properties, verbose=False):
+def generate(path, properties, sys_paths, verbose=False):
     """Generates a synthetic dataset of patterns with given properties
         Params:
             path : path to folder to put a new dataset into
@@ -127,7 +127,8 @@ def generate(path, properties, verbose=False):
     path = Path(path)
     gen_config = properties['generator']['config']
     gen_stats = properties['generator']['stats']
-    body_options = _gather_body_options(Path(properties['body_samples_path']))
+    body_samples_path = Path(sys_paths['body_samples_path']) / properties['body_samples']
+    body_options = _gather_body_options(body_samples_path)
 
     # create data folder
     data_folder, default_path, body_sample_path = _create_data_folder(properties, path)
@@ -143,7 +144,7 @@ def generate(path, properties, verbose=False):
     # generate data
     start_time = time.time()
 
-    default_body = BodyParameters(Path(properties['bodies_default_path']) / (properties['body_default'] + '.yaml'))
+    default_body = BodyParameters(Path(sys_paths['bodies_default_path']) / (properties['body_default'] + '.yaml'))
     sampler = pyp.params.DesignSampler(properties['design_file'])
     for i in range(properties['size']):
         # Redo sampling untill success
@@ -172,7 +173,7 @@ def generate(path, properties, verbose=False):
                 # TODO Straight vs apart -- needed??
                 rand_body = body_sample(
                     body_options,
-                    Path(properties['body_samples_path']),
+                    body_samples_path,
                     straight='Pants' not in new_design['meta']['bottom'])
                 piece_shaped = MetaGarment(name, rand_body, new_design) 
                 
@@ -225,10 +226,9 @@ if __name__ == '__main__':
         props.set_basic(
             design_file='./assets/design_params/default.yaml',
             body_default='mean_all',
-            bodies_default_path=str(Path(system_props['bodies_default_path'])),
-            body_samples_path=str(Path(system_props['body_samples_path']) / 'garment-first-samples'),
-            name='data_50',
-            size=50,
+            body_samples='garment-first-samples',
+            name='data_5',
+            size=5,
             to_subfolders=True)
         props.set_section_config('generator')
     else:
@@ -237,7 +237,8 @@ if __name__ == '__main__':
             True)
 
     # Generator
-    default_path, body_sample_path = generate(system_props['datasets_path'], props, verbose=False)
+    default_path, body_sample_path = generate(
+        system_props['datasets_path'], props, system_props, verbose=False)
 
     # Gather the pattern images separately
     gather_visuals(default_path)
