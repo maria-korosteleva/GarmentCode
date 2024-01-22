@@ -26,6 +26,9 @@ class BodyParameters(pyp.BodyParametrizationBase):
             self.params['bust_line'] = (1 - 1/3) * self.params['vert_bust_line'] + 1/3 * self.params['bust_line']
         
         self.params['hip_inclination'] /= 2
+
+        # Add ease to armhole
+        self.params['armscye_depth'] += 2.5
         
         # DRAFT 
         # diff = np.tan(np.deg2rad(self.params['shoulder_incl'] / 2)) * (
@@ -34,8 +37,6 @@ class BodyParameters(pyp.BodyParametrizationBase):
         # print('Bust ', self.params['bust_line'], 'Back_diff ', diff)  # DEBUG
         # self.params['waist_line'] -= diff
         # self.params['waist_over_bust_line'] += diff
-
-        # TODO add ease to the armhole
 
 
 # TODO: - ami - do we need this function ?
