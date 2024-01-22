@@ -63,9 +63,11 @@ class Interface:
         
         return projected
 
-    def needsFlipping(self, i):
-        """ Check if particular edge should be re-oriented to follow the
+    def needsFlipping(self, i, tol=1.):
+        """ Check if particular edge (i) should be re-oriented to follow the
             general direction of the interface
+            * tol -- tolerance in distance differences that triggers flipping (in cm)
+
         """
         if self.edges_flipping[i]:
             return True
@@ -84,14 +86,16 @@ class Interface:
 
             # check by start vertex
             # NOTE this can misfire in particular 3D orentations
-            return norm(s_3d - next_3d) < norm(end_3d - next_3d)
+            diff = norm(end_3d - next_3d) - norm(s_3d - next_3d)
+            return diff > tol
         if i == len(self.edges) - 1:
             prev, prev_panel = self.edges[i-1], self.panel[i-1]
             prev_3d = prev_panel.point_to_3D(prev.midpoint())
 
             # check by start vertex
             # NOTE this can misfire in particular 3D orentations
-            return norm(s_3d - prev_3d) > norm(end_3d - prev_3d)
+            diff = norm(s_3d - prev_3d) - norm(end_3d - prev_3d)
+            return diff > tol
 
         # Mid case
         # Utilize distance from the end vertex to the next panel 
@@ -107,7 +111,8 @@ class Interface:
         forward_order_dist = norm(s_3d - prev_3d) + norm(end_3d - next_3d)
         flipped_order_dist = norm(s_3d - next_3d) + norm(end_3d - prev_3d)
 
-        return flipped_order_dist < forward_order_dist
+        diff = forward_order_dist - flipped_order_dist
+        return diff > tol
 
     # ANCHOR --- Info ----
     def oriented_edges(self):
