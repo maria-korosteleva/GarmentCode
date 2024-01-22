@@ -340,8 +340,13 @@ class BodiceHalf(pyp.Component):
         len_back = self.btorso.interfaces['outside'].edges.length()
         diff = len_back - len_front
 
-        self._adjust_top_level(self.ftorso, out_depth, f_in_depth)
-        self._adjust_top_level(self.btorso, out_depth - diff, b_in_depth)
+        if diff < 0: 
+            f_depth, b_depth = out_depth - diff, out_depth
+        else: 
+            f_depth, b_depth = out_depth, out_depth + diff
+
+        self._adjust_top_level(self.ftorso, f_depth, f_in_depth)
+        self._adjust_top_level(self.btorso, b_depth, b_in_depth)
 
         self.translate_by([0, out_depth - body['armscye_depth'] * 0.75, 0])   # adjust for better localisation
 
