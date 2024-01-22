@@ -201,6 +201,9 @@ class BodiceHalf(pyp.Component):
         self.sleeve = None
         self.collar_comp = None
         self.eval_dep_params(body, design)
+
+        #FIXME Sidelength not matching by large number (0003)
+        
         if design['shirt']['strapless']['v']:
             self.make_strapless(body, design)
         else:
