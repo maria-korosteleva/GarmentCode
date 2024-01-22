@@ -80,7 +80,7 @@ def _id_generator(size=10, chars=string.ascii_uppercase + string.digits):
         """
         return ''.join(random.choices(chars, k=size))
 
-def body_sample(bodies: dict, path, straight=True):
+def body_sample(bodies: dict, path: Path, straight=True):
 
     rand_name = random.sample(list(bodies.keys()), k=1)
     body_i = bodies[rand_name[0]]
@@ -89,7 +89,7 @@ def body_sample(bodies: dict, path, straight=True):
     obj_file = body_i['objs']['straight'] if straight else body_i['objs']['apart']
 
     body = BodyParameters(path / mes_file)
-    body.params['body_sample'] = obj_file
+    body.params['body_sample'] = (path / obj_file).stem
 
     return body
 
