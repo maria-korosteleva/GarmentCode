@@ -278,8 +278,8 @@ class BodiceHalf(pyp.Component):
         if not design['sleeve']['sleeveless']['v']:  
             # Ordering
             bodice_sleeve_int = pyp.Interface.from_multiple(
-                f_sleeve_int.reverse(),
-                b_sleeve_int.reverse())
+                f_sleeve_int,
+                b_sleeve_int)
             self.stitching_rules.append((
                 self.sleeve.interfaces['in'], 
                 bodice_sleeve_int
