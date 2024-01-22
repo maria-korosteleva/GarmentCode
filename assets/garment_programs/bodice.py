@@ -83,7 +83,7 @@ class BodiceFrontHalf(BaseBodicePanel):
         }
   
         # default placement
-        self.translate_by([0, body['height'] - body['head_l'] - max_len, 0])
+        self.translate_by([0, body['height'] - body['head_l'] - max_len - shoulder_incl, 0])
 
 
 class BodiceBackHalf(BaseBodicePanel):
@@ -164,7 +164,7 @@ class BodiceBackHalf(BaseBodicePanel):
             b_edge[-1].end[0] += side_adj
 
         # default placement
-        self.translate_by([0, body['height'] - body['head_l'] - length, 0])
+        self.translate_by([0, body['height'] - body['head_l'] - length - shoulder_incl, 0])
 
     def get_width(self, level):
         return self.width
@@ -281,8 +281,8 @@ class BodiceHalf(pyp.Component):
         if not design['sleeve']['sleeveless']['v']:  
             # Ordering
             bodice_sleeve_int = pyp.Interface.from_multiple(
-                f_sleeve_int.reverse(),
-                b_sleeve_int.reverse())
+                f_sleeve_int,
+                b_sleeve_int)
             self.stitching_rules.append((
                 self.sleeve.interfaces['in'], 
                 bodice_sleeve_int

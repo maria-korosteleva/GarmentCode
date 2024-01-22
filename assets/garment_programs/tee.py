@@ -59,7 +59,7 @@ class TorsoFrontHalfPanel(BaseBodicePanel):
         }
 
         # default placement
-        self.translate_by([0, body['height'] - body['head_l'] - length, 0])
+        self.translate_by([0, body['height'] - body['head_l'] - length - shoulder_incl, 0])
 
     def get_width(self, level):
         return super().get_width(level) + self.width - self.body['shoulder_w'] / 2
@@ -110,7 +110,7 @@ class TorsoBackHalfPanel(BaseBodicePanel):
         }
 
         # default placement
-        self.translate_by([0, body['height'] - body['head_l'] - length, 0])
+        self.translate_by([0, body['height'] - body['head_l'] - length - shoulder_incl, 0])
 
     def get_width(self, level):
         return super().get_width(level) + self.width - self.body['shoulder_w'] / 2
