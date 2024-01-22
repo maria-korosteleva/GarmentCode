@@ -83,7 +83,7 @@ class BodiceFrontHalf(BaseBodicePanel):
         }
   
         # default placement
-        self.translate_by([0, body['height'] - body['head_l'] - max_len, 0])
+        self.translate_by([0, body['height'] - body['head_l'] - max_len - shoulder_incl, 0])
 
 
 class BodiceBackHalf(BaseBodicePanel):
@@ -164,7 +164,7 @@ class BodiceBackHalf(BaseBodicePanel):
             b_edge[-1].end[0] += side_adj
 
         # default placement
-        self.translate_by([0, body['height'] - body['head_l'] - length, 0])
+        self.translate_by([0, body['height'] - body['head_l'] - length - shoulder_incl, 0])
 
     def get_width(self, level):
         return self.width
