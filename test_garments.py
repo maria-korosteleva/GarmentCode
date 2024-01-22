@@ -18,13 +18,14 @@ if __name__ == '__main__':
     # body_file = './assets/body_measurments/f_smpl_model.yaml'
     # body_file = './assets/body_measurments/f_smpl_model_fluffy.yaml'
     # body_file = './assets/body_measurments/m_smpl_avg.yaml'
-    # body_file = r"C:\Users\mariako\Documents\Data\GarmentCodeData\garment-first-samples\measurements\00003.yaml"
+    # body_file = r"C:\Users\mariako\Documents\Data\GarmentCodeData\garment-first-samples\measurements\00003_edited.yaml"
 
     body = BodyParameters(body_file)
 
     design_files = {
         'base': './assets/design_params/base.yaml',
         # 'our_dress': r"G:\My Drive\GarmentCode\sewing_siggraph_garment\designs\dress_design_params.yaml"
+        # 'jing_dress': r"C:\Users\mariako\Documents\Code\Procedural-Garments\Logs\Configured_design__240117-19-06-53\design_params_manual.yaml"
         # 'debug': './Logs/Configured_design__231117-17-17-27/design_params.yaml' 
         # 'default': './assets/design_params/default.yaml',
         # 'modern': './assets/design_params/modern.yaml',
