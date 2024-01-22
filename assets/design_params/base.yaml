@@ -8,7 +8,7 @@
 design: 
   meta: 
     upper: 
-      v: FittedShirt
+      v: Shirt
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
@@ -16,7 +16,7 @@ design:
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
-      v:  PencilSkirt  # Pants  # PencilSkirt 
+      v:  null 
       range: 
         - SkirtCircle
         - GodetSkirt
@@ -44,15 +44,15 @@ design:
       range: [True, False]
       type: bool
     length: 
-      v: 1.8
+      v: 1.1
       range: [0.5, 4.5]   # 1 == waistline
       type: float
     width:   # Around the body 
-      v: 1.
+      v: 1.1
       range: [1., 1.4]    # 1 == bust size
       type: float
     flare: 
-      v: 1.4
+      v: 1.
       range: 
       - 0.7
       - 1.4
@@ -143,7 +143,7 @@ design:
      
   sleeve:
     sleeveless: 
-      v: True
+      v: False
       range: [True, False]
       type: bool
     armhole_shape: 
@@ -151,7 +151,7 @@ design:
       range: [ArmholeSquare, ArmholeAngle, ArmholeCurve]
       type: select
     length: 
-      v: 1.  # 30
+      v: 0.5  # 30
       range: [0.05, 1]
       type: float
     connecting_width:
