@@ -106,7 +106,7 @@ class FittedSkirtPanel(pyp.Panel):
 
         # Shared params
         low_angle = design['low_angle']['v']
-        hip_side_incl = np.deg2rad(body['hip_inclination'])
+        hip_side_incl = np.deg2rad(body['_hip_inclination'])
         flare = design['flare']['v']
         low_width = body['hips'] * (flare - 1) / 4 + hips  # Distribute the difference equally 
                                                                            # between front and back

@@ -114,7 +114,7 @@ class SleevePanel(pyp.Panel):
 
         # TODO end_width to be not less then the width of the arm??
 
-        shoulder_angle = np.deg2rad(body['shoulder_incl'])
+        shoulder_angle = np.deg2rad(body['_shoulder_incl'])
         rest_angle = max(np.deg2rad(design['sleeve_angle']['v']),
                          shoulder_angle)
         standing = design['standing_shoulder']['v']
@@ -177,7 +177,7 @@ class SleevePanel(pyp.Panel):
         self.set_pivot(self.edges[1].end)
         self.translate_to(
             [- body['shoulder_w'] / 2,
-            body['height'] - body['head_l'] - body['armscye_depth'], 0])
+            body['height'] - body['head_l'] - body['_armscye_depth'], 0])
         # NOTE: Extra 5 deg account for the fact that the arm is ~conic shape
         # Makes draping of sleeves less problematic
         self.rotate_to(R.from_euler(
@@ -201,7 +201,7 @@ class Sleeve(pyp.Component):
         sleeve_balance = body['_base_sleeve_balance'] / 2
 
         rest_angle = max(np.deg2rad(design['sleeve_angle']['v']),
-                         np.deg2rad(body['shoulder_incl']))
+                         np.deg2rad(body['_shoulder_incl']))
 
         connecting_width = design['connecting_width']['v']
         smoothing_coeff = design['smoothing_coeff']['v']

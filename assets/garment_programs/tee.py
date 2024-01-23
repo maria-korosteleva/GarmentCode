@@ -29,7 +29,7 @@ class TorsoFrontHalfPanel(BaseBodicePanel):
         self.width = frac * m_width
         b_width = frac * b_width
 
-        sh_tan = np.tan(np.deg2rad(body['shoulder_incl']))
+        sh_tan = np.tan(np.deg2rad(body['_shoulder_incl']))
         shoulder_incl = sh_tan * self.width
         length = design['length']['v'] * body['waist_line']
 
@@ -86,7 +86,7 @@ class TorsoBackHalfPanel(BaseBodicePanel):
         self.width = frac * m_width
         b_width = frac * b_width
 
-        shoulder_incl = (np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
+        shoulder_incl = (np.tan(np.deg2rad(body['_shoulder_incl']))) * self.width
         length = design['length']['v'] * body['waist_line']
 
         self.edges = pyp.EdgeSeqFactory.from_verts(

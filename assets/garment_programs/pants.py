@@ -26,7 +26,7 @@ class PantPanel(pyp.Panel):
         flare = body['leg_circ'] * (design['flare']['v']  - 1) / 4 
         hips_depth = hips_depth * hipline_ext
 
-        hip_side_incl = np.deg2rad(body['hip_inclination'])
+        hip_side_incl = np.deg2rad(body['_hip_inclination'])
         dart_depth = hips_depth * 0.8 
 
         # Crotch cotrols

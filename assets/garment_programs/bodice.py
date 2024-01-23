@@ -23,7 +23,7 @@ class BodiceFrontHalf(BaseBodicePanel):
 
         self.width = front_frac * m_bust
         waist = (m_waist - body['waist_back_width']) / 2
-        sh_tan = np.tan(np.deg2rad(body['shoulder_incl']))
+        sh_tan = np.tan(np.deg2rad(body['_shoulder_incl']))
         shoulder_incl = sh_tan * self.width
         bottom_d_width = (self.width - waist) * 2 / 3
 
@@ -45,7 +45,7 @@ class BodiceFrontHalf(BaseBodicePanel):
         self.edges.close_loop()
 
         # Side dart
-        bust_line = body['waist_line'] - body['bust_line']
+        bust_line = body['waist_line'] - body['_bust_line']
         side_d_depth = 0.75 * (self.width - bust_point)    # NOTE: calculated value 
         side_d_width = max_len - side_len
         s_edge, side_interface = self.add_dart(
@@ -97,7 +97,7 @@ class BodiceBackHalf(BaseBodicePanel):
         waist = body['waist_back_width'] / 2  
         # NOTE: no inclination on the side, since there is not much to begin with
         waist_width = self.width if waist < self.width else waist  
-        shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['shoulder_incl']))) * self.width
+        shoulder_incl = (sh_tan:=np.tan(np.deg2rad(body['_shoulder_incl']))) * self.width
 
         # Adjust to make sure length is measured from the shoulder
         # and not the de-fact side of the garment
@@ -113,7 +113,7 @@ class BodiceBackHalf(BaseBodicePanel):
         self.edges.append(edge_0)
         self.edges.append(pyp.EdgeSeqFactory.from_verts(
             edge_0.end,
-            [-self.width, body['waist_line'] - body['bust_line']],  # from the bottom
+            [-self.width, body['waist_line'] - body['_bust_line']],  # from the bottom
             [-self.width, length],   
             [0, length + shoulder_incl],   # Add some fabric for the neck (inclination of shoulders)
         ))
@@ -139,7 +139,7 @@ class BodiceBackHalf(BaseBodicePanel):
             side_adj = 0  if w_diff < 4 else w_diff / 6  # NOTE: don't take from sides if the difference is too small
             bottom_d_width = w_diff - side_adj
             bottom_d_width /= 2   # double darts
-            bottom_d_depth = 1. * (length - body['bust_line'])  # calculated value
+            bottom_d_depth = 1. * (length - body['_bust_line'])  # calculated value
             bottom_d_position = body['bum_points'] / 2
 
             # TODOLOW Avoid hardcoding for matching with the bottoms?
@@ -224,7 +224,7 @@ class BodiceHalf(pyp.Component):
         # Sleeves
         # NOTE assuming the vertical side is the first argument
         max_cwidth = self.ftorso.interfaces['shoulder_corner'].edges[0].length() - 1  # cm
-        min_cwidth = body['armscye_depth']
+        min_cwidth = body['_armscye_depth']
         v = design['sleeve']['connecting_width']['v']
         design['sleeve']['connecting_width']['v'] = min(min_cwidth + min_cwidth * v, max_cwidth)
 
@@ -244,7 +244,7 @@ class BodiceHalf(pyp.Component):
         # Depth
         # Collar depth is given w.r.t. length.
         # adjust for the shoulder inclination
-        tg = np.tan(np.deg2rad(body['shoulder_incl']))
+        tg = np.tan(np.deg2rad(body['_shoulder_incl']))
         f_depth_adj = tg * (self.ftorso.get_width(0) - width / 2)
         b_depth_adj = tg * (self.btorso.get_width(0) - width / 2)
 
@@ -253,14 +253,14 @@ class BodiceHalf(pyp.Component):
 
         design['collar']['f_strapless_depth'] = {}
         design['collar']['f_strapless_depth']['v'] = min(
-            design['collar']['fc_depth']['v'] * body['bust_line'], 
+            design['collar']['fc_depth']['v'] * body['_bust_line'], 
             max_f_len)
         design['collar']['fc_depth']['v'] = design['collar']['f_strapless_depth']['v'] + f_depth_adj
         
 
         design['collar']['b_strapless_depth'] = {}
         design['collar']['b_strapless_depth']['v'] =  min(
-            design['collar']['bc_depth']['v'] * body['bust_line'], 
+            design['collar']['bc_depth']['v'] * body['_bust_line'], 
             max_b_len)
         design['collar']['bc_depth']['v'] = design['collar']['b_strapless_depth']['v'] + b_depth_adj 
 
@@ -351,7 +351,7 @@ class BodiceHalf(pyp.Component):
         self._adjust_top_level(self.ftorso, f_depth, f_in_depth)
         self._adjust_top_level(self.btorso, b_depth, b_in_depth)
 
-        self.translate_by([0, out_depth - body['armscye_depth'] * 0.75, 0])   # adjust for better localisation
+        self.translate_by([0, out_depth - body['_armscye_depth'] * 0.75, 0])   # adjust for better localisation
 
     def _adjust_top_level(self, panel, out_level, in_level):
         """Crops the top of the bodice front/back panel for strapless style
