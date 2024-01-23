@@ -565,7 +565,7 @@ design:
     
   pants: 
     length: 
-      v: 0.9
+      v: 0.8
       range: [0.1, 1.5]   # 0 == hip line, 1 == floor length
       type: float
     width: 
