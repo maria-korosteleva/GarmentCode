@@ -162,7 +162,7 @@ def generate(path, properties, sys_paths, verbose=False):
                 rand_body = body_sample(
                     body_options,
                     body_samples_path,
-                    straight='Pants' not in design['meta']['bottom']['v'])
+                    straight='Pants' != design['meta']['bottom']['v'])
                 name = rand_body.params['body_sample']
 
                 piece_shaped = MetaGarment(name, rand_body, design) 
