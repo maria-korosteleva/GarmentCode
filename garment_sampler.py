@@ -53,7 +53,7 @@ def _create_data_folder(properties, path=Path('')):
     return path_with_dataset, default_folder, body_folder
 
 def _gather_body_options(body_path: Path):
-    objs_path = body_path / 'meshes'
+    objs_path = body_path / 'measurements'
 
     bodies = {}
     for file in objs_path.iterdir():

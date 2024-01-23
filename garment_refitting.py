@@ -54,31 +54,29 @@ def _create_data_folder(properties, path=Path('')):
 
 
 def _gather_body_options(body_path: Path):
-    objs_path = body_path / 'meshes'
+    objs_path = body_path / 'measurements'
 
-    bodies = {}
+    bodies = []
     for file in objs_path.iterdir():
         
         # Get name
         b_name = file.stem.split('_')[0]
-        bodies[b_name] = {}
+        bodies.append({})
 
-        # TODO With or withough subpath? -- check integration with sim loading
         # Get obj options
-        bodies[b_name]['objs'] = dict(
+        bodies[-1]['objs'] = dict(
             straight=f'meshes/{b_name}_straight.obj', 
             apart=f'meshes/{b_name}_apart.obj', )
 
         # Get measurements
-        bodies[b_name]['mes'] = f'measurements/{b_name}.yaml'
+        bodies[-1]['mes'] = f'measurements/{b_name}.yaml'
     
     return bodies
 
 
-def body_sample(bodies: dict, path: Path, straight=True):
+def body_sample(idx, bodies: dict, path: Path, straight=True):
 
-    rand_name = random.sample(list(bodies.keys()), k=1)
-    body_i = bodies[rand_name[0]]
+    body_i = bodies[idx]
 
     mes_file = body_i['mes']
     obj_file = body_i['objs']['straight'] if straight else body_i['objs']['apart']
@@ -150,33 +148,30 @@ def generate(path, properties, sys_paths, verbose=False):
                 
     
     for i in range(properties['size']):
-        # Redo sampling untill success
-        for _ in range(100):  # Putting a limit on re-tries to avoid infinite loops
-            
-            # log properties every time
-            properties.serialize(data_folder / 'dataset_properties.yaml')
-            
-            try:
-                # On random body shape
-                # TODO Straight vs apart -- needed??
-                rand_body = body_sample(
-                    body_options,
-                    body_samples_path,
-                    straight='Pants' != design['meta']['bottom']['v'])
-                name = rand_body.params['body_sample']
+        # log properties every time
+        properties.serialize(data_folder / 'dataset_properties.yaml')
 
-                piece_shaped = MetaGarment(name, rand_body, design) 
-                
-                # Save samples
-                _save_sample(piece_shaped, rand_body, design, body_sample_data, verbose=verbose)
-                
-                break  # Stop generation
-            except BaseException as e:
-                print(f'{name} failed')
-                traceback.print_exc()
-                print(e)
-                
-                continue
+        try:
+            # On random body shape
+            # TODO Straight vs apart -- needed??
+            rand_body = body_sample(
+                i + properties['body_sample_start_id'],
+                body_options,
+                body_samples_path,
+                straight='Pants' != design['meta']['bottom']['v'])
+            name = rand_body.params['body_sample']
+
+            piece_shaped = MetaGarment(name, rand_body, design) 
+            
+            # Save samples
+            _save_sample(piece_shaped, rand_body, design, body_sample_data, verbose=verbose)
+            
+        except BaseException as e:
+            print(f'{name} failed')
+            traceback.print_exc()
+            print(e)
+            
+            continue
 
     elapsed = time.time() - start_time
     gen_stats['generation_time'] = f'{elapsed:.3f} s'
@@ -211,6 +206,7 @@ if __name__ == '__main__':
             design_file='./assets/design_params/jumpsuit_fit.yaml',
             body_default='mean_all',
             body_samples='garment-first-samples',
+            body_sample_start_id=10,
             name='refit_5',
             size=5,
             to_subfolders=True)
