@@ -204,7 +204,7 @@ class BodiceHalf(pyp.Component):
 
         #FIXME Sidelength not matching by large number (0003)
         
-        if design['shirt']['strapless']['v']:
+        if design['shirt']['strapless']['v'] and fitted:  # NOTE: Strapless design only for fitted tops
             self.make_strapless(body, design)
         else:
             # Sleeves and collars 
