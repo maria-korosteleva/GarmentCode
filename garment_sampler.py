@@ -100,7 +100,7 @@ def _save_sample(piece, body, new_design, folder, verbose=False):
     # Save as json file
     folder = pattern.serialize(
         folder, 
-        tag=datetime.now().strftime("%y%m%d-%H-%M-%S"),
+        tag='',
         to_subfolder=True,
         with_3d=True, with_text=False, view_ids=False)
 
