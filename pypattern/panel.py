@@ -22,9 +22,14 @@ class Panel(BaseComponent):
         applications
 
     """
-    def __init__(self, name) -> None:
+    def __init__(self, name, label='') -> None:
+        """Base class for panel creations
+            * Name: panel name. Expected to be a unique identifier of a panel object
+            * label: additional panel label (non-unique)
+        """
         super().__init__(name)
 
+        self.label = label
         self.translation = np.zeros(3)
         self.rotation = R.from_euler('XYZ', [0, 0, 0])  # zero rotation
         # NOTE: initiating with empty sequence allows .append() to it safely
@@ -90,6 +95,11 @@ class Panel(BaseComponent):
         return False
 
     # ANCHOR - Operations -- update object in-place 
+    def set_panel_label(self, label: str, overwrite=True):  # TODOLOW add to the base component? 
+        """If overwrite is not enabled, only updates the label if it's empty."""
+        if not self.label or overwrite:
+            self.label = label
+
     def set_pivot(self, point_2d, replicate_placement=False):
         """Specify 2D point w.r.t. panel local space
             to be used as pivot for translation and rotation
@@ -302,12 +312,19 @@ class Panel(BaseComponent):
             panel.vertices.pop()
             panel.edges[-1]['endpoints'][-1] = 0
 
+        # Add panel label, if known
+        if self.label:
+            # DEBUG
+            print('Labeled!', self.name, self.label)
+            panel.label = self.label
+
         spattern = BasicPattern()
         spattern.name = self.name
         spattern.pattern['panels'] = {self.name: vars(panel)}
 
         # Assembly stitching info (panel might have inner stitches)
         spattern.pattern['stitches'] = self.stitching_rules.assembly()
+
         return spattern
 
     # ANCHOR utils

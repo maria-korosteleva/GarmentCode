@@ -313,3 +313,6 @@ class Sleeve(pyp.Component):
             
             # UPD out interface!
             self.interfaces['out'] = self.cuff.interfaces['bottom']
+
+        # Set label 
+        self.set_panel_label('arm')

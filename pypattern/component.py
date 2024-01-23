@@ -16,6 +16,12 @@ class Component(BaseComponent):
 
         self.subs = []  # list of generative subcomponents
 
+    def set_panel_label(self, label: str, overwrite=True):
+        """Propagate given label to all sub-panels (in subcomponents)"""
+        subs = self._get_subcomponents()
+        for sub in subs: 
+            sub.set_panel_label(label, overwrite)
+
     def pivot_3D(self):
         """Pivot of a component as a block
 

@@ -24,6 +24,9 @@ class MetaGarment(pyp.Component):
             upper = globals()[upper_name]
             self.subs = [upper(body, design)]
 
+            # Set a label
+            self.subs[-1].set_panel_label('body', overwrite=False)
+
         # Define Lower garment
         lower_name = design['meta']['bottom']['v']
         if lower_name:
@@ -57,6 +60,8 @@ class MetaGarment(pyp.Component):
             
             # Add waist label
             self.subs[-1].interfaces['top'].edges.propagate_label('lower_interface')
+            # Set panel segmentation labels
+            self.subs[-1].set_panel_label('body', overwrite=False)
 
         # Attach Lower garment if present
         if lower_name:
@@ -75,3 +80,6 @@ class MetaGarment(pyp.Component):
             # Add waist label
             if not belt_name:
                 self.subs[-1].interfaces['top'].edges.propagate_label('lower_interface')
+            # Set panel segmentation labels
+            self.subs[-1].set_panel_label('leg', overwrite=False)
+            
