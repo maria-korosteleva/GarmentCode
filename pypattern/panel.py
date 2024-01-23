@@ -314,8 +314,6 @@ class Panel(BaseComponent):
 
         # Add panel label, if known
         if self.label:
-            # DEBUG
-            print('Labeled!', self.name, self.label)
             panel.label = self.label
 
         spattern = BasicPattern()
