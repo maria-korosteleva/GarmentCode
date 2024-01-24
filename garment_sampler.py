@@ -187,6 +187,8 @@ def generate(path, properties, sys_paths, verbose=False):
                 _save_sample(piece_shaped, rand_body, new_design, body_sample_data, verbose=verbose)
                 
                 break  # Stop generation
+            except KeyboardInterrupt:  # Return immediately with whatever is ready
+                return default_path, body_sample_path
             except BaseException as e:
                 print(f'{name} failed')
                 traceback.print_exc()
@@ -227,8 +229,8 @@ if __name__ == '__main__':
             design_file='./assets/design_params/default.yaml',
             body_default='mean_all',
             body_samples='garment-first-samples',
-            name='data_5',
-            size=5,
+            name='data_100',
+            size=100,
             to_subfolders=True)
         props.set_section_config('generator')
     else:

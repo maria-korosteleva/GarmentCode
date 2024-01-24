@@ -165,7 +165,8 @@ def generate(path, properties, sys_paths, verbose=False):
             
             # Save samples
             _save_sample(piece_shaped, rand_body, design, body_sample_data, verbose=verbose)
-            
+        except KeyboardInterrupt:  # Return immediately with whatever is ready
+            return default_path, body_sample_path
         except BaseException as e:
             print(f'{name} failed')
             traceback.print_exc()
@@ -206,9 +207,9 @@ if __name__ == '__main__':
             design_file='./assets/design_params/jumpsuit_fit.yaml',
             body_default='mean_all',
             body_samples='garment-first-samples',
-            body_sample_start_id=10,
-            name='refit_5',
-            size=5,
+            body_sample_start_id=0,
+            name='refit_30',
+            size=30,
             to_subfolders=True)
         props.set_section_config('generator')
     else:
