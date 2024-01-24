@@ -105,7 +105,7 @@ def ArmholeCurve(incl, width, angle, bottom_angle_mix=0, invert=True, **kwargs):
 class SleevePanel(pyp.Panel):
     """Trying proper sleeve panel"""
 
-    def __init__(self, name, body, design, open_shape, length_shift=0):
+    def __init__(self, name, body, design, open_shape, length_shift=0, _standing_margin=5):
         """Define a standard sleeve panel (half a sleeve)
             * length_shift -- force upd sleeve length by this amount. 
                 Can be used to adjust length evaluation to fit the cuff
@@ -148,21 +148,29 @@ class SleevePanel(pyp.Panel):
         # Fin
         self.edges.close_loop()
 
-        if standing and rest_angle > shoulder_angle:  # Add a "shelve" to create square shoulder appearance
-            top_edge = self.edges[-1]
-            start = top_edge.start
-            len = design['standing_shoulder_len']['v']
+        if standing:
+            if rest_angle > (shoulder_angle + np.deg2rad(_standing_margin)):  # Add a "shelve" to create square shoulder appearance
+                top_edge = self.edges[-1]
+                start = top_edge.start
+                len = design['standing_shoulder_len']['v']
 
-            x_shift = len * np.cos(rest_angle - shoulder_angle)
-            y_shift = len * np.sin(rest_angle - shoulder_angle)
+                x_shift = len * np.cos(rest_angle - shoulder_angle)
+                y_shift = len * np.sin(rest_angle - shoulder_angle)
 
-            standing_edge = pyp.Edge(
-                start=start,
-                end=[start[0] - x_shift, start[1] + y_shift]
-            )
-            top_edge.start = standing_edge.end
+                standing_edge = pyp.Edge(
+                    start=start,
+                    end=[start[0] - x_shift, start[1] + y_shift]
+                )
+                top_edge.start = standing_edge.end
 
-            self.edges.substitute(top_edge, [standing_edge, top_edge])
+                self.edges.substitute(top_edge, [standing_edge, top_edge])
+            else:
+                print(f'{self.__class__.__name__}::WARNING::'
+                      f'Sleeve rest angle {np.rad2deg(rest_angle):.3f} should be '
+                      f'larger than shoulder angle {body["_shoulder_incl"]} by '
+                      f'at least {_standing_margin} deg to enable '
+                      'standing shoulder. Standing shoulder ignored')
+                standing = False
 
         # Interfaces
         self.interfaces = {
@@ -242,7 +250,6 @@ class Sleeve(pyp.Component):
                 front_opening, back_opening, 
                 tol=0.2 / front_opening.length()  # ~2mm tolerance as a fraction of length
             )
-
         # ----- Get sleeve panels -------
         self.f_sleeve = SleevePanel(
             f'{tag}_sleeve_f', body, design, front_opening,
