@@ -5,7 +5,7 @@ from scipy.spatial.transform import Rotation as R
 
 from external.pattern.core import BasicPattern
 from pypattern.base import BaseComponent
-from pypattern.edge import Edge, EdgeSequence
+from pypattern.edge import Edge, EdgeSequence, CircleEdge
 from pypattern.generic_utils import close_enough, vector_align_3D
 from pypattern.operators import cut_into_edge
 from pypattern.interface import Interface
@@ -69,16 +69,21 @@ class Panel(BaseComponent):
 
     def is_self_intersecting(self):
         """Check whether the panel has self-intersection"""
-
-        edge_curves = [e.as_curve() for e in self.edges]
+        edge_curves = []
+        for e in self.edges:
+            if isinstance(e, CircleEdge):  
+                # NOTE: Intersections for Arcs (Circle edge) fails in svgpathtools:
+                # They are not well implemented in svgpathtools, see
+                # https://github.com/mathandy/svgpathtools/issues/121
+                # https://github.com/mathandy/svgpathtools/blob/fcb648b9bb9591d925876d3b51649fa175b40524/svgpathtools/path.py#L1960
+                # Hence using linear approximation for robustness:
+                edge_curves += [eseg.as_curve() for eseg in e.linearize(n_verts_inside=10)]
+            else:
+                edge_curves.append(e.as_curve())
 
         # NOTE: simple pairwise checks of edges
         for i1 in range(0, len(edge_curves)):
            for i2 in range(i1 + 1, len(edge_curves)):
-                # NOTE: Intersections for Arcs (Circle edge) may fail:
-                # They are not well implemented in svgpathtools, see
-                # https://github.com/mathandy/svgpathtools/issues/121
-                # https://github.com/mathandy/svgpathtools/blob/fcb648b9bb9591d925876d3b51649fa175b40524/svgpathtools/path.py#L1960
                 intersect_t = edge_curves[i1].intersect(edge_curves[i2])
                 
                 # Check exceptions -- intersection at the vertex
