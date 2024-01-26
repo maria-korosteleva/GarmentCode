@@ -204,6 +204,9 @@ class Sleeve(pyp.Component):
         super().__init__(f'{self.__class__.__name__}_{tag}')
 
         design = design['sleeve']
+        self.design = design
+        self.body = body
+        
         sleeve_balance = body['_base_sleeve_balance'] / 2
 
         rest_angle = max(np.deg2rad(design['sleeve_angle']['v']),
@@ -250,16 +253,18 @@ class Sleeve(pyp.Component):
                 front_opening, back_opening, 
                 tol=0.2 / front_opening.length()  # ~2mm tolerance as a fraction of length
             )
+        
+        # --- Eval length adjustment for cuffs (if any) ----
+        cuff_len_adj = self._cuff_len_adj()
+
         # ----- Get sleeve panels -------
         self.f_sleeve = SleevePanel(
             f'{tag}_sleeve_f', body, design, front_opening,
-            length_shift=-design['cuff']['cuff_len']['v'] * body['arm_length']
-            if design['cuff']['type']['v'] else 0
+            length_shift=-cuff_len_adj
             ).translate_by([0, 0, 15])
         self.b_sleeve = SleevePanel(
             f'{tag}_sleeve_b', body, design, back_opening,
-            length_shift=-design['cuff']['cuff_len']['v'] * body['arm_length']
-            if design['cuff']['type']['v'] else 0
+            length_shift=-cuff_len_adj
             ).translate_by([0, 0, -15])
 
         # Connect panels
@@ -291,8 +296,7 @@ class Sleeve(pyp.Component):
             # Ensure it fits regardless of parameters
             cuff_circ = max(cuff_circ, body['wrist'])
             cdesign['cuff']['b_width'] = dict(v=cuff_circ)
-            
-            cdesign['cuff']['cuff_len']['v'] = design['cuff']['cuff_len']['v'] * body['arm_length']
+            cdesign['cuff']['cuff_len']['v'] = cuff_len_adj
 
             cuff_class = getattr(bands, cdesign['cuff']['type']['v'])
             self.cuff = cuff_class(f'sl_{tag}', cdesign)
@@ -323,3 +327,16 @@ class Sleeve(pyp.Component):
 
         # Set label 
         self.set_panel_label('arm')
+
+    def _cuff_len_adj(self):
+        """Eval sleeve length adjustment due to cuffs (if any)"""
+        if not self.design['cuff']['type']['v']:
+            return 0
+        
+        cuff_len_adj = self.design['cuff']['cuff_len']['v'] * self.body['arm_length']
+        max_len = self.design['length']['v'] * self.body['arm_length']
+        if cuff_len_adj > max_len * 0.7:
+            cuff_len_adj = max_len * 0.7
+        
+        return cuff_len_adj
+

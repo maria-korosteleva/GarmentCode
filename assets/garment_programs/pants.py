@@ -186,7 +186,10 @@ class PantsHalf(BaseBottoms):
 
         length = design['length']['v'] * body['_leg_length']
         cuff_len = design['cuff']['cuff_len']['v'] * body['_leg_length']
-        if design['cuff']['type']['v'] and length > cuff_len:
+        if design['cuff']['type']['v']: 
+            if length * 0.9 < cuff_len:
+                # Cannot be longer then a pant
+                cuff_len = length * 0.9  
             # Include the cuff into the overall length, 
             # unless the requested length is too short to fit the cuff 
             # (to avoid negative length)
@@ -230,7 +233,7 @@ class PantsHalf(BaseBottoms):
             cdesign = deepcopy(design)
             cdesign['cuff']['b_width'] = {}
             cdesign['cuff']['b_width']['v'] = pant_bottom.edges.length() / design['cuff']['top_ruffle']['v']
-            cdesign['cuff']['cuff_len']['v'] = design['cuff']['cuff_len']['v'] * body['_leg_length']
+            cdesign['cuff']['cuff_len']['v'] = cuff_len
 
             # Init
             cuff_class = getattr(bands, cdesign['cuff']['type']['v'])
