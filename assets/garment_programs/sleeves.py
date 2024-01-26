@@ -278,8 +278,8 @@ class Sleeve(pyp.Component):
         # Interfaces
         self.interfaces.update({
             'in': pyp.Interface.from_multiple(
-                self.f_sleeve.interfaces['in'],
-                self.b_sleeve.interfaces['in'].reverse()
+                self.f_sleeve.interfaces['in'], 
+                self.b_sleeve.interfaces['in'].reverse(with_edge_dir_reverse=True)
             ),
             'out': pyp.Interface.from_multiple(
                     self.f_sleeve.interfaces['out'], 
