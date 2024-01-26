@@ -219,7 +219,9 @@ class Sleeve(pyp.Component):
         back_w = back_w(connecting_width) if callable(back_w) else back_w
 
         # --- Define sleeve opening shapes ----
-        armhole = globals()[design['armhole_shape']['v']]
+        # NOTE: Non-trad armholes only for sleeveless styles due to 
+        # unclear inversion and stitching errors (see below)
+        armhole = globals()[design['armhole_shape']['v']] if design['sleeveless']['v'] else ArmholeCurve
         front_project, front_opening = armhole(
             front_w - sleeve_balance,
             connecting_width, 
