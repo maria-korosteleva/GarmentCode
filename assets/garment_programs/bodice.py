@@ -293,6 +293,10 @@ class BodiceHalf(pyp.Component):
                 bodice_sleeve_int, 
                 gap=7
             )
+
+        # Add edge labels
+        f_sleeve_int.edges.propagate_label(f'{self.name}_armhole')
+        b_sleeve_int.edges.propagate_label(f'{self.name}_armhole')
     
     def add_collars(self, name, body, design):
         # Front
@@ -332,6 +336,10 @@ class BodiceHalf(pyp.Component):
             self.interfaces['back_in'] = pyp.Interface.from_multiple(
                 self.btorso.interfaces['inside'], self.interfaces['back_collar']
             )
+        
+        # Add edge labels
+        fc_interface.edges.propagate_label(f'{self.name}_collar')
+        bc_interface.edges.propagate_label(f'{self.name}_collar')
 
     def make_strapless(self, body, design):
 
