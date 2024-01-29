@@ -180,14 +180,14 @@ class BodiceHalf(pyp.Component):
         # Torso
         if fitted:
             self.ftorso = BodiceFrontHalf(
-                f'{name}_ftorso', body, design).translate_by([0, 0, 25])
+                f'{name}_ftorso', body, design).translate_by([0, 0, 30])
             self.btorso = BodiceBackHalf(
-                f'{name}_btorso', body, design).translate_by([0, 0, -20])
+                f'{name}_btorso', body, design).translate_by([0, 0, -25])
         else:
             self.ftorso = tee.TorsoFrontHalfPanel(
-                f'{name}_ftorso', body, design).translate_by([0, 0, 25])
+                f'{name}_ftorso', body, design).translate_by([0, 0, 30])
             self.btorso = tee.TorsoBackHalfPanel(
-                f'{name}_btorso', body, design).translate_by([0, 0, -20])
+                f'{name}_btorso', body, design).translate_by([0, 0, -25])
 
         # Interfaces
         self.interfaces.update({
