@@ -28,11 +28,11 @@ class BaseComponent(ABC):
 
     def bbox(self):
         """Bounding box -- in 2D"""
-        return 0, 0, 0, 0, 0, 0
+        return np.array([0, 0]), np.array([0, 0])
 
     def bbox3D(self):
         """Bounding box in 3D space"""
-        return 0, 0, 0, 0, 0, 0
+        return np.array([0, 0, 0]), np.array([0, 0, 0])
 
     def is_self_intersecting(self):
         """Check whether the component have self-intersections"""

@@ -107,6 +107,10 @@ class Component(BaseComponent):
         subs = self._get_subcomponents()
         bboxes = [s.bbox3D() for s in subs]
 
+        if not len(subs):
+            # Special components without panel geometry -- no bbox defined
+            return np.array([[np.inf, np.inf, np.inf], [-np.inf, -np.inf, -np.inf]])
+
         mins = np.vstack([b[0] for b in bboxes])
         maxes = np.vstack([b[1] for b in bboxes])
 
