@@ -168,6 +168,7 @@ def generate(path, properties, sys_paths, verbose=False):
 
                 # On default body
                 piece_default = MetaGarment(name, default_body, new_design) 
+                piece_default.assert_total_length()   # Check final length correctness
 
                 # On random body shape
                 # TODO Straight vs apart -- needed??
@@ -176,6 +177,7 @@ def generate(path, properties, sys_paths, verbose=False):
                     body_samples_path,
                     straight='Pants' != new_design['meta']['bottom']['v'])
                 piece_shaped = MetaGarment(name, rand_body, new_design) 
+                piece_shaped.assert_total_length()   # Check final length correctness
                 
                 if piece_default.is_self_intersecting() or piece_shaped.is_self_intersecting():
                     if verbose:

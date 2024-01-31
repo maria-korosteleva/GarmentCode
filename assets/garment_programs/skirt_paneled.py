@@ -370,6 +370,8 @@ class PencilSkirt(StackableSkirtComponent):
             )
         }
 
+    def length(self):
+        return self.front.length()
 
 class Skirt2(StackableSkirtComponent):
     """Simple 2 panel skirt"""
@@ -421,6 +423,9 @@ class Skirt2(StackableSkirtComponent):
             )
         }
 
+    def length(self):
+        return self.front.length()
+
 
 class SkirtManyPanels(BaseBottoms):
     """Round Skirt with many panels"""
@@ -470,4 +475,7 @@ class SkirtManyPanels(BaseBottoms):
             'top': pyp.Interface.from_multiple(*[sub.interfaces['top']
                                                  for sub in self.subs])
         }
+    
+    def length(self):
+        return self.front.length()
 

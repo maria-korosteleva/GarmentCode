@@ -114,3 +114,6 @@ class GodetSkirt(BaseBottoms):
 
     def get_rise(self):
         return self.base.get_rise()
+    
+    def length(self):
+        return self.base.length()

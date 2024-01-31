@@ -259,6 +259,11 @@ class PantsHalf(BaseBottoms):
             'top_b': self.back.interfaces['top'],
         }
 
+    def length(self):
+        if self.design['pants']['cuff']['type']['v']:
+            return self.front.length() + self.cuff.length()
+        
+        return self.front.length()
 
 class Pants(BaseBottoms):
     def __init__(self, body, design, rise=None) -> None:
@@ -287,4 +292,7 @@ class Pants(BaseBottoms):
 
     def get_rise(self):
         return self.right.get_rise()
+    
+    def length(self):
+        return self.right.length()
 

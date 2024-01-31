@@ -32,6 +32,15 @@ class Component(BaseComponent):
         return np.array(((mins[0] + maxes[0]) / 2, maxes[1],
                          (mins[-1] + maxes[-1]) / 2))
 
+    def length(self):
+        """Length of a component in cm
+        
+            Defaults the to the vertical length of a 3D bounding box
+            * longest_dim -- if set, returns the longest dimention out of the bounding box dimentions
+        """
+        subs = self._get_subcomponents()
+        return sum([s.length() for s in subs]) if subs else 0
+
     def translate_by(self, delta_vector):
         """Translate component by a vector"""
         for subs in self._get_subcomponents():

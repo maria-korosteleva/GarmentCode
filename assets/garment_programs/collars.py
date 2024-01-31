@@ -119,6 +119,9 @@ class NoPanelsCollar(pyp.Component):
             'front_proj': pyp.Interface(self, f_collar),
             'back_proj': pyp.Interface(self, b_collar)
         }
+    
+    def length(self):
+        return 0
 
 
 class Turtle(pyp.Component):
@@ -165,6 +168,9 @@ class Turtle(pyp.Component):
                 self.back.interfaces['bottom']
             )
         })
+
+    def length(self):
+        return self.interfaces['back'].edges.length()
 
 
 class SimpleLapelPanel(pyp.Panel):
@@ -250,6 +256,8 @@ class SimpleLapel(pyp.Component):
             )
         })
 
+    def length(self):
+        return self.interfaces['back'].edges.length()
 
 class HoodPanel(pyp.Panel):
     """A panel for the side of the hood"""
@@ -349,4 +357,6 @@ class Hood2Panels(pyp.Component):
             'bottom': self.panel.interfaces['to_bodice']
         })
 
+    def length(self):
+        return self.panel.length()
 

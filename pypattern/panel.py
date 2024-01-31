@@ -67,6 +67,19 @@ class Panel(BaseComponent):
         """Pivot point of a panel in 3D"""
         return self.point_to_3D([0, 0])
 
+    def length(self, longest_dim=False):
+        """Length of a panel element in cm
+        
+            Defaults the to the vertical length of a 2D bounding box
+            * longest_dim -- if set, returns the longest dimention out of the bounding box dimentions
+        """
+        bbox = self.bbox()
+
+        x = abs(bbox[1][0] - bbox[0][0])
+        y = abs(bbox[1][1] - bbox[0][1])
+
+        return max(x, y) if longest_dim else y
+
     def is_self_intersecting(self):
         """Check whether the panel has self-intersection"""
         edge_curves = []
@@ -396,6 +409,15 @@ class Panel(BaseComponent):
                 final_norm[i] = 0.0
 
         return final_norm
+
+    def bbox(self):
+        """Evaluate 2D bounding box"""
+        # Using curve linearization for more accurate approximation of bbox
+        lin_edges = EdgeSequence([e.linearize() for e in self.edges])
+        verts_2d = np.asarray(lin_edges.verts())
+
+        return verts_2d.min(axis=0), verts_2d.max(axis=0)
+
 
     def bbox3D(self):
         """Evaluate 3D bounding box of the current panel"""

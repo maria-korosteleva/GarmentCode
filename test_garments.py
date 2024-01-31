@@ -52,6 +52,11 @@ if __name__ == '__main__':
     ]
     for df in designs:
         test_garments.append(MetaGarment(df, body, designs[df]))
+        try:
+            test_garments[-1].assert_total_length()
+        except BaseException as e:
+            print(e)
+            pass
 
     for piece in test_garments:
         pattern = piece.assembly()

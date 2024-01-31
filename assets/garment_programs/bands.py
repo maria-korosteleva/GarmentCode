@@ -1,7 +1,7 @@
 import pypattern as pyp
 from assets.garment_programs.circle_skirt import CircleArcPanel
 from assets.garment_programs import skirt_paneled
-
+from assets.garment_programs.base_classes import BaseBand
 
 class StraightBandPanel(pyp.Panel):
     """One panel for a panel skirt"""
@@ -26,7 +26,7 @@ class StraightBandPanel(pyp.Panel):
         self.center_x()
 
 
-class StraightWB(pyp.Component):
+class StraightWB(BaseBand):
     """Simple 2 panel waistband"""
     def __init__(self, body, design, rise=1.) -> None:
         """Simple 2 panel waistband
@@ -37,7 +37,7 @@ class StraightWB(pyp.Component):
                 the rise is ignored and the StraightWB is created to sit well on the waist
         
         """
-        super().__init__(self.__class__.__name__)
+        super().__init__(body, design, rise=rise)
 
         # Measurements
         self.waist = design['waistband']['waist']['v'] * body['waist']
@@ -135,12 +135,12 @@ class FittedWB(StraightWB):
             self.bottom_width * self.bottom_back_fraction)
 
 
-class CuffBand(pyp.Component):
+class CuffBand(BaseBand):
     """ Cuff class for sleeves or pants
         band-like piece of fabric with optional "skirt"
     """
     def __init__(self, tag, design, length=None) -> None:
-        super().__init__(self.__class__.__name__)
+        super().__init__(body=None, design=design, tag=tag)
 
         self.design = design['cuff']
 
@@ -171,11 +171,11 @@ class CuffBand(pyp.Component):
         }
 
 
-class CuffSkirt(pyp.Component):
+class CuffSkirt(BaseBand):
     """A skirt-like flared cuff """
 
     def __init__(self, tag, design, length=None) -> None:
-        super().__init__(self.__class__.__name__)
+        super().__init__(body=None, design=design, tag=tag)
 
         self.design = design['cuff']
         width = self.design['b_width']['v']
@@ -242,3 +242,6 @@ class CuffBandSkirt(pyp.Component):
             'top_back': self.cuff.interfaces['top_back'],
             'bottom': self.skirt.interfaces['bottom']
         }
+
+    def length(self):
+        return self.cuff.length() + self.skirt.length()

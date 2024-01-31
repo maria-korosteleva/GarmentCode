@@ -40,6 +40,9 @@ class CircleArcPanel(pyp.Panel):
             'left': pyp.Interface(self, self.edges[1]),
             'right': pyp.Interface(self, self.edges[3])
         }
+
+    def length(self, *args):
+        return self.interfaces['right'].edges.length()
     
     @staticmethod
     def from_w_length_suns(name, length, top_width, sun_fraction):
@@ -63,7 +66,6 @@ class CircleArcPanel(pyp.Panel):
         arc = top_width / rad
 
         return CircleArcPanel(name, rad, length, arc)
-
 
 class AsymHalfCirclePanel(pyp.Panel):
     """Panel for a asymmetrci circle skirt"""
@@ -103,6 +105,9 @@ class AsymHalfCirclePanel(pyp.Panel):
             'left': pyp.Interface(self, self.edges[1]),
             'right': pyp.Interface(self, self.edges[3])
         }
+    
+    def length(self, *args):
+        return self.interfaces['right'].edges.length()
 
 class SkirtCircle(StackableSkirtComponent):
     """Simple circle skirt"""
@@ -190,6 +195,9 @@ class SkirtCircle(StackableSkirtComponent):
         panel.interfaces['bottom'].substitute(
             target_edge, interf_edges,
             [panel for _ in range(len(interf_edges))])
+        
+    def length(self, *args):
+        return self.front.length()
 
 
 class AsymmSkirtCircle(SkirtCircle):

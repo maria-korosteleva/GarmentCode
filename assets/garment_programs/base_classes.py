@@ -101,3 +101,22 @@ class StackableSkirtComponent(BaseBottoms):
         }
 
 
+class BaseBand(pyp.Component):
+    def __init__(self, body, design, tag='', rise=None) -> None:
+        """Base band initialization
+        """
+        super().__init__(
+            self.__class__.__name__ if not tag else f'{self.__class__.__name__}_{tag}')
+        self.body = body
+        self.design = design
+        self.rise = rise
+        
+        # Set of interfaces that need to be implemented
+        self.interfaces = {
+            'top': object(),
+            'bottom': object()
+        }
+
+    def length(self):
+        """Base length == Length of a first panel"""
+        return self._get_subcomponents()[0].length()

@@ -387,6 +387,8 @@ class BodiceHalf(pyp.Component):
         out[0] += out_level * (bot[0] - out[0]) / (out[1] - bot[1])
         out[1] = min_y - out_level
 
+    def length(self):
+        return self.btorso.length()
 
 class Shirt(pyp.Component):
     """Panel for the front of upper garments with darts to properly fit it to
@@ -443,6 +445,8 @@ class Shirt(pyp.Component):
 
         return design
 
+    def length(self):
+        return self.right.length()
 
 class FittedShirt(Shirt):
     """Creates fitted shirt

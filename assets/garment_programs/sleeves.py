@@ -188,6 +188,9 @@ class SleevePanel(pyp.Panel):
             body['height'] - body['head_l'] - body['_armscye_depth'], 0])
         self.rotate_to(R.from_euler(
             'XYZ', [0, 0, body['arm_pose_angle']], degrees=True)) 
+        
+    def length(self, longest_dim=False):
+        return self.interfaces['bottom'].edges.length()
 
 
 class Sleeve(pyp.Component):
@@ -342,3 +345,11 @@ class Sleeve(pyp.Component):
         
         return cuff_len_adj
 
+    def length(self):
+        if self.design['sleeveless']['v']:
+            return 0
+        
+        if self.design['cuff']['type']['v']:
+            return self.f_sleeve.length() + self.cuff.length()
+        
+        return self.f_sleeve.length()
