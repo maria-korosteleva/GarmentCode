@@ -362,6 +362,10 @@ class BodiceHalf(pyp.Component):
 
         self.translate_by([0, out_depth - body['_armscye_depth'] * 0.75, 0])   # adjust for better localisation
 
+        # Add a label
+        self.ftorso.interfaces['shoulder'].edges.propagate_label('strapless_top')
+        self.btorso.interfaces['shoulder'].edges.propagate_label('strapless_top')
+
     def _adjust_top_level(self, panel, out_level, in_level):
         """Crops the top of the bodice front/back panel for strapless style
         """
