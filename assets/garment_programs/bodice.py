@@ -202,8 +202,6 @@ class BodiceHalf(pyp.Component):
         self.collar_comp = None
         self.eval_dep_params(body, design)
 
-        #FIXME Sidelength not matching by large number (0003)
-        
         if design['shirt']['strapless']['v'] and fitted:  # NOTE: Strapless design only for fitted tops
             self.make_strapless(body, design)
         else:
@@ -347,27 +345,35 @@ class BodiceHalf(pyp.Component):
         f_in_depth = design['collar']['f_strapless_depth']['v']
         b_in_depth = design['collar']['b_strapless_depth']['v']
 
-        # Compensate for lenght difference
-        len_front = self.ftorso.interfaces['outside'].edges.length()
+        # Shoulder adjustment for the back
+        # TODO Shoulder adj evaluation should be a function
+        shoulder_angle = np.deg2rad(body['_shoulder_incl'])
+        sleeve_balance = body['_base_sleeve_balance'] / 2
+        back_w = self.btorso.get_width(0)
+        shoulder_adj = np.tan(shoulder_angle) * (back_w - sleeve_balance)
+        out_depth -= shoulder_adj
+
+        # Upd back
+        self._adjust_top_level(self.btorso, out_depth, b_in_depth)
+
+        # Front depth determined by ~compensating for lenght difference
         len_back = self.btorso.interfaces['outside'].edges.length()
-        diff = len_back - len_front
-
-        if diff < 0: 
-            f_depth, b_depth = out_depth - diff, out_depth
-        else: 
-            f_depth, b_depth = out_depth, out_depth + diff
-
-        self._adjust_top_level(self.ftorso, f_depth, f_in_depth)
-        self._adjust_top_level(self.btorso, b_depth, b_in_depth)
-
+        len_front = self.ftorso.interfaces['outside'].edges.length()
+        self._adjust_top_level(self.ftorso, out_depth, f_in_depth, target_remove=(len_front - len_back))
+        
+        # Placement
         self.translate_by([0, out_depth - body['_armscye_depth'] * 0.75, 0])   # adjust for better localisation
 
         # Add a label
         self.ftorso.interfaces['shoulder'].edges.propagate_label('strapless_top')
         self.btorso.interfaces['shoulder'].edges.propagate_label('strapless_top')
 
-    def _adjust_top_level(self, panel, out_level, in_level):
+
+    def _adjust_top_level(self, panel, out_level, in_level, target_remove=None):
         """Crops the top of the bodice front/back panel for strapless style
+
+            * out_length_diff -- if set, determined the length difference that should be compensates
+            after cutting the depth
         """
         # TODOLOW Should this be the panel's function?
 
@@ -388,8 +394,18 @@ class BodiceHalf(pyp.Component):
         if bot is out:
             bot, top = top, bot
         
-        out[0] += out_level * (bot[0] - out[0]) / (out[1] - bot[1])
+        if target_remove is not None:
+            # Adjust the depth to remove this length exactly
+            angle_sin = abs(out[1] - bot[1]) / outside_edge.length()   
+            curr_remove = out_level / angle_sin
+            length_diff = target_remove - curr_remove
+            adjustment = length_diff * angle_sin
+            out_level += adjustment
+        
+        angle_cotan = abs(out[0] - bot[0]) / abs(out[1] - bot[1])
+        out[0] -= out_level * angle_cotan  
         out[1] = min_y - out_level
+
 
     def length(self):
         return self.btorso.length()
