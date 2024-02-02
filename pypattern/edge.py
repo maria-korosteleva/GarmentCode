@@ -804,6 +804,7 @@ class EdgeSequence:
                 p = [mi[0],ma[1]]
                 b_points = [b_points[0],p,b_points[1]]
 
+        # FIXME Use one common order for the bbox output
         bbox = [mi[0], ma[0], mi[1], ma[1]]
 
         return bbox, b_points
