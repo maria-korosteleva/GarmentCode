@@ -134,6 +134,7 @@ class Panel(BaseComponent):
 
         if replicate_placement:
             self.translation = self.point_to_3D(point_2d)
+            # FIXME Replicate rotation
 
         # UPD vertex locations relative to new pivot
         for v in self.edges.verts():
@@ -296,6 +297,8 @@ class Panel(BaseComponent):
 
          NOTE: panel EdgeSequence is assumed to be a single loop of edges
         """
+        # FIXME Some panels have weird resulting alignemnt when this pivot setup is removed -- there is a bug somewhere
+
         # always start from zero for consistency between panels
         self.set_pivot(self.edges[0].start, replicate_placement=True)
 
