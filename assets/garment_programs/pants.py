@@ -243,7 +243,8 @@ class PantsHalf(BaseBottoms):
             self.cuff.place_by_interface(
                 self.cuff.interfaces['top'],
                 pant_bottom,
-                gap=5
+                gap=5,
+                alignment='left'
             )
 
             # Stitch
