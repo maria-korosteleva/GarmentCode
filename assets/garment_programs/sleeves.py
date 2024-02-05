@@ -111,6 +111,7 @@ class SleevePanel(pyp.Panel):
                 Can be used to adjust length evaluation to fit the cuff
         """
         super().__init__(name)
+        MIN_LENGTH = 5    # Minimum sleeve length
 
         # TODO end_width to be not less then the width of the arm??
 
@@ -135,8 +136,9 @@ class SleevePanel(pyp.Panel):
         arm_width = abs(open_shape[0].start[1] - open_shape[-1].end[1])
         # Length from the border of the opening to the end of the sleeve
         length = design['length']['v'] * (body['arm_length'] - opening_length)
-        if length + length_shift > 0:  # NOTE: Avoid incorrect state (but it makes the result less precise)
-            length += length_shift
+        # NOTE: Asked to reduce by too much: reduce as much as possible
+        length = max(length + length_shift, MIN_LENGTH)
+
         self.edges = pyp.EdgeSeqFactory.from_verts(
             [0, 0], [0, -end_width], [length, -arm_width]
         )
