@@ -69,24 +69,53 @@ class BaseComponent(ABC):
         self.translate_by([0, other_bbox[0][1] - curr_bbox[1][1] - gap, 0])
         return self
 
-    def place_by_interface(self, self_interface, out_interface, gap=2):
+    def place_by_interface(self, self_interface, out_interface, gap=2, alignment='center'):
         """Adjust the placement of component according to the connectivity
         instruction
+
+        Alignment options: 
+        'center' center of the interface to center of the interface
+        'top' - top on Y axis
+        'bottom' - bottom on Y axis
+        'left' - left on X axis
+        'right' - right on X axis
         """
         
         # Align translation
         self_bbox = self_interface.bbox_3d()
         out_bbox = out_interface.bbox_3d()
-        mid_out = (out_bbox[1] + out_bbox[0]) / 2
-        mid_self = (self_bbox[1] + self_bbox[0]) / 2
+        
+        # Determine alignment point depending on requested alignment type
+        point_out = (out_bbox[1] + out_bbox[0]) / 2
+        point_self = (self_bbox[1] + self_bbox[0]) / 2
+        if alignment == 'center':
+            pass # No modification needed
+        elif alignment == 'top':
+            point_out[1] = out_bbox[1][1]  # Use max in Y
+            point_self[1] = self_bbox[1][1]
+        elif alignment == 'bottom':
+            point_out[1] = out_bbox[0][1]  # Use min in Y
+            point_self[1] = self_bbox[0][1]
+        elif alignment == 'right':
+            point_out[0] = out_bbox[0][0]  # Use min in X
+            point_self[0] = self_bbox[0][0]
+        elif alignment == 'left':
+            point_out[0] = out_bbox[1][0]  # Use max in X
+            point_self[0] = self_bbox[1][0]
+        else: 
+            raise ValueError(
+                f'{self.__class__.__name__}::{self.name}::ERROR::'
+                f'Uknown alignment type ({alignment}) requested in place_by_interface().'
+                f' Available types: center, top, bottom, left, right')
 
         # Add a gap outside the current
         full_bbox = self.bbox3D()
         center = (full_bbox[0] + full_bbox[1]) / 2
+        mid_self = (self_bbox[1] + self_bbox[0]) / 2
         gap_dir = mid_self - center
         gap_dir = gap * gap_dir / np.linalg.norm(gap_dir)
         
-        diff = mid_out - (mid_self + gap_dir)
+        diff = point_out - (point_self + gap_dir)
         
         self.translate_by(diff)
 

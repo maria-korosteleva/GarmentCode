@@ -289,7 +289,8 @@ class BodiceHalf(pyp.Component):
             self.sleeve.place_by_interface(
                 self.sleeve.interfaces['in'], 
                 bodice_sleeve_int, 
-                gap=7
+                gap=7,
+                alignment='top'
             )
 
         # Add edge labels

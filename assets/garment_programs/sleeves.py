@@ -182,12 +182,12 @@ class SleevePanel(pyp.Panel):
         }
 
         # Default placement
-        self.set_pivot(self.edges[1].end)
-        self.translate_to(
-            [- body['shoulder_w'] / 2,
-            body['height'] - body['head_l'] - body['_armscye_depth'], 0])
-        self.rotate_to(R.from_euler(
-            'XYZ', [0, 0, body['arm_pose_angle']], degrees=True)) 
+        self.set_pivot(self.edges[-1].start) 
+        self.translate_to([
+            - body['shoulder_w'] / 2,
+            body['height'] - body['head_l'],
+            0, 
+        ])
         
     def length(self, longest_dim=False):
         return self.interfaces['bottom'].edges.length()
@@ -310,14 +310,15 @@ class Sleeve(pyp.Component):
             self.cuff.rotate_by(
                 R.from_euler(
                     'XYZ', 
-                    [0, 0, -90 + body['arm_pose_angle']],  # from -Ox direction
+                    [0, 0, -90],  # from -Ox direction 
                     degrees=True
                 )
             )
             self.cuff.place_by_interface(
                 self.cuff.interfaces['top'],
                 self.interfaces['out'],
-                gap=5
+                gap=2,
+                alignment='top'
             )
 
             self.stitching_rules.append(
@@ -329,6 +330,10 @@ class Sleeve(pyp.Component):
             
             # UPD out interface!
             self.interfaces['out'] = self.cuff.interfaces['bottom']
+
+        # Final rotation of sleeve piece
+        self.rotate_by(R.from_euler(
+            'XYZ', [0, 0, body['arm_pose_angle']], degrees=True)) 
 
         # Set label 
         self.set_panel_label('arm')
