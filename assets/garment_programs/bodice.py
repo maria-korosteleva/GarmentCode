@@ -8,7 +8,7 @@ from assets.garment_programs.base_classes import BaseBodicePanel
 from assets.garment_programs import sleeves
 from assets.garment_programs import collars
 from assets.garment_programs import tee
-
+from scipy.spatial.transform import Rotation as R
 
 class BodiceFrontHalf(BaseBodicePanel):
     def __init__(self, name, body, design) -> None:
@@ -286,11 +286,20 @@ class BodiceHalf(pyp.Component):
                 self.sleeve.interfaces['in'], 
                 bodice_sleeve_int
             ))
+
+            # DRAFT 
+            gap = 3 - body['arm_pose_angle'] / 10
+            # gap = 0
+
+            # DEBUG
+            print('gap ', gap)
+
             self.sleeve.place_by_interface(
                 self.sleeve.interfaces['in'], 
                 bodice_sleeve_int, 
-                gap=7,
-                alignment='top'
+                gap=gap,   # DEBUG 7,  # TODO This might depend on the pose though.. 
+                alignment='top',
+                # DEBUG gap_dir=np.array([1., 0, 0])
             )
 
         # Add edge labels

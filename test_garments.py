@@ -24,7 +24,9 @@ if __name__ == '__main__':
 
     design_files = {
         # 'base': './assets/design_params/base.yaml',
-        'sleeve_align': './assets/design_params/sleeve_alignment_1.yaml',
+        # 'sleeve_align': './assets/design_params/sleeve_alignment_1.yaml',
+        'sleeve_long': './assets/design_params/sleeve_too_long.yaml',
+        # 'pants_align': './assets/design_params/pants_alignment.yaml',
         # 'js_base': './assets/design_params/jumpsuit_fit.yaml',
         # 'our_dress': r"G:\My Drive\GarmentCode\sewing_siggraph_garment\designs\dress_design_params.yaml"
         # 'jing_dress': r"C:\Users\mariako\Documents\Code\Procedural-Garments\Logs\Configured_design__240117-19-06-53\design_params_manual.yaml"

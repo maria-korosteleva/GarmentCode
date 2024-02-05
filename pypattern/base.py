@@ -69,7 +69,14 @@ class BaseComponent(ABC):
         self.translate_by([0, other_bbox[0][1] - curr_bbox[1][1] - gap, 0])
         return self
 
-    def place_by_interface(self, self_interface, out_interface, gap=2, alignment='center'):
+    def place_by_interface(
+            self, 
+            self_interface, 
+            out_interface, 
+            gap=2, 
+            alignment='center',
+            gap_dir=None
+        ):
         """Adjust the placement of component according to the connectivity
         instruction
 
@@ -109,12 +116,13 @@ class BaseComponent(ABC):
                 f' Available types: center, top, bottom, left, right')
 
         # Add a gap outside the current
-        full_bbox = self.bbox3D()
-        center = (full_bbox[0] + full_bbox[1]) / 2
-        mid_self = (self_bbox[1] + self_bbox[0]) / 2
-        gap_dir = mid_self - center
-        gap_dir = gap * gap_dir / np.linalg.norm(gap_dir)
+        if gap_dir is None:
+            full_bbox = self.bbox3D()
+            center = (full_bbox[0] + full_bbox[1]) / 2
+            mid_self = (self_bbox[1] + self_bbox[0]) / 2
+            gap_dir = mid_self - center
         
+        gap_dir = gap * gap_dir / np.linalg.norm(gap_dir)
         diff = point_out - (point_self + gap_dir)
         
         self.translate_by(diff)
