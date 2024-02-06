@@ -287,19 +287,15 @@ class BodiceHalf(pyp.Component):
                 bodice_sleeve_int
             ))
 
-            # DRAFT 
-            gap = 3 - body['arm_pose_angle'] / 10
-            # gap = 0
-
-            # DEBUG
-            print('gap ', gap)
-
+            # NOTE: This is a heuristic tuned for arm poses 30 deg-60 deg 
+            # used in the dataset
+            # FIXME Needs a better general solution
+            gap = -1 - body['arm_pose_angle'] / 10
             self.sleeve.place_by_interface(
                 self.sleeve.interfaces['in'], 
                 bodice_sleeve_int, 
-                gap=gap,   # DEBUG 7,  # TODO This might depend on the pose though.. 
+                gap=gap,   
                 alignment='top',
-                # DEBUG gap_dir=np.array([1., 0, 0])
             )
 
         # Add edge labels
