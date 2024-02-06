@@ -1,12 +1,13 @@
 design:
   meta:
     upper:
-      v: Shirt
+      v: null  #  Shirt
       range:
       - FittedShirt
       - Shirt
       - null
       type: select_null
+      default_prob: 1.   # Not defined
     wb:
       v: null
       range:
@@ -14,9 +15,9 @@ design:
       - FittedWB
       - null
       type: select_null
-      default_prob: 0.5
+      default_prob: 1.  # 0.5
     bottom:
-      v: null
+      v: Pants  #null
       range:
       - SkirtCircle
       - AsymmSkirtCircle
@@ -28,6 +29,7 @@ design:
       - SkirtLevels
       - null
       type: select_null
+      default_prob: 1.   # Not defined
   waistband:
     waist:
       v: 1.0
@@ -856,7 +858,7 @@ design:
         - CuffBandSkirt
         - null
         type: select_null
-        default_prob: 0.5
+        default_prob: 0.0 #  0.5  Always with a cuff
       top_ruffle:
         v: 1.0
         range:
