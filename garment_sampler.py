@@ -115,6 +115,8 @@ def _save_sample(piece, body, new_design, folder, verbose=False):
     if verbose:
         print(f'Saved {piece.name}')
 
+def has_pants(design):
+    return 'Pants' == design['meta']['bottom']['v']
 
 
 def generate(path, properties, sys_paths, verbose=False):
@@ -170,12 +172,17 @@ def generate(path, properties, sys_paths, verbose=False):
                 piece_default = MetaGarment(name, default_body, new_design) 
                 piece_default.assert_total_length()   # Check final length correctness
 
+                # Straight/apart legs pose
+                def_obj_name = properties['body_default']
+                if has_pants(new_design):
+                    def_obj_name += '_apart'
+                default_body.params['body_sample'] = def_obj_name
+
                 # On random body shape
-                # TODO Straight vs apart -- needed??
                 rand_body = body_sample(
                     body_options,
                     body_samples_path,
-                    straight='Pants' != new_design['meta']['bottom']['v'])
+                    straight=not has_pants(new_design))
                 piece_shaped = MetaGarment(name, rand_body, new_design) 
                 piece_shaped.assert_total_length()   # Check final length correctness
                 
