@@ -149,14 +149,13 @@ def generate(path, properties, sys_paths, verbose=False):
     default_body = BodyParameters(Path(sys_paths['bodies_default_path']) / (properties['body_default'] + '.yaml'))
     sampler = pyp.params.DesignSampler(properties['design_file'])
     for i in range(properties['size']):
+        # log properties every time
+        properties.serialize(data_folder / 'dataset_properties.yaml')
+
         # Redo sampling untill success
         for _ in range(100):  # Putting a limit on re-tries to avoid infinite loops
             new_design = sampler.randomize()
             name = f'rand_{_id_generator()}'
-            
-            # log properties every time
-            properties.serialize(data_folder / 'dataset_properties.yaml')
-            
             try:
                 if verbose:
                     print(f'{name} saving design params for debug')
@@ -202,7 +201,8 @@ def generate(path, properties, sys_paths, verbose=False):
                 return default_path, body_sample_path
             except BaseException as e:
                 print(f'{name} failed')
-                traceback.print_exc()
+                if verbose:
+                    traceback.print_exc()
                 print(e)
                 
                 continue
