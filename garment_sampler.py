@@ -102,7 +102,7 @@ def _save_sample(piece, body, new_design, folder, verbose=False):
         folder, 
         tag='',
         to_subfolder=True,
-        with_3d=True, with_text=False, view_ids=False)
+        with_3d=False, with_text=False, view_ids=False)
 
     body.save(folder)
     with open(Path(folder) / 'design_params.yaml', 'w') as f:
