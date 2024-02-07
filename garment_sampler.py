@@ -170,7 +170,9 @@ def generate(path, properties, sys_paths, verbose=False):
 
                 # On default body
                 piece_default = MetaGarment(name, default_body, new_design) 
-                piece_default.assert_total_length()   # Check final length correctness
+                # Check quality
+                piece_default.assert_total_length() 
+                piece_default.assert_non_empty(filter_belts=True)  # Enough to check for default
 
                 # Straight/apart legs pose
                 def_obj_name = properties['body_default']
