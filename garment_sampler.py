@@ -172,6 +172,7 @@ def generate(path, properties, sys_paths, verbose=False):
                 # Check quality
                 piece_default.assert_total_length() 
                 piece_default.assert_non_empty(filter_belts=True)  # Enough to check for default
+                piece_default.assert_skirt_waistband()
 
                 # Straight/apart legs pose
                 def_obj_name = properties['body_default']
@@ -240,8 +241,8 @@ if __name__ == '__main__':
             design_file='./assets/design_params/default.yaml',
             body_default='mean_all',
             body_samples='garment-first-samples',
-            name='data_100',
-            size=100,
+            name='skirt_belts_50',
+            size=50,
             to_subfolders=True)
         props.set_section_config('generator')
     else:

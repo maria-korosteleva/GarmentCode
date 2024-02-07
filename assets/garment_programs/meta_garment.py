@@ -13,7 +13,7 @@ class TotalLengthError(BaseException):
     the floor length for a given person"""
     pass
 
-class EmptyPattern(BaseException):
+class IncorrectElementConfiguration(BaseException):
     """Error indicating that given pattern is an empty garment"""
     pass
 
@@ -105,10 +105,18 @@ class MetaGarment(pyp.Component):
             raise TotalLengthError(f'{self.__class__.__name__}::{self.name}::ERROR:'
                                     f':Total length {length} exceeds the floor length {floor}')
         
+    # TODO these checks don't require initialization of the pattern!
     def assert_non_empty(self, filter_belts=True):
         """Check that the garment is non-empty
             * filter_wb -- if set, then garments consisting only of waistbands are considered empty
         """
         if not self.upper_name and not self.lower_name:
             if filter_belts or not self.belt_name:
-                raise EmptyPattern()
+                raise IncorrectElementConfiguration()
+            
+    def assert_skirt_waistband(self):
+        """Check if a generated heavy skirt is created with a waistband"""
+
+        if self.lower_name and self.lower_name in ['SkirtCircle', 'AsymmSkirtCircle', 'SkirtManyPanels']:
+            if not (self.belt_name or self.upper_name):
+                raise IncorrectElementConfiguration()
