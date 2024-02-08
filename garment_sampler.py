@@ -27,6 +27,7 @@ from assets.garment_programs.bands import *
 from assets.body_measurments.body_params import BodyParameters
 import pypattern as pyp
 
+# Utils
 def _create_data_folder(properties, path=Path('')):
     """ Create a new directory to put dataset in 
         & generate appropriate name & update dataset properties
@@ -73,7 +74,6 @@ def _gather_body_options(body_path: Path):
     
     return bodies
 
-
 def _id_generator(size=10, chars=string.ascii_uppercase + string.digits):
         """Generate a random string of a given size, see
         https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits
@@ -92,7 +92,6 @@ def body_sample(bodies: dict, path: Path, straight=True):
     body.params['body_sample'] = (path / obj_file).stem
 
     return body
-
 
 def _save_sample(piece, body, new_design, folder, verbose=False):
 
@@ -118,7 +117,19 @@ def _save_sample(piece, body, new_design, folder, verbose=False):
 def has_pants(design):
     return 'Pants' == design['meta']['bottom']['v']
 
+def gather_visuals(path, verbose=False):
+    vis_path = Path(path) / 'patterns_vis'
+    vis_path.mkdir(parents=True, exist_ok=True)
 
+    for p in path.rglob("*.png"):
+        try: 
+            shutil.copy(p, vis_path)
+        except shutil.SameFileError:
+            if verbose:
+                print('File {} already exists'.format(p.name))
+            pass
+
+# Generation loop
 def generate(path, properties, sys_paths, verbose=False):
     """Generates a synthetic dataset of patterns with given properties
         Params:
@@ -216,18 +227,6 @@ def generate(path, properties, sys_paths, verbose=False):
 
     return default_path, body_sample_path
 
-
-def gather_visuals(path, verbose=False):
-    vis_path = Path(path) / 'patterns_vis'
-    vis_path.mkdir(parents=True, exist_ok=True)
-
-    for p in path.rglob("*.png"):
-        try: 
-            shutil.copy(p, vis_path)
-        except shutil.SameFileError:
-            if verbose:
-                print('File {} already exists'.format(p.name))
-            pass
 
 
 if __name__ == '__main__':
