@@ -23,9 +23,9 @@ if __name__ == '__main__':
     body = BodyParameters(body_file)
 
     design_files = {
-        # 'base': './assets/design_params/base.yaml',
+        'base': './assets/design_params/base.yaml',
         # 'sleeve_align': './assets/design_params/sleeve_alignment_1.yaml',
-        'sleeve_long': './assets/design_params/sleeve_too_long.yaml',
+        # 'sleeve_long': './assets/design_params/sleeve_too_long.yaml',
         # 'pants_align': './assets/design_params/pants_alignment.yaml',
         # 'js_base': './assets/design_params/jumpsuit_fit.yaml',
         # 'our_dress': r"G:\My Drive\GarmentCode\sewing_siggraph_garment\designs\dress_design_params.yaml"

@@ -68,9 +68,10 @@ class GodetSkirt(BaseBottoms):
             cut_width = 1  # 1 cm 
             cuts_dist_req = cuts_dist
             cuts_dist = (bottom_len - cut_width * num_inserts) / num_inserts
-            print(f'{self.__class__.__name__}::WARNING:: Cannot place {num_inserts} cuts '
-                  f'with requested distance between cuts ({cuts_dist_req}). '
-                  f'Using the maximum possible distance ({cuts_dist})')
+            if self.verbose:
+                print(f'{self.__class__.__name__}::WARNING:: Cannot place {num_inserts} cuts '
+                    f'with requested distance between cuts ({cuts_dist_req}). '
+                    f'Using the maximum possible distance ({cuts_dist})')
 
         # Insert panels
         insert = Insert(0, width=ins_w, depth=ins_depth).translate_by([
@@ -87,9 +88,10 @@ class GodetSkirt(BaseBottoms):
             old_cut_width = cut_width
             cut_depth = 1
             cut_width = 2 * math.sqrt(side_len**2 - cut_depth**2)
-            print(f'{self.__class__.__name__}::WARNING::Requested cut_width ({old_cut_width:.2f}) '
-                  'is too wide for given inserts. '
-                  f'Using the maximum possible width ({cut_width:.2f})')
+            if self.verbose:
+                print(f'{self.__class__.__name__}::WARNING::Requested cut_width ({old_cut_width:.2f}) '
+                    'is too wide for given inserts. '
+                    f'Using the maximum possible width ({cut_width:.2f})')
         
         cut_shape = pyp.EdgeSeqFactory.from_verts(
             [0, 0], [cut_width / 2, cut_depth], [cut_width, 0])

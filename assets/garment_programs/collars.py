@@ -102,7 +102,9 @@ class NoPanelsCollar(pyp.Component):
             angle=design['collar']['fc_angle']['v'], 
             flip=design['collar']['f_flip_curve']['v'],
             x=design['collar']['f_bezier_x']['v'],
-            y=design['collar']['f_bezier_y']['v'],)
+            y=design['collar']['f_bezier_y']['v'],
+            verbose=self.verbose
+        )
 
         # Back
         collar_type = globals()[design['collar']['b_collar']['v']]
@@ -113,7 +115,8 @@ class NoPanelsCollar(pyp.Component):
             flip=design['collar']['b_flip_curve']['v'],
             x=design['collar']['b_bezier_x']['v'],
             y=design['collar']['b_bezier_y']['v'],
-            )
+            verbose=self.verbose
+        )
         
         self.interfaces = {
             'front_proj': pyp.Interface(self, f_collar),
@@ -278,7 +281,8 @@ class HoodPanel(pyp.Panel):
             [1, 0],  # Full opening is vertically aligned
             [1, 0],
             target_len=b_length,
-            return_as_edge=True
+            return_as_edge=True, 
+            verbose=self.verbose
         )
         self.edges.append(bottom_back)
 
@@ -293,7 +297,8 @@ class HoodPanel(pyp.Panel):
             [1, 0],  # Full opening is vertically aligned
             [1, 0],
             target_len=f_length,
-            return_as_edge=True
+            return_as_edge=True,
+            verbose=self.verbose
         )
         self.edges.append(bottom_front)
 

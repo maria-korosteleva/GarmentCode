@@ -271,10 +271,14 @@ class BodiceHalf(pyp.Component):
 
         _, f_sleeve_int = pyp.ops.cut_corner(
             self.sleeve.interfaces['in_front_shape'].projecting_edges(), 
-            self.ftorso.interfaces['shoulder_corner'])
+            self.ftorso.interfaces['shoulder_corner'], 
+            verbose=self.verbose
+        )
         _, b_sleeve_int = pyp.ops.cut_corner(
             self.sleeve.interfaces['in_back_shape'].projecting_edges(), 
-            self.btorso.interfaces['shoulder_corner'])
+            self.btorso.interfaces['shoulder_corner'],
+            verbose=self.verbose
+        )
 
         if not design['sleeve']['sleeveless']['v']:  
             # Ordering
@@ -315,11 +319,13 @@ class BodiceHalf(pyp.Component):
         # Project shape
         _, fc_interface = pyp.ops.cut_corner(
             self.collar_comp.interfaces['front_proj'].edges, 
-            self.ftorso.interfaces['collar_corner']
+            self.ftorso.interfaces['collar_corner'],
+            verbose=self.verbose
         )
         _, bc_interface = pyp.ops.cut_corner(
             self.collar_comp.interfaces['back_proj'].edges, 
-            self.btorso.interfaces['collar_corner']
+            self.btorso.interfaces['collar_corner'],
+            verbose=self.verbose
         )
 
         # Add stitches/interfaces

@@ -339,8 +339,8 @@ class EdgeSeqFactory:
         )
 
         if not out.success:
-            print('Curve From Extreme::WARNING::Optimization not successful')
             if verbose:
+                print('Curve From Extreme::WARNING::Optimization not successful')
                 print(out)
 
         cp = out.x.tolist()

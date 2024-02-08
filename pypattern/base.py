@@ -11,8 +11,9 @@ class BaseComponent(ABC):
         operations
     """
 
-    def __init__(self, name) -> None:
+    def __init__(self, name, verbose=False) -> None:
         self.name = name
+        self.verbose = verbose
 
         # List or dictionary of the interfaces of this components
         # available for connectivity with other components

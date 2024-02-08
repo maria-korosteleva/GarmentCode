@@ -402,7 +402,8 @@ class Panel(BaseComponent):
             # Indecisive averaging, so using just one of the norms
             # NOTE: sometimes happens on thin arcs
             avg_norm = norms[0]   
-            print(f'{self.__class__.__name__}::{self.name}::WARNING::Norm evaluation failed, assigning norm based on the first edge')
+            if self.verbose:
+                print(f'{self.__class__.__name__}::{self.name}::WARNING::Norm evaluation failed, assigning norm based on the first edge')
 
         final_norm = avg_norm / np.linalg.norm(avg_norm)
 

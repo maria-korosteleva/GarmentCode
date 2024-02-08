@@ -53,7 +53,7 @@ def ArmholeAngle(incl, width, angle, incl_coeff=0.2, w_coeff=0.2,
     return edges, sleeve_edges
 
 
-def ArmholeCurve(incl, width, angle, bottom_angle_mix=0, invert=True, **kwargs):
+def ArmholeCurve(incl, width, angle, bottom_angle_mix=0, invert=True, verbose=False, **kwargs):
     """ Classic sleeve opening on Cubic Bezier curves
     """
     # Curvature as parameters?
@@ -94,7 +94,8 @@ def ArmholeCurve(incl, width, angle, bottom_angle_mix=0, invert=True, **kwargs):
         down_direction,  # Full opening is vertically aligned
         dir,
         target_len=edge.length(),
-        return_as_edge=True
+        return_as_edge=True, 
+        verbose=verbose
     )
 
     return edge_as_seq, pyp.EdgeSequence(fin_inv_edge.reverse())
@@ -167,11 +168,12 @@ class SleevePanel(pyp.Panel):
 
                 self.edges.substitute(top_edge, [standing_edge, top_edge])
             else:
-                print(f'{self.__class__.__name__}::WARNING::'
-                      f'Sleeve rest angle {np.rad2deg(rest_angle):.3f} should be '
-                      f'larger than shoulder angle {body["_shoulder_incl"]} by '
-                      f'at least {_standing_margin} deg to enable '
-                      'standing shoulder. Standing shoulder ignored')
+                if self.verbose:
+                    print(f'{self.__class__.__name__}::WARNING::'
+                        f'Sleeve rest angle {np.rad2deg(rest_angle):.3f} should be '
+                        f'larger than shoulder angle {body["_shoulder_incl"]} by '
+                        f'at least {_standing_margin} deg to enable '
+                        'standing shoulder. Standing shoulder ignored')
                 standing = False
 
         # Interfaces
@@ -234,7 +236,8 @@ class Sleeve(pyp.Component):
             incl_coeff=smoothing_coeff, 
             w_coeff=smoothing_coeff, 
             invert=not design['sleeveless']['v'],
-            bottom_angle_mix=design['opening_dir_mix']['v']
+            bottom_angle_mix=design['opening_dir_mix']['v'],
+            verbose=self.verbose
         )
         back_project, back_opening = armhole(
             back_w - sleeve_balance,
@@ -258,7 +261,8 @@ class Sleeve(pyp.Component):
         if front_w != back_w: 
             front_opening, back_opening = pyp.ops.even_armhole_openings(
                 front_opening, back_opening, 
-                tol=0.2 / front_opening.length()  # ~2mm tolerance as a fraction of length
+                tol=0.2 / front_opening.length(), # ~2mm tolerance as a fraction of length
+                verbose=self.verbose
             )
         
         # --- Eval length adjustment for cuffs (if any) ----

@@ -408,7 +408,7 @@ def distribute_horisontally(component, n_copies, stride=20, name_tag='panel'):
 
 
 # ANCHOR ----- Sleeve support -----
-def even_armhole_openings(front_opening, back_opening, tol=1e-2):
+def even_armhole_openings(front_opening, back_opening, tol=1e-2, verbose: bool = False):
     """
         Rearrange sleeve openings for front and back s.t. their projection 
         on vertical line is the same, while preserving the overall shape.
@@ -435,7 +435,7 @@ def even_armhole_openings(front_opening, back_opening, tol=1e-2):
     target_segment = cfront[-1].as_curve()
 
     intersect_t = target_segment.intersect(inter_segment)
-    if len(intersect_t) != 1:
+    if len(intersect_t) != 1 and verbose:
         print(
             f'Redistribute Sleeve Openings::WARNING::{len(intersect_t)} intersection points instead of one. '
             f'Front and back opening curves might be the same with lengths: {cfront.length()}, {cback.length()}'
@@ -562,8 +562,8 @@ def curve_match_tangents(curve, target_tan0, target_tan1, target_len=None,
         method='L-BFGS-B',
     )
     if not out.success:
-        print(f'Curve_match_tangents::WARNING::optimization not successfull')
         if verbose:
+            print(f'Curve_match_tangents::WARNING::optimization not successfull')
             print(out)
 
     shift = out.x
