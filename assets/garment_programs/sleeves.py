@@ -124,7 +124,6 @@ class SleevePanel(pyp.Panel):
         # Calculating extension size & end size before applying ruffles
         # Since ruffles add to pattern length & width, but not to de-facto 
         # sleeve length in 3D
-        opening_length = abs(open_shape[0].start[0] - open_shape[-1].end[0])
         end_width = design['end_width']['v'] * abs(open_shape[0].start[1] - open_shape[-1].end[1]) 
         # Ensure it fits regardless of parameters
         end_width = max(end_width, body['wrist'] / 2)
@@ -134,6 +133,7 @@ class SleevePanel(pyp.Panel):
             open_shape.extend(design['connect_ruffle']['v'])
 
         # -- Main body of a sleeve --
+        opening_length = abs(open_shape[0].start[0] - open_shape[-1].end[0])
         arm_width = abs(open_shape[0].start[1] - open_shape[-1].end[1])
         # Length from the border of the opening to the end of the sleeve
         length = design['length']['v'] * (body['arm_length'] - opening_length)
