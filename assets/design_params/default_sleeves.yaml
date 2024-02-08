@@ -226,10 +226,10 @@ design:
       type: select
       default_prob: 0.7
     length:
-      v: 0.3
+      v: 1.0   # 0.3
       range:
-      - 0.1
-      - 1.2
+      - 0.1   # 0.1
+      - 1.15   # 1.2
       type: float
     connecting_width:
       v: 0.2  
@@ -334,7 +334,7 @@ design:
       - true
       - false
       type: bool
-      default_prob: 0.8
+      default_prob: 1.  # 0.8
     shirt:
       strapless:
         v: false
@@ -460,8 +460,8 @@ design:
       length:
         v: 0.3
         range:
-        - 0.05
-        - 1.2
+        - 0.1
+        - 1.15
         type: float
       connecting_width:
         v: 0.2

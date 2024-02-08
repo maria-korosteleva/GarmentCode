@@ -228,7 +228,7 @@ design:
       v: 0.3
       range:
       - 0.1
-      - 1.2
+      - 1.15
       type: float
     connecting_width:
       v: 0.2  
@@ -459,8 +459,8 @@ design:
       length:
         v: 0.3
         range:
-        - 0.05
-        - 1.2
+        - 0.1
+        - 1.15
         type: float
       connecting_width:
         v: 0.2
