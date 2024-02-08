@@ -22,7 +22,7 @@ from assets.garment_programs.tee import *
 from assets.garment_programs.godet import *
 from assets.garment_programs.bodice import *
 from assets.garment_programs.pants import *
-from assets.garment_programs.meta_garment import *
+from assets.garment_programs.meta_garment import MetaGarment, IncorrectElementConfiguration
 from assets.garment_programs.bands import *
 from assets.body_measurments.body_params import BodyParameters
 import pypattern as pyp
@@ -129,6 +129,50 @@ def gather_visuals(path, verbose=False):
                 print('File {} already exists'.format(p.name))
             pass
 
+# Quality filter
+def assert_param_combinations(design, filter_belts=True):
+    """Check for some known invalid parameter combinations cases"""
+    upper_name = design['meta']['upper']['v']
+    lower_name = design['meta']['bottom']['v']
+    belt_name = design['meta']['wb']['v']
+
+    if upper_name:  # No issues with garments that can hang on shoulders
+        return
+
+    # Empty patterns and singular belts
+    if not lower_name:
+        if filter_belts or not belt_name:
+            raise IncorrectElementConfiguration('ERROR::IncorrectParams::Empty pattern or singular belt')
+        return
+    
+    # Cases when lower name is present (and maybe a belt):
+    # All pants and pencils are okay
+    if lower_name in ['Pants', 'PencilSkirt']:
+        return
+
+    # -- Sliding issues --
+    # NOTE: Checks are conservative, so some sliding issues might be present nontheless 
+    # Skirt 2 & skirts of top of it -- uses ruffles and belt is too wide if even present
+    if (lower_name == 'Skirt2'
+            or lower_name == 'GodetSkirt' and design['godet-skirt']['base']['v'] == 'Skirt2'
+            or lower_name == 'SkirtLevels' and design['levels-skirt']['base']['v'] == 'Skirt2'
+        ):
+
+        if (design['skirt']['ruffle']['v'] > 1 and (not belt_name or design['waistband']['waist']['v'] > 1.)):
+            raise IncorrectElementConfiguration('ERROR::IncorrectParams::Skirt2 ruffles + belt')
+
+    # Flare skirts & skirts on top of it -- no belt + too wide / too long
+    flare_skirts = ['SkirtCircle', 'AsymmSkirtCircle', 'SkirtManyPanels']
+    if (lower_name in flare_skirts
+            or lower_name == 'SkirtLevels' and design['levels-skirt']['base']['v'] in flare_skirts
+        ):
+        # if Fitted belt not present -- check if "heavy"
+        if not belt_name or design['waistband']['waist']['v'] > 1.:
+            length_param = design['levels-skirt' if lower_name == 'SkirtLevels' else 'flare-skirt']['length']['v'] 
+            if length_param > 0.4 and design['flare-skirt']['suns']['v'] > 0.75:
+                raise IncorrectElementConfiguration('ERROR::IncorrectParams::Flare skirts + belt')
+
+
 # Generation loop
 def generate(path, properties, sys_paths, verbose=False):
     """Generates a synthetic dataset of patterns with given properties
@@ -178,12 +222,12 @@ def generate(path, properties, sys_paths, verbose=False):
                             sort_keys=False
                         )
 
+                # Preliminary checks 
+                assert_param_combinations(new_design)
+
                 # On default body
                 piece_default = MetaGarment(name, default_body, new_design) 
-                # Check quality
-                piece_default.assert_total_length() 
-                piece_default.assert_non_empty(filter_belts=True)  # Enough to check for default
-                piece_default.assert_skirt_waistband()
+                piece_default.assert_total_length()  # Check final length correctnesss
 
                 # Straight/apart legs pose
                 def_obj_name = properties['body_default']
@@ -240,8 +284,8 @@ if __name__ == '__main__':
             design_file='./assets/design_params/default.yaml',
             body_default='mean_all',
             body_samples='garment-first-samples',
-            name='skirt_belts_50',
-            size=50,
+            name='filters_20',
+            size=20,
             to_subfolders=True)
         props.set_section_config('generator')
     else:
