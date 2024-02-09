@@ -11,6 +11,7 @@ import time
 import random
 import string
 import traceback
+import argparse
 
 sys.path.insert(0, './external/')
 sys.path.insert(1, './')
@@ -26,6 +27,21 @@ from assets.garment_programs.meta_garment import MetaGarment, IncorrectElementCo
 from assets.garment_programs.bands import *
 from assets.body_measurments.body_params import BodyParameters
 import pypattern as pyp
+
+def get_command_args():
+    """command line arguments to control the run"""
+    # https://stackoverflow.com/questions/40001892/reading-named-command-arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--batch_id', '-b', help='id of a sampling batch', type=int, default=None)
+    parser.add_argument('--size', '-s', help='size of a sample', type=int, default=10)
+    parser.add_argument('--name', '-n', help='Name of the dataset', type=str, default='data')
+    parser.add_argument('--replicate', '-re', help='Name of the dataset to re-generate. If set, other arguments are ignored', type=str, default=None)
+    
+
+    args = parser.parse_args()
+    print('Commandline arguments: ', args)
+
+    return args
 
 # Utils
 def _create_data_folder(properties, path=Path('')):
@@ -277,21 +293,23 @@ if __name__ == '__main__':
 
     system_props = Properties('./system.json')
 
-    new = True
-    if new:
+    args = get_command_args()
+
+    if args.replicate is not None:
+        props = Properties(
+            Path(system_props['datasets_path']) / args.replicate / 'dataset_properties.yaml',
+            True)
+    else:  # New sample
         props = Properties()
         props.set_basic(
             design_file='./assets/design_params/default.yaml',
             body_default='mean_all',
-            body_samples='garment-first-samples',
-            name='filters_20',
-            size=20,
+            body_samples='body_shapes_and_measures_2023-12-30',  # 'garment-first-samples',
+            size=args.size,
+            name=f'{args.name}_{args.size}' if not args.batch_id else f'{args.name}_{args.size}_{args.batch_id}',
             to_subfolders=True)
         props.set_section_config('generator')
-    else:
-        props = Properties(
-            Path(system_props['datasets_path']) / 'data_30_231116-17-26-02/dataset_properties.yaml',
-            True)
+        
 
     # Generator
     default_path, body_sample_path = generate(
@@ -300,8 +318,5 @@ if __name__ == '__main__':
     # Gather the pattern images separately
     gather_visuals(default_path)
     gather_visuals(body_sample_path)
-
-    # At the end -- it takes some time to gather the info
-    # DRAFT props.add_sys_info()  # update this info regardless of the basic config    
 
     print('Data generation completed!')
