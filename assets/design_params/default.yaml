@@ -62,14 +62,14 @@ design:
       v: 1.05
       range:
       - 1.0
-      - 1.4
+      - 1.3
       type: float
       default_prob: 0.4
     flare: 
       v: 1.0
       range: 
       - 0.7
-      - 1.7
+      - 1.6
       type: float
       default_prob: 0.4
   collar:
@@ -346,14 +346,14 @@ design:
         v: 1.0
         range:
         - 1.0
-        - 1.4
+        - 1.3
         type: float
         default_prob: 0.4
       flare: 
         v: 1.0
         range: 
         - 0.7
-        - 1.7
+        - 1.6
         type: float
         default_prob: 0.4
     collar:

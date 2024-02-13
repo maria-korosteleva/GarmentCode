@@ -182,10 +182,13 @@ def assert_param_combinations(design, filter_belts=True):
     if (lower_name in flare_skirts
             or lower_name == 'SkirtLevels' and design['levels-skirt']['base']['v'] in flare_skirts
         ):
-        # if Fitted belt not present -- check if "heavy"
-        if not belt_name or design['waistband']['waist']['v'] > 1.:
+        # if Fitted belt of enough width not present -- check if "heavy"
+        if (not belt_name 
+                or design['waistband']['waist']['v'] > 1.
+                or design['waistband']['width']['v'] <= 0.25
+            ):
             length_param = design['levels-skirt' if lower_name == 'SkirtLevels' else 'flare-skirt']['length']['v'] 
-            if length_param > 0.4 and design['flare-skirt']['suns']['v'] > 0.75:
+            if length_param > 0.5 or design['flare-skirt']['suns']['v'] > 0.75:
                 raise IncorrectElementConfiguration('ERROR::IncorrectParams::Flare skirts + belt')
 
 
@@ -304,7 +307,7 @@ if __name__ == '__main__':
         props.set_basic(
             design_file='./assets/design_params/default.yaml',
             body_default='mean_all',
-            body_samples='body_shapes_and_measures_2023-12-30',  # 'garment-first-samples',
+            body_samples='garment-first-samples',   # 'body_shapes_and_measures_2023-12-30',  # ,
             size=args.size,
             name=f'{args.name}_{args.size}' if not args.batch_id else f'{args.name}_{args.size}_{args.batch_id}',
             to_subfolders=True)
