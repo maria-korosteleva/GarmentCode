@@ -1,12 +1,13 @@
 design:
   meta:
     upper:
-      v: Shirt
+      v: null # Shirt
       range:
       - FittedShirt
       - Shirt
       - null
       type: select_null
+      default_prob: 0.3
     wb:
       v: null
       range:
@@ -28,6 +29,7 @@ design:
       - SkirtLevels
       - null
       type: select_null
+      default_prob: 0.3
   waistband:
     waist:
       v: 1.0
