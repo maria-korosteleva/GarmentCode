@@ -2,14 +2,25 @@
 
 import customconfig
 from pathlib import Path
+import shutil
 
 from garment_sampler import gather_visuals
 
 
 system_props = customconfig.Properties('./system.json')
-dataset = 'test_drag_fixes_100_240209-16-27-32'
-def_datapath = Path(system_props['datasets_path']) / dataset / 'default_body'
-rand_datapath = Path(system_props['datasets_path']) / dataset / 'random_body'
+dataset = 'test_unpacking'
 
-gather_visuals(def_datapath)
-gather_visuals(rand_datapath)
+datapaths = [
+    Path(system_props['datasets_path']) / dataset / 'default_body', 
+    Path(system_props['datasets_path']) / dataset / 'random_body'
+]
+
+for datapath in datapaths:
+    # Check packing
+    tar_path = datapath / 'data.tar.gz'
+    if tar_path.exists():
+        shutil.unpack_archive(tar_path, datapath)
+        # Finally -- clean up
+        tar_path.unlink()
+
+    gather_visuals(datapath)
