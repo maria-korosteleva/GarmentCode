@@ -56,8 +56,8 @@ design:
     length:
       v: 1.2
       range:
-      - 0.5   # TODO Check minimum length in 3D
-      - 4.5
+      - 0.5   
+      - 3.5
       type: float
       default_prob: 0.7
     width:
@@ -565,7 +565,7 @@ design:
       v: 0.2
       range:
       - -0.2
-      - 1
+      - 0.95
       type: float
     rise:
       v: 1
@@ -600,7 +600,7 @@ design:
       v: 0.2
       range:
       - -0.2
-      - 1
+      - 0.95
       type: float
     rise:
       v: 1
@@ -709,7 +709,7 @@ design:
       v: 0.4
       range:
       - 0.2
-      - 1
+      - 0.95
       type: float
     rise:
       v: 1
@@ -806,7 +806,7 @@ design:
       v: 0.5
       range:
       - 0.2
-      - 1.1
+      - 0.95
       type: float
     rise:
       v: 1
@@ -826,7 +826,7 @@ design:
       v: 0.3
       range:
       - 0.2
-      - 1
+      - 0.9
       type: float
     width:
       v: 1.0
