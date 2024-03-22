@@ -374,7 +374,9 @@ class BodiceHalf(pyp.Component):
         self._adjust_top_level(self.ftorso, out_depth, f_in_depth, target_remove=(len_front - len_back))
         
         # Placement
-        self.translate_by([0, out_depth - body['_armscye_depth'] * 0.75, 0])   # adjust for better localisation
+        # NOTE: The commented line places the top a bit higher, increasing the chanced of correct drape
+        # Surcumvented by attachment constraint, so removed for nicer alignment in asymmetric garments
+        # self.translate_by([0, out_depth - body['_armscye_depth'] * 0.75, 0])   # adjust for better localisation
 
         # Add a label
         self.ftorso.interfaces['shoulder'].edges.propagate_label('strapless_top')
