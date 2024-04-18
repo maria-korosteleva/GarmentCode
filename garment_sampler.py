@@ -69,7 +69,7 @@ def _create_data_folder(properties, path=Path('')):
 
     return path_with_dataset, default_folder, body_folder
 
-def _gather_body_options(body_path: Path):
+def gather_body_options(body_path: Path):
     objs_path = body_path / 'measurements'
 
     bodies = {}
@@ -204,7 +204,7 @@ def generate(path, properties, sys_paths, verbose=False):
     gen_config = properties['generator']['config']
     gen_stats = properties['generator']['stats']
     body_samples_path = Path(sys_paths['body_samples_path']) / properties['body_samples']
-    body_options = _gather_body_options(body_samples_path)
+    body_options = gather_body_options(body_samples_path)
 
     # create data folder
     data_folder, default_path, body_sample_path = _create_data_folder(properties, path)
