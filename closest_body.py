@@ -10,8 +10,13 @@ sys.path.insert(1, './')
 from external.customconfig import Properties
 from garment_sampler import gather_body_options
 
-def mes_distance(mes_1, mes_2):
+def load_mesurements(body_folder_path, body_options):
+    for body in body_options:
+        with open(body_folder_path / body_options[body]['mes'], 'r') as f:
+            body_options[body]['mes_list'] = yaml.load(f, Loader=yaml.SafeLoader)['body']
 
+
+def mes_distance(mes_1, mes_2):
     # TODO Weights on more important values? 
     diffs = []
     for key, value in mes_1.items():
@@ -21,18 +26,16 @@ def mes_distance(mes_1, mes_2):
 
     return np.mean(diffs)
 
-def find_closest_body(body_folder_path, body_options, in_mes_path):
+def find_closest_body(body_options, in_mes_path):
 
     with open(in_mes_path, 'r') as f:
         in_mes = yaml.load(f, Loader=yaml.SafeLoader)['body']
 
-
     dists = []
     bodies_list = list(body_options.keys())
+    # NOTE: parallelizable? 
     for body in bodies_list:
-        with open(body_folder_path / body_options[body]['mes'], 'r') as f:
-            body_mes = yaml.load(f, Loader=yaml.SafeLoader)['body']
-
+        body_mes = body_options[body]['mes_list']
         dists.append(mes_distance(in_mes, body_mes))
 
     min_id = np.argmin(dists)
@@ -49,9 +52,6 @@ def find_closest_body(body_folder_path, body_options, in_mes_path):
 
     return min_body
 
-    
-# TODO pre-load bodies for acceleration 
-
 if __name__ == '__main__':
 
     system_props = Properties('./system.json')
@@ -65,8 +65,9 @@ if __name__ == '__main__':
 
     body_samples_path = Path(system_props['body_samples_path']) / body_samples_folder
     body_options = gather_body_options(body_samples_path)
+    load_mesurements(body_samples_path, body_options)
 
-    closest_body = find_closest_body(body_samples_path, body_options, in_body_mes)
+    closest_body = find_closest_body(body_options, in_body_mes)
 
     print('Found closest body!:', closest_body)
 
