@@ -11,7 +11,7 @@ import sys
 # for system info
 import platform
 import psutil
-if 'win' in platform.system() or 'Win' in platform.system():
+if 'windows' in platform.system() or 'Windows' in platform.system():
     import wmi  # pip install wmi
 
 
@@ -190,7 +190,7 @@ class Properties():
         self.properties['system_info']['processor'] = platform.processor()
         self.properties['system_info']['ram'] = str(round(psutil.virtual_memory().total / (1024.0 ** 3))) + " GB"
 
-        if 'win' in platform.system() or 'Win' in platform.system():
+        if 'windows' in platform.system() or 'Windows' in platform.system():
             # only works on WIndows machines
             computer = wmi.WMI() 
             self.properties['system_info']['GPU'] = [computer.Win32_VideoController()[i].name for i in range(len(computer.Win32_VideoController()))]
