@@ -25,8 +25,8 @@ class Insert(pyp.Panel):
 
 class GodetSkirt(BaseBottoms):
 
-    def __init__(self, body, design) -> None:
-        super().__init__(body, design)
+    def __init__(self, body, design, rise=None) -> None:
+        super().__init__(body, design, rise=rise)
 
         gdesign = design['godet-skirt']
         ins_w = gdesign['insert_w']['v']
@@ -35,7 +35,7 @@ class GodetSkirt(BaseBottoms):
         base_skirt = getattr(skirts, gdesign['base']['v'])
         # NOTE: godets currently don't like slits on the front/back 
         # of the base skirt => Forcing to remove any slits
-        self.base = base_skirt(body, design, slit=False)  
+        self.base = base_skirt(body, design, rise=rise, slit=False)  
 
         bintr = self.base.interfaces['bottom']
         for edge, panel in zip(bintr.edges, bintr.panel):
@@ -68,9 +68,10 @@ class GodetSkirt(BaseBottoms):
             cut_width = 1  # 1 cm 
             cuts_dist_req = cuts_dist
             cuts_dist = (bottom_len - cut_width * num_inserts) / num_inserts
-            print(f'{self.__class__.__name__}::WARNING:: Cannot place {num_inserts} cuts '
-                  f'with requested distance between cuts ({cuts_dist_req}). '
-                  f'Using the maximum possible distance ({cuts_dist})')
+            if self.verbose:
+                print(f'{self.__class__.__name__}::WARNING:: Cannot place {num_inserts} cuts '
+                    f'with requested distance between cuts ({cuts_dist_req}). '
+                    f'Using the maximum possible distance ({cuts_dist})')
 
         # Insert panels
         insert = Insert(0, width=ins_w, depth=ins_depth).translate_by([
@@ -87,9 +88,10 @@ class GodetSkirt(BaseBottoms):
             old_cut_width = cut_width
             cut_depth = 1
             cut_width = 2 * math.sqrt(side_len**2 - cut_depth**2)
-            print(f'{self.__class__.__name__}::WARNING::Requested cut_width ({old_cut_width:.2f}) '
-                  'is too wide for given inserts. '
-                  f'Using the maximum possible width ({cut_width:.2f})')
+            if self.verbose:
+                print(f'{self.__class__.__name__}::WARNING::Requested cut_width ({old_cut_width:.2f}) '
+                    'is too wide for given inserts. '
+                    f'Using the maximum possible width ({cut_width:.2f})')
         
         cut_shape = pyp.EdgeSeqFactory.from_verts(
             [0, 0], [cut_width / 2, cut_depth], [cut_width, 0])
@@ -114,3 +116,6 @@ class GodetSkirt(BaseBottoms):
 
     def get_rise(self):
         return self.base.get_rise()
+    
+    def length(self):
+        return self.base.length()

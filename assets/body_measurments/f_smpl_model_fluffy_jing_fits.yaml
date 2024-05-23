@@ -1,0 +1,26 @@
+body:
+  arm_pose_angle: 50.0
+  arm_length: 80  # TODO Check
+  wrist: 17  # TODO Check
+  armscye_depth: 14.5
+  back_width: 52 # 46
+  bum_points: 19
+  bust: 110  # 118.3
+  bust_line: 28 # 26 #  24  #  22.1  
+  bust_points: 20.2
+  crotch_hip_diff: 13.0
+  head_l: 24.3
+  height: 162.5
+  hips: 122.0
+  hips_line: 19.0
+  hip_back_width: 70  # TODO Check
+  hip_inclination: 18 # 9  # TODO Check
+  leg_circ: 78.0
+  neck_w: 16
+  shoulder_w: 38 #35
+  shoulder_incl: 10
+  underbust: 103
+  waist: 103  # 100.0
+  waist_line: 45  # 37.3
+  waist_over_bust_line: 52  #44
+  waist_back_width: 44 # 50  # TODO Check

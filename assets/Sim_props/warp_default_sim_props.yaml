@@ -1,0 +1,62 @@
+sim:
+  config:
+    max_sim_steps: 1000
+    max_frame_time: 15
+    max_meshgen_time: 20
+    max_sim_time: 1500
+    zero_gravity_steps: 10
+    self_collision_steps: 0
+    static_threshold: 0.03
+    non_static_percent: 1.5
+    resolution_scale: 1.0
+    ground: false
+    material:
+      garment_tri_ka: 10000.0
+      garment_edge_ke: 1.0
+      garment_tri_ke: 10000.0
+      spring_ke: 50000.0
+      garment_edge_kd: 10.0
+      garment_tri_kd: 1.0
+      spring_kd: 10.0
+      fabric_density: 1.0
+      fabric_thickness: 0.1
+    options:
+      enable_particle_particle_collisions: false
+      enable_triangle_particle_collisions: true
+      enable_edge_edge_collisions: true
+      enable_stitch_editing: false
+      global_damping_factor: 0.25
+      global_damping_effective_velocity: 0.0
+      global_max_velocity: 25.0
+      enable_global_collision_filter: true
+      enable_attachment_constraint: true   
+      enable_cloth_reference_drag: true
+      cloth_reference_margin: 0.1
+      enable_body_smoothing: false
+      smoothing_total_smoothing_factor: 1.0
+      smoothing_recover_start_frame: 150
+      smoothing_num_steps: 100
+      smoothing_frame_gap_between_steps: 1
+      body_collision_thickness: 0.25
+      body_friction: 0.5
+  stats:
+    fails:
+      crashes: []
+      cloth_body_intersection: []
+      cloth_self_intersection: []
+      static_equilibrium: []
+      fast_finish: []
+      pattern_loading: []
+    sim_time: {}
+    spf: {}
+    fin_frame: {}
+render:
+  config:
+    resolution:
+    - 800
+    - 800
+    sides:
+    - front
+    - back
+  stats:
+    render_time: {}

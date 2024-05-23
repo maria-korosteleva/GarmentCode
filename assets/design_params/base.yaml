@@ -8,15 +8,15 @@
 design: 
   meta: 
     upper: 
-      v: null
+      v: Shirt
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
-      v: StraightWB 
+      v: null 
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
-      v: AsymmSkirtCircle 
+      v:  null 
       range: 
         - SkirtCircle
         - GodetSkirt
@@ -44,15 +44,15 @@ design:
       range: [True, False]
       type: bool
     length: 
-      v: 1.8
+      v: 1.1
       range: [0.5, 4.5]   # 1 == waistline
       type: float
     width:   # Around the body 
-      v: 1.
+      v: 1.1
       range: [1., 1.4]    # 1 == bust size
       type: float
     flare: 
-      v: 1.4
+      v: 1.
       range: 
       - 0.7
       - 1.4
@@ -72,7 +72,7 @@ design:
       range: [-0.5, 1]   # 0 = a neck width, 1 = max possible width
       type: float
     fc_depth:   # Front collar depth
-      v: 0.2  # 0.25
+      v: 0.35  # 0.25
       range: [0, 1]   # 0 = min possible, 1 = bust line
       type: float
     bc_depth:   # back collar depth
@@ -121,7 +121,7 @@ design:
       type: bool
     component:
       style: 
-        v: Hood2Panels
+        v: null 
         range: [Turtle, SimpleLapel, Hood2Panels]
         type: select_null
       depth: 
@@ -143,7 +143,7 @@ design:
      
   sleeve:
     sleeveless: 
-      v: True
+      v: False
       range: [True, False]
       type: bool
     armhole_shape: 
@@ -151,7 +151,7 @@ design:
       range: [ArmholeSquare, ArmholeAngle, ArmholeCurve]
       type: select
     length: 
-      v: 0.2  # 30
+      v: 0.5  # 30
       range: [0.05, 1]
       type: float
     connecting_width:
@@ -197,7 +197,7 @@ design:
     # Cuff
     cuff: 
       type:
-        v: CuffBand
+        v: null
         range: [CuffBand, CuffSkirt, CuffBandSkirt]
         type: select_null
       top_ruffle: 
@@ -419,7 +419,7 @@ design:
 
   flare-skirt:
     length:
-      v: 0.65
+      v: 0.2
       range: [-0.2, 1]
       type: float 
     rise:
@@ -494,7 +494,7 @@ design:
       range: [0.2, 1]
       type: float 
     rise:
-      v: 0.7
+      v: 1.
       range: [0.5, 1]
       type: float
     flare:   # coefficient may depend on length
@@ -582,7 +582,7 @@ design:
       type: float
     cuff: 
       type:
-        v: CuffBand
+        v: null 
         range: [CuffBand, CuffSkirt, CuffBandSkirt]
         type: select_null
       top_ruffle: 

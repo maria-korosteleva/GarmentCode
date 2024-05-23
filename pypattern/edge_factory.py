@@ -316,6 +316,7 @@ class EdgeSeqFactory:
         return left_seqs, right_seqs
 
     # --- Curve fittings ---- 
+    # TODO These should be in CurveEdge factory
     @staticmethod
     def curve_3_points(start, end, target, verbose=False):
         """Create (Quadratic) curve edge between start and end that
@@ -338,8 +339,8 @@ class EdgeSeqFactory:
         )
 
         if not out.success:
-            print('Curve From Extreme::WARNING::Optimization not successful')
             if verbose:
+                print('Curve From Extreme::WARNING::Optimization not successful')
                 print(out)
 
         cp = out.x.tolist()

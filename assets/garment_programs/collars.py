@@ -102,7 +102,9 @@ class NoPanelsCollar(pyp.Component):
             angle=design['collar']['fc_angle']['v'], 
             flip=design['collar']['f_flip_curve']['v'],
             x=design['collar']['f_bezier_x']['v'],
-            y=design['collar']['f_bezier_y']['v'],)
+            y=design['collar']['f_bezier_y']['v'],
+            verbose=self.verbose
+        )
 
         # Back
         collar_type = globals()[design['collar']['b_collar']['v']]
@@ -113,12 +115,16 @@ class NoPanelsCollar(pyp.Component):
             flip=design['collar']['b_flip_curve']['v'],
             x=design['collar']['b_bezier_x']['v'],
             y=design['collar']['b_bezier_y']['v'],
-            )
+            verbose=self.verbose
+        )
         
         self.interfaces = {
             'front_proj': pyp.Interface(self, f_collar),
             'back_proj': pyp.Interface(self, b_collar)
         }
+    
+    def length(self):
+        return 0
 
 
 class Turtle(pyp.Component):
@@ -165,6 +171,9 @@ class Turtle(pyp.Component):
                 self.back.interfaces['bottom']
             )
         })
+
+    def length(self):
+        return self.interfaces['back'].edges.length()
 
 
 class SimpleLapelPanel(pyp.Panel):
@@ -222,7 +231,7 @@ class SimpleLapel(pyp.Component):
         
         self.front = SimpleLapelPanel(
             f'{tag}_collar_front', length_f, depth).translate_by(
-            [-depth * 2, height_p, 30])
+            [-depth * 2, height_p, 35])  # FIXME This should be related with the bodice panels' placement
 
         if standing:
             self.back = StraightBandPanel(
@@ -250,6 +259,8 @@ class SimpleLapel(pyp.Component):
             )
         })
 
+    def length(self):
+        return self.interfaces['back'].edges.length()
 
 class HoodPanel(pyp.Panel):
     """A panel for the side of the hood"""
@@ -270,7 +281,8 @@ class HoodPanel(pyp.Panel):
             [1, 0],  # Full opening is vertically aligned
             [1, 0],
             target_len=b_length,
-            return_as_edge=True
+            return_as_edge=True, 
+            verbose=self.verbose
         )
         self.edges.append(bottom_back)
 
@@ -285,7 +297,8 @@ class HoodPanel(pyp.Panel):
             [1, 0],  # Full opening is vertically aligned
             [1, 0],
             target_len=f_length,
-            return_as_edge=True
+            return_as_edge=True,
+            verbose=self.verbose
         )
         self.edges.append(bottom_front)
 
@@ -349,4 +362,6 @@ class Hood2Panels(pyp.Component):
             'bottom': self.panel.interfaces['to_bodice']
         })
 
+    def length(self):
+        return self.panel.length()
 

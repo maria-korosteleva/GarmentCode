@@ -11,8 +11,9 @@ class BaseComponent(ABC):
         operations
     """
 
-    def __init__(self, name) -> None:
+    def __init__(self, name, verbose=False) -> None:
         self.name = name
+        self.verbose = verbose
 
         # List or dictionary of the interfaces of this components
         # available for connectivity with other components
@@ -28,11 +29,11 @@ class BaseComponent(ABC):
 
     def bbox(self):
         """Bounding box -- in 2D"""
-        return 0, 0, 0, 0, 0, 0
+        return np.array([0, 0]), np.array([0, 0])
 
     def bbox3D(self):
         """Bounding box in 3D space"""
-        return 0, 0, 0, 0, 0, 0
+        return np.array([0, 0, 0]), np.array([0, 0, 0])
 
     def is_self_intersecting(self):
         """Check whether the component have self-intersections"""
@@ -69,24 +70,61 @@ class BaseComponent(ABC):
         self.translate_by([0, other_bbox[0][1] - curr_bbox[1][1] - gap, 0])
         return self
 
-    def place_by_interface(self, self_interface, out_interface, gap=2):
+    def place_by_interface(
+            self, 
+            self_interface, 
+            out_interface, 
+            gap=2, 
+            alignment='center',
+            gap_dir=None
+        ):
         """Adjust the placement of component according to the connectivity
         instruction
+
+        Alignment options: 
+        'center' center of the interface to center of the interface
+        'top' - top on Y axis
+        'bottom' - bottom on Y axis
+        'left' - left on X axis
+        'right' - right on X axis
         """
         
-        # Alight translation
+        # Align translation
         self_bbox = self_interface.bbox_3d()
         out_bbox = out_interface.bbox_3d()
-        mid_out = (out_bbox[1] + out_bbox[0]) / 2
-        mid_self = (self_bbox[1] + self_bbox[0]) / 2
+        
+        # Determine alignment point depending on requested alignment type
+        point_out = (out_bbox[1] + out_bbox[0]) / 2
+        point_self = (self_bbox[1] + self_bbox[0]) / 2
+        if alignment == 'center':
+            pass # No modification needed
+        elif alignment == 'top':
+            point_out[1] = out_bbox[1][1]  # Use max in Y
+            point_self[1] = self_bbox[1][1]
+        elif alignment == 'bottom':
+            point_out[1] = out_bbox[0][1]  # Use min in Y
+            point_self[1] = self_bbox[0][1]
+        elif alignment == 'right':
+            point_out[0] = out_bbox[0][0]  # Use min in X
+            point_self[0] = self_bbox[0][0]
+        elif alignment == 'left':
+            point_out[0] = out_bbox[1][0]  # Use max in X
+            point_self[0] = self_bbox[1][0]
+        else: 
+            raise ValueError(
+                f'{self.__class__.__name__}::{self.name}::ERROR::'
+                f'Uknown alignment type ({alignment}) requested in place_by_interface().'
+                f' Available types: center, top, bottom, left, right')
 
         # Add a gap outside the current
-        full_bbox = self.bbox3D()
-        center = (full_bbox[0] + full_bbox[1]) / 2
-        gap_dir = mid_self - center
-        gap_dir = gap * gap_dir / np.linalg.norm(gap_dir)
+        if gap_dir is None:
+            full_bbox = self.bbox3D()
+            center = (full_bbox[0] + full_bbox[1]) / 2
+            mid_self = (self_bbox[1] + self_bbox[0]) / 2
+            gap_dir = mid_self - center
         
-        diff = mid_out - (mid_self + gap_dir)
+        gap_dir = gap * gap_dir / np.linalg.norm(gap_dir)
+        diff = point_out - (point_self + gap_dir)
         
         self.translate_by(diff)
 

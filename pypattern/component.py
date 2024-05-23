@@ -16,6 +16,12 @@ class Component(BaseComponent):
 
         self.subs = []  # list of generative subcomponents
 
+    def set_panel_label(self, label: str, overwrite=True):
+        """Propagate given label to all sub-panels (in subcomponents)"""
+        subs = self._get_subcomponents()
+        for sub in subs: 
+            sub.set_panel_label(label, overwrite)
+
     def pivot_3D(self):
         """Pivot of a component as a block
 
@@ -25,6 +31,15 @@ class Component(BaseComponent):
         mins, maxes = self.bbox3D()
         return np.array(((mins[0] + maxes[0]) / 2, maxes[1],
                          (mins[-1] + maxes[-1]) / 2))
+
+    def length(self):
+        """Length of a component in cm
+        
+            Defaults the to the vertical length of a 3D bounding box
+            * longest_dim -- if set, returns the longest dimention out of the bounding box dimentions
+        """
+        subs = self._get_subcomponents()
+        return sum([s.length() for s in subs]) if subs else 0
 
     def translate_by(self, delta_vector):
         """Translate component by a vector"""
@@ -100,6 +115,10 @@ class Component(BaseComponent):
         
         subs = self._get_subcomponents()
         bboxes = [s.bbox3D() for s in subs]
+
+        if not len(subs):
+            # Special components without panel geometry -- no bbox defined
+            return np.array([[np.inf, np.inf, np.inf], [-np.inf, -np.inf, -np.inf]])
 
         mins = np.vstack([b[0] for b in bboxes])
         maxes = np.vstack([b[1] for b in bboxes])

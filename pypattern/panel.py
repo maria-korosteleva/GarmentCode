@@ -5,7 +5,7 @@ from scipy.spatial.transform import Rotation as R
 
 from external.pattern.core import BasicPattern
 from pypattern.base import BaseComponent
-from pypattern.edge import Edge, EdgeSequence
+from pypattern.edge import Edge, EdgeSequence, CircleEdge
 from pypattern.generic_utils import close_enough, vector_align_3D
 from pypattern.operators import cut_into_edge
 from pypattern.interface import Interface
@@ -22,9 +22,14 @@ class Panel(BaseComponent):
         applications
 
     """
-    def __init__(self, name) -> None:
+    def __init__(self, name, label='') -> None:
+        """Base class for panel creations
+            * Name: panel name. Expected to be a unique identifier of a panel object
+            * label: additional panel label (non-unique)
+        """
         super().__init__(name)
 
+        self.label = label
         self.translation = np.zeros(3)
         self.rotation = R.from_euler('XYZ', [0, 0, 0])  # zero rotation
         # NOTE: initiating with empty sequence allows .append() to it safely
@@ -62,18 +67,36 @@ class Panel(BaseComponent):
         """Pivot point of a panel in 3D"""
         return self.point_to_3D([0, 0])
 
+    def length(self, longest_dim=False):
+        """Length of a panel element in cm
+        
+            Defaults the to the vertical length of a 2D bounding box
+            * longest_dim -- if set, returns the longest dimention out of the bounding box dimentions
+        """
+        bbox = self.bbox()
+
+        x = abs(bbox[1][0] - bbox[0][0])
+        y = abs(bbox[1][1] - bbox[0][1])
+
+        return max(x, y) if longest_dim else y
+
     def is_self_intersecting(self):
         """Check whether the panel has self-intersection"""
-
-        edge_curves = [e.as_curve() for e in self.edges]
+        edge_curves = []
+        for e in self.edges:
+            if isinstance(e, CircleEdge):  
+                # NOTE: Intersections for Arcs (Circle edge) fails in svgpathtools:
+                # They are not well implemented in svgpathtools, see
+                # https://github.com/mathandy/svgpathtools/issues/121
+                # https://github.com/mathandy/svgpathtools/blob/fcb648b9bb9591d925876d3b51649fa175b40524/svgpathtools/path.py#L1960
+                # Hence using linear approximation for robustness:
+                edge_curves += [eseg.as_curve() for eseg in e.linearize(n_verts_inside=10)]
+            else:
+                edge_curves.append(e.as_curve())
 
         # NOTE: simple pairwise checks of edges
         for i1 in range(0, len(edge_curves)):
            for i2 in range(i1 + 1, len(edge_curves)):
-                # NOTE: Intersections for Arcs (Circle edge) may fail:
-                # They are not well implemented in svgpathtools, see
-                # https://github.com/mathandy/svgpathtools/issues/121
-                # https://github.com/mathandy/svgpathtools/blob/fcb648b9bb9591d925876d3b51649fa175b40524/svgpathtools/path.py#L1960
                 intersect_t = edge_curves[i1].intersect(edge_curves[i2])
                 
                 # Check exceptions -- intersection at the vertex
@@ -90,6 +113,11 @@ class Panel(BaseComponent):
         return False
 
     # ANCHOR - Operations -- update object in-place 
+    def set_panel_label(self, label: str, overwrite=True):  # TODOLOW add to the base component? 
+        """If overwrite is not enabled, only updates the label if it's empty."""
+        if not self.label or overwrite:
+            self.label = label
+
     def set_pivot(self, point_2d, replicate_placement=False):
         """Specify 2D point w.r.t. panel local space
             to be used as pivot for translation and rotation
@@ -106,6 +134,7 @@ class Panel(BaseComponent):
 
         if replicate_placement:
             self.translation = self.point_to_3D(point_2d)
+            # FIXME Replicate rotation
 
         # UPD vertex locations relative to new pivot
         for v in self.edges.verts():
@@ -268,6 +297,8 @@ class Panel(BaseComponent):
 
          NOTE: panel EdgeSequence is assumed to be a single loop of edges
         """
+        # FIXME Some panels have weird resulting alignemnt when this pivot setup is removed -- there is a bug somewhere
+
         # always start from zero for consistency between panels
         self.set_pivot(self.edges[0].start, replicate_placement=True)
 
@@ -302,12 +333,17 @@ class Panel(BaseComponent):
             panel.vertices.pop()
             panel.edges[-1]['endpoints'][-1] = 0
 
+        # Add panel label, if known
+        if self.label:
+            panel.label = self.label
+
         spattern = BasicPattern()
         spattern.name = self.name
         spattern.pattern['panels'] = {self.name: vars(panel)}
 
         # Assembly stitching info (panel might have inner stitches)
         spattern.pattern['stitches'] = self.stitching_rules.assembly()
+
         return spattern
 
     # ANCHOR utils
@@ -366,7 +402,8 @@ class Panel(BaseComponent):
             # Indecisive averaging, so using just one of the norms
             # NOTE: sometimes happens on thin arcs
             avg_norm = norms[0]   
-            print(f'{self.__class__.__name__}::{self.name}::WARNING::Norm evaluation failed, assigning norm based on the first edge')
+            if self.verbose:
+                print(f'{self.__class__.__name__}::{self.name}::WARNING::Norm evaluation failed, assigning norm based on the first edge')
 
         final_norm = avg_norm / np.linalg.norm(avg_norm)
 
@@ -376,6 +413,15 @@ class Panel(BaseComponent):
                 final_norm[i] = 0.0
 
         return final_norm
+
+    def bbox(self):
+        """Evaluate 2D bounding box"""
+        # Using curve linearization for more accurate approximation of bbox
+        lin_edges = EdgeSequence([e.linearize() for e in self.edges])
+        verts_2d = np.asarray(lin_edges.verts())
+
+        return verts_2d.min(axis=0), verts_2d.max(axis=0)
+
 
     def bbox3D(self):
         """Evaluate 3D bounding box of the current panel"""

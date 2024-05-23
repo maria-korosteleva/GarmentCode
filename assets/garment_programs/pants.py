@@ -26,7 +26,7 @@ class PantPanel(pyp.Panel):
         flare = body['leg_circ'] * (design['flare']['v']  - 1) / 4 
         hips_depth = hips_depth * hipline_ext
 
-        hip_side_incl = np.deg2rad(body['hip_inclination'])
+        hip_side_incl = np.deg2rad(body['_hip_inclination'])
         dart_depth = hips_depth * 0.8 
 
         # Crotch cotrols
@@ -168,10 +168,11 @@ class PantPanel(pyp.Panel):
         
 
 class PantsHalf(BaseBottoms):
-    def __init__(self, tag, body, design) -> None:
-        super().__init__(body, design, tag)
+    def __init__(self, tag, body, design, rise=None) -> None:
+        super().__init__(body, design, tag, rise=rise)
         design = design['pants']
-        waist, hips_depth, waist_back = self.eval_rise(design['rise']['v'])
+        self.rise = design['rise']['v'] if rise is None else rise
+        waist, hips_depth, waist_back = self.eval_rise(self.rise)
 
         # NOTE: min value = full sum > leg curcumference
         # Max: pant leg falls flat from the back
@@ -183,13 +184,17 @@ class PantsHalf(BaseBottoms):
         front_extention = front_hip / 4    # From pattern making book
         back_extention = crotch_extention - front_extention
 
-        length = design['length']['v'] * body['_leg_length']
-        cuff_len = design['cuff']['cuff_len']['v'] * body['_leg_length']
-        if design['cuff']['type']['v'] and length > cuff_len:
+        length, cuff_len = design['length']['v'], design['cuff']['cuff_len']['v']
+        if design['cuff']['type']['v']: 
+            if length - cuff_len < design['length']['range'][0]:   # Min length from paramss
+                # Cannot be longer then a pant
+                cuff_len = length - design['length']['range'][0]
             # Include the cuff into the overall length, 
             # unless the requested length is too short to fit the cuff 
             # (to avoid negative length)
             length -= cuff_len
+        length *= body['_leg_length']
+        cuff_len *= body['_leg_length']
 
         self.front = PantPanel(
             f'pant_f_{tag}', body, design,
@@ -229,7 +234,7 @@ class PantsHalf(BaseBottoms):
             cdesign = deepcopy(design)
             cdesign['cuff']['b_width'] = {}
             cdesign['cuff']['b_width']['v'] = pant_bottom.edges.length() / design['cuff']['top_ruffle']['v']
-            cdesign['cuff']['cuff_len']['v'] = design['cuff']['cuff_len']['v'] * body['_leg_length']
+            cdesign['cuff']['cuff_len']['v'] = cuff_len
 
             # Init
             cuff_class = getattr(bands, cdesign['cuff']['type']['v'])
@@ -239,7 +244,8 @@ class PantsHalf(BaseBottoms):
             self.cuff.place_by_interface(
                 self.cuff.interfaces['top'],
                 pant_bottom,
-                gap=5
+                gap=5,
+                alignment='left'
             )
 
             # Stitch
@@ -255,13 +261,18 @@ class PantsHalf(BaseBottoms):
             'top_b': self.back.interfaces['top'],
         }
 
+    def length(self):
+        if self.design['pants']['cuff']['type']['v']:
+            return self.front.length() + self.cuff.length()
+        
+        return self.front.length()
 
 class Pants(BaseBottoms):
-    def __init__(self, body, design) -> None:
+    def __init__(self, body, design, rise=None) -> None:
         super().__init__(body, design)
 
-        self.right = PantsHalf('r', body, design)
-        self.left = PantsHalf('l', body, design).mirror()
+        self.right = PantsHalf('r', body, design, rise)
+        self.left = PantsHalf('l', body, design, rise).mirror()
 
         self.stitching_rules = pyp.Stitches(
             (self.right.interfaces['crotch_f'], self.left.interfaces['crotch_f']),
@@ -282,5 +293,8 @@ class Pants(BaseBottoms):
         }
 
     def get_rise(self):
-        return self.design['pants']['rise']['v']
+        return self.right.get_rise()
+    
+    def length(self):
+        return self.right.length()
 

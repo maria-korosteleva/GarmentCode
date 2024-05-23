@@ -40,6 +40,9 @@ class CircleArcPanel(pyp.Panel):
             'left': pyp.Interface(self, self.edges[1]),
             'right': pyp.Interface(self, self.edges[3])
         }
+
+    def length(self, *args):
+        return self.interfaces['right'].edges.length()
     
     @staticmethod
     def from_w_length_suns(name, length, top_width, sun_fraction):
@@ -63,7 +66,6 @@ class CircleArcPanel(pyp.Panel):
         arc = top_width / rad
 
         return CircleArcPanel(name, rad, length, arc)
-
 
 class AsymHalfCirclePanel(pyp.Panel):
     """Panel for a asymmetrci circle skirt"""
@@ -103,6 +105,9 @@ class AsymHalfCirclePanel(pyp.Panel):
             'left': pyp.Interface(self, self.edges[1]),
             'right': pyp.Interface(self, self.edges[3])
         }
+    
+    def length(self, *args):
+        return self.interfaces['right'].edges.length()
 
 class SkirtCircle(StackableSkirtComponent):
     """Simple circle skirt"""
@@ -111,7 +116,8 @@ class SkirtCircle(StackableSkirtComponent):
 
         design = design['flare-skirt']
         suns = design['suns']['v']
-        waist, hips_depth, _ = self.eval_rise(design['rise']['v'] if rise is None else rise)
+        self.rise = design['rise']['v'] if rise is None else rise
+        waist, hips_depth, _ = self.eval_rise(self.rise)
 
         if length is None:  # take from design parameters
             length = hips_depth + design['length']['v'] * body['_leg_length']
@@ -189,9 +195,9 @@ class SkirtCircle(StackableSkirtComponent):
         panel.interfaces['bottom'].substitute(
             target_edge, interf_edges,
             [panel for _ in range(len(interf_edges))])
-
-    def get_rise(self):
-        return self.design['flare-skirt']['rise']['v']
+        
+    def length(self, *args):
+        return self.front.length()
 
 
 class AsymmSkirtCircle(SkirtCircle):

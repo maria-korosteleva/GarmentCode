@@ -1,0 +1,27 @@
+body:
+  arm_length: 56.8064
+  arm_pose_angle: 45.4775
+  armscye_depth: 13.1301
+  back_width: 50.7175
+  bum_points: 17.736
+  bust: 102.787
+  bust_line: 25.9217
+  bust_points: 17.8195
+  crotch_hip_diff: 9.92969
+  head_l: 27.2653
+  height: 178.873
+  hip_back_width: 53.9145
+  hip_inclination: 6.7451
+  hips: 102.85
+  hips_line: 24.4948
+  leg_circ: 59.9882
+  neck_w: 20.3361
+  shoulder_incl: 22.5059
+  shoulder_w: 38.5276
+  underbust: 93.0277
+  vert_bust_line: 21.5796
+  waist: 89.003
+  waist_back_width: 40.7068
+  waist_line: 38.3492
+  waist_over_bust_line: 41.6141
+  wrist: 17.4648
