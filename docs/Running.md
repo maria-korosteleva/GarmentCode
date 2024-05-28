@@ -37,7 +37,7 @@ NOTE:
 * The values of parameters are in cm (distances), degrees (angles), or given as a fraction
 ​
 ### Changing body measurements
-​
+
 To use another set of body measurements (among the ones used in the paper): 
  In `test_garments.py` change `body_to_use` variable to another key from `bodies_measurements` dictionary to use 
 ​
@@ -45,9 +45,11 @@ To use another set of body measurements (among the ones used in the paper):
  * Default: 'avg'  (=average female body shape)
 ​
 
-The values for body measurements can be updated in corresponding configuration files (`./assets/body_measurements`)
+The values for body measurements can be updated in corresponding configuration files (`./assets/body_measurements`). 
 ​
 Utilized examples for body shapes are given in `./assets/bodies` for reference.
+
+> NOTE: Descriptions of body measurements are provided in  [docs/Body Measurements GarmentCode.pdf](Body%20Measurements%20GarmentCode.pdf).
 
 ## Running GarmentViewer to simulate created patterns
 
