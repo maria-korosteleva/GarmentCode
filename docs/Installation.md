@@ -24,7 +24,9 @@ If required, you could install the library and dependecies manually
 * [svgpathtools](https://github.com/mathandy/svgpathtools)
 * [cairoSVG](https://cairosvg.org/)
     NOTE: this lib has some quirks on Windows, which we resolve with including needed dlls in `./pattern/cairo_dlls` and adding the ditrectory to PATH in runtime
-* [PySimpleGUI](https://github.com/PySimpleGUI/PySimpleGUI) to run GUI script
+* [PySimpleGUI v5](https://github.com/PySimpleGUI/PySimpleGUI) to run GUI script
+
+    > NOTE: We provide PySimpleGUI distribution keys -- the users of GarmentCode do not require a separate PySimpleGUI license to use our GUI. These keys support only PySimpleGUI v5.*
 * wmi (on Windows)
 
 All python dependencies can be installed with `pip install` / `conda install`:
