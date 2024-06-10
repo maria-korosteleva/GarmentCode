@@ -1,4 +1,8 @@
 import os
+import sys
+from pathlib import Path
+sys.path.append(str((Path(os.getcwd()) / 'external').resolve()))
+
 from gui.callbacks import GUIState
 
 if 'Windows' in os.environ.get('OS', ''):

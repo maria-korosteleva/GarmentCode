@@ -2,6 +2,8 @@ from datetime import datetime
 import shutil
 from pathlib import Path
 import yaml
+import sys, os
+sys.path.append(str((Path(os.getcwd()) / 'external').resolve()))
 
 from assets.garment_programs.meta_garment import MetaGarment
 from assets.body_measurments.body_params import BodyParameters
