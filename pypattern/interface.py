@@ -275,7 +275,7 @@ class Interface:
                 self.edges_flipping.insert(orig + j, curr_edges_flip)
         else: 
             self.panel.insert(orig, new_panels)
-            self.edges_flipping.insert(orig, False)
+            self.edges_flipping.insert(orig, curr_edges_flip)
 
         # Propagate ruffle indicators
         ins_len = 1 if isinstance(new_edges, Edge) else len(new_edges)
