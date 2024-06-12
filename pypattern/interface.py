@@ -69,6 +69,11 @@ class Interface:
             * tol -- tolerance in distance differences that triggers flipping (in cm)
 
         """
+        # FIXME Remove attempts to estimate flips and fully rely on specs from the user
+        # It simplifies the control (e.g. in bodice bottom interface)
+        # NOTE: requires a good amount of regression testing
+        # DRAFT return self.edges_flipping[i]
+
         if self.edges_flipping[i]:
             return True
         
@@ -263,11 +268,11 @@ class Interface:
 
         # Update panels & flip info
         self.panel.pop(orig)
-        self.edges_flipping.pop(orig)
+        curr_edges_flip = self.edges_flipping.pop(orig)
         if isinstance(new_panels, list) or isinstance(new_panels, tuple):
             for j in range(len(new_panels)):
                 self.panel.insert(orig + j, new_panels[j])
-                self.edges_flipping.insert(orig + j, False)
+                self.edges_flipping.insert(orig + j, curr_edges_flip)
         else: 
             self.panel.insert(orig, new_panels)
             self.edges_flipping.insert(orig, False)

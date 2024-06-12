@@ -446,6 +446,8 @@ class Shirt(pyp.Component):
                                      self.left.interfaces['back_in']))
 
         # Adjust interface ordering for correct connectivity
+        # FIXME These interface edits could be simplified by removing 
+        # the requristic edge flipping estimation in the interface. 
         self.left.interfaces['b_bottom'].reverse()
         if fitted: 
             self.right.interfaces['f_bottom'].reorder([0, 1], [1, 0])
