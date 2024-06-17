@@ -45,6 +45,7 @@ class GUIState:
 
         # Elements
         self.ui_design_subtabs = {}
+        self.NONE = 'Empty'
 
         # TODO Params
         # TODO Callbacks on params
@@ -97,9 +98,14 @@ class GUIState:
                 
 
     def def_body_tab(self):
+        # TODO Callback
 
-        # TODO Load from file option
-        ui.label('Body tab')
+        # TODO selector of available options + upload is one of them
+        # NOTE: https://www.reddit.com/r/nicegui/comments/1393i2f/file_upload_with_restricted_types/
+        self.ui_body_file = ui.upload(
+            label=str(self.pattern_state.body_file.name),  
+            on_upload=lambda e: ui.notify(f'Uploaded {e.name}')
+        ).classes('max-w-full').props('accept=".yaml,.json"')  
         
         body = self.pattern_state.body_params
         for param in body:
@@ -117,30 +123,65 @@ class GUIState:
             result = ui.label()
 
     def def_flat_design_subtab(self, design_params, use_collapsible=False):
+        """Group of design parameters"""
         # TODO Callbacks
+        # TODO Collect element references?
         for param in design_params: 
-            if 'v' in design_params[param]:
-                # Leaf value
-                # TODO Display options
-                ui.label(param).classes('text-h4')
-                ui.label(design_params[param]['v'])
-            else:
-                # Section
+            if 'v' not in design_params[param]:
                 # TODOLOW Maybe use expansion for all?
                 if use_collapsible:
                     # TODO font size?
                     with ui.expansion(f'{param}:').classes('w-full'):
                         self.def_flat_design_subtab(design_params[param])
                 else:
-                    with ui.card().tight():
+                    with ui.card():   # DRAFT .tight():
                         self.def_flat_design_subtab(design_params[param])
+            else:
+                # Leaf value
+                p_type = design_params[param]['type']
+                val = design_params[param]['v']
+                p_range = design_params[param]['range']
 
+                if 'select' in p_type:
+                    values = design_params[param]['range']
+                    if 'null' in p_type:  # TODO Account for this in the events handlers
+                        if None in values:
+                            values.remove(None)  # If there
+                        values.append(self.NONE)  # NOTE: Displayable value
+                    in_el = ui.select(values, value=val if val is not None else self.NONE)
+                elif p_type == 'bool':
+                    in_el = ui.switch(param, value=val)
+                elif p_type == 'float' or p_type == 'int':
+                    ui.label(param)
+                    in_el = ui.slider(
+                        value=val, 
+                        min=p_range[0], 
+                        max=p_range[1], 
+                        step=0.025 if p_type == 'float' else 1
+                    ).props('label-always')
+                    # TODO Events control: https://nicegui.io/documentation/slider#throttle_events_with_leading_and_trailing_options
+                elif 'file' in p_type:
+                    default_path = Path(design_params[param]['v'])
+                    ftype = p_type.split('_')[-1]
+                    in_el = ui.upload(
+                        label=str(default_path),
+                        on_upload=lambda e: ui.notify(f'Uploaded {e.name}')
+                    ).classes('max-w-full').props(f'accept=".{ftype}"')
+                else:
+                    print(f'GUI::WARNING::Unknown parameter type: {p_type}')
+                    in_el = ui.input(label=param, value=val, placeholder='Type the value',
+                        validation={'Input too long': lambda value: len(value) < 20}
+                    )
+                
 
     def def_design_tab(self):
-
-        # TODO Load from file option
-        ui.label('Design tab')
-
+        # TODO selector of available options + upload is one of them
+        # NOTE: https://www.reddit.com/r/nicegui/comments/1393i2f/file_upload_with_restricted_types/
+        self.ui_design_file = ui.upload(
+            label=str(self.pattern_state.design_file.name),  
+            on_upload=lambda e: ui.notify(f'Uploaded {e.name}')
+        ).classes('max-w-full').props('accept=".yaml,.json"')  
+    
         # TODO Width of the tabs vs width of the content
         design_params = self.pattern_state.design_params
         with ui.splitter(value=30).classes('w-full h-256') as splitter:
