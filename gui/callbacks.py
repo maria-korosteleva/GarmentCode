@@ -81,20 +81,40 @@ class GUIState:
         # TODO Develop the theme more
         ui.colors(primary='#d984cc')
         
-
     def layout(self):
         """Overall page layout"""
-        # TODOLOW Make collapsible? 
-        with ui.tabs().classes('w-full') as tabs:
-            self.ui_design_tab = ui.tab('Design parameters')
-            self.ui_body_tab = ui.tab('Body parameters')
-        with ui.tab_panels(tabs, value=self.ui_design_tab, animated=True).classes('w-full'):
-            with ui.tab_panel(self.ui_design_tab):
-                self.def_design_tab()
-            with ui.tab_panel(self.ui_body_tab):
-                self.def_body_tab()
 
-        # TODO Add pattern visual
+        # TODO Header
+        # TODO About us page
+        # TODO Link to project page
+        # TODO Copyright notice at the bottom
+        # TODO License info? 
+
+        app.add_static_files('/img', './assets/img')
+        with ui.row(wrap=False).classes('w-full h-screen'):
+
+            # Tabs
+            self.def_param_tabs_layout()
+
+            # Pattern visual
+            with ui.image('/img/millimiter_paper_1500_900.png').classes('w-2/3'):
+                self.ui_pattern_img = ui.image(
+                    '/img/test_shape.svg'
+                ).classes('bg-transparent').props('fit=scale-down')   # DRAFT w-2/3 
+
+    def def_param_tabs_layout(self):
+        """Layout of tabs with parameters"""
+        # TODOLOW Make collapsible? 
+        with ui.column(wrap=False).classes('w-1/3 max-w-1/3'):
+            with ui.tabs() as tabs:
+                self.ui_design_tab = ui.tab('Design parameters')
+                self.ui_body_tab = ui.tab('Body parameters')
+            with ui.tab_panels(tabs, value=self.ui_design_tab, animated=True):  
+                with ui.tab_panel(self.ui_design_tab):
+                    self.def_design_tab()
+                with ui.tab_panel(self.ui_body_tab):
+                    self.def_body_tab()
+       
                 
 
     def def_body_tab(self):
@@ -134,7 +154,8 @@ class GUIState:
                     with ui.expansion(f'{param}:').classes('w-full'):
                         self.def_flat_design_subtab(design_params[param])
                 else:
-                    with ui.card():   # DRAFT .tight():
+                    # TODO Header of the card!
+                    with ui.card().classes('w-full'):   # DRAFT .tight():
                         self.def_flat_design_subtab(design_params[param])
             else:
                 # Leaf value
@@ -148,7 +169,10 @@ class GUIState:
                         if None in values:
                             values.remove(None)  # If there
                         values.append(self.NONE)  # NOTE: Displayable value
-                    in_el = ui.select(values, value=val if val is not None else self.NONE)
+                    in_el = ui.select(
+                        values, 
+                        value=val if val is not None else self.NONE
+                    ).classes('w-full')
                 elif p_type == 'bool':
                     in_el = ui.switch(param, value=val)
                 elif p_type == 'float' or p_type == 'int':
@@ -158,7 +182,7 @@ class GUIState:
                         min=p_range[0], 
                         max=p_range[1], 
                         step=0.025 if p_type == 'float' else 1
-                    ).props('label-always')
+                    ).props('label-always').classes('w-full')
                     # TODO Events control: https://nicegui.io/documentation/slider#throttle_events_with_leading_and_trailing_options
                 elif 'file' in p_type:
                     default_path = Path(design_params[param]['v'])
@@ -171,9 +195,8 @@ class GUIState:
                     print(f'GUI::WARNING::Unknown parameter type: {p_type}')
                     in_el = ui.input(label=param, value=val, placeholder='Type the value',
                         validation={'Input too long': lambda value: len(value) < 20}
-                    )
+                    ).classes('w-full')
                 
-
     def def_design_tab(self):
         # TODO selector of available options + upload is one of them
         # NOTE: https://www.reddit.com/r/nicegui/comments/1393i2f/file_upload_with_restricted_types/
@@ -184,7 +207,7 @@ class GUIState:
     
         # TODO Width of the tabs vs width of the content
         design_params = self.pattern_state.design_params
-        with ui.splitter(value=30).classes('w-full h-256') as splitter:
+        with ui.splitter(value=35).classes('w-full') as splitter:   # DRAFT  
             with splitter.before:
                 with ui.tabs().props('vertical').classes('w-full') as tabs:
                     for param in design_params:
@@ -198,13 +221,15 @@ class GUIState:
                         self.ui_design_subtabs[param] = ui.tab(param)
 
             with splitter.after:
-                with ui.tab_panels(tabs, value=self.ui_design_subtabs['meta']).props('vertical').classes('w-full h-full'):
+                with ui.tab_panels(tabs, value=self.ui_design_subtabs['meta']).props('vertical').classes('w-full'):  # DRAFT h-full
                     for param, tab_elem in self.ui_design_subtabs.items():
                         with ui.tab_panel(tab_elem):
-                            self.def_flat_design_subtab(
-                                design_params[param],
-                                use_collapsible=(param == 'left')
-                            )
+                            # FIXME Weird height issues
+                            with ui.scroll_area().classes('w-full p-0 m-0'):    # DRAFT .classes('w-full h-full'):
+                                self.def_flat_design_subtab(
+                                    design_params[param],
+                                    use_collapsible=(param == 'left')
+                                )
                             
 
 
