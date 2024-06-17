@@ -2,7 +2,8 @@ import os
 import sys
 from pathlib import Path
 sys.path.append(str((Path(os.getcwd()) / 'external').resolve()))
-from gui.callbacks_psg import GUIState
+# DRAFT from gui.callbacks_psg import GUIState
+from gui.callbacks import GUIState
 
 if 'Windows' in os.environ.get('OS', ''):
     # https://stackoverflow.com/a/43046744
@@ -17,6 +18,6 @@ if 'Windows' in os.environ.get('OS', ''):
 if __name__ == '__main__':
 
     state = GUIState()
-    state.event_loop()
+    state.run()
     del state
     
