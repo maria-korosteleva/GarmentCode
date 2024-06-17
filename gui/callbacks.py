@@ -43,7 +43,9 @@ class GUIState:
         self.def_canvas_size = (1315, 670)   # 
         self.body_img_size = (None, None)  # NOTE updated in subroutines
 
-        # TODO Tabs
+        # Elements
+        self.ui_design_subtabs = {}
+
         # TODO Params
         # TODO Callbacks on params
         # TODO Pattern vizualisation
@@ -95,6 +97,8 @@ class GUIState:
                 
 
     def def_body_tab(self):
+
+        # TODO Load from file option
         ui.label('Body tab')
         
         body = self.pattern_state.body_params
@@ -112,10 +116,55 @@ class GUIState:
                 elem.disable()
             result = ui.label()
 
+    def def_flat_design_subtab(self, design_params, use_collapsible=False):
+        # TODO Callbacks
+        for param in design_params: 
+            if 'v' in design_params[param]:
+                # Leaf value
+                # TODO Display options
+                ui.label(param).classes('text-h4')
+                ui.label(design_params[param]['v'])
+            else:
+                # Section
+                # TODOLOW Maybe use expansion for all?
+                if use_collapsible:
+                    # TODO font size?
+                    with ui.expansion(f'{param}:').classes('w-full'):
+                        self.def_flat_design_subtab(design_params[param])
+                else:
+                    with ui.card().tight():
+                        self.def_flat_design_subtab(design_params[param])
+
 
     def def_design_tab(self):
+
+        # TODO Load from file option
         ui.label('Design tab')
-        pass
+
+        # TODO Width of the tabs vs width of the content
+        design_params = self.pattern_state.design_params
+        with ui.splitter(value=30).classes('w-full h-256') as splitter:
+            with splitter.before:
+                with ui.tabs().props('vertical').classes('w-full') as tabs:
+                    for param in design_params:
+                        if 'v' in design_params[param]:
+                            # TODO Error message
+                            # sg.popup_error_with_traceback(
+                            #     f'Leaf parameter on top level of design hierarchy: {param}!!'
+                            # )
+                            continue
+                        # Tab
+                        self.ui_design_subtabs[param] = ui.tab(param)
+
+            with splitter.after:
+                with ui.tab_panels(tabs, value=self.ui_design_subtabs['meta']).props('vertical').classes('w-full h-full'):
+                    for param, tab_elem in self.ui_design_subtabs.items():
+                        with ui.tab_panel(tab_elem):
+                            self.def_flat_design_subtab(
+                                design_params[param],
+                                use_collapsible=(param == 'left')
+                            )
+                            
 
 
     # Runtime updates
