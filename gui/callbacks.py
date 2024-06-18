@@ -5,7 +5,7 @@
 from copy import copy
 from pathlib import Path
 
-from nicegui import ui, app, context
+from nicegui import ui, app
 from nicegui.events import ValueChangeEventArguments
 
 from .gui_pattern import GUIPattern
@@ -44,7 +44,6 @@ class GUIState:
         self.ui_design_subtabs = {}
         self.NONE = 'Empty'
 
-        # TODO Params
         # TODO Callbacks on params
         # TODO Pattern vizualisation
         # 
@@ -58,9 +57,6 @@ class GUIState:
         # # Draw initial pattern
         # self.upd_pattern_visual()
 
-        # DEBUG
-        # NOTE: Killing the process from UI itself -- dev option only!
-        # ui.button('shutdown', on_click=app.shutdown)   
 
     # Start the GUI
     def run(self):
@@ -88,17 +84,18 @@ class GUIState:
         # TODO License info? 
 
         app.add_static_files('/img', './assets/img')
-        with ui.row(wrap=False).classes('w-full h-screen'):
+        with ui.row(wrap=False).classes('w-full h-full'):
 
             # Tabs
             self.def_param_tabs_layout()
 
             # Pattern visual
-            with ui.image('/img/millimiter_paper_1500_900.png').classes('w-2/3'):
+            with ui.image('/img/millimiter_paper_1500_900.png').classes('w-1/2'):
                 self.ui_pattern_img = ui.image(
                     '/img/test_shape.svg'
                 ).classes('bg-transparent').props('fit=scale-down')   # DRAFT w-2/3 
 
+    # SECTION -- Parameter menu
     def def_param_tabs_layout(self):
         """Layout of tabs with parameters"""
         # TODOLOW Make collapsible? 
@@ -202,7 +199,6 @@ class GUIState:
             on_upload=lambda e: ui.notify(f'Uploaded {e.name}')
         ).classes('max-w-full').props('accept=".yaml,.json"')  
     
-        # TODO Width of the tabs vs width of the content
         design_params = self.pattern_state.design_params
         with ui.splitter(value=32).classes('w-[17vw] h-[85vh] p-0 m-0') as splitter:
             with splitter.before:
@@ -227,6 +223,6 @@ class GUIState:
                                     use_collapsible=(param == 'left')
                                 )
                             
+    # SECTION -- Pattern visuals
 
-
-    # Runtime updates
+    # SECTION -- Event callbacks
