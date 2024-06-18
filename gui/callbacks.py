@@ -51,7 +51,7 @@ class GUIState:
         self.layout()
 
         # New
-        # TODO Separate params per user session!
+        # TODO Separate params per user session! (probably using internal page for configurator will be enough)
         # TODO 3D scene visualisation
         # TODO Waiting, buttons, and all.. 
 
