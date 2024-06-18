@@ -224,11 +224,24 @@ class GUIState:
     # SECTION -- Pattern visuals
     def def_pattern_display(self):
         """Prepare pattern display area"""
+        # TODO On/off body outline
         with ui.column().classes('w-full items-center p-0 m-0'):
             with ui.image('/img/millimiter_paper_1500_900.png').classes('w-[70vw] border') as self.ui_pattern_bg:
-                with ui.image('/img/body_30_opacity.png').classes('bg-transparent w-[30vw] overflow-visible') as self.ui_body_outline:
-                    self.ui_pattern_img = ui.image(
+                # FIXME Body image gets cropped?
+                # FIXME Increase body image resolution and use GGG outline 
+                with ui.image('/img/body_30_opacity.png') \
+                    .classes('bg-transparent w-[30vw] overflow-visible absolute top-[5%] left-[5%]') as self.ui_body_outline: 
+                    # NOTE: Positioning: https://github.com/zauberzeug/nicegui/discussions/957 
+                    # TODO Proper positioning in the callbacks
+                    # DRAFT  translate-x-[-50%] translate-y-[-50%]
+                    # NOTE: Automatically updates from source
+                    # TODO How to update: https://github.com/zauberzeug/nicegui/blob/a435775e5cf4a8a14e44163812744964f449cc6e/examples/opencv_webcam/main.py#L38
+                    self.ui_pattern_display = ui.interactive_image(
                         '/img/pattern_test.svg'
-                    ).classes('bg-transparent w-[50vw] border')  # DRAFT .props('fit=scale-down')   # DRAFT w-2/3 
+                    ).classes('bg-transparent w-[50vw]')
+
+                    # TODO Use interactive image to load svg pattern on top of the body image (one less layer)? 
+
+        self.ui_body_outline
 
     # SECTION -- Event callbacks
