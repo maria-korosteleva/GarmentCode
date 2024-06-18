@@ -45,8 +45,6 @@ class GUIState:
         self.NONE = 'Empty'
 
         # TODO Callbacks on params
-        # TODO Pattern vizualisation
-        # 
         self.stylings()
         self.layout()
 
@@ -54,7 +52,7 @@ class GUIState:
         # TODO 3D scene visualisation
         # TODO Waiting, buttons, and all.. 
 
-        # # Draw initial pattern
+        # TODO Draw initial pattern
         # self.upd_pattern_visual()
 
 
@@ -77,27 +75,42 @@ class GUIState:
     def layout(self):
         """Overall page layout"""
 
-        # TODO Header
         # TODO About us page
         # TODO Link to project page
-        # TODO Copyright notice at the bottom
         # TODO License info? 
+        # TODO error on mobile/small screens? (Or put the controls in the drawer -- figure it out?)
+        # TODO Link to GitHub
+
+        # as % of viewport width/height
+        self.h_header = 5
+        self.h_footer = 3
+        self.h_content = 85
+        self.w_pattern_display = 65  # TODO Not great for height control though..
 
         app.add_static_files('/img', './assets/img')
-        with ui.row(wrap=False).classes('w-full h-full'):
-
+        with ui.row(wrap=False).classes('w-full h-full'):  
             # Tabs
             self.def_param_tabs_layout()
-
+            
             # Pattern visual
             self.def_pattern_display()
-            
+        
+        # Overall wrapping
+        # NOTE: https://nicegui.io/documentation/section_pages_routing#page_layout
+        with ui.header(elevated=True, fixed=False).classes(f'h-[{self.h_header}vh] items-center justify-between py-0 px-4 m-0'):
+            ui.label('GarmentCode design configurator').style('font-size: 150%; font-weight: 400')
+            ui.button(on_click=lambda: right_drawer.toggle(), icon='menu').props('flat color=white')
+        # DRAFT No ui.left_drawer().classes('w-[50vw]'):
+        with ui.right_drawer(fixed=False, value=False).props('bordered') as right_drawer:
+            ui.label('Menu with useful links')
+        with ui.footer(fixed=False, elevated=True).classes(f'h-[{self.h_footer}vh] items-center justify-center p-0 m-0'):
+            ui.label('Future copyright message IGL (c)')   # TODO 
 
     # SECTION -- Parameter menu
     def def_param_tabs_layout(self):
         """Layout of tabs with parameters"""
         # TODOLOW Make collapsible? 
-        with ui.column(wrap=False).classes('h-[95vh]'):
+        with ui.column(wrap=False).classes(f'h-[{self.h_content}vh]'):
             with ui.tabs() as tabs:
                 self.ui_design_tab = ui.tab('Design parameters')
                 self.ui_body_tab = ui.tab('Body parameters')
@@ -117,7 +130,7 @@ class GUIState:
             on_upload=lambda e: ui.notify(f'Uploaded {e.name}')
         ).classes('max-w-full').props('accept=".yaml,.json"')  
         
-        with ui.scroll_area().classes('w-[16vw] h-[85vh]'):   # NOTE: p-0 m-0 gap-0 dont' seem to have effect
+        with ui.scroll_area().classes(f'w-[16vw] h-[{self.h_content - 10}vh]'):   # NOTE: p-0 m-0 gap-0 dont' seem to have effect
             body = self.pattern_state.body_params
             for param in body:
                 # TODO Callback
@@ -198,7 +211,7 @@ class GUIState:
         ).classes('max-w-full').props('accept=".yaml,.json"')  
     
         design_params = self.pattern_state.design_params
-        with ui.splitter(value=32).classes('w-[17vw] h-[85vh] p-0 m-0') as splitter:
+        with ui.splitter(value=32).classes(f'w-[17vw] h-[{self.h_content - 10}vh] p-0 m-0') as splitter:
             with splitter.before:
                 with ui.tabs().props('vertical').classes('w-full') as tabs:
                     for param in design_params:
@@ -215,7 +228,7 @@ class GUIState:
                 with ui.tab_panels(tabs, value=self.ui_design_subtabs['meta']).props('vertical').classes('w-full'):  # DRAFT h-full
                     for param, tab_elem in self.ui_design_subtabs.items():
                         with ui.tab_panel(tab_elem).classes('p-0 m-0'): 
-                            with ui.scroll_area().classes('w-full h-[76vh] p-0 m-0'):
+                            with ui.scroll_area().classes(f'w-full h-[{self.h_content - 19}vh] p-0 m-0'):
                                 self.def_flat_design_subtab(
                                     design_params[param],
                                     use_collapsible=(param == 'left')
@@ -226,7 +239,7 @@ class GUIState:
         """Prepare pattern display area"""
         # TODO On/off body outline
         with ui.column().classes('w-full items-center p-0 m-0'):
-            with ui.image('/img/millimiter_paper_1500_900.png').classes('w-[70vw] border') as self.ui_pattern_bg:
+            with ui.image('/img/millimiter_paper_1500_900.png').classes(f'w-[{self.w_pattern_display}vw] border') as self.ui_pattern_bg:
                 # FIXME Body image gets cropped?
                 # FIXME Increase body image resolution and use GGG outline 
                 with ui.image('/img/body_30_opacity.png') \
@@ -242,6 +255,7 @@ class GUIState:
 
                     # TODO Use interactive image to load svg pattern on top of the body image (one less layer)? 
 
-        self.ui_body_outline
+            # TODO Add downloadable content (with timestamp)
+            ui.button('Download Current Garment', on_click=lambda: ui.download('https://nicegui.io/logo.png'))
 
     # SECTION -- Event callbacks
