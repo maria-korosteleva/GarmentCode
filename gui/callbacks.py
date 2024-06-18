@@ -90,10 +90,8 @@ class GUIState:
             self.def_param_tabs_layout()
 
             # Pattern visual
-            with ui.image('/img/millimiter_paper_1500_900.png').classes('w-1/2'):
-                self.ui_pattern_img = ui.image(
-                    '/img/test_shape.svg'
-                ).classes('bg-transparent').props('fit=scale-down')   # DRAFT w-2/3 
+            self.def_pattern_display()
+            
 
     # SECTION -- Parameter menu
     def def_param_tabs_layout(self):
@@ -224,5 +222,13 @@ class GUIState:
                                 )
                             
     # SECTION -- Pattern visuals
+    def def_pattern_display(self):
+        """Prepare pattern display area"""
+        with ui.column().classes('w-full items-center p-0 m-0'):
+            with ui.image('/img/millimiter_paper_1500_900.png').classes('w-[70vw] border') as self.ui_pattern_bg:
+                with ui.image('/img/body_30_opacity.png').classes('bg-transparent w-[30vw] overflow-visible') as self.ui_body_outline:
+                    self.ui_pattern_img = ui.image(
+                        '/img/pattern_test.svg'
+                    ).classes('bg-transparent w-[50vw] border')  # DRAFT .props('fit=scale-down')   # DRAFT w-2/3 
 
     # SECTION -- Event callbacks
