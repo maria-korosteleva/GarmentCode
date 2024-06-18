@@ -21,6 +21,8 @@ class GUIPattern:
     def __init__(self) -> None:
         self.save_path = Path.cwd() / 'Logs' 
         self.png_path = None
+        self.png_relative_path = None
+        self.svg_relative_path = None
         self.tmp_path = Path.cwd() / 'tmp'
         
         # create paths
@@ -164,6 +166,8 @@ class GUIPattern:
         if not len(pattern.panel_order()): 
             # Empty pattern
             self.png_path = ''
+            self.png_relative_path = ''
+            self.svg_relative_path = ''
             return
 
         # Save as json file
@@ -181,7 +185,9 @@ class GUIPattern:
         for filename in files:
             if 'pattern.png' in filename and '3d' not in filename:
                 self.png_path = os.path.join(root, filename)
-                break
+                self.png_relative_path = f'{os.path.basename(folder)}/{filename}'
+            if '.svg' in filename:
+                self.svg_relative_path = f'{os.path.basename(folder)}/{filename}'
 
     def clear_tmp(self, root=False):
         """Clear tmp folder"""

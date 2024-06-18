@@ -32,6 +32,7 @@ class GUIState:
         self.pattern_state = GUIPattern()
 
         # Pattern display
+        # TODO What is needed among these params? 
         self.min_margin = 10
         self.default_body_img_margins = [125, 20] 
         self.body_img_margins = copy(self.default_body_img_margins)
@@ -44,11 +45,13 @@ class GUIState:
         self.ui_design_subtabs = {}
         self.NONE = 'Empty'
 
-        # TODO Callbacks on params
+        # TODO Callbacks on buttons and file loads
+        self.pattern_state.reload_garment()
         self.stylings()
         self.layout()
 
         # New
+        # TODO Separate params per user session!
         # TODO 3D scene visualisation
         # TODO Waiting, buttons, and all.. 
 
@@ -88,6 +91,7 @@ class GUIState:
         self.w_pattern_display = 65  # TODO Not great for height control though..
 
         app.add_static_files('/img', './assets/img')
+        app.add_static_files('/tmp_pattern', self.pattern_state.tmp_path)
         with ui.row(wrap=False).classes('w-full h-full'):  
             # Tabs
             self.def_param_tabs_layout()
@@ -141,7 +145,9 @@ class GUIState:
                         format='%.2f',
                         precision=2,
                         step=0.5,
+                        # NOTE: e.sender == UI object, e.value == new value
                         # DRAFT on_change=lambda e: result.set_text(f'you entered: {e.value}')
+                        on_change=lambda e: self.param_change(body, param, e.value, body=True)
                         ) 
                 if param[0] == '_':
                     elem.disable()
@@ -176,17 +182,20 @@ class GUIState:
                         values.append(self.NONE)  # NOTE: Displayable value
                     in_el = ui.select(
                         values, 
-                        value=val if val is not None else self.NONE
+                        value=val if val is not None else self.NONE,
+                        on_change=lambda e: self.param_change(design_params, param, e.value)
                     ).classes('w-full')
                 elif p_type == 'bool':
-                    in_el = ui.switch(param, value=val)
+                    in_el = ui.switch(
+                        param, value=val, on_change=lambda e: self.param_change(design_params, param, e.value))
                 elif p_type == 'float' or p_type == 'int':
                     ui.label(param)
                     in_el = ui.slider(
                         value=val, 
                         min=p_range[0], 
                         max=p_range[1], 
-                        step=0.025 if p_type == 'float' else 1
+                        step=0.025 if p_type == 'float' else 1,
+                        on_change=lambda e: self.param_change(design_params, param, e.value)
                     ).props('label-always').classes('w-full')
                     # TODO Events control: https://nicegui.io/documentation/slider#throttle_events_with_leading_and_trailing_options
                 elif 'file' in p_type:
@@ -194,12 +203,13 @@ class GUIState:
                     ftype = p_type.split('_')[-1]
                     in_el = ui.upload(
                         label=str(default_path),
-                        on_upload=lambda e: ui.notify(f'Uploaded {e.name}')
+                        on_upload=lambda e: self.param_change(design_params, param, e.name)  # TODO Debug
                     ).classes('max-w-full').props(f'accept=".{ftype}"')
                 else:
                     print(f'GUI::WARNING::Unknown parameter type: {p_type}')
                     in_el = ui.input(label=param, value=val, placeholder='Type the value',
-                        validation={'Input too long': lambda value: len(value) < 20}
+                        validation={'Input too long': lambda value: len(value) < 20},
+                        on_change=lambda e: self.param_change(design_params, param, e.value)
                     ).classes('w-full')
                 
     def def_design_tab(self):
@@ -250,7 +260,7 @@ class GUIState:
                     # NOTE: Automatically updates from source
                     # TODO How to update: https://github.com/zauberzeug/nicegui/blob/a435775e5cf4a8a14e44163812744964f449cc6e/examples/opencv_webcam/main.py#L38
                     self.ui_pattern_display = ui.interactive_image(
-                        '/img/pattern_test.svg'
+                        '/tmp_pattern/' + self.pattern_state.svg_relative_path if self.pattern_state.svg_relative_path else ''
                     ).classes('bg-transparent w-[50vw]')
 
                     # TODO Use interactive image to load svg pattern on top of the body image (one less layer)? 
@@ -259,3 +269,29 @@ class GUIState:
             ui.button('Download Current Garment', on_click=lambda: ui.download('https://nicegui.io/logo.png'))
 
     # SECTION -- Event callbacks
+
+    def param_change(self, props, key, new_val, body=False):
+        """Some parameter has changed -- update stored parameter and re-draw the patterns"""
+
+        # FIXME Some modeling errors
+        if new_val == self.NONE:
+            new_val = None
+        if body:
+            props[key] = new_val
+        else:
+            props[key]['v'] = new_val
+
+        # TODO asymmetric parameter handling as before
+
+        # Display the garment
+        self.pattern_state.reload_garment()
+
+        # FIXME The image is not updating after initial load
+
+        # DEBUG
+        print(f'YYYYYY:Setting source: {self.pattern_state.svg_relative_path}')
+
+        self.ui_pattern_display.set_source(
+            '/tmp_pattern/' + self.pattern_state.svg_relative_path if self.pattern_state.svg_relative_path else '')
+
+        # TODO Re-align the canvas and body with the new pattern
