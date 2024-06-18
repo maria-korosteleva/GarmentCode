@@ -425,7 +425,7 @@ class BasicPattern(object):
         vert_comp = control_vec - control_projected  
         control_scale[1] = np.linalg.norm(vert_comp) / edge_len
         # Distinguish left&right curvature
-        control_scale[1] *= np.sign(np.cross(control_point, edge_vec))
+        control_scale[1] *= np.sign(np.cross(edge_vec, control_vec))
 
         return control_scale 
 
