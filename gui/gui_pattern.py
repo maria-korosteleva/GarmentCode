@@ -173,7 +173,7 @@ class GUIPattern:
         # Save as json file
         folder = pattern.serialize(
             self.tmp_path, 
-            tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
+            # DEBUG write to the same source tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
             to_subfolder=True, 
             with_3d=False, with_text=False, view_ids=False)
         
