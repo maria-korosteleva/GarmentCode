@@ -74,6 +74,7 @@ class GUIPattern:
         # Reload
         self.reload_garment()
 
+    # TODO Deprecated -- not needed in the new UI
     def set_design_param(self, param_path, new_value, reload=True):
         """Set the new value of design params"""
 
@@ -149,12 +150,25 @@ class GUIPattern:
                 'Configured_design', self.body_params, self.design_params)
             self._view_serialize()
 
-    def sync_left(self):
-        """Synchronize left and right design parameters"""
+    @staticmethod
+    def _nested_sync(s_from, s_to):
+        if 'v' in s_to:
+            s_to['v'] = s_from['v']
+        else:
+            for key in s_to:
+                if key in s_from:
+                    GUIPattern._nested_sync(s_from[key], s_to[key])
 
+    def sync_left(self, with_check=False):
+        """Synchronize left and right design parameters"""
+        # Check if needed in the first place
+        if with_check and self.design_params['left']['enable_asym']['v']:
+            # Asymmetry enabled, the params should not syncronise 
+            return  
         for k in self.design_params['left']:
             if k != 'enable_asym':
-                self.design_params['left'][k] = deepcopy(self.design_params[k])
+                # Use proper value assignment instead of deepcopy
+                self._nested_sync(self.design_params[k], self.design_params['left'][k])
 
     def _view_serialize(self):
         """Save a sewing pattern svg/png representation to tmp folder be used
@@ -237,7 +251,6 @@ class GUIPattern:
             return right_check or left_check
         else:
             return (not is_strapless) and is_curve
-
 
     def save(self):
         """Save current garment design to self.save_path """

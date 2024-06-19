@@ -314,7 +314,8 @@ class GUIState:
         self.pattern_state.body_params.eval_dependencies()
 
         # Update the garment
-        # TODO Sync left values, etc. (check GUIPattern class)
+        # Sync left-right for easier editing
+        self.pattern_state.sync_left(with_check=True)
         self.pattern_state.reload_garment()
 
         # Update display
