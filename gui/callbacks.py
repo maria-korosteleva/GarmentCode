@@ -288,7 +288,12 @@ class GUIState:
         # NOTE: Fix to the "same value" issue in lambdas 
         # https://github.com/zauberzeug/nicegui/wiki/FAQs#why-have-all-my-elements-the-same-value
    
-        # FIXME Only waiting for operations that are known to take long!!!
+        # FIXME Armhole type switch does not seem to be working =(
+
+        # Quick update
+        if not self.pattern_state.is_slow_design(): 
+            self._sync_update_state()
+            return
 
         # Display waiting spinner untill getting the result
         # NOTE Splashscreen solution to block users from modifying params while updating
@@ -309,6 +314,7 @@ class GUIState:
         self.pattern_state.body_params.eval_dependencies()
 
         # Update the garment
+        # TODO Sync left values, etc. (check GUIPattern class)
         self.pattern_state.reload_garment()
 
         # Update display

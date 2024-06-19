@@ -198,6 +198,47 @@ class GUIPattern:
             self.tmp_path.mkdir(parents=True, exist_ok=True)
 
     # Current state
+    def is_slow_design(self) -> bool:
+        """Check is parameters that result in slow pattern generation are enabled
+
+            E.g. curved armhole evaluation
+        """
+        # Pants
+        if (self.design_params['meta']['bottom']['v'] == 'Pants'):
+            return True
+
+        # Upper garment
+        is_not_upper = self.design_params['meta']['upper']['v'] is None
+        if is_not_upper:
+            return False
+        
+        # Upper + fitted + strapless
+        is_asymm = self.design_params['left']['enable_asym']['v']
+        is_fitted = 'Fitted' in self.design_params['meta']['upper']['v']
+        is_strapless = self.design_params['shirt']['strapless']['v']
+        is_asymm_strapless = self.design_params['left']['shirt']['strapless']['v']
+
+        is_strapless = is_fitted and is_strapless
+        is_asymm_strapless = is_fitted and is_asymm_strapless
+
+        # Sleeve potential setup
+        sleeves = self.design_params['sleeve']        
+        is_sleeveless = sleeves['sleeveless']['v']
+        is_curve = sleeves['armhole_shape']['v'] == 'ArmholeCurve'
+        is_curve = not is_sleeveless and is_curve
+        
+        is_asym_sleeveless = self.design_params['left']['sleeve']['sleeveless']['v']
+        is_asymm_curve = self.design_params['left']['sleeve']['armhole_shape']['v'] == 'ArmholeCurve'
+        is_asymm_curve = not is_asym_sleeveless and is_asymm_curve
+
+        if is_asymm:
+            right_check = (not is_strapless) and is_curve
+            left_check = (not is_asymm_strapless) and is_asymm_curve
+            return right_check or left_check
+        else:
+            return (not is_strapless) and is_curve
+
+
     def save(self):
         """Save current garment design to self.save_path """
 
