@@ -220,18 +220,14 @@ class VisPattern(core.ParametrizedPattern):
                                  font_size='7', 
                                  text_anchor='middle'))
 
-    def _save_as_image(
-            self, svg_filename, png_filename,
+    def get_svg(self, svg_filename,
             with_text=True, view_ids=True, 
-            margin=2):  
-        """
-            Saves current pattern in svg and png format for visualization
+            margin=2):
+        """Convert pattern to writable svg representation"""
 
-            * with_text: include panel names
-            * view_ids: include ids of vertices and edges in the output image
-            * margin: small amount of free space around the svg drawing (to correctly display the line width)
-
-        """
+        if len(self.panel_order()) == 0:  # If we are still here, but pattern is empty, don't generate an image
+            raise core.EmptyPatternError()
+        
         # Get svg representation per panel
         # Order by depth (=> most front panels render in front)
         # TODOLOW Even smarter way is needed for prettier allignment
@@ -297,6 +293,24 @@ class VisPattern(core.ParametrizedPattern):
                 if panel is not None:
                     self._add_panel_annotations(
                         dwg, panel, paths[i], with_text, view_ids)
+        
+        return dwg
+
+
+    def _save_as_image(
+            self, svg_filename, png_filename,
+            with_text=True, view_ids=True, 
+            margin=2):  
+        """
+            Saves current pattern in svg and png format for visualization
+
+            * with_text: include panel names
+            * view_ids: include ids of vertices and edges in the output image
+            * margin: small amount of free space around the svg drawing (to correctly display the line width)
+
+        """
+        
+        dwg = self.get_svg(svg_filename, with_text, view_ids, margin)
         
         dwg.save(pretty=True)
 

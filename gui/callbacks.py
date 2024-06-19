@@ -258,12 +258,9 @@ class GUIState:
                     # NOTE: Positioning: https://github.com/zauberzeug/nicegui/discussions/957 
                     # DRAFT  translate-x-[-50%] translate-y-[-50%]
                     # NOTE: Automatically updates from source
-                    # TODO How to update: https://github.com/zauberzeug/nicegui/blob/a435775e5cf4a8a14e44163812744964f449cc6e/examples/opencv_webcam/main.py#L38
                     self.ui_pattern_display = ui.interactive_image(
-                        f'{self.path_ui_pattern}/' + self.pattern_state.svg_relative_path if self.pattern_state.svg_relative_path else ''
-                    ).classes('bg-transparent w-[50vw]')
-
-                    # TODO Use interactive image to load svg pattern on top of the body image (one less layer)? 
+                        f'{self.path_ui_pattern}/' + self.pattern_state.svg_filename if self.pattern_state.svg_filename else '',
+                    ).classes('bg-transparent w-[50vw] h-full')
 
             # TODO Add downloadable content (with timestamp)
             ui.button('Download Current Garment', on_click=lambda: ui.download('https://nicegui.io/logo.png'))
@@ -319,10 +316,7 @@ class GUIState:
         self.pattern_state.reload_garment()
 
         # Update display
-        # TODO (return only svg representation?) Update svg content instead of source image (?) -- check if more interactive
         # TODO Re-align the canvas and body with the new pattern
         if self.ui_pattern_display is not None:
             self.ui_pattern_display.set_source(
-                f'{self.path_ui_pattern}/' + self.pattern_state.svg_relative_path if self.pattern_state.svg_relative_path else '')
-
-        return 'finished'
+                f'{self.path_ui_pattern}/' + self.pattern_state.svg_filename if self.pattern_state.svg_filename else '')

@@ -21,9 +21,7 @@ icon_image_b64 = b'iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAACXBIWXMAAAsSA
 class GUIPattern:
     def __init__(self) -> None:
         self.save_path = Path.cwd() / 'Logs' 
-        self.png_path = None
-        self.png_relative_path = None
-        self.svg_relative_path = None
+        self.svg_filename = None
         self.tmp_path = Path.cwd() / 'tmp'
         
         # create paths
@@ -171,39 +169,32 @@ class GUIPattern:
                 self._nested_sync(self.design_params[k], self.design_params['left'][k])
 
     def _view_serialize(self):
-        """Save a sewing pattern svg/png representation to tmp folder be used
+        """Save a sewing pattern svg representation to tmp folder be used
         for display"""
 
         # Clear up the folder from previous version -- it's not needed any more
         self.clear_tmp()
         pattern = self.sew_pattern.assembly()
 
-        if not len(pattern.panel_order()): 
-            # Empty pattern
-            self.png_path = ''
-            self.png_relative_path = ''
-            self.svg_relative_path = ''
-            return
+        try:
+            self.svg_filename = f'pattern_{time.time()}.svg'
+            dwg = pattern.get_svg(self.tmp_path / self.svg_filename, with_text=False, view_ids=False)
+            dwg.save()
+        except pyp.EmptyPatternError:
+            self.svg_filename = ''
 
-        # Save as json file
-        # NOTE: Using current timestamp to allow browsers to re-load the file easily
-        folder = pattern.serialize(
-            self.tmp_path, 
-            tag='_' + str(time.time()),   # DRAFT datetime.now().strftime("%y%m%d-%H-%M-%S"), 
-            to_subfolder=True, 
-            with_3d=False, with_text=False, view_ids=False)
+        # TODO the following is deprecated -- use for creating download files
+        # # Save as json file
+        # # NOTE: Using current timestamp to allow browsers to re-load the file easily
+        # folder = pattern.serialize(
+        #     self.tmp_path, 
+        #     tag='_' + str(time.time()),   # DRAFT datetime.now().strftime("%y%m%d-%H-%M-%S"), 
+        #     to_subfolder=True, 
+        #     with_3d=False, with_text=False, view_ids=False)
         
-        self.body_bottom = np.asarray(pattern.body_bottom_shift)
-        self.png_size = pattern.png_size
+        # self.body_bottom = np.asarray(pattern.body_bottom_shift)
+        # self.png_size = pattern.png_size
 
-        # get PNG file!
-        root, _, files = next(os.walk(folder))
-        for filename in files:
-            if 'pattern.png' in filename and '3d' not in filename:
-                self.png_path = os.path.join(root, filename)
-                self.png_relative_path = f'{os.path.basename(folder)}/{filename}'
-            if '.svg' in filename:
-                self.svg_relative_path = f'{os.path.basename(folder)}/{filename}'
 
     def clear_tmp(self, root=False):
         """Clear tmp folder"""
