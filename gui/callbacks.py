@@ -39,7 +39,6 @@ class GUIState:
 
         # Elements
         self.ui_design_subtabs = {}
-        self.NONE = 'Empty'  # TODO Use Nones as is for values update simplicity
 
         # TODO Callbacks on buttons and file loads
         self.pattern_state.reload_garment()
@@ -169,13 +168,10 @@ class GUIState:
                 p_range = design_params[param]['range']
                 if 'select' in p_type:
                     values = design_params[param]['range']
-                    if 'null' in p_type:  # TODO Account for this in the events handlers
-                        if None in values:
-                            values.remove(None)  # If there
-                        values.append(self.NONE)  # NOTE: Displayable value
+                    if 'null' in p_type and None not in values: 
+                        values.append(None)  # NOTE: Displayable value
                     ui.select(
-                        values, 
-                        value=val if val is not None else self.NONE,
+                        values, value=val,
                         on_change=lambda: self.update_state()
                     ).classes('w-full').bind_value(design_params[param], 'v')
                 elif p_type == 'bool':
