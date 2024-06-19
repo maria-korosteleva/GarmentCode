@@ -2,6 +2,7 @@ import os.path
 from copy import deepcopy
 from pathlib import Path
 from datetime import datetime
+import time
 import yaml
 import shutil 
 import numpy as np
@@ -171,9 +172,10 @@ class GUIPattern:
             return
 
         # Save as json file
+        # NOTE: Using current timestamp to allow browsers to re-load the file easily
         folder = pattern.serialize(
             self.tmp_path, 
-            # DEBUG write to the same source tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
+            tag='_' + str(time.time()),   # DRAFT datetime.now().strftime("%y%m%d-%H-%M-%S"), 
             to_subfolder=True, 
             with_3d=False, with_text=False, view_ids=False)
         
