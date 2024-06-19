@@ -215,6 +215,7 @@ class GUIState:
                 
     def def_design_tab(self):
         # TODO selector of available options + upload is one of them
+        # TODO Upload as a dialog
         # NOTE: https://www.reddit.com/r/nicegui/comments/1393i2f/file_upload_with_restricted_types/
         self.ui_design_file = ui.upload(
             label=str(self.pattern_state.design_file.name),  
