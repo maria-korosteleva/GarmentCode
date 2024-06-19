@@ -251,10 +251,8 @@ class GUIState:
         # TODO On/off body outline
         with ui.column().classes('w-full items-center p-0 m-0'):
             with ui.image(f'{self.path_static_img}/millimiter_paper_1500_900.png').classes(f'w-[{self.w_pattern_display}vw] border') as self.ui_pattern_bg:
-                # FIXME Body image gets cropped?
-                # FIXME Increase body image resolution and use GGG outline 
-                with ui.image(f'{self.path_static_img}/body_30_opacity.png') \
-                    .classes('bg-transparent w-[30vw] overflow-visible absolute top-[5%] left-[5%]') as self.ui_body_outline: 
+                with ui.image(f'{self.path_static_img}/ggg_outline_mean_all.svg') \
+                    .classes('bg-transparent h-full overflow-visible absolute top-[0%] left-[0%]') as self.ui_body_outline: 
                     # NOTE: Positioning: https://github.com/zauberzeug/nicegui/discussions/957 
                     # DRAFT  translate-x-[-50%] translate-y-[-50%]
                     # NOTE: Automatically updates from source
