@@ -39,6 +39,7 @@ class GUIState:
 
         # Elements
         self.ui_design_subtabs = {}
+        self.ui_pattern_display = None
 
         # TODO Callbacks on buttons and file loads
         self.pattern_state.reload_garment()
@@ -46,9 +47,10 @@ class GUIState:
         self.layout()
 
         # New
-        # TODO Separate params per user session! (probably using internal page for configurator will be enough)
+        # TODO Separate params per user session! 
+        # (probably using internal page for configurator will be enough)
+        # Or saving to user/browser storage??
         # TODO 3D scene visualisation
-        # TODO Waiting, buttons, and all.. 
 
     # Start the GUI
     def run(self):
@@ -87,15 +89,12 @@ class GUIState:
         app.add_static_files(self.path_static_img, './assets/img')
         app.add_static_files(self.path_ui_pattern, self.pattern_state.tmp_path)
         with ui.row(wrap=False).classes('w-full h-full'):  
-            
+            # Tabs
+            self.def_param_tabs_layout()
             
             # Pattern visual
             self.def_pattern_display()
 
-            # DEBUG: Temporary solution for testing callbacks
-            # Tabs
-            self.def_param_tabs_layout()
-        
         # Overall wrapping
         # NOTE: https://nicegui.io/documentation/section_pages_routing#page_layout
         with ui.header(elevated=True, fixed=False).classes(f'h-[{self.h_header}vh] items-center justify-between py-0 px-4 m-0'):
@@ -279,7 +278,8 @@ class GUIState:
         # Update display
         # TODO Update svg content instead of source image (?) -- check if more interactive
         # TODO Re-align the canvas and body with the new pattern
-        self.ui_pattern_display.set_source(
-            f'{self.path_ui_pattern}/' + self.pattern_state.svg_relative_path if self.pattern_state.svg_relative_path else '')
+        if self.ui_pattern_display is not None:
+            self.ui_pattern_display.set_source(
+                f'{self.path_ui_pattern}/' + self.pattern_state.svg_relative_path if self.pattern_state.svg_relative_path else '')
 
         
