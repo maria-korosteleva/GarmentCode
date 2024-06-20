@@ -249,17 +249,23 @@ class GUIState:
     # SECTION -- Pattern visuals
     def def_pattern_display(self):
         """Prepare pattern display area"""
-        # TODO On/off body outline
-        with ui.column().classes('w-full items-center p-0 m-0'):
-            with ui.image(f'{self.path_static_img}/millimiter_paper_1500_900.png').classes(f'w-[{self.w_pattern_display}vw] border') as self.ui_pattern_bg:
-                with ui.image(f'{self.path_static_img}/ggg_outline_mean_all.svg') \
-                    .classes('bg-transparent h-full overflow-visible absolute top-[0%] left-[0%]') as self.ui_body_outline: 
-                    # NOTE: Positioning: https://github.com/zauberzeug/nicegui/discussions/957 
-                    # DRAFT  translate-x-[-50%] translate-y-[-50%]
-                    # NOTE: Automatically updates from source
-                    self.ui_pattern_display = ui.interactive_image(
-                        f'{self.path_ui_pattern}/' + self.pattern_state.svg_filename if self.pattern_state.svg_filename else '',
-                    ).classes('bg-transparent w-[50vw] h-full')
+        with ui.column().classes('w-full items-center p-0 m-0'): 
+            with ui.column().classes('p-0 m-0'):
+                switch = ui.switch(
+                    'Body Silhouette', value=True, 
+                ).props('dense left-label').classes('text-stone-800')
+                with ui.image(f'{self.path_static_img}/millimiter_paper_1500_900.png').classes(f'w-[{self.w_pattern_display}vw] border') as self.ui_pattern_bg:
+                    with ui.row().classes('w-full h-full bg-transparent'):
+                        with ui.image(f'{self.path_static_img}/ggg_outline_mean_all.svg') \
+                            .classes('bg-transparent h-full overflow-visible absolute top-[0%] left-[0%]') as self.ui_body_outline: 
+                            # NOTE: Positioning: https://github.com/zauberzeug/nicegui/discussions/957 
+                            # DRAFT  translate-x-[-50%] translate-y-[-50%]
+                            # NOTE: Automatically updates from source
+                            self.ui_pattern_display = ui.interactive_image(
+                                f'{self.path_ui_pattern}/' + self.pattern_state.svg_filename if self.pattern_state.svg_filename else '',
+                            ).classes('bg-transparent w-[50vw] h-full')
+
+                switch.bind_value(self.ui_body_outline, 'visible')
 
             # TODO Add downloadable content (with timestamp)
             ui.button('Download Current Garment', on_click=lambda: ui.download('https://nicegui.io/logo.png'))
@@ -277,7 +283,6 @@ class GUIState:
             ui.spinner('hearts', size='15em').classes('fixed-center')   # NOTE: 'dots' 'ball' 
 
     # SECTION -- Event callbacks
-
     async def update_state(self):
         """Params were updated -- update the visuals"""
 
@@ -302,7 +307,6 @@ class GUIState:
         await self.loop.run_in_executor(self._async_executor, self._sync_update_state)
         
         self.spin_dialog.close()
-
 
     def _sync_update_state(self):
         # Update derivative body values (just in case)
