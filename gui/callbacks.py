@@ -256,18 +256,17 @@ class GUIState:
                     'Body Silhouette', value=True, 
                 ).props('dense left-label').classes('text-stone-800')
                 with ui.image(f'{self.path_static_img}/millimiter_paper_1500_900.png').classes(f'w-[{self.w_pattern_display}vw] border') as self.ui_pattern_bg:
-                    with ui.row().classes('w-full h-full bg-transparent'):
-                        with ui.image(f'{self.path_static_img}/ggg_outline_mean_all.svg') \
-                            .classes('bg-transparent h-full overflow-visible absolute top-[0%] left-[0%]') as self.ui_body_outline: 
-                            # NOTE: Positioning: https://github.com/zauberzeug/nicegui/discussions/957 
-                            # DRAFT  translate-x-[-50%] translate-y-[-50%]
-                            # NOTE: Automatically updates from source
-                            self.ui_pattern_display = ui.interactive_image(
-                                f'{self.path_ui_pattern}/' + self.pattern_state.svg_filename if self.pattern_state.svg_filename else '',
-                            ).classes('bg-transparent w-[50vw] h-full')
-
-                switch.bind_value(self.ui_body_outline, 'visible')
-
+                    self.ui_body_outline = ui.image(f'{self.path_static_img}/ggg_outline_mean_all.svg') \
+                        .classes('bg-transparent h-full overflow-visible absolute top-[0%] left-[0%]') 
+                    switch.bind_value(self.ui_body_outline, 'visible')
+                    
+                    # NOTE: Positioning: https://github.com/zauberzeug/nicegui/discussions/957 
+                    # DRAFT  translate-x-[-50%] translate-y-[-50%]
+                    # NOTE: Automatically updates from source
+                    self.ui_pattern_display = ui.interactive_image(
+                        f'{self.path_ui_pattern}/' + self.pattern_state.svg_filename if self.pattern_state.svg_filename else '',
+                    ).classes('bg-transparent w-[50vw] h-full absolute top-[0%] left-[0%]')
+                
             # TODO Add downloadable content (with timestamp)
             ui.button('Download Current Garment', on_click=lambda: ui.download('https://nicegui.io/logo.png'))
 
