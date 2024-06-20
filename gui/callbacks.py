@@ -168,7 +168,7 @@ class GUIState:
                         self.def_flat_design_subtab(design_params[param])
                 else:
                     # TODO Header of the card!
-                    with ui.card().classes('w-full'):   # DRAFT .tight():
+                    with ui.card().classes('w-full'): 
                         self.def_flat_design_subtab(design_params[param])
             else:
                 # Leaf value
@@ -195,9 +195,10 @@ class GUIState:
                         min=p_range[0], 
                         max=p_range[1], 
                         step=0.025 if p_type == 'float' else 1,
-                        on_change=lambda: self.update_state()
-                    ).props('label-always').classes('w-full').bind_value(design_params[param], 'v')
-                    # TODO Events control: https://nicegui.io/documentation/slider#throttle_events_with_leading_and_trailing_options
+                    ).props('snap label').classes('w-full').bind_value(design_params[param], 'v') \
+                        .on('update:model-value', lambda: self.update_state(),
+                            throttle=0.5, leading_events=False)
+                    # NOTE Events control: https://nicegui.io/documentation/slider#throttle_events_with_leading_and_trailing_options
                 elif 'file' in p_type:
                     default_path = Path(design_params[param]['v'])
                     # FIXME .bind_value(design_params[param], 'v')  -- doesn't work!
