@@ -140,7 +140,7 @@ class GUIState:
         ).classes('max-w-full').props('accept=".yaml,.json"')  
         
         self.body_elems = []
-        with ui.scroll_area().classes(f'w-[16vw] h-[{self.h_content - 10}vh]'):   # NOTE: p-0 m-0 gap-0 dont' seem to have effect
+        with ui.scroll_area().classes(f'w-full h-[{self.h_content - 10}vh]'):   # NOTE: p-0 m-0 gap-0 dont' seem to have effect
             body = self.pattern_state.body_params
             for param in body:
                 # TODOLOW Squish a bit -- too long (failed to figure out)
@@ -223,7 +223,7 @@ class GUIState:
         ).classes('max-w-full').props('accept=".yaml,.json"')  
     
         design_params = self.pattern_state.design_params
-        with ui.splitter(value=32).classes(f'w-[17vw] h-[{self.h_content - 10}vh] p-0 m-0') as splitter:
+        with ui.splitter(value=32).classes(f'w-full h-[{self.h_content - 10}vh] p-0 m-0') as splitter:
             with splitter.before:
                 with ui.tabs().props('vertical').classes('w-full') as tabs:
                     for param in design_params:
