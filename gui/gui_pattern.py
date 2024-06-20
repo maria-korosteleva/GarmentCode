@@ -180,6 +180,11 @@ class GUIPattern:
             self.svg_filename = f'pattern_{time.time()}.svg'
             dwg = pattern.get_svg(self.tmp_path / self.svg_filename, with_text=False, view_ids=False)
             dwg.save()
+
+            self.body_bottom = np.asarray(pattern.body_bottom_shift)
+            self.bbox_size = pattern.png_size
+            self.viewbox = pattern.viewbox   # DRAFT Check if used
+            self.svg_bbox = pattern.svg_bbox
         except pyp.EmptyPatternError:
             self.svg_filename = ''
 
@@ -192,8 +197,7 @@ class GUIPattern:
         #     to_subfolder=True, 
         #     with_3d=False, with_text=False, view_ids=False)
         
-        # self.body_bottom = np.asarray(pattern.body_bottom_shift)
-        # self.png_size = pattern.png_size
+        
 
 
     def clear_tmp(self, root=False):

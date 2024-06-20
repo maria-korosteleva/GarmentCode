@@ -271,6 +271,8 @@ class VisPattern(core.ParametrizedPattern):
         )
 
         # "floor" level for a pattern
+        self.viewbox = viewbox   # DRAFT 
+        self.svg_bbox = np.min(arrdims[:, 0]), np.max(arrdims[:, 1]), np.min(arrdims[:, 2]), np.max(arrdims[:, 3])
         self.body_bottom_shift = -viewbox[0] * self.px_per_unit, -viewbox[1] * self.px_per_unit 
         self.png_size = viewbox[2:]
 

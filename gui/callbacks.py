@@ -255,17 +255,17 @@ class GUIState:
                 switch = ui.switch(
                     'Body Silhouette', value=True, 
                 ).props('dense left-label').classes('text-stone-800')
-                with ui.image(f'{self.path_static_img}/millimiter_paper_1500_900.png').classes(f'w-[{self.w_pattern_display}vw] border') as self.ui_pattern_bg:
+                with ui.image(f'{self.path_static_img}/millimiter_paper_1500_900.png').classes(f'w-[{self.w_pattern_display}vw] border-8') as self.ui_pattern_bg:
                     self.ui_body_outline = ui.image(f'{self.path_static_img}/ggg_outline_mean_all.svg') \
-                        .classes('bg-transparent h-full overflow-visible absolute top-[0%] left-[0%]') 
+                        .classes('bg-transparent h-full overflow-visible absolute top-[0%] left-[0%] border') 
                     switch.bind_value(self.ui_body_outline, 'visible')
                     
                     # NOTE: Positioning: https://github.com/zauberzeug/nicegui/discussions/957 
-                    # DRAFT  translate-x-[-50%] translate-y-[-50%]
+                    
                     # NOTE: Automatically updates from source
                     self.ui_pattern_display = ui.interactive_image(
-                        f'{self.path_ui_pattern}/' + self.pattern_state.svg_filename if self.pattern_state.svg_filename else '',
-                    ).classes('bg-transparent w-[50vw] h-full absolute top-[0%] left-[0%]')
+                        ''
+                    ).classes('bg-transparent border')   # DRAFT w-[50vw] h-full absolute top-[0%] left-[0%]')
                 
             # TODO Add downloadable content (with timestamp)
             ui.button('Download Current Garment', on_click=lambda: ui.download('https://nicegui.io/logo.png'))
@@ -323,3 +323,82 @@ class GUIState:
         if self.ui_pattern_display is not None:
             self.ui_pattern_display.set_source(
                 f'{self.path_ui_pattern}/' + self.pattern_state.svg_filename if self.pattern_state.svg_filename else '')
+            
+            if self.pattern_state.svg_filename:
+                # Placement
+
+                p_body_bottom = self.pattern_state.body_bottom
+                p_bbox = self.pattern_state.bbox_size
+                p_viewbox = self.pattern_state.viewbox  # TODO refactor
+
+                # Hight of the image relative to the body height (feet at origin)
+                rel_height = int(abs(100 * p_bbox[-1] / p_viewbox[1]))
+                
+                # DEBUG
+                print('Placement info: ')
+                print(p_viewbox)
+                print(p_body_bottom)
+                print(p_bbox)
+
+                # png_body = self.pattern_state.body_bottom
+
+                # # Location of the bottom of the body 
+                # real_b_bottom = np.asarray([
+                #     self.body_img_size[0]/2 + self.default_body_img_margins[0], 
+                #     self.body_img_size[1]*0.95 + self.default_body_img_margins[1]
+                # ])  # Coefficient to account for feet projection -- the bottom is lower then floor level
+
+                # # Location of the body feet on the svg
+                # location = real_b_bottom - png_body
+
+                # Align the "virtual" pivot with the origin of the svg, before placement
+                # DEBUG
+                # TODO Use bbox (and bottom=max value for Y for alignment)
+                print('Bbox svg ', self.pattern_state.svg_bbox)
+
+                rel_w_shift = int(-100 * p_viewbox[0] / p_bbox[0])
+                rel_h_shift = int(100 * p_viewbox[1] / p_bbox[1]) + 100   # NOTE: Remove the image part itself
+
+                # Eval height w.r.t. expected human height (from body params)
+                # Scale according to this value (+ relative to the human silhouette)
+                # Alight horizontally
+
+                # DRAFT  translate-x-[-50%] translate-y-[-50%]
+
+                # TODO What if the pattern doesn't fit? Additional scaling factor that includes the body
+
+                # DEBUG Test values
+                body_x_shift = 15
+                body_height_fraction = 0.85
+                rel_height = 35 * body_height_fraction  # Can I fix it? Will it be the same on other monitors? 
+                rel_w_shift = int(rel_w_shift * 0.01 * rel_height)
+                rel_h_shift = int(rel_h_shift * 0.01 * rel_height) * body_height_fraction
+
+                
+
+                # DEBUG
+                print(f'Relative sizes: scale-[{rel_height}%] '
+                      f'{"-" if rel_w_shift < 0 else ""}translate-x-[{abs(rel_w_shift)}%] '
+                      f'{"-" if rel_h_shift < 0 else ""}translate-y-[{abs(rel_h_shift)}%]')
+
+                self.ui_pattern_display.classes(
+                    replace=f"""bg-transparent border p-0 m-0
+                        absolute bottom-[{abs(rel_h_shift)}%] left-[{body_x_shift + abs(rel_w_shift)}%]
+                        origin-bottom-left
+                        scale-[{rel_height}%]
+                        
+                        
+                    """
+                    )
+
+                #{"-" if rel_w_shift < 0 else ""}translate-x-[{abs(rel_w_shift)}%]
+                # {"-" if rel_h_shift < 0 else ""}translate-y-[{abs(rel_h_shift)}%]
+                # {"-" if rel_w_shift < 0 else ""}translate-x-[{abs(rel_w_shift)}%]
+                #        translate-y-[{rel_h_shift}%]
+                #        absolute bottom-[0%] left-[0%]
+                # scale-[{rel_height}%]
+                # DRAFT  w-[50vw] h-[{rel_height}%]
+
+            else:
+                # TODO restore default body placement
+                pass
