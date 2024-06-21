@@ -178,7 +178,11 @@ class GUIPattern:
 
         try:
             self.svg_filename = f'pattern_{time.time()}.svg'
-            dwg = pattern.get_svg(self.tmp_path / self.svg_filename, with_text=False, view_ids=False)
+            dwg = pattern.get_svg(self.tmp_path / self.svg_filename, 
+                                  with_text=False, 
+                                  view_ids=False,
+                                  margin=0
+            )
             dwg.save()
 
             self.body_bottom = np.asarray(pattern.body_bottom_shift)
@@ -197,9 +201,6 @@ class GUIPattern:
         #     to_subfolder=True, 
         #     with_3d=False, with_text=False, view_ids=False)
         
-        
-
-
     def clear_tmp(self, root=False):
         """Clear tmp folder"""
         shutil.rmtree(self.tmp_path)
@@ -212,6 +213,9 @@ class GUIPattern:
 
             E.g. curved armhole evaluation
         """
+
+        # TODO add Hoody!
+
         # Pants
         if (self.design_params['meta']['bottom']['v'] == 'Pants'):
             return True

@@ -18,6 +18,7 @@ if 'Windows' in os.environ.get('OS',''):
 
 import cairosvg
 import svgpathtools as svgpath
+import svgwrite as sw
 
 import matplotlib.pyplot as plt
 
@@ -222,7 +223,7 @@ class VisPattern(core.ParametrizedPattern):
 
     def get_svg(self, svg_filename,
             with_text=True, view_ids=True, 
-            margin=2):
+            margin=2) -> sw.Drawing:
         """Convert pattern to writable svg representation"""
 
         if len(self.panel_order()) == 0:  # If we are still here, but pattern is empty, don't generate an image
