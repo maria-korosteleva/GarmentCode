@@ -33,9 +33,10 @@ class GUIState:
 
         # Pattern display constants
         self.canvas_aspect_ratio = 1500 / 900   # Millimiter paper
-        self.w_rel_body_size = 0.55  # Body size as fraction of horisontal canvas axis
+        self.w_rel_body_size = 0.5  # Body size as fraction of horisontal canvas axis
         self.background_body_scale = 1 / 171.99   # Inverse of the mean_all body height from GGG
-        self.background_body_canvas_center = 0.255  # Fraction of the canvas (millimiter paper)
+        self.background_body_canvas_center = 0.27  # Fraction of the canvas (millimiter paper)
+        self.w_svg_pad, self.h_svg_pad = 5, 5   # compensation for automatic svg padding, ~okay on big screens
 
         # Elements
         self.ui_design_subtabs = {}
@@ -316,15 +317,23 @@ class GUIState:
 
         # Update display
         if self.ui_pattern_display is not None:
-            self.ui_pattern_display.set_source(
-                f'{self.path_ui_pattern}/' + self.pattern_state.svg_filename if self.pattern_state.svg_filename else '')
-            
+
             if self.pattern_state.svg_filename:
                 # Re-align the canvas and body with the new pattern
                 p_bbox_size = self.pattern_state.svg_bbox_size
                 p_bbox = self.pattern_state.svg_bbox
 
-                # FIXME there is some padding in svgs... 
+                # Attempt on fixing the svg padding 
+                # TODO this should be scaling-independent somehow (applies after, it seems)
+                # it grows w.r.t. viepowt, constand w.r.t screen size
+                # TODO Github issue for NiceGUI team
+                p_bbox_size[0] += self.w_svg_pad * 2
+                p_bbox_size[1] += self.h_svg_pad * 2
+                p_bbox[0] -= self.w_svg_pad
+                p_bbox[1] += self.w_svg_pad
+                p_bbox[2] -= self.h_svg_pad
+                p_bbox[3] += self.h_svg_pad
+
                 # FIXME overflowing elements -- one can check that margins are negative
 
                 # Margin calculations w.r.t. canvas size
@@ -335,8 +344,11 @@ class GUIState:
                 m_left = self.background_body_canvas_center - w_shift * self.background_body_scale * self.w_rel_body_size
                 m_right = 1 - m_left - p_bbox_size[0] * self.background_body_scale * self.w_rel_body_size
 
+                self.ui_pattern_display.set_source(
+                    f'{self.path_ui_pattern}/' + self.pattern_state.svg_filename if self.pattern_state.svg_filename else '')
+            
                 self.ui_pattern_display.classes(
-                    replace=f"""bg-transparent p-0 
+                    replace=f"""bg-transparent p-0
                             mt-[{int(m_top * 100 / self.canvas_aspect_ratio)}%]
                             ml-[{int(m_left * 100)}%] 
                             mr-[{int(m_right * 100)}%] 
@@ -344,4 +356,4 @@ class GUIState:
                     """)
             else:
                 # TODO restore default body placement
-                pass
+                self.ui_pattern_display.set_source('')

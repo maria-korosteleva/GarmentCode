@@ -272,8 +272,8 @@ class VisPattern(core.ParametrizedPattern):
         )
 
         # Pattern info for correct placement 
-        self.svg_bbox = np.min(arrdims[:, 0]), np.max(arrdims[:, 1]), np.min(arrdims[:, 2]), np.max(arrdims[:, 3])
-        self.svg_bbox_size = viewbox[2:]
+        self.svg_bbox = [np.min(arrdims[:, 0]), np.max(arrdims[:, 1]), np.min(arrdims[:, 2]), np.max(arrdims[:, 3])]
+        self.svg_bbox_size = [viewbox[2], viewbox[3]]
 
         # Save
         attributes = attributes_f + attributes_b
