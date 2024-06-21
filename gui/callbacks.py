@@ -31,15 +31,11 @@ class GUIState:
         # Pattern
         self.pattern_state = GUIPattern()
 
-        # Pattern display
-        # TODO What is needed among these params? 
-        self.min_margin = 10
-        self.default_body_img_margins = [125, 20] 
-        self.body_img_margins = copy(self.default_body_img_margins)
-        self.body_img_id = None
-        self.back_img_id = None
-        self.def_canvas_size = (1315, 670)   # 
-        self.body_img_size = (None, None)  # NOTE updated in subroutines
+        # Pattern display constants
+        self.canvas_aspect_ratio = 1500 / 900   # Millimiter paper
+        self.w_rel_body_size = 0.55  # Body size as fraction of horisontal canvas axis
+        self.background_body_scale = 1 / 171.99   # Inverse of the mean_all body height from GGG
+        self.background_body_canvas_center = 0.255  # Fraction of the canvas (millimiter paper)
 
         # Elements
         self.ui_design_subtabs = {}
@@ -265,7 +261,7 @@ class GUIState:
                     # NOTE: Automatically updates from source
                     self.ui_pattern_display = ui.interactive_image(
                         ''
-                    ).classes('bg-transparent border')   # DRAFT w-[50vw] h-full absolute top-[0%] left-[0%]')
+                    ).classes('bg-transparent p-0 m-0') 
                 
             # TODO Add downloadable content (with timestamp)
             ui.button('Download Current Garment', on_click=lambda: ui.download('https://nicegui.io/logo.png'))
@@ -319,55 +315,33 @@ class GUIState:
         self.pattern_state.reload_garment()
 
         # Update display
-        # TODO Re-align the canvas and body with the new pattern
         if self.ui_pattern_display is not None:
             self.ui_pattern_display.set_source(
                 f'{self.path_ui_pattern}/' + self.pattern_state.svg_filename if self.pattern_state.svg_filename else '')
             
             if self.pattern_state.svg_filename:
-                # Placement
-
-                p_body_bottom = self.pattern_state.body_bottom
-                p_bbox_size = self.pattern_state.bbox_size
+                # Re-align the canvas and body with the new pattern
+                p_bbox_size = self.pattern_state.svg_bbox_size
                 p_bbox = self.pattern_state.svg_bbox
-                p_viewbox = self.pattern_state.viewbox  # TODO refactor
-
-                # DEBUG
-                print('Placement info: ')
-                print(p_viewbox)
-                print(p_body_bottom)
-                print(p_bbox_size)
 
                 # FIXME there is some padding in svgs... 
+                # FIXME overflowing elements -- one can check that margins are negative
 
-                # Margin calculations w.r.t. body size
-                canvas_aspect_ratio = 1500 / 900
-                w_rel_body_size = 0.55
-                body_scale = 1 / 171.99   # TODO Default body scale
-                body_center = 0.255  # TODO Fraction of the container
-                w_shift = abs(p_bbox[0])
-                h_shift = abs(p_bbox[3])
-                m_top = 1 - (h_shift + p_bbox_size[1]) * body_scale - 0.01
-                m_left = body_center - w_shift * body_scale * w_rel_body_size
-                m_right = 1 - m_left - p_bbox_size[0] * body_scale * w_rel_body_size
+                # Margin calculations w.r.t. canvas size
+                # s.t. the pattern scales correctly
+                w_shift = abs(p_bbox[0])  # Body feet location in width direction w.r.t top-left corner of the pattern
+                h_shift = abs(p_bbox[3])  # Body feet location in height direction w.r.t top-left corner of the pattern
+                m_top = 1 - (h_shift + p_bbox_size[1]) * self.background_body_scale - 0.01
+                m_left = self.background_body_canvas_center - w_shift * self.background_body_scale * self.w_rel_body_size
+                m_right = 1 - m_left - p_bbox_size[0] * self.background_body_scale * self.w_rel_body_size
 
                 self.ui_pattern_display.classes(
-                    replace=f"""bg-transparent border p-0 
-                            mt-[{int(m_top * 100 / canvas_aspect_ratio)}%]
+                    replace=f"""bg-transparent p-0 
+                            mt-[{int(m_top * 100 / self.canvas_aspect_ratio)}%]
                             ml-[{int(m_left * 100)}%] 
                             mr-[{int(m_right * 100)}%] 
                             object-contain
-                    """
-                    )
-                
-                print(f"""bg-transparent border-8 p-0 
-mt-[{int(m_top * 100 / canvas_aspect_ratio)}%]  {h_shift + p_bbox_size[1]} {(h_shift + p_bbox_size[1]) * body_scale}
-ml-[{int(m_left * 100)}%]  {body_center} {w_shift} {w_shift * body_scale}
-mr-[{int(m_right * 100)}%] {p_bbox_size[0] * body_scale}
-object-contain
-                    """
-                )
-                
+                    """)
             else:
                 # TODO restore default body placement
                 pass

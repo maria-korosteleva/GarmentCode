@@ -463,8 +463,8 @@ class GUIState:
         
         # Change canvas size to fit a pattern (if needed)
         self.upd_canvas_size((
-            location[0] + self.pattern_state.bbox_size[0] + self.min_margin,
-            location[1] + self.pattern_state.bbox_size[1] + self.min_margin
+            location[0] + self.pattern_state.svg_bbox_size[0] + self.min_margin,
+            location[1] + self.pattern_state.svg_bbox_size[1] + self.min_margin
         ))
         # Align body with the pattern
         if self.body_img_id is not None:

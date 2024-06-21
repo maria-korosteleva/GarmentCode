@@ -29,7 +29,6 @@ class GUIPattern:
         self.tmp_path.mkdir(parents=True, exist_ok=True)
 
         self.ui_id = None   # ID of current object in the interface
-        self.body_bottom = None   # Location of body center in the current png representation of a garment
         self.body_params = None
 
         self.design_sampler = pyp.params.DesignSampler()
@@ -185,9 +184,7 @@ class GUIPattern:
             )
             dwg.save()
 
-            self.body_bottom = np.asarray(pattern.body_bottom_shift)
-            self.bbox_size = pattern.png_size
-            self.viewbox = pattern.viewbox   # DRAFT Check if used
+            self.svg_bbox_size = pattern.svg_bbox_size
             self.svg_bbox = pattern.svg_bbox
         except pyp.EmptyPatternError:
             self.svg_filename = ''
