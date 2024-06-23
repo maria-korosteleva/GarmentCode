@@ -69,6 +69,7 @@ class GUIPattern:
         self.design_sampler.load(path)
 
         # Reload
+        # TODO Check if needed to be executed immediately
         self.reload_garment()
 
     # TODO Deprecated -- not needed in the new UI
@@ -112,33 +113,45 @@ class GUIPattern:
         if reload:
             self.reload_garment()
 
-    def sample_design(self):
+    def sample_design(self, reload=True):
         """Random design parameters"""
 
-        while True:
-            new_design = self.design_sampler.randomize()
-            self.design_params.update(new_design)
-            if 'left' in self.design_params and not self.design_params['left']['enable_asym']['v']:
-                self.sync_left()
+        # DRAFT while True:
+        new_design = self.design_sampler.randomize()
+        # FIXME re-assign the values instead up overwriting them
+        # self.design_params.update(new_design)
+        self._nested_sync(new_design, self.design_params)
+
+
+        if 'left' in self.design_params and not self.design_params['left']['enable_asym']['v']:
+            self.sync_left()
+        
+        if reload:
             self.reload_garment()
 
-            if self.sew_pattern.is_self_intersecting():
-                # Let the user know
-                out = sg.popup_yes_no(
-                    'A sampled design is self-intersecting. Generate a new one?', 
-                    title='Self-Intersecting',
-                    icon=icon_image_b64)
+            # DRAFT 
+            # TODO Make a universal update
+            # if self.sew_pattern.is_self_intersecting():
+            #     # Let the user know
+            #     out = sg.popup_yes_no(
+            #         'A sampled design is self-intersecting. Generate a new one?', 
+            #         title='Self-Intersecting',
+            #         icon=icon_image_b64)
 
-                if out == 'No':
-                    break
-            else:
-                break
+            #     if out == 'No':
+            #         break
+            # else:
+            #     break
 
-    def restore_design(self):
+    def restore_design(self, reload=True):
         """Restore design values to match the current loaded file"""
         new_design = self.design_sampler.default()
-        self.design_params.update(new_design)
-        self.reload_garment()
+        # FIXME re-assign the values instead up overwriting them
+        self._nested_sync(new_design, self.design_params)
+        # DRAFT self.design_params.update(new_design)
+        
+        if reload:
+            self.reload_garment()
 
     def reload_garment(self):
         """Reload sewing pattern with current body and design parameters"""
