@@ -459,6 +459,9 @@ class SkirtManyPanels(BaseBottoms):
         self.front.rotate_by(R.from_euler('XYZ', [0, -90, 0], degrees=True))
         self.front.rotate_align([-dist, 0, panel_w / 2])
 
+        # Upd interface orientation
+        self.front.interfaces['top'].reverse(True)
+
         # Create new panels
         self.subs = pyp.ops.distribute_Y(self.front, n_panels, name_tag='skirt_panel')
 
