@@ -8,15 +8,15 @@
 design: 
   meta: 
     upper: 
-      v: Shirt
+      v: FittedShirt
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
-      v: null 
+      v: null   # FittedWB 
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
-      v:  null 
+      v: Pants 
       range: 
         - SkirtCircle
         - GodetSkirt
@@ -184,7 +184,7 @@ design:
 
     # Ruffle
     connect_ruffle:
-      v: 1.
+      v: 1.2
       range: [1, 2]
       type: float
     
@@ -197,15 +197,15 @@ design:
     # Cuff
     cuff: 
       type:
-        v: null
+        v: CuffBandSkirt
         range: [CuffBand, CuffSkirt, CuffBandSkirt]
         type: select_null
       top_ruffle: 
-        v: 1
+        v: 1.2
         range: [1, 3]
         type: float
       cuff_len: 
-        v: 0.1
+        v: 0.3
         range:
         - 0.05
         - 0.9
@@ -582,7 +582,7 @@ design:
       type: float
     cuff: 
       type:
-        v: null 
+        v: CuffBandSkirt 
         range: [CuffBand, CuffSkirt, CuffBandSkirt]
         type: select_null
       top_ruffle: 
@@ -590,7 +590,7 @@ design:
         range: [1, 2]
         type: float
       cuff_len: 
-        v: 0.1
+        v: 0.3
         range:
         - 0.05
         - 0.9

@@ -63,61 +63,13 @@ class Interface:
         
         return projected
 
-    def needsFlipping(self, i, tol=1.):
+    def needsFlipping(self, i):
         """ Check if particular edge (i) should be re-oriented to follow the
             general direction of the interface
             * tol -- tolerance in distance differences that triggers flipping (in cm)
 
         """
-        # FIXME Remove attempts to estimate flips and fully rely on specs from the user
-        # It simplifies the control (e.g. in bodice bottom interface)
-        # NOTE: requires a good amount of regression testing
-        # DRAFT return self.edges_flipping[i]
-
-        if self.edges_flipping[i]:
-            return True
-        
-        # Otherwise, try to evaluate
-
-        e = self.edges[i]
-        panel = self.panel[i]
-        s_3d, end_3d = panel.point_to_3D(e.start), panel.point_to_3D(e.end)
-
-        # Corener cases
-        if i == 0:
-            next, next_panel = (self.edges[(i+1 % len(self.edges))],
-                                self.panel[(i+1) % len(self.edges)])
-            next_3d = next_panel.point_to_3D(next.midpoint())
-
-            # check by start vertex
-            # NOTE this can misfire in particular 3D orentations
-            diff = norm(end_3d - next_3d) - norm(s_3d - next_3d)
-            return diff > tol
-        if i == len(self.edges) - 1:
-            prev, prev_panel = self.edges[i-1], self.panel[i-1]
-            prev_3d = prev_panel.point_to_3D(prev.midpoint())
-
-            # check by start vertex
-            # NOTE this can misfire in particular 3D orentations
-            diff = norm(s_3d - prev_3d) - norm(end_3d - prev_3d)
-            return diff > tol
-
-        # Mid case
-        # Utilize distance from the end vertex to the next panel 
-        # start -> prev + end -> next or other way around  
-        prev, prev_panel = self.edges[i-1], self.panel[i-1]
-        next, next_panel = (self.edges[(i+1 % len(self.edges))],
-                            self.panel[(i+1) % len(self.edges)])
-
-        # Optimal order in 3D
-        prev_3d = prev_panel.point_to_3D(prev.midpoint())
-        next_3d = next_panel.point_to_3D(next.midpoint())
-
-        forward_order_dist = norm(s_3d - prev_3d) + norm(end_3d - next_3d)
-        flipped_order_dist = norm(s_3d - next_3d) + norm(end_3d - prev_3d)
-
-        diff = forward_order_dist - flipped_order_dist
-        return diff > tol
+        return self.edges_flipping[i]
 
     # ANCHOR --- Info ----
     def oriented_edges(self):
