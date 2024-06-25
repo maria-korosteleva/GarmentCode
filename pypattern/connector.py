@@ -7,9 +7,11 @@ from pypattern.generic_utils import close_enough
 class StitchingRule:
     """High-level stitching instructions connecting two component interfaces
     """
-    def __init__(self, int1: Interface, int2: Interface,
+    def __init__(self, int1: Interface, int2: Interface, 
                  verbose: bool = False) -> None:
         """
+        Inputs:
+            * int1, int2 -- two interfaces to connect in the stitch
         NOTE: When connecting interfaces with multiple edge count on both
             sides,
             1) Note that the edge sequences may change their structure.
@@ -163,6 +165,16 @@ class StitchingRule:
                     'edge': self.int2.edges[j].geometric_id
                 }
             ])
+
+            # Swap indication 
+            # NOTE: Swap is indicated on the interfaces in order to support component
+            # incapsulation. Same stitching rule for different participating components may have different
+            # fabric side preferences. 
+            # NOTE: "right_wrong" stitch is used when either of the interfaces request it
+            # NOTE: Backward-compatible formulation 
+            if self.int1.right_wrong[i] or self.int2.right_wrong[j]:  
+                stitches[-1].append('right_wrong')
+
         return stitches
 
 

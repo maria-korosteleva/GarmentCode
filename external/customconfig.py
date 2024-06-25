@@ -97,6 +97,34 @@ class Properties:
 
         return dataname in fails_list
 
+    def is_fail_section(self, dataname):
+        """
+            Check if a particular object is listed as fail in any of the sections
+            Fails may be listed in the stats subsection of any of the section
+            return the section name
+        """
+
+        for section_key in self.properties:
+            section = self.properties[section_key]
+            if isinstance(section, dict) and 'stats' in section and ('fails' in section['stats']):
+                if isinstance(section['stats']['fails'], dict):
+                    for key in section['stats']['fails']:
+                        if not isinstance(section['stats']['fails'][key], list):
+                            raise NotImplementedError(
+                                'Properties::ERROR:: Fails subsections of the type {} is not supported'.format(
+                                    type(section['stats']['fails'][key])))
+                                    
+                        if dataname in section['stats']['fails'][key]:  # expects a list as value
+                            return True, key
+
+                elif isinstance(section['stats']['fails'], list):
+                    if dataname in section['stats']['fails'][key]:  # expects a list as value
+                        return True, 'fails'
+                else:
+                    raise NotImplementedError('Properties::ERROR:: Fails subsections of the type {} is not supported'.format(type(section['stats']['fails'])))
+
+        return False, None
+
     def count_fails(self):
         """
             Number of (unique) datapoints marked as fail

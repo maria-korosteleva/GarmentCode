@@ -26,6 +26,9 @@ if __name__ == '__main__':
 
     design_files = {
         'base': './assets/design_params/base.yaml',
+        # 'thin_skirt': r'c:\Users\mariako\Documents\Logs\datasets_gen\to_compare_garments_5000_0_regen_240613-14-58-48_errors\default_body\data\rand_N0ASZSMN5U\design_params_edited.yaml'
+        # 'mp_skirt_flip': r"C:\Users\mariako\Documents\Logs\datasets_gen\to_compare_garments_5000_0_regen_240613-14-58-48_errors\default_body\data\rand_BSH8MAZ3S9\design_params_edited.yaml"
+        # 'st_err': r"C:\Users\mariako\Documents\Logs\datasets_gen\to_compare_garments_5000_0_regen_240613-14-58-48_errors\default_body\data\rand_A35G0NQPF9\design_params.yaml"
         # 'sleeve_align': './assets/design_params/sleeve_alignment_1.yaml',
         # 'sleeve_long': './assets/design_params/sleeve_too_long.yaml',
         # 'pants_align': './assets/design_params/pants_alignment.yaml',

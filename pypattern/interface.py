@@ -11,7 +11,7 @@ class Interface:
     """Description of an interface of a panel or component
         that can be used in stitches as a single unit
     """
-    def __init__(self, panel, edges, ruffle=1.):
+    def __init__(self, panel, edges, ruffle=1., right_wrong=False):
         """
         Parameters:
             * panel - Panel object
@@ -21,10 +21,15 @@ class Interface:
                 object will supply projecting_edges() shape
                 s.t. the ruffles with the given rate are created. Default = 1.
                     (no ruffles, smooth connection)
+            * right_wrong -- control of stitch orientation -- indication if this interface's
+                right side of the fabric should be connected to the wrong side of another interface. 
+                Default -- False -- connect right side of the fabric to the right side of the faric, 
+                sufficient in most cases.
         """
 
         self.edges = edges if isinstance(edges, EdgeSequence) else EdgeSequence(edges)
         self.panel = [panel for _ in range(len(self.edges))]  # matches every edge 
+        self.right_wrong = [right_wrong for _ in range(len(self.edges))]
 
         # Allow to enfoce change the direction of edge 
         # (used in many-to-many stitches correspondance determination)
@@ -187,6 +192,7 @@ class Interface:
         new_edges = EdgeSequence()
         new_panel_list = []
         new_flipping_info = []
+        new_right_wrong = []
         for i in range(len(self.panel)):
             id = i if i not in curr_edge_ids else projected_edge_ids[curr_edge_ids.index(i)]
             # edges
@@ -194,10 +200,13 @@ class Interface:
             new_flipping_info.append(self.edges_flipping[id])
             # panels
             new_panel_list.append(self.panel[id])
+            # connectivity indication
+            new_right_wrong.append(self.right_wrong[id])
             
         self.edges = new_edges
         self.panel = new_panel_list
         self.edges_flipping = new_flipping_info
+        self.right_wrong = new_right_wrong
 
     def substitute(self, orig, new_edges, new_panels):
         """Update the interface edges with correct correction of panels
@@ -218,16 +227,21 @@ class Interface:
             orig = len(self.edges) + orig 
         self.edges.substitute(orig, new_edges)
 
-        # Update panels & flip info
+        # Update panels & flip info & right_wrong info
         self.panel.pop(orig)
         curr_edges_flip = self.edges_flipping.pop(orig)
+        curr_right_wrong = self.right_wrong.pop(orig)
         if isinstance(new_panels, list) or isinstance(new_panels, tuple):
             for j in range(len(new_panels)):
                 self.panel.insert(orig + j, new_panels[j])
+
+                # TODOLOW Note propagation of default values. Allow to specify them as func input!
                 self.edges_flipping.insert(orig + j, curr_edges_flip)
+                self.right_wrong.insert(orig + j, curr_right_wrong)
         else: 
             self.panel.insert(orig, new_panels)
             self.edges_flipping.insert(orig, curr_edges_flip)
+            self.right_wrong.insert(orig + j, curr_right_wrong)
 
         # Propagate ruffle indicators
         ins_len = 1 if isinstance(new_edges, Edge) else len(new_edges)
@@ -238,6 +252,11 @@ class Interface:
                 if it['sec'][1] > orig:
                     it['sec'][1] += ins_len - 1
 
+        return self
+
+    def set_right_wrong(self, right_wrong):
+        """Set all right_wrong values for the edges in current interface to the input value"""
+        self.right_wrong = [right_wrong for _ in range(len(self.edges))]
         return self
 
     # ANCHOR ----- Statics ----
@@ -257,6 +276,7 @@ class Interface:
         new_int.edges_flipping = []
         new_int.panel = []
         new_int.ruffle = []
+        new_int.right_wrong = []
         
         for elem in ints:
             shift = len(new_int.edges)
@@ -266,6 +286,7 @@ class Interface:
 
             new_int.edges.append(elem.edges)
             new_int.panel += elem.panel 
+            new_int.right_wrong += elem.right_wrong
             new_int.edges_flipping += elem.edges_flipping 
             
         return new_int 
