@@ -111,7 +111,7 @@ class AsymHalfCirclePanel(pyp.Panel):
 
 class SkirtCircle(StackableSkirtComponent):
     """Simple circle skirt"""
-    def __init__(self, body, design, tag='', length=None, rise=None, slit=True, asymm=False, **kwargs) -> None:
+    def __init__(self, body, design, tag='', length=None, rise=None, slit=True, asymm=False, min_len=5, **kwargs) -> None:
         super().__init__(body, design, tag)
 
         design = design['flare-skirt']
@@ -121,6 +121,10 @@ class SkirtCircle(StackableSkirtComponent):
 
         if length is None:  # take from design parameters
             length = hips_depth + design['length']['v'] * body['_leg_length']
+
+        # NOTE: with some combinations of rise and length parameters length may become too small/negative
+        # Hence putting a min positive value here
+        length = max(length, min_len)
 
         # panels
         if not asymm:  # Typical symmetric skirt

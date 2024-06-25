@@ -375,7 +375,7 @@ class PencilSkirt(StackableSkirtComponent):
 
 class Skirt2(StackableSkirtComponent):
     """Simple 2 panel skirt"""
-    def __init__(self, body, design, tag='', length=None, rise=None, slit=True, top_ruffles=True) -> None:
+    def __init__(self, body, design, tag='', length=None, rise=None, slit=True, top_ruffles=True, min_len=5) -> None:
         super().__init__(body, design, tag)
 
         design = design['skirt']
@@ -386,6 +386,10 @@ class Skirt2(StackableSkirtComponent):
         # Force from arguments if given
         if length is None:
             length = hip_line + design['length']['v'] * body['_leg_length']  # Depends on leg length
+
+        # NOTE: with some combinations of rise and length parameters length may become too small/negative
+        # Hence putting a min positive value here
+        length = max(length, min_len)
 
         self.front = SkirtPanel(
             f'skirt_front_{tag}' if tag else 'skirt_front', 
@@ -430,7 +434,7 @@ class Skirt2(StackableSkirtComponent):
 class SkirtManyPanels(BaseBottoms):
     """Round Skirt with many panels"""
 
-    def __init__(self, body, design, tag='', rise=None) -> None:
+    def __init__(self, body, design, tag='', rise=None, min_len=5) -> None:
         tag_extra = str(design['flare-skirt']['skirt-many-panels']['n_panels']['v'])
         tag = f'{tag}_{tag_extra}' if tag else tag_extra 
         super().__init__(body, design, tag=tag, rise=rise)
@@ -442,6 +446,10 @@ class SkirtManyPanels(BaseBottoms):
 
         # Length is dependent on length of legs
         length = hip_line + design['length']['v'] * body['_leg_length']
+
+        # NOTE: with some combinations of rise and length parameters, length may become too small/negative
+        # Hence putting a min positive value here
+        length = max(length, min_len)
 
         flare_coeff_pi = 1 + design['suns']['v'] * length * 2 * np.pi / waist
 
