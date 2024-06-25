@@ -279,7 +279,16 @@ def generate(path, properties, sys_paths, verbose=False):
                 if verbose:
                     traceback.print_exc()
                 print(e)
+
+                # Check empty folder
+                if (default_sample_data / name).exists():
+                    print('Generate::Info::Removed empty folder after unsuccessful sampling attempt', default_sample_data / name)
+                    shutil.rmtree(default_sample_data / name, ignore_errors=True)
                 
+                if (body_sample_data / name).exists():
+                    print('Generate::Info::Removed empty folder after unsuccessful sampling attempt', body_sample_data / name)
+                    shutil.rmtree(body_sample_data / name, ignore_errors=True)
+
                 continue
 
     elapsed = time.time() - start_time
