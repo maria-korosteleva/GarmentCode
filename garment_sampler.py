@@ -27,6 +27,7 @@ from assets.garment_programs.meta_garment import MetaGarment, IncorrectElementCo
 from assets.garment_programs.bands import *
 from assets.body_measurments.body_params import BodyParameters
 import pypattern as pyp
+import stats_utils
 
 def get_command_args():
     """command line arguments to control the run"""
@@ -129,6 +130,8 @@ def _save_sample(piece, body, new_design, folder, verbose=False):
         )
     if verbose:
         print(f'Saved {piece.name}')
+
+    return pattern
 
 def has_pants(design):
     return 'Pants' == design['meta']['bottom']['v']
@@ -268,9 +271,12 @@ def generate(path, properties, sys_paths, verbose=False):
                     continue  # Redo the randomization
                 
                 # Save samples
-                _save_sample(piece_default, default_body, new_design, default_sample_data, verbose=verbose)
+                pattern = _save_sample(piece_default, default_body, new_design, default_sample_data, verbose=verbose)
                 _save_sample(piece_shaped, rand_body, new_design, body_sample_data, verbose=verbose)
                 
+                stats_utils.count_panels(pattern, props)
+                stats_utils.garment_type(name, new_design, props)
+
                 break  # Stop generation
             except KeyboardInterrupt:  # Return immediately with whatever is ready
                 return default_path, body_sample_path
@@ -295,6 +301,7 @@ def generate(path, properties, sys_paths, verbose=False):
     gen_stats['generation_time'] = f'{elapsed:.3f} s'
 
     # log properties
+    props.stats_summary()
     properties.serialize(data_folder / 'dataset_properties.yaml')
 
     return default_path, body_sample_path
@@ -321,6 +328,12 @@ if __name__ == '__main__':
             name=f'{args.name}_{args.size}' if not args.batch_id else f'{args.name}_{args.size}_{args.batch_id}',
             to_subfolders=True)
         props.set_section_config('generator')
+        props.set_section_stats(
+            'generator', 
+            panel_count={},
+            garment_types={},
+            garment_types_summary=dict(main={}, style={})
+        )
         
 
     # Generator

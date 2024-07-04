@@ -32,6 +32,8 @@ from assets.garment_programs.meta_garment import *
 from assets.garment_programs.bands import *
 from assets.body_measurments.body_params import BodyParameters
 
+import stats_utils
+
 def get_command_args():
     """command line arguments to control the run"""
     # https://stackoverflow.com/questions/40001892/reading-named-command-arguments
@@ -106,6 +108,8 @@ def _save_sample(piece, body, new_design, folder, verbose=False):
         )
     if verbose:
         print(f'Saved {piece.name}')
+    
+    return pattern
 
 
 def filtered_subfolders(
@@ -131,7 +135,6 @@ def filtered_subfolders(
             continue
         names.append(el_name)
 
-        # DEBUG
         if verbose:
             print(f'{el_name}: {is_fail}, {section}')
 
@@ -157,15 +160,15 @@ def generate(
     gen_stats = properties['generator']['stats']
 
     # create data folder
-    data_folder, default_path, body_sample_path = _create_data_folder(properties, path, unique=False)
+    data_folder, default_path, body_sample_path = _create_data_folder(
+        properties, path, 
+        unique=False 
+    )
     default_sample_data = default_path / 'data'
 
     if not default_body:
         body_sample_data = body_sample_path / 'data'
 
-    # generate data
-    start_time = time.time()
-    
     if default_body:
         default_body = BodyParameters(
             Path(sys_paths['bodies_default_path']) / (properties['body_default'] + '.yaml'))
@@ -187,14 +190,21 @@ def generate(
             name=properties['data_folder'],
             data_folder=properties['data_folder'],
             to_subfolders=True)
-        new_props.set_section_config('generator', random_seed=properties['generator']['config']['random_seed'])
+        new_props.set_section_config(
+            'generator', 
+            random_seed=properties['generator']['config']['random_seed'],
+            generation_time = gen_stats['generation_time']
+        )
+        
+        new_props.set_section_stats(
+            'generator',
+            panel_count={},
+            garment_types={},
+            garment_types_summary=dict(main={}, style={})
+        )
         gen_stats = new_props['generator']['stats']
 
     for name in names:
-        # log properties every time
-        if default_body:
-            new_props.serialize(data_folder / 'dataset_properties.yaml')
-
         # Load design from the init folder
         try:
             fname1 = in_datapath / name / f'{name}_design_params.yaml'
@@ -209,7 +219,7 @@ def generate(
 
         if default_body: # On default body
             piece_default = MetaGarment(name, default_body, design) 
-            _save_sample(piece_default, default_body, design, default_sample_data, verbose=verbose)
+            pattern = _save_sample(piece_default, default_body, design, default_sample_data, verbose=verbose)
         else: # On random body shape
             try:
 
@@ -224,7 +234,7 @@ def generate(
                     continue   # Just skip examples without body files
                 
                 piece_shaped = MetaGarment(name, rand_body, design) 
-                _save_sample(piece_shaped, rand_body, design, body_sample_data, verbose=verbose)
+                pattern = _save_sample(piece_shaped, rand_body, design, body_sample_data, verbose=verbose)
             except KeyboardInterrupt:  # Return immediately with whatever is ready
                 return default_path, body_sample_path
             except BaseException as e:
@@ -233,15 +243,16 @@ def generate(
                 print(e)
                 
                 continue
-
-        # DEBUG
-        break
-
-    elapsed = time.time() - start_time
-    gen_stats['generation_time'] = f'{elapsed:.3f} s'
+        
+        # Update props and log every time
+        if default_body:
+            stats_utils.count_panels(pattern, new_props)
+            stats_utils.garment_type(name, design, new_props)
+            new_props.serialize(data_folder / 'dataset_properties.yaml')
 
     # log properties
     if default_body:
+        new_props.stats_summary()
         new_props.serialize(data_folder / 'dataset_properties.yaml')
 
     return default_path, body_sample_path
@@ -267,9 +278,8 @@ if __name__ == '__main__':
 
     datasets = args.data
     body_types = [
-        # DEBUG
         'default_body',
-        # 'random_body'
+        'random_body'
     ]
 
     # (simulated) dataset to use

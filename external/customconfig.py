@@ -5,6 +5,7 @@ from numbers import Number
 import traceback
 import sys
 from pathlib import Path
+import numpy as np
 
 import platform
 import psutil
@@ -13,6 +14,7 @@ import psutil
 if 'windows' in platform.system() or 'Windows' in platform.system():
     import wmi  # pip install wmi
 
+# FIXME merge carefully on the integration with sim
 
 class Properties:
     """Keeps, loads, and saves configuration & statistic information
@@ -195,7 +197,12 @@ class Properties:
             if isinstance(value, dict) and 'stats' in value:
                 value['stats'] = {}
 
-    def summarize_stats(self, key, log_sum=False, log_avg=False, as_time=False):
+    def summarize_stats(self, 
+                        key, 
+                        log_sum=False, log_avg=False, 
+                        log_median=False, log_80=False, log_95=False,
+                        log_min=False, log_max=False,
+                        as_time=False):
         """Make a summary of requested key with requested statistics in current props"""
         updated = False
         for section in self.properties.values():
@@ -215,6 +222,21 @@ class Properties:
                             section['stats'][key + "_avg"] = sum(stats_values) / len(stats_values)
                             if as_time:
                                 section['stats'][key + "_avg"] = str(timedelta(seconds=section['stats'][key + "_avg"]))
+                            updated = True
+                        if log_median:
+                            section['stats'][key + "_med"] = str(timedelta(seconds=np.percentile(stats_values, 50))) if as_time else float(np.percentile(stats_values, 50))
+                            updated = True
+                        if log_80:
+                            section['stats'][key + "_p80"] = str(timedelta(seconds=np.percentile(stats_values, 80))) if as_time else float(np.percentile(stats_values, 80))
+                            updated = True
+                        if log_95:
+                            section['stats'][key + "_p95"] = str(timedelta(seconds=np.percentile(stats_values, 95))) if as_time else float(np.percentile(stats_values, 95))
+                            updated = True
+                        if log_min:
+                            section['stats'][key + "_min"] = str(timedelta(seconds=min(stats_values))) if as_time else min(stats_values)
+                            updated = True
+                        if log_min:
+                            section['stats'][key + "_max"] = str(timedelta(seconds=max(stats_values))) if as_time else max(stats_values)
                             updated = True
         return updated
 
@@ -251,6 +273,9 @@ class Properties:
         updated_spf = self.summarize_stats('spf', log_avg=True, as_time=True)
         updated_scan = self.summarize_stats('processing_time', log_sum=True, log_avg=True, as_time=True)
         updated_scan_faces = self.summarize_stats('faces_removed', log_avg=True)
+
+        updated_panel_count = self.summarize_stats(
+            'panel_count', log_avg=True, log_median=True, log_min=True, log_max=True)
 
         if not (updated_frames and updated_render and updated_sim_time and updated_spf):
             print('CustomConfig::WARNING::Sim stats summary requested, but not all sections were updated')
