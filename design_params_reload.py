@@ -16,6 +16,7 @@ import time
 import random
 import string
 import traceback
+import argparse
 
 sys.path.insert(0, './external/')
 sys.path.insert(1, './')
@@ -30,21 +31,35 @@ from assets.garment_programs.pants import *
 from assets.garment_programs.meta_garment import *
 from assets.garment_programs.bands import *
 from assets.body_measurments.body_params import BodyParameters
-import pypattern as pyp
 
-def _create_data_folder(properties, path=Path('')):
+def get_command_args():
+    """command line arguments to control the run"""
+    # https://stackoverflow.com/questions/40001892/reading-named-command-arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data', '-d', nargs='+', help='names of datasets to re-do', type=str, default=None)
+
+    args = parser.parse_args()
+    print('Commandline arguments: ', args)
+
+    return args
+
+
+def _create_data_folder(properties, path=Path(''), unique=True):
     """ Create a new directory to put dataset in 
         & generate appropriate name & update dataset properties
     """
-    if 'data_folder' in properties:  # will this work?
-        # => regenerating from existing data
-        properties['name'] = properties['data_folder'] + '_regen'
-        data_folder = properties['name']
-    else:
-        data_folder = properties['name']
+    # NOTE: Not for re-generation
+    # if 'data_folder' in properties:  # will this work?
+    #     # => regenerating from existing data
+    #     properties['name'] = properties['data_folder'] + '_regen'
+    #     data_folder = properties['name']
+    # else:
+    #     data_folder = properties['name']
+    data_folder = properties['data_folder']
 
     # make unique
-    data_folder += '_' + datetime.now().strftime('%y%m%d-%H-%M-%S')
+    if unique:
+        data_folder += '_' + datetime.now().strftime('%y%m%d-%H-%M-%S')
     properties['data_folder'] = data_folder
     path_with_dataset = path / data_folder
     path_with_dataset.mkdir(parents=True)
@@ -56,27 +71,6 @@ def _create_data_folder(properties, path=Path('')):
     body_folder.mkdir(parents=True, exist_ok=True)
 
     return path_with_dataset, default_folder, body_folder
-
-
-def _gather_body_options(body_path: Path):
-    objs_path = body_path / 'measurements'
-
-    bodies = []
-    for file in objs_path.iterdir():
-        
-        # Get name
-        b_name = file.stem.split('_')[0]
-        bodies.append({})
-
-        # Get obj options
-        bodies[-1]['objs'] = dict(
-            straight=f'meshes/{b_name}_straight.obj', 
-            apart=f'meshes/{b_name}_apart.obj', )
-
-        # Get measurements
-        bodies[-1]['mes'] = f'measurements/{b_name}.yaml'
-    
-    return bodies
 
 
 def body_sample(idx, bodies: dict, path: Path, straight=True):
@@ -163,7 +157,7 @@ def generate(
     gen_stats = properties['generator']['stats']
 
     # create data folder
-    data_folder, default_path, body_sample_path = _create_data_folder(properties, path)
+    data_folder, default_path, body_sample_path = _create_data_folder(properties, path, unique=False)
     default_sample_data = default_path / 'data'
 
     if not default_body:
@@ -181,13 +175,25 @@ def generate(
         fail_types=fail_types,
         verbose=verbose
     )
-    # Clean the stats and unfreeze
-    properties.clean_stats(properties.properties)
-    properties['frozen'] = False
+
+    # Re-create props
+    if default_body:
+        new_props = Properties()
+        new_props.set_basic(
+            design_file='./assets/design_params/default.yaml',
+            body_default='mean_all',
+            body_samples=properties['body_samples'],
+            size=properties['size'],
+            name=properties['data_folder'],
+            data_folder=properties['data_folder'],
+            to_subfolders=True)
+        new_props.set_section_config('generator', random_seed=properties['generator']['config']['random_seed'])
+        gen_stats = new_props['generator']['stats']
 
     for name in names:
         # log properties every time
-        properties.serialize(data_folder / 'dataset_properties.yaml')
+        if default_body:
+            new_props.serialize(data_folder / 'dataset_properties.yaml')
 
         # Load design from the init folder
         try:
@@ -200,9 +206,6 @@ def generate(
             if verbose:
                 print('FileNotFoundError::', fname)
             continue   # Just skip examples without design files
-
-        # TODO default body vs loaded body
-
 
         if default_body: # On default body
             piece_default = MetaGarment(name, default_body, design) 
@@ -231,11 +234,15 @@ def generate(
                 
                 continue
 
+        # DEBUG
+        break
+
     elapsed = time.time() - start_time
     gen_stats['generation_time'] = f'{elapsed:.3f} s'
 
     # log properties
-    properties.serialize(data_folder / 'dataset_properties.yaml')
+    if default_body:
+        new_props.serialize(data_folder / 'dataset_properties.yaml')
 
     return default_path, body_sample_path
 
@@ -256,36 +263,51 @@ def gather_visuals(path, verbose=False):
 if __name__ == '__main__':
     system_props = Properties('./system.json')
 
+    args = get_command_args()
+
+    datasets = args.data
+    body_types = [
+        # DEBUG
+        'default_body',
+        # 'random_body'
+    ]
+
     # (simulated) dataset to use
-    in_dataset = 'garments_5000_0'
-    body_type = 'default_body'
-    in_datapath = Path(system_props['garmentcodedata_gen']) / in_dataset / body_type
-    props = Properties(Path(system_props['datasets_sim']) / in_dataset / body_type / f'dataset_properties_{body_type}.yaml', clean_stats=False)
+    for in_dataset in datasets:
+        for body_type in body_types:
+            
+            print(f'INFO::Re-creating {in_dataset} for {body_type}')
 
-    # Check packing
-    # Check packing
-    tars = list(in_datapath.glob('*.tar.gz'))
-    for tar_path in tars:
-        # NOTE: Unpacks and overwrites the dataset_properties files
-        shutil.unpack_archive(tar_path, in_datapath)
-        # Finally -- clean up
-        tar_path.unlink()
+            in_datapath = Path(system_props['garmentcodedata_gen']) / in_dataset / body_type
+            props = Properties(Path(system_props['datasets_sim']) / in_dataset / body_type / f'dataset_properties_{body_type}.yaml', clean_stats=False)
 
-    # Generator
-    default_path, body_sample_path = generate(
-        system_props['datasets_path'], props, in_datapath / 'data', system_props,
-        default_body=(body_type == 'default_body'),
-        # fail_types=[
-        #     'stitching_error', 
-        #     'pattern_loading', 
-        #     'gt_edges_creation', 
-        #     'meshgen-timeout', 
-        #     # 'cloth_self_intersection',
-        # ],
-        verbose=True)
+            # Check packing
+            # Check packing
+            tars = list(in_datapath.glob('*.tar.gz'))
+            for tar_path in tars:
+                # NOTE: Unpacks and overwrites the dataset_properties files
+                shutil.unpack_archive(tar_path, in_datapath)
+                # Finally -- clean up
+                tar_path.unlink()
 
-    # Gather the pattern images separately
-    gather_visuals(default_path)
-    gather_visuals(body_sample_path)
+            # Generator
+            default_path, body_sample_path = generate(
+                system_props['datasets_path'], props, in_datapath / 'data', system_props,
+                default_body=(body_type == 'default_body'),
+                # fail_types=[
+                #     'stitching_error', 
+                #     'pattern_loading', 
+                #     'gt_edges_creation', 
+                #     'meshgen-timeout', 
+                #     # 'cloth_self_intersection',
+                # ],
+                verbose=False)
 
-    print('Data generation completed!')
+            # Gather the pattern images separately
+            # NOTE: No need for images on the full data
+            # if body_type == 'default_body':
+            #     gather_visuals(default_path)
+            # else:
+            #     gather_visuals(body_sample_path)
+
+            print('Data generation completed!')
