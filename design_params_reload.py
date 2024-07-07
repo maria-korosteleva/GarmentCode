@@ -218,8 +218,16 @@ def generate(
             continue   # Just skip examples without design files
 
         if default_body: # On default body
-            piece_default = MetaGarment(name, default_body, design) 
-            pattern = _save_sample(piece_default, default_body, design, default_sample_data, verbose=verbose)
+            try:
+                piece_default = MetaGarment(name, default_body, design) 
+                pattern = _save_sample(piece_default, default_body, design, default_sample_data, verbose=verbose)
+            except KeyboardInterrupt:  # Return immediately with whatever is ready
+                return default_path, body_sample_path
+            except BaseException as e:
+                print(f'{name} failed')
+                traceback.print_exc()
+                print(e)
+                continue
         else: # On random body shape
             try:
 
