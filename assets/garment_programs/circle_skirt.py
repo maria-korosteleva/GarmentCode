@@ -139,7 +139,7 @@ class SkirtCircle(StackableSkirtComponent):
             # NOTE: Asymmetic front/back is only defined on full skirt (1 sun)
             w_rad = waist / 2 / np.pi
             f_length = design['asymm']['front_length']['v'] * length
-            tot_len = waist / 2 + length + f_length
+            tot_len = w_rad * 2 + length + f_length 
             del_r = tot_len / 2 - f_length - w_rad
             s_length = np.sqrt((tot_len / 2)**2 - del_r**2) - w_rad
 
