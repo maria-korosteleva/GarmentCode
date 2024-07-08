@@ -64,8 +64,37 @@ class Interface:
         projected = self.edges.copy() if not on_oriented else self.oriented_edges()
         for r in self.ruffle:
             if not close_enough(r['coeff'], 1, 1e-3):
-                projected[r['sec'][0]:r['sec'][1]].extend(1 / r['coeff'])
-        
+                if r['sec'][1] >= len(projected) or not projected[r['sec'][1] - 1:r['sec'][1] + 1].isChained():
+                    projected[r['sec'][0]:r['sec'][1]].extend(1 / r['coeff'])
+                else:
+                    # Don't let extention to affect the rest of the sequence
+                    # Find the vert that separates the ruffle seqences
+                    prev_edge, next_edge = projected[r['sec'][1] - 1], projected[r['sec'][1]]
+
+                    # Common vertex
+                    common_v = prev_edge.end if prev_edge.end is next_edge.end or prev_edge.end is next_edge.start else prev_edge.start
+
+                    # Create copy and assign to next edge
+                    common_v_copy = common_v.copy()
+                    copy_to_end = False
+                    if common_v is next_edge.end:
+                        next_edge.end = common_v_copy
+                        copy_to_end = True
+                    else:
+                        next_edge.start = common_v_copy
+
+                    # Extend the sequence
+                    projected[r['sec'][0]:r['sec'][1]].extend(1 / r['coeff'])
+
+                    # move the next edges s.t. created vertex alignes with the original common vertex
+                    projected[r['sec'][1]:].translate_by([common_v[0] - common_v_copy[0], common_v[1] - common_v_copy[1]])
+
+                    # re-chain the edges
+                    if copy_to_end:
+                        next_edge.end = common_v
+                    else:
+                        next_edge.start = common_v
+
         return projected
 
     def needsFlipping(self, i):

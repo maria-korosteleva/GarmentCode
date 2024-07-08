@@ -909,7 +909,8 @@ class EdgeSequence:
 
     def extend(self, factor):
         """Extend or shrink the edges along the line from start of the first
-        edge to the end of the last edge in sequence
+        edge to the end of the last edge in sequence. The start of the first
+        edge remains fixed
         """
         # TODOLOW Version With preservation of total length?
         # TODOLOW Base extention factor on change in total length of edges rather
