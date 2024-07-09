@@ -49,6 +49,11 @@ class StitchingRule:
         rev_frac1 = self.int1.projecting_edges(on_oriented=True).fractions()
         rev_frac1.reverse()
 
+        # DEBUG
+        if len(self.int1) == len(self.int2):
+            if not np.allclose(frac1, frac2, atol=tol) and np.allclose(rev_frac1, frac2, atol=tol):
+                raise RuntimeError(f'DEBUG_ERROR::{self.int1.panel_names(), self.int2.panel_names()}::Reverse matched stitch!!')
+
         return (len(self.int1) == len(self.int2) 
                 and (np.allclose(frac1, frac2, atol=tol)
                      or np.allclose(rev_frac1, frac2, atol=tol))
