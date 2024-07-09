@@ -41,15 +41,17 @@ class StitchingRule:
     def isMatching(self, tol=0.05):
         # if both the breakdown and relative partitioning is similar
 
-        rev_frac1 = self.int1.edges.fractions()
+        frac1 = self.int1.projecting_edges(on_oriented=True).fractions()
+        frac2 = self.int2.projecting_edges(on_oriented=True).fractions()
+
+        # FIXME Is it correct to compare with reverse fractions? 
+        # Do we actually flip the order if the reverse works better, ever? 
+        rev_frac1 = self.int1.projecting_edges(on_oriented=True).fractions()
         rev_frac1.reverse()
 
         return (len(self.int1) == len(self.int2) 
-                and (np.allclose(self.int1.edges.fractions(),
-                                 self.int2.edges.fractions(), atol=tol)
-                     or np.allclose(rev_frac1, self.int2.edges.fractions(),
-                                    atol=tol)
-                )
+                and (np.allclose(frac1, frac2, atol=tol)
+                     or np.allclose(rev_frac1, frac2, atol=tol))
         )
 
     def match_interfaces(self):
