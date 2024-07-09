@@ -143,7 +143,7 @@ def cut_corner(target_shape: EdgeSequence, target_interface: Interface,
 
 
 def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True,
-                  flip_target=False, tol=1e-4):
+                  flip_target=False, tol=1e-2):
     """ Insert edges of the target_shape into the given base_edge, starting
         from offset edges in target shape are rotated s.t. start -> end
         vertex vector is aligned with the edge
