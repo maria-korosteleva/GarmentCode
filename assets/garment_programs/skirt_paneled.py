@@ -229,6 +229,8 @@ class FittedSkirtPanel(pyp.Panel):
             'right': pyp.Interface(self, right, [1] * (len(right) - 1) + [hipline_ext]), 
             'left': pyp.Interface(self, left, [hipline_ext] + [1] * (len(left) - 1)),  
         }
+        self.interfaces['left'].edges_flipping[0] = True
+        self.interfaces['right'].edges_flipping[-1] = True
 
         # Add top darts
         if w_diff > hw_shift:
