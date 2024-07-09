@@ -64,7 +64,7 @@ def _create_data_folder(properties, path=Path(''), unique=True):
         data_folder += '_' + datetime.now().strftime('%y%m%d-%H-%M-%S')
     properties['data_folder'] = data_folder
     path_with_dataset = path / data_folder
-    path_with_dataset.mkdir(parents=True)
+    path_with_dataset.mkdir(parents=True, exist_ok=True)
 
     default_folder = path_with_dataset / 'default_body'
     body_folder = path_with_dataset / 'random_body'
