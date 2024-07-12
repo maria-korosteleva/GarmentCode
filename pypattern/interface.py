@@ -202,6 +202,18 @@ class Interface:
         
         return self
 
+    def flip_edges(self):
+        """Reverse the direction of edges in the interface
+            (without updating the edge objects)
+
+            Reversal is useful for updating interface edges for correct
+                matching in the multi-stitches
+        """
+        self.edges_flipping = [not e for e in self.edges_flipping]
+        
+        return self
+
+
     def reorder(self, curr_edge_ids, projected_edge_ids):
         """Change the order of edges from curr_edge_ids to projected_edge_ids
             in the interface

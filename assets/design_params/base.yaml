@@ -12,11 +12,11 @@ design:
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
-      v: null   # FittedWB 
+      v: null # FittedWB 
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
-      v: Pants 
+      v: PencilSkirt 
       range: 
         - SkirtCircle
         - GodetSkirt
@@ -34,7 +34,7 @@ design:
       range: [1., 2]   # 1 == waist length
       type: float
     width: 
-      v: 0.1
+      v: 0.3
       range: [0.1, 1]
       type: float
 

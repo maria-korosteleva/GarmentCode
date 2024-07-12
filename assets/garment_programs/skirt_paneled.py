@@ -362,7 +362,7 @@ class PencilSkirt(StackableSkirtComponent):
             'top_f': self.front.interfaces['top'],
             'top_b': self.back.interfaces['top'],
             'top': pyp.Interface.from_multiple(
-                self.front.interfaces['top'].reverse(with_edge_dir_reverse=True),
+                self.front.interfaces['top'].flip_edges(),
                 self.back.interfaces['top'].reverse(with_edge_dir_reverse=True)
             ),
             'bottom_f': self.front.interfaces['bottom'],

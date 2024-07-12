@@ -257,8 +257,8 @@ class PantsHalf(BaseBottoms):
         self.interfaces = {
             'crotch_f': self.front.interfaces['crotch'],
             'crotch_b': self.back.interfaces['crotch'],
-            'top_f': self.front.interfaces['top'].reverse(True),
-            'top_b': self.back.interfaces['top'].reverse(True),
+            'top_f': self.front.interfaces['top'], 
+            'top_b': self.back.interfaces['top'] 
         }
 
     def length(self):
@@ -287,9 +287,9 @@ class Pants(BaseBottoms):
             # Some are reversed for correct connection
             'top': pyp.Interface.from_multiple(   # around the body starting from front right
                 self.right.interfaces['top_f'],
-                self.left.interfaces['top_f'],
-                self.left.interfaces['top_b'].reverse(), # Flips the edges and restores the direction
-                self.right.interfaces['top_b']
+                self.left.interfaces['top_f'].reverse(with_edge_dir_reverse=True),
+                self.left.interfaces['top_b'],
+                self.right.interfaces['top_b'].reverse(), # Flips the edges and restores the direction
             )
         }
 
