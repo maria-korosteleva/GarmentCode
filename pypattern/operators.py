@@ -7,7 +7,7 @@ from scipy.spatial.transform import Rotation as R
 from scipy.optimize import minimize
 import svgpathtools as svgpath
 
-from pypattern.edge import Edge, CurveEdge, EdgeSequence
+from pypattern.edge import Edge, CurveEdge, EdgeSequence, ILENGTH_S_TOL
 from pypattern.interface import Interface
 from pypattern.generic_utils import vector_angle, close_enough, c_to_list, c_to_np
 from pypattern.generic_utils import list_to_c
@@ -249,7 +249,7 @@ def cut_into_edge_single(target_shape, base_edge: Edge, offset=0, right=True,
 
     # find starting vertex for insertion & place edges there
     curve = base_edge.as_curve()
-    rel_offset = curve.ilength(offset)
+    rel_offset = curve.ilength(offset, s_tol=ILENGTH_S_TOL)
 
     # ----- OPTIMIZATION --- 
     start = [0.1, 0.1]

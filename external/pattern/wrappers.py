@@ -211,7 +211,7 @@ class VisPattern(core.ParametrizedPattern):
             # name edges
             for idx in range(len(path)):
                 seg = path[idx]
-                middle = c_to_np(seg.point(seg.ilength(seg.length() / 2)))
+                middle = c_to_np(seg.point(seg.ilength(seg.length() / 2, s_tol=1e-3)))
                 middle[1] -= 3  # slightly above the line
                 # name
                 drawing.add(
