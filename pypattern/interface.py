@@ -17,6 +17,7 @@ class Interface:
             * panel - Panel object
             * edges - Edge or EdgeSequence -- edges in the panel that are
                 allowed to connect to
+            # TODO rename to something more generic/projection related?
             * ruffle - ruffle coefficient for a particular edge. Interface
                 object will supply projecting_edges() shape
                 s.t. the ruffles with the given rate are created. Default = 1.
