@@ -286,10 +286,10 @@ class Pants(BaseBottoms):
                 self.right.interfaces['top_b'], self.left.interfaces['top_b']),
             # Some are reversed for correct connection
             'top': pyp.Interface.from_multiple(   # around the body starting from front right
-                self.right.interfaces['top_f'],
+                self.right.interfaces['top_f'].flip_edges(),
                 self.left.interfaces['top_f'].reverse(with_edge_dir_reverse=True),
-                self.left.interfaces['top_b'],
-                self.right.interfaces['top_b'].reverse(), # Flips the edges and restores the direction
+                self.left.interfaces['top_b'].flip_edges(),
+                self.right.interfaces['top_b'].reverse(with_edge_dir_reverse=True), # Flips the edges and restores the direction
             )
         }
 
