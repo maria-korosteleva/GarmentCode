@@ -44,8 +44,7 @@ class StitchingRule:
         frac1 = self.int1.projecting_edges(on_oriented=True).fractions()
         frac2 = self.int2.projecting_edges(on_oriented=True).fractions()
 
-        return (len(self.int1) == len(self.int2) and (np.allclose(frac1, frac2, atol=tol))  
-        )
+        return len(self.int1) == len(self.int2) and np.allclose(frac1, frac2, atol=tol)
 
     def match_interfaces(self):
         """ Subdivide the interface edges on both sides s.t. they are matching 

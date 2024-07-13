@@ -6,7 +6,7 @@ from assets.garment_programs.base_classes import BaseBand
 class StraightBandPanel(pyp.Panel):
     """One panel for a panel skirt"""
 
-    def __init__(self, name, width, depth=10) -> None:
+    def __init__(self, name, width, depth, match_int_proportion_to) -> None:
         super().__init__(name)
 
         # define edge loop
@@ -16,9 +16,9 @@ class StraightBandPanel(pyp.Panel):
         # define interface
         self.interfaces = {
             'right': pyp.Interface(self, self.edges[0]),
-            'top': pyp.Interface(self, self.edges[1]).reverse(True),
+            'top': pyp.Interface(self, self.edges[1], ruffle=width / match_int_proportion_to).reverse(True),
             'left': pyp.Interface(self, self.edges[2]),
-            'bottom': pyp.Interface(self, self.edges[3])
+            'bottom': pyp.Interface(self, self.edges[3], ruffle=width / match_int_proportion_to)
         }
 
         # Default translation
@@ -87,16 +87,19 @@ class StraightWB(BaseBand):
     def define_panels(self):
         back_width = self.top_width * self.top_back_fraction
 
-        # TODO check in 3D -- fitting to top or to the bottom of the lowered bottoms??
         self.front = StraightBandPanel(
             'wb_front', 
             self.top_width - back_width, 
-            self.width)
+            self.width,
+            match_int_proportion_to=self.body['waist'] - self.body['waist_back_width']
+        )
           
         self.back = StraightBandPanel(
             'wb_back', 
             back_width, 
-            self.width)
+            self.width,
+            match_int_proportion_to=self.body['waist_back_width']
+        )
 
 
 class FittedWB(StraightWB):
@@ -126,13 +129,15 @@ class FittedWB(StraightWB):
             'wb_front', 
             self.width, 
             self.top_width * (1 - self.top_back_fraction), 
-            self.bottom_width * (1 - self.bottom_back_fraction))
+            self.bottom_width * (1 - self.bottom_back_fraction)
+        )
         
         self.back = CircleArcPanel.from_all_length(
             'wb_back', 
             self.width, 
             self.top_width * self.top_back_fraction, 
-            self.bottom_width * self.bottom_back_fraction)
+            self.bottom_width * self.bottom_back_fraction
+        )
 
 
 class CuffBand(BaseBand):

@@ -51,7 +51,7 @@ class TorsoFrontHalfPanel(BaseBodicePanel):
             'outside':  pyp.Interface(self, self.edges[1]),   
             'inside': pyp.Interface(self, self.edges[-1]),
             'shoulder': pyp.Interface(self, self.edges[-2]),
-            'bottom': pyp.Interface(self, self.edges[0]),
+            'bottom': pyp.Interface(self, self.edges[0], ruffle=self.width / ((body['waist'] - body['waist_back_width']) / 2)),
             
             # Reference to the corner for sleeve and collar projections
             'shoulder_corner': pyp.Interface(self, [self.edges[-3], self.edges[-2]]),
@@ -102,7 +102,7 @@ class TorsoBackHalfPanel(BaseBodicePanel):
             'outside':  pyp.Interface(self, self.edges[1]),   
             'inside': pyp.Interface(self, self.edges[-1]),
             'shoulder': pyp.Interface(self, self.edges[-2]),
-            'bottom': pyp.Interface(self, self.edges[0]),
+            'bottom': pyp.Interface(self, self.edges[0], ruffle=self.width / (body['waist_back_width'] / 2)),
             
             # Reference to the corner for sleeve and collar projections
             'shoulder_corner': pyp.Interface(self, [self.edges[-3], self.edges[-2]]),
