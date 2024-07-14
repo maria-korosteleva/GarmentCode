@@ -216,7 +216,6 @@ class GUIState:
                     ).classes('w-full')
                 
     def def_design_tab(self):
-        # TODO selector of available options + upload is one of them
         # TODO Upload as a dialog
         # NOTE: https://www.reddit.com/r/nicegui/comments/1393i2f/file_upload_with_restricted_types/
         # self.ui_design_file = ui.upload(
@@ -224,32 +223,26 @@ class GUIState:
         #     on_upload=lambda e: ui.notify(f'Uploaded {e.name}')
         # ).classes('max-w-full').props('accept=".yaml,.json"')  
 
-        # FIXME Re-write event handlers to avoid binding and do regular updates
-        # Allowing to update the interface once
-        # TODO Update interface function
         async def random():
-            self.toggle_param_update_events(self.ui_design_refs)  # Don't react to value updates
+            self.toggle_design_param_update_events(self.ui_design_refs)  # Don't react to value updates
 
             self.pattern_state.sample_design(False)
-            self.update_params_ui_state(self.ui_design_refs, self.pattern_state.design_params)
+            self.update_design_params_ui_state(self.ui_design_refs, self.pattern_state.design_params)
             await self.update_pattern_ui_state()
 
-            self.toggle_param_update_events(self.ui_design_refs)  # Re-do reaction to value updates
-
-        
+            self.toggle_design_param_update_events(self.ui_design_refs)  # Re-do reaction to value updates
+    
         async def default():
-            self.toggle_param_update_events(self.ui_design_refs)
+            self.toggle_design_param_update_events(self.ui_design_refs)
 
             self.pattern_state.restore_design(False)
-            self.update_params_ui_state(self.ui_design_refs, self.pattern_state.design_params)
+            self.update_design_params_ui_state(self.ui_design_refs, self.pattern_state.design_params)
             await self.update_pattern_ui_state()
 
-            self.toggle_param_update_events(self.ui_design_refs)
+            self.toggle_design_param_update_events(self.ui_design_refs)
 
 
         # Set of buttons
-        # FIXME Too many state updates are triggered by the whole dictionary update
-        # -> slow response (extremely)
         with ui.row():
             ui.button('Random', on_click=random)
             ui.button('Default', on_click=default)
@@ -410,29 +403,21 @@ class GUIState:
                 self.ui_pattern_display.set_source('')
 
 
-    def update_params_ui_state(self, ui_elems, design_params):
+    def update_design_params_ui_state(self, ui_elems, design_params):
         """Sync ui params with the current state of the design params"""
-        # TODO Body params too!
-
         for param in design_params: 
             if 'v' not in design_params[param]:
-                self.update_params_ui_state(ui_elems[param], design_params[param])
+                self.update_design_params_ui_state(ui_elems[param], design_params[param])
             else:
                 ui_elems[param].value = design_params[param]['v']
 
-    def toggle_param_update_events(self, ui_elems):
+    def toggle_design_param_update_events(self, ui_elems):
+        """Enable/disable event handling on the ui elements related to GarmentCode parameters"""
         for param in ui_elems:
             if isinstance(ui_elems[param], dict):
-                self.toggle_param_update_events(ui_elems[param])
+                self.toggle_design_param_update_events(ui_elems[param])
             else:
-                # DEBUG
-                print('Before ', ui_elems[param].is_ignoring_events, param)
-                # DRAFT ui_elems[param]._is_ignoring_events = not ui_elems[param].is_ignoring_events
-
-                if ui_elems[param].is_ignoring_events:
+                if ui_elems[param].is_ignoring_events:  # -> disabled
                     ui_elems[param].enable()
                 else:
                     ui_elems[param].disable()
-
-                # DEBUG
-                print('After ', ui_elems[param].is_ignoring_events, param)
