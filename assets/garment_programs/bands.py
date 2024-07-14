@@ -6,7 +6,7 @@ from assets.garment_programs.base_classes import BaseBand
 class StraightBandPanel(pyp.Panel):
     """One panel for a panel skirt"""
 
-    def __init__(self, name, width, depth, match_int_proportion) -> None:
+    def __init__(self, name, width, depth, match_int_proportion=None) -> None:
         super().__init__(name)
 
         # define edge loop
@@ -16,9 +16,15 @@ class StraightBandPanel(pyp.Panel):
         # define interface
         self.interfaces = {
             'right': pyp.Interface(self, self.edges[0]),
-            'top': pyp.Interface(self, self.edges[1], ruffle=width / match_int_proportion).reverse(True),
+            'top': pyp.Interface(self, 
+                                 self.edges[1], 
+                                 ruffle=width / match_int_proportion if match_int_proportion is not None else 1.
+                                 ).reverse(True),
             'left': pyp.Interface(self, self.edges[2]),
-            'bottom': pyp.Interface(self, self.edges[3], ruffle=width / match_int_proportion)
+            'bottom': pyp.Interface(self, 
+                                    self.edges[3], 
+                                    ruffle=width / match_int_proportion if match_int_proportion is not None else 1.
+                                    )
         }
 
         # Default translation

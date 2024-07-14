@@ -15,7 +15,7 @@ class PantPanel(pyp.Panel):
             hips_depth,
             crotch_width,
             dart_position,
-            match_top_int_to,
+            match_top_int_to=None,
             hipline_ext=1,
             double_dart=False) -> None:
         """
@@ -127,10 +127,16 @@ class PantPanel(pyp.Panel):
         if w_diff > hw_shift:
             top_edges, int_edges = self.add_darts(
                 top, dart_width, dart_depth, dart_position, double_dart=double_dart)
-            self.interfaces['top'] = pyp.Interface(self, int_edges, ruffle=waist / match_top_int_to) 
+            self.interfaces['top'] = pyp.Interface(
+                self, int_edges, 
+                ruffle=waist / match_top_int_to if match_top_int_to is not None else 1.
+            ) 
             self.edges.substitute(top, top_edges)
         else:
-            self.interfaces['top'] = pyp.Interface(self, top, ruffle=waist / match_top_int_to) 
+            self.interfaces['top'] = pyp.Interface(
+                self, top, 
+                ruffle=waist / match_top_int_to if match_top_int_to is not None else 1.
+        ) 
         
         
 
