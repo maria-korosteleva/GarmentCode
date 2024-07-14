@@ -15,11 +15,11 @@ class PantPanel(pyp.Panel):
             hips_depth,
             crotch_width,
             dart_position,
+            match_top_int_to=None,
             hipline_ext=1,
             double_dart=False) -> None:
         """
-            Basic pant panel with option to be fitted (with darts) or ruffled
-            at waist area.
+            Basic pant panel with option to be fitted (with darts)
         """
         super().__init__(name)
 
@@ -122,14 +122,23 @@ class PantPanel(pyp.Panel):
         }
 
         # Add top dart
+        # NOTE: Ruffle indicator to match to waistline proportion for correct balance line matching
         dart_width = w_diff - hw_shift  
         if w_diff > hw_shift:
             top_edges, int_edges = self.add_darts(
                 top, dart_width, dart_depth, dart_position, double_dart=double_dart)
-            self.interfaces['top'] = pyp.Interface(self, int_edges) 
+            self.interfaces['top'] = pyp.Interface(
+                self, int_edges, 
+                ruffle=waist / match_top_int_to if match_top_int_to is not None else 1.
+            ) 
             self.edges.substitute(top, top_edges)
         else:
-            self.interfaces['top'] = pyp.Interface(self, top) 
+            self.interfaces['top'] = pyp.Interface(
+                self, top, 
+                ruffle=waist / match_top_int_to if match_top_int_to is not None else 1.
+        ) 
+        
+        
 
     def add_darts(self, top, dart_width, dart_depth, dart_position, double_dart=False):
         
@@ -204,6 +213,7 @@ class PantsHalf(BaseBottoms):
             hips_depth=hips_depth,
             dart_position = body['bust_points'] / 2,
             crotch_width=front_extention,
+            match_top_int_to=(body['waist'] - body['waist_back_width']) / 2
             ).translate_by([0, body['_waist_level'] - 5, 25])
         self.back = PantPanel(
             f'pant_b_{tag}', body, design,
@@ -214,6 +224,7 @@ class PantsHalf(BaseBottoms):
             hipline_ext=1.1,
             dart_position = body['bum_points'] / 2,
             crotch_width=back_extention,
+            match_top_int_to=body['waist_back_width'] / 2,
             double_dart=True
             ).translate_by([0, body['_waist_level'] - 5, -20])
 
@@ -257,8 +268,8 @@ class PantsHalf(BaseBottoms):
         self.interfaces = {
             'crotch_f': self.front.interfaces['crotch'],
             'crotch_b': self.back.interfaces['crotch'],
-            'top_f': self.front.interfaces['top'],
-            'top_b': self.back.interfaces['top'],
+            'top_f': self.front.interfaces['top'], 
+            'top_b': self.back.interfaces['top'] 
         }
 
     def length(self):
@@ -286,10 +297,11 @@ class Pants(BaseBottoms):
                 self.right.interfaces['top_b'], self.left.interfaces['top_b']),
             # Some are reversed for correct connection
             'top': pyp.Interface.from_multiple(   # around the body starting from front right
-                self.right.interfaces['top_f'],
-                self.left.interfaces['top_f'].reverse(),
-                self.left.interfaces['top_b'],   
-                self.right.interfaces['top_b'].reverse()),
+                self.right.interfaces['top_f'].flip_edges(),
+                self.left.interfaces['top_f'].reverse(with_edge_dir_reverse=True),
+                self.left.interfaces['top_b'].flip_edges(),
+                self.right.interfaces['top_b'].reverse(with_edge_dir_reverse=True), # Flips the edges and restores the direction
+            )
         }
 
     def get_rise(self):

@@ -7,9 +7,11 @@ from pypattern.generic_utils import close_enough
 class StitchingRule:
     """High-level stitching instructions connecting two component interfaces
     """
-    def __init__(self, int1: Interface, int2: Interface,
+    def __init__(self, int1: Interface, int2: Interface, 
                  verbose: bool = False) -> None:
         """
+        Inputs:
+            * int1, int2 -- two interfaces to connect in the stitch
         NOTE: When connecting interfaces with multiple edge count on both
             sides,
             1) Note that the edge sequences may change their structure.
@@ -39,16 +41,10 @@ class StitchingRule:
     def isMatching(self, tol=0.05):
         # if both the breakdown and relative partitioning is similar
 
-        rev_frac1 = self.int1.edges.fractions()
-        rev_frac1.reverse()
+        frac1 = self.int1.projecting_edges(on_oriented=True).fractions()
+        frac2 = self.int2.projecting_edges(on_oriented=True).fractions()
 
-        return (len(self.int1) == len(self.int2) 
-                and (np.allclose(self.int1.edges.fractions(),
-                                 self.int2.edges.fractions(), atol=tol)
-                     or np.allclose(rev_frac1, self.int2.edges.fractions(),
-                                    atol=tol)
-                )
-        )
+        return len(self.int1) == len(self.int2) and np.allclose(frac1, frac2, atol=tol)
 
     def match_interfaces(self):
         """ Subdivide the interface edges on both sides s.t. they are matching 
@@ -92,8 +88,9 @@ class StitchingRule:
 
         while in_id < len(inter.edges) and add_id < len(to_add):
             # projected edges since they represent the stitch sizes
-            next_init = covered_init + inter.projecting_edges()[in_id].length() / total_len
-            next_added = covered_added + to_add[add_id]
+            # NOTE: sometimes overshoots slightly due to error accumulation -> bounding by 1.
+            next_init = min(covered_init + inter.projecting_edges()[in_id].length() / total_len, 1.)
+            next_added = min(covered_added + to_add[add_id], 1.)
             if close_enough(next_init, next_added, tol):
                 # the vertex exists, skip
                 in_id += 1
@@ -134,9 +131,8 @@ class StitchingRule:
 
                 # TODO what if these edges are used in other interfaces? Do they need to be updated as well?
                 # next step
-                # By the size of new edge
-                covered_init += inter.projecting_edges()[in_id].length() / total_len 
-                covered_added = next_added
+                # These are now matched
+                covered_init, covered_added = next_added, next_added 
                 in_id += 1
                 add_id += 1
 
@@ -163,6 +159,16 @@ class StitchingRule:
                     'edge': self.int2.edges[j].geometric_id
                 }
             ])
+
+            # Swap indication 
+            # NOTE: Swap is indicated on the interfaces in order to support component
+            # incapsulation. Same stitching rule for different participating components may have different
+            # fabric side preferences. 
+            # NOTE: "right_wrong" stitch is used when either of the interfaces request it
+            # NOTE: Backward-compatible formulation 
+            if self.int1.right_wrong[i] or self.int2.right_wrong[j]:  
+                stitches[-1].append('right_wrong')
+
         return stitches
 
 

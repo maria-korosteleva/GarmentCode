@@ -50,6 +50,7 @@ class MetaGarment(pyp.Component):
             Lower = None
 
         # Belt (or not)
+        # TODO Adapt the rise of the lower garment to the width of the belt for correct matching
         if self.belt_name:
             Belt_class = globals()[self.belt_name]
             

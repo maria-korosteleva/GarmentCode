@@ -9,6 +9,7 @@ from pypattern.generic_utils import close_enough
 from pypattern.generic_utils import c_to_list
 from pypattern.generic_utils import list_to_c
 
+ILENGTH_S_TOL = 1e-10   # NOTE: tolerance value for evaluating curve parameter (t) from acr length
 
 class Edge:
     """Edge an individual segment of a panel border connecting two panel
@@ -550,7 +551,7 @@ class CurveEdge(Edge):
         """Center of the edge"""
         curve = self.as_curve()
 
-        t_mid = curve.ilength(curve.length()/2)
+        t_mid = curve.ilength(curve.length()/2, s_tol=ILENGTH_S_TOL)
         return c_to_list(curve.point(t_mid))
     
     def _subdivide(self, fractions: list, by_length=False):
@@ -568,7 +569,7 @@ class CurveEdge(Edge):
         for fr in fractions:
             covered_fr += fr
             if by_length:
-                next_t = curve.ilength(clen * covered_fr)
+                next_t = curve.ilength(clen * covered_fr, s_tol=ILENGTH_S_TOL)
                 subcurves.append(curve.cropped(prev_t, next_t))
                 prev_t = next_t
             else:
@@ -640,7 +641,7 @@ class CurveEdge(Edge):
 
         curve = self.as_curve(absolute=False)
         curve_lengths = tvals_init * curve.length()
-        tvals = [curve.ilength(c_len) for c_len in curve_lengths]
+        tvals = [curve.ilength(c_len, s_tol=ILENGTH_S_TOL) for c_len in curve_lengths]
 
         edge_verts = [self._rel_to_abs_2d(c_to_list(curve.point(t))) for t in tvals]
         seq = self.to_edge_sequence(edge_verts)
@@ -909,7 +910,8 @@ class EdgeSequence:
 
     def extend(self, factor):
         """Extend or shrink the edges along the line from start of the first
-        edge to the end of the last edge in sequence
+        edge to the end of the last edge in sequence. The start of the first
+        edge remains fixed
         """
         # TODOLOW Version With preservation of total length?
         # TODOLOW Base extention factor on change in total length of edges rather

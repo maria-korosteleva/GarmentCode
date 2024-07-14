@@ -10,8 +10,14 @@ from assets.garment_programs import shapes
 class SkirtPanel(pyp.Panel):
     """One panel of a panel skirt with ruffles on the waist"""
 
-    def __init__(self, name, waist_length=70, length=70, ruffles=1,
-                 bottom_cut=0, flare=0) -> None:
+    def __init__(self, 
+                 name, 
+                 waist_length=70, length=70, 
+                 ruffles=1,
+                 match_top_int_to=None,
+                 bottom_cut=0, 
+                 flare=0
+        ) -> None:
         super().__init__(name)
 
         base_width = waist_length
@@ -37,7 +43,8 @@ class SkirtPanel(pyp.Panel):
         self.interfaces = {
             'right': pyp.Interface(self, self.right[-1]),
             'top': pyp.Interface(self, self.waist,
-                                 ruffle=ruffles).reverse(True),
+                                 ruffle=self.waist.length() / match_top_int_to if match_top_int_to is not None else ruffles
+            ).reverse(True),
             'left': pyp.Interface(self, self.left[0]),
             'bottom': pyp.Interface(self, self.bottom)
         }
@@ -95,8 +102,10 @@ class FittedSkirtPanel(pyp.Panel):
             length,
             hipline_ext=1,
             dart_position=None, dart_frac=0.5, double_dart=False,
+            match_top_int_to=None,
             slit=0, left_slit=0, right_slit=0,
-            side_cut=None, flip_side_cut=False) -> None:
+            side_cut=None, flip_side_cut=False
+        ) -> None:
         """ Fitted panel for a pencil skirt
 
             Body/design values that differ between front and back panels are supplied as parameters, 
@@ -229,16 +238,24 @@ class FittedSkirtPanel(pyp.Panel):
             'right': pyp.Interface(self, right, [1] * (len(right) - 1) + [hipline_ext]), 
             'left': pyp.Interface(self, left, [hipline_ext] + [1] * (len(left) - 1)),  
         }
+        self.interfaces['left'].edges_flipping[0] = True
+        self.interfaces['right'].edges_flipping[-1] = True
 
         # Add top darts
         if w_diff > hw_shift:
             dart_width = w_diff - hw_shift
             top_edges, int_edges = self.add_darts(top, dart_width, dart_depth, dart_position, double_dart=double_dart)
 
-            self.interfaces['top'] = pyp.Interface(self, int_edges) 
+            self.interfaces['top'] = pyp.Interface(
+                self, int_edges,
+                ruffle=int_edges.length() / match_top_int_to if match_top_int_to is not None else 1.
+            ) 
             self.edges.substitute(top, top_edges)
         else:
-            self.interfaces['top'] = pyp.Interface(self, top) 
+            self.interfaces['top'] = pyp.Interface(
+                self, top,
+                ruffle=top.length() / match_top_int_to if match_top_int_to is not None else 1.
+            ) 
 
     def add_darts(self, top, dart_width, dart_depth, dart_position, double_dart=False):
         top_edge_len = top.length()
@@ -316,7 +333,7 @@ class PencilSkirt(StackableSkirtComponent):
             length = length - hips_depth
 
         self.front = FittedSkirtPanel(
-            f'skirt_front',   
+            'skirt_front',   
             body,
             design,
             (waist - back_waist) / 2,
@@ -325,6 +342,7 @@ class PencilSkirt(StackableSkirtComponent):
             length=length,
             dart_position=body['bust_points'] / 2,
             dart_frac=0.8,  # Diff for front and back
+            match_top_int_to=(body['waist'] - body['waist_back_width']),
             slit=design['front_slit']['v'] if slit else 0, 
             left_slit=design['left_slit']['v'] if slit else 0,
             right_slit=design['right_slit']['v'] if slit else 0,
@@ -332,7 +350,7 @@ class PencilSkirt(StackableSkirtComponent):
         ).translate_to([0, body['_waist_level'], 25])
 
         self.back = FittedSkirtPanel(
-            f'skirt_back', 
+            'skirt_back', 
             body,
             design,
             back_waist / 2,
@@ -343,6 +361,7 @@ class PencilSkirt(StackableSkirtComponent):
             dart_position=body['bum_points'] / 2,
             dart_frac=0.85,   
             double_dart=True,
+            match_top_int_to=body['waist_back_width'],
             slit=design['back_slit']['v'] if slit else 0, 
             left_slit=design['left_slit']['v'] if slit else 0, 
             right_slit=design['right_slit']['v'] if slit else 0,
@@ -360,8 +379,8 @@ class PencilSkirt(StackableSkirtComponent):
             'top_f': self.front.interfaces['top'],
             'top_b': self.back.interfaces['top'],
             'top': pyp.Interface.from_multiple(
-                self.front.interfaces['top'],
-                self.back.interfaces['top'].reverse()
+                self.front.interfaces['top'].flip_edges(),
+                self.back.interfaces['top'].reverse(with_edge_dir_reverse=True)
             ),
             'bottom_f': self.front.interfaces['bottom'],
             'bottom_b': self.back.interfaces['bottom'],
@@ -375,7 +394,7 @@ class PencilSkirt(StackableSkirtComponent):
 
 class Skirt2(StackableSkirtComponent):
     """Simple 2 panel skirt"""
-    def __init__(self, body, design, tag='', length=None, rise=None, slit=True, top_ruffles=True) -> None:
+    def __init__(self, body, design, tag='', length=None, rise=None, slit=True, top_ruffles=True, min_len=5) -> None:
         super().__init__(body, design, tag)
 
         design = design['skirt']
@@ -387,13 +406,18 @@ class Skirt2(StackableSkirtComponent):
         if length is None:
             length = hip_line + design['length']['v'] * body['_leg_length']  # Depends on leg length
 
+        # NOTE: with some combinations of rise and length parameters length may become too small/negative
+        # Hence putting a min positive value here
+        length = max(length, min_len)
+
         self.front = SkirtPanel(
             f'skirt_front_{tag}' if tag else 'skirt_front', 
             waist_length=waist - back_waist, 
             length=length,
             ruffles=design['ruffle']['v'] if top_ruffles else 1,   # Only if on waistband
             flare=design['flare']['v'],
-            bottom_cut=design['bottom_cut']['v'] * design['length']['v'] if slit else 0
+            bottom_cut=design['bottom_cut']['v'] * design['length']['v'] if slit else 0,
+            match_top_int_to=(body['waist'] - body['waist_back_width'])
         ).translate_to([0, body['_waist_level'], 25])
         self.back = SkirtPanel(
             f'skirt_back_{tag}'  if tag else 'skirt_back', 
@@ -401,7 +425,8 @@ class Skirt2(StackableSkirtComponent):
             length=length,
             ruffles=design['ruffle']['v'] if top_ruffles else 1,   # Only if on waistband
             flare=design['flare']['v'],
-            bottom_cut=design['bottom_cut']['v'] * design['length']['v'] if slit else 0
+            bottom_cut=design['bottom_cut']['v'] * design['length']['v'] if slit else 0,
+            match_top_int_to=body['waist_back_width']
         ).translate_to([0, body['_waist_level'], -20])
 
         self.stitching_rules = pyp.Stitches(
@@ -430,7 +455,7 @@ class Skirt2(StackableSkirtComponent):
 class SkirtManyPanels(BaseBottoms):
     """Round Skirt with many panels"""
 
-    def __init__(self, body, design, tag='', rise=None) -> None:
+    def __init__(self, body, design, tag='', rise=None, min_len=5) -> None:
         tag_extra = str(design['flare-skirt']['skirt-many-panels']['n_panels']['v'])
         tag = f'{tag}_{tag_extra}' if tag else tag_extra 
         super().__init__(body, design, tag=tag, rise=rise)
@@ -442,6 +467,10 @@ class SkirtManyPanels(BaseBottoms):
 
         # Length is dependent on length of legs
         length = hip_line + design['length']['v'] * body['_leg_length']
+
+        # NOTE: with some combinations of rise and length parameters, length may become too small/negative
+        # Hence putting a min positive value here
+        length = max(length, min_len)
 
         flare_coeff_pi = 1 + design['suns']['v'] * length * 2 * np.pi / waist
 
@@ -458,6 +487,9 @@ class SkirtManyPanels(BaseBottoms):
         # Align orientation with a body
         self.front.rotate_by(R.from_euler('XYZ', [0, -90, 0], degrees=True))
         self.front.rotate_align([-dist, 0, panel_w / 2])
+
+        # Upd interface orientation
+        self.front.interfaces['top'].reverse(True)
 
         # Create new panels
         self.subs = pyp.ops.distribute_Y(self.front, n_panels, name_tag='skirt_panel')

@@ -70,7 +70,13 @@ class CircleEdgeFactory:
         """
         # Find circle center
         str_dist = norm(np.asarray(end) - np.asarray(start))
-        center_r = np.sqrt(radius ** 2 - str_dist ** 2 / 4)
+
+        # NOTE: close enough values may give negative 
+        # value under sqrt due to numerical errors
+        if close_enough(radius ** 2, str_dist ** 2 / 4, 1e-3):
+            center_r = 0.
+        else:
+            center_r = np.sqrt(radius ** 2 - str_dist ** 2 / 4)
 
         # Find the absolute value of Y
         control_y = radius + center_r if large_arc else radius - center_r

@@ -245,6 +245,9 @@ class SimpleLapel(pyp.Component):
             ).translate_by([-length_b, height_p, -10])
             self.back.rotate_by(R.from_euler('XYZ', [90, 45, 0], degrees=True))
 
+        if standing:
+            self.back.interfaces['right'].set_right_wrong(True)
+
         self.stitching_rules.append((
             self.front.interfaces['to_collar'], 
             self.back.interfaces['right']
@@ -254,8 +257,8 @@ class SimpleLapel(pyp.Component):
             #'front': NOTE: no front interface here
             'back': self.back.interfaces['left'],
             'bottom': pyp.Interface.from_multiple(
-                self.front.interfaces['to_bodice'],
-                self.back.interfaces['bottom'] if standing else self.back.interfaces['top'],
+                self.front.interfaces['to_bodice'].set_right_wrong(True),
+                self.back.interfaces['bottom'] if standing else self.back.interfaces['top'].set_right_wrong(True),
             )
         })
 

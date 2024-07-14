@@ -8,15 +8,15 @@
 design: 
   meta: 
     upper: 
-      v: Shirt
+      v: FittedShirt
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
-      v: null 
+      v: null # FittedWB 
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
-      v:  null 
+      v: PencilSkirt 
       range: 
         - SkirtCircle
         - GodetSkirt
@@ -34,7 +34,7 @@ design:
       range: [1., 2]   # 1 == waist length
       type: float
     width: 
-      v: 0.1
+      v: 0.3
       range: [0.1, 1]
       type: float
 
@@ -121,7 +121,7 @@ design:
       type: bool
     component:
       style: 
-        v: null 
+        v: SimpleLapel 
         range: [Turtle, SimpleLapel, Hood2Panels]
         type: select_null
       depth: 
@@ -129,7 +129,7 @@ design:
         range: [2, 8]
         type: int
       lapel_standing:
-        v: False
+        v: True
         range: [True, False]
         type: bool
       hood_depth: 
@@ -143,7 +143,7 @@ design:
      
   sleeve:
     sleeveless: 
-      v: False
+      v: True
       range: [True, False]
       type: bool
     armhole_shape: 
@@ -184,7 +184,7 @@ design:
 
     # Ruffle
     connect_ruffle:
-      v: 1.
+      v: 1.2
       range: [1, 2]
       type: float
     
@@ -197,15 +197,15 @@ design:
     # Cuff
     cuff: 
       type:
-        v: null
+        v: CuffBandSkirt
         range: [CuffBand, CuffSkirt, CuffBandSkirt]
         type: select_null
       top_ruffle: 
-        v: 1
+        v: 1.2
         range: [1, 3]
         type: float
       cuff_len: 
-        v: 0.1
+        v: 0.3
         range:
         - 0.05
         - 0.9
@@ -582,7 +582,7 @@ design:
       type: float
     cuff: 
       type:
-        v: null 
+        v: CuffBandSkirt 
         range: [CuffBand, CuffSkirt, CuffBandSkirt]
         type: select_null
       top_ruffle: 
@@ -590,7 +590,7 @@ design:
         range: [1, 2]
         type: float
       cuff_len: 
-        v: 0.1
+        v: 0.3
         range:
         - 0.05
         - 0.9

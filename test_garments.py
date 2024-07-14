@@ -15,6 +15,9 @@ if __name__ == '__main__':
     # 
     # body_file = './assets/body_measurments/f_smpl_avg.yaml'
     body_file = './assets/default_bodies/mean_all.yaml'
+    # body_file = r"C:\Users\MariaKo\Documents\Logs\datasets\gen_errors\rand_NRXDPYOARD\body_measurements.yaml"
+    # body_file = r"C:\Users\MariaKo\Documents\Logs\datasets\gen_errors\rand_2RVZ9O8V6J\body_measurements.yaml"
+    # body_file = r"C:\Users\MariaKo\Documents\Logs\datasets\gen_errors\rand_160S53YNAF\body_measurements.yaml"
     # body_file = r"G:\My Drive\GarmentCode\sewing_siggraph_garment\measurements\Maria.yaml"
     # body_file = './assets/body_measurments/f_avatar.yaml'
     # body_file = './assets/body_measurments/f_smpl_model.yaml'
@@ -26,6 +29,12 @@ if __name__ == '__main__':
 
     design_files = {
         'base': './assets/design_params/base.yaml',
+        # 'gen_err': r"C:\Users\MariaKo\Documents\Logs\datasets\gen_errors\rand_2RVZ9O8V6J\design_params.yaml"
+        # 'gen_err_3': r"C:\Users\MariaKo\Documents\Logs\datasets\gen_errors\rand_160S53YNAF\design_params_edit.yaml"
+        # 'gen_err_2': r"C:\Users\MariaKo\Documents\Logs\datasets\gen_errors\rand_NRXDPYOARD\design_params.yaml"
+        # 'thin_skirt': r'c:\Users\mariako\Documents\Logs\datasets_gen\to_compare_garments_5000_0_regen_240613-14-58-48_errors\default_body\data\rand_N0ASZSMN5U\design_params_edited.yaml'
+        # 'mp_skirt_flip': r"C:\Users\mariako\Documents\Logs\datasets_gen\to_compare_garments_5000_0_regen_240613-14-58-48_errors\default_body\data\rand_BSH8MAZ3S9\design_params_edited.yaml"
+        # 'st_err': r"C:\Users\mariako\Documents\Logs\datasets_gen\to_compare_garments_5000_0_regen_240613-14-58-48_errors\default_body\data\rand_A35G0NQPF9\design_params.yaml"
         # 'sleeve_align': './assets/design_params/sleeve_alignment_1.yaml',
         # 'sleeve_long': './assets/design_params/sleeve_too_long.yaml',
         # 'pants_align': './assets/design_params/pants_alignment.yaml',

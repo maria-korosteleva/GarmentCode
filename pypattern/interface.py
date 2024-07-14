@@ -11,20 +11,26 @@ class Interface:
     """Description of an interface of a panel or component
         that can be used in stitches as a single unit
     """
-    def __init__(self, panel, edges, ruffle=1.):
+    def __init__(self, panel, edges, ruffle=1., right_wrong=False):
         """
         Parameters:
             * panel - Panel object
             * edges - Edge or EdgeSequence -- edges in the panel that are
                 allowed to connect to
+            # TODO rename to something more generic/projection related?
             * ruffle - ruffle coefficient for a particular edge. Interface
                 object will supply projecting_edges() shape
                 s.t. the ruffles with the given rate are created. Default = 1.
                     (no ruffles, smooth connection)
+            * right_wrong -- control of stitch orientation -- indication if this interface's
+                right side of the fabric should be connected to the wrong side of another interface. 
+                Default -- False -- connect right side of the fabric to the right side of the faric, 
+                sufficient in most cases.
         """
 
         self.edges = edges if isinstance(edges, EdgeSequence) else EdgeSequence(edges)
         self.panel = [panel for _ in range(len(self.edges))]  # matches every edge 
+        self.right_wrong = [right_wrong for _ in range(len(self.edges))]
 
         # Allow to enfoce change the direction of edge 
         # (used in many-to-many stitches correspondance determination)
@@ -59,60 +65,46 @@ class Interface:
         projected = self.edges.copy() if not on_oriented else self.oriented_edges()
         for r in self.ruffle:
             if not close_enough(r['coeff'], 1, 1e-3):
-                projected[r['sec'][0]:r['sec'][1]].extend(1 / r['coeff'])
-        
+                if r['sec'][1] >= len(projected) or not projected[r['sec'][1] - 1:r['sec'][1] + 1].isChained():
+                    projected[r['sec'][0]:r['sec'][1]].extend(1 / r['coeff'])
+                else:
+                    # Don't let extention to affect the rest of the sequence
+                    # Find the vert that separates the ruffle seqences
+                    prev_edge, next_edge = projected[r['sec'][1] - 1], projected[r['sec'][1]]
+
+                    # Common vertex
+                    common_v = prev_edge.end if prev_edge.end is next_edge.end or prev_edge.end is next_edge.start else prev_edge.start
+
+                    # Create copy and assign to next edge
+                    common_v_copy = common_v.copy()
+                    copy_to_end = False
+                    if common_v is next_edge.end:
+                        next_edge.end = common_v_copy
+                        copy_to_end = True
+                    else:
+                        next_edge.start = common_v_copy
+
+                    # Extend the sequence
+                    projected[r['sec'][0]:r['sec'][1]].extend(1 / r['coeff'])
+
+                    # move the next edges s.t. created vertex alignes with the original common vertex
+                    projected[r['sec'][1]:].translate_by([common_v[0] - common_v_copy[0], common_v[1] - common_v_copy[1]])
+
+                    # re-chain the edges
+                    if copy_to_end:
+                        next_edge.end = common_v
+                    else:
+                        next_edge.start = common_v
+
         return projected
 
-    def needsFlipping(self, i, tol=1.):
+    def needsFlipping(self, i):
         """ Check if particular edge (i) should be re-oriented to follow the
             general direction of the interface
             * tol -- tolerance in distance differences that triggers flipping (in cm)
 
         """
-        if self.edges_flipping[i]:
-            return True
-        
-        # Otherwise, try to evaluate
-
-        e = self.edges[i]
-        panel = self.panel[i]
-        s_3d, end_3d = panel.point_to_3D(e.start), panel.point_to_3D(e.end)
-
-        # Corener cases
-        if i == 0:
-            next, next_panel = (self.edges[(i+1 % len(self.edges))],
-                                self.panel[(i+1) % len(self.edges)])
-            next_3d = next_panel.point_to_3D(next.midpoint())
-
-            # check by start vertex
-            # NOTE this can misfire in particular 3D orentations
-            diff = norm(end_3d - next_3d) - norm(s_3d - next_3d)
-            return diff > tol
-        if i == len(self.edges) - 1:
-            prev, prev_panel = self.edges[i-1], self.panel[i-1]
-            prev_3d = prev_panel.point_to_3D(prev.midpoint())
-
-            # check by start vertex
-            # NOTE this can misfire in particular 3D orentations
-            diff = norm(s_3d - prev_3d) - norm(end_3d - prev_3d)
-            return diff > tol
-
-        # Mid case
-        # Utilize distance from the end vertex to the next panel 
-        # start -> prev + end -> next or other way around  
-        prev, prev_panel = self.edges[i-1], self.panel[i-1]
-        next, next_panel = (self.edges[(i+1 % len(self.edges))],
-                            self.panel[(i+1) % len(self.edges)])
-
-        # Optimal order in 3D
-        prev_3d = prev_panel.point_to_3D(prev.midpoint())
-        next_3d = next_panel.point_to_3D(next.midpoint())
-
-        forward_order_dist = norm(s_3d - prev_3d) + norm(end_3d - next_3d)
-        flipped_order_dist = norm(s_3d - next_3d) + norm(end_3d - prev_3d)
-
-        diff = forward_order_dist - flipped_order_dist
-        return diff > tol
+        return self.edges_flipping[i]
 
     # ANCHOR --- Info ----
     def oriented_edges(self):
@@ -211,6 +203,18 @@ class Interface:
         
         return self
 
+    def flip_edges(self):
+        """Reverse the direction of edges in the interface
+            (without updating the edge objects)
+
+            Reversal is useful for updating interface edges for correct
+                matching in the multi-stitches
+        """
+        self.edges_flipping = [not e for e in self.edges_flipping]
+        
+        return self
+
+
     def reorder(self, curr_edge_ids, projected_edge_ids):
         """Change the order of edges from curr_edge_ids to projected_edge_ids
             in the interface
@@ -230,6 +234,7 @@ class Interface:
         new_edges = EdgeSequence()
         new_panel_list = []
         new_flipping_info = []
+        new_right_wrong = []
         for i in range(len(self.panel)):
             id = i if i not in curr_edge_ids else projected_edge_ids[curr_edge_ids.index(i)]
             # edges
@@ -237,10 +242,13 @@ class Interface:
             new_flipping_info.append(self.edges_flipping[id])
             # panels
             new_panel_list.append(self.panel[id])
+            # connectivity indication
+            new_right_wrong.append(self.right_wrong[id])
             
         self.edges = new_edges
         self.panel = new_panel_list
         self.edges_flipping = new_flipping_info
+        self.right_wrong = new_right_wrong
 
     def substitute(self, orig, new_edges, new_panels):
         """Update the interface edges with correct correction of panels
@@ -261,16 +269,21 @@ class Interface:
             orig = len(self.edges) + orig 
         self.edges.substitute(orig, new_edges)
 
-        # Update panels & flip info
+        # Update panels & flip info & right_wrong info
         self.panel.pop(orig)
-        self.edges_flipping.pop(orig)
+        curr_edges_flip = self.edges_flipping.pop(orig)
+        curr_right_wrong = self.right_wrong.pop(orig)
         if isinstance(new_panels, list) or isinstance(new_panels, tuple):
             for j in range(len(new_panels)):
                 self.panel.insert(orig + j, new_panels[j])
-                self.edges_flipping.insert(orig + j, False)
+
+                # TODOLOW Note propagation of default values. Allow to specify them as func input!
+                self.edges_flipping.insert(orig + j, curr_edges_flip)
+                self.right_wrong.insert(orig + j, curr_right_wrong)
         else: 
             self.panel.insert(orig, new_panels)
-            self.edges_flipping.insert(orig, False)
+            self.edges_flipping.insert(orig, curr_edges_flip)
+            self.right_wrong.insert(orig + j, curr_right_wrong)
 
         # Propagate ruffle indicators
         ins_len = 1 if isinstance(new_edges, Edge) else len(new_edges)
@@ -281,6 +294,11 @@ class Interface:
                 if it['sec'][1] > orig:
                     it['sec'][1] += ins_len - 1
 
+        return self
+
+    def set_right_wrong(self, right_wrong):
+        """Set all right_wrong values for the edges in current interface to the input value"""
+        self.right_wrong = [right_wrong for _ in range(len(self.edges))]
         return self
 
     # ANCHOR ----- Statics ----
@@ -300,6 +318,7 @@ class Interface:
         new_int.edges_flipping = []
         new_int.panel = []
         new_int.ruffle = []
+        new_int.right_wrong = []
         
         for elem in ints:
             shift = len(new_int.edges)
@@ -309,6 +328,7 @@ class Interface:
 
             new_int.edges.append(elem.edges)
             new_int.panel += elem.panel 
+            new_int.right_wrong += elem.right_wrong
             new_int.edges_flipping += elem.edges_flipping 
             
         return new_int 

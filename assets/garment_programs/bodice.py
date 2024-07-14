@@ -446,15 +446,11 @@ class Shirt(pyp.Component):
                                      self.left.interfaces['back_in']))
 
         # Adjust interface ordering for correct connectivity
-        self.left.interfaces['b_bottom'].reverse()
-        if fitted: 
-            self.right.interfaces['f_bottom'].reorder([0, 1], [1, 0])
-
         self.interfaces = {   # Bottom connection
             'bottom': pyp.Interface.from_multiple(
-                self.right.interfaces['f_bottom'],
+                self.right.interfaces['f_bottom'].reverse(),
                 self.left.interfaces['f_bottom'],
-                self.left.interfaces['b_bottom'],
+                self.left.interfaces['b_bottom'].reverse(),
                 self.right.interfaces['b_bottom'],)
         }
 
