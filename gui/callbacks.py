@@ -155,19 +155,20 @@ class GUIState:
                 if param[0] == '_':
                     elem.disable()
 
-    def def_flat_design_subtab(self, design_params, use_collapsible=False):
+    def def_flat_design_subtab(self, ui_elems, design_params, use_collapsible=False):
         """Group of design parameters"""
         for param in design_params: 
             if 'v' not in design_params[param]:
                 # TODOLOW Maybe use expansion for all?
+                ui_elems[param] = {}
                 if use_collapsible:
                     # TODO font size?
                     with ui.expansion(f'{param}:').classes('w-full'):
-                        self.def_flat_design_subtab(design_params[param])
+                        self.def_flat_design_subtab(ui_elems[param], design_params[param])
                 else:
                     # TODO Header of the card!
                     with ui.card().classes('w-full'): 
-                        self.def_flat_design_subtab(design_params[param])
+                        self.def_flat_design_subtab(ui_elems[param], design_params[param])
             else:
                 # Leaf value
                 p_type = design_params[param]['type']
@@ -177,18 +178,18 @@ class GUIState:
                     values = design_params[param]['range']
                     if 'null' in p_type and None not in values: 
                         values.append(None)  # NOTE: Displayable value
-                    ui.select(
+                    ui_elems[param] = ui.select(
                         values, value=val,
                         on_change=lambda e, dic=design_params, param=param: self.update_pattern_ui_state(dic, param, e.value)
                     ).classes('w-full') 
                 elif p_type == 'bool':
-                    ui.switch(
+                    ui_elems[param] = ui.switch(
                         param, value=val, 
                         on_change=lambda e, dic=design_params, param=param: self.update_pattern_ui_state(dic, param, e.value)
                     )
                 elif p_type == 'float' or p_type == 'int':
                     ui.label(param)
-                    ui.slider(
+                    ui_elems[param] = ui.slider(
                         value=val, 
                         min=p_range[0], 
                         max=p_range[1], 
@@ -197,18 +198,19 @@ class GUIState:
                         .on('update:model-value', 
                             lambda e, dic=design_params, param=param: self.update_pattern_ui_state(dic, param, e.args),
                             throttle=0.5, leading_events=False)
+
                     # NOTE Events control: https://nicegui.io/documentation/slider#throttle_events_with_leading_and_trailing_options
                 elif 'file' in p_type:
                     default_path = Path(design_params[param]['v'])
                     # FIXME .bind_value(design_params[param], 'v')  -- doesn't work! (and also -- not a great idea)
                     ftype = p_type.split('_')[-1]
-                    ui.upload(
+                    ui_elems[param] = ui.upload(
                         label=str(default_path),
                         on_upload=lambda: self.update_pattern_ui_state()
                     ).classes('max-w-full').props(f'accept=".{ftype}"')
                 else:
                     print(f'GUI::WARNING::Unknown parameter type: {p_type}')
-                    ui.input(label=param, value=val, placeholder='Type the value',
+                    ui_elems[param] = ui.input(label=param, value=val, placeholder='Type the value',
                         validation={'Input too long': lambda value: len(value) < 20},
                         on_change=lambda e, dic=design_params, param=param: self.update_pattern_ui_state(dic, param, e.value)
                     ).classes('w-full')
@@ -225,16 +227,25 @@ class GUIState:
         # FIXME Re-write event handlers to avoid binding and do regular updates
         # Allowing to update the interface once
         # TODO Update interface function
-        def random():
-            # self.update_pattern_ui_state(force_update=True)
-            pass
+        async def random():
+            self.toggle_param_update_events(self.ui_design_refs)  # Don't react to value updates
+
+            self.pattern_state.sample_design(False)
+            self.update_params_ui_state(self.ui_design_refs, self.pattern_state.design_params)
+            await self.update_pattern_ui_state()
+
+            self.toggle_param_update_events(self.ui_design_refs)  # Re-do reaction to value updates
 
         
-        def default():
-            # DRAFT self.pattern_state.restore_design(False)
-            pass
+        async def default():
+            self.toggle_param_update_events(self.ui_design_refs)
 
-            
+            self.pattern_state.restore_design(False)
+            self.update_params_ui_state(self.ui_design_refs, self.pattern_state.design_params)
+            await self.update_pattern_ui_state()
+
+            self.toggle_param_update_events(self.ui_design_refs)
+
 
         # Set of buttons
         # FIXME Too many state updates are triggered by the whole dictionary update
@@ -246,6 +257,7 @@ class GUIState:
     
         # Design parameters
         design_params = self.pattern_state.design_params
+        self.ui_design_refs = {}
         with ui.splitter(value=32).classes(f'w-full h-[{self.h_content - 10}vh] p-0 m-0') as splitter:
             with splitter.before:
                 with ui.tabs().props('vertical').classes('w-full') as tabs:
@@ -258,6 +270,7 @@ class GUIState:
                             continue
                         # Tab
                         self.ui_design_subtabs[param] = ui.tab(param)
+                        self.ui_design_refs[param] = {}
 
             with splitter.after:
                 with ui.tab_panels(tabs, value=self.ui_design_subtabs['meta']).props('vertical').classes('w-full'):  # DRAFT h-full
@@ -265,6 +278,7 @@ class GUIState:
                         with ui.tab_panel(tab_elem).classes('p-0 m-0'): 
                             with ui.scroll_area().classes(f'w-full h-[{self.h_content - 19}vh] p-0 m-0'):
                                 self.def_flat_design_subtab(
+                                    self.ui_design_refs[param],
                                     design_params[param],
                                     use_collapsible=(param == 'left')
                                 )
@@ -306,7 +320,7 @@ class GUIState:
 
     # SECTION -- Event callbacks
     # TODO Is this a pattern_state function?
-    async def update_pattern_ui_state(self, dic, param, new_value, body_param=False):
+    async def update_pattern_ui_state(self, param_dict=None, param=None, new_value=None, body_param=False):
         """UI was updated -- update the state of the pattern parameters and visuals"""
 
         # NOTE: Fix to the "same value" issue in lambdas 
@@ -316,10 +330,11 @@ class GUIState:
         print('Updating pattern')
 
         # Update the values
-        if body_param:
-            dic[param] = new_value
-        else:
-            dic[param]['v'] = new_value
+        if param_dict is not None:
+            if body_param:
+                param_dict[param] = new_value
+            else:
+                param_dict[param]['v'] = new_value
 
         # Quick update
         if not self.pattern_state.is_slow_design(): 
@@ -393,3 +408,31 @@ class GUIState:
             else:
                 # TODO restore default body placement
                 self.ui_pattern_display.set_source('')
+
+
+    def update_params_ui_state(self, ui_elems, design_params):
+        """Sync ui params with the current state of the design params"""
+        # TODO Body params too!
+
+        for param in design_params: 
+            if 'v' not in design_params[param]:
+                self.update_params_ui_state(ui_elems[param], design_params[param])
+            else:
+                ui_elems[param].value = design_params[param]['v']
+
+    def toggle_param_update_events(self, ui_elems):
+        for param in ui_elems:
+            if isinstance(ui_elems[param], dict):
+                self.toggle_param_update_events(ui_elems[param])
+            else:
+                # DEBUG
+                print('Before ', ui_elems[param].is_ignoring_events, param)
+                # DRAFT ui_elems[param]._is_ignoring_events = not ui_elems[param].is_ignoring_events
+
+                if ui_elems[param].is_ignoring_events:
+                    ui_elems[param].enable()
+                else:
+                    ui_elems[param].disable()
+
+                # DEBUG
+                print('After ', ui_elems[param].is_ignoring_events, param)
