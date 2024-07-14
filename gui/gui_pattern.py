@@ -94,24 +94,25 @@ class GUIPattern:
         # Otherwise stays as is
         dic[param]['v'] = new_value
 
-        if 'enable_asym' in param_path and new_value == False:
-            self.sync_left()
-
-        if ('left' not in param_path 
-                and 'meta' not in param_path 
-                and not self.design_params['left']['enable_asym']['v']
-                and param_path[0] in self.design_params['left']):
-            # Copy the fields to the left side
-            dic = self.design_params['left']
-            # Skip the top levels
-            # https://stackoverflow.com/a/37704379
-            for key in param_path[:-1]:
-                dic = dic.setdefault(key, {})
-            if param in dic:  # Some parameters may not be present
-                dic[param]['v'] = new_value
+        # TODO Are the following needed at all? 
 
         if reload:
-            self.reload_garment()
+            if 'enable_asym' in param_path and new_value == False:
+                self.sync_left()
+            if ('left' not in param_path 
+                    and 'meta' not in param_path 
+                    and not self.design_params['left']['enable_asym']['v']
+                    and param_path[0] in self.design_params['left']):
+                # Copy the fields to the left side
+                dic = self.design_params['left']
+                # Skip the top levels
+                # https://stackoverflow.com/a/37704379
+                for key in param_path[:-1]:
+                    dic = dic.setdefault(key, {})
+                if param in dic:  # Some parameters may not be present
+                    dic[param]['v'] = new_value
+
+                self.reload_garment()
 
     def sample_design(self, reload=True):
         """Random design parameters"""

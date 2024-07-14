@@ -42,10 +42,7 @@ class GUIState:
         # Elements
         self.ui_design_subtabs = {}
         self.ui_pattern_display = None
-        self._async_executor = ThreadPoolExecutor(1)
-        # Allows to disable update propagation when mass-updating the values
-        # e.g. on the file upload
-        self.enable_pattern_updates = True    
+        self._async_executor = ThreadPoolExecutor(1)  
 
         # TODO Callbacks on buttons and file loads
         self.pattern_state.reload_garment()
@@ -152,8 +149,8 @@ class GUIState:
                         precision=2,
                         step=0.5,
                         # NOTE: e.sender == UI object, e.value == new value
-                        on_change=lambda: self.update_pattern_ui_state()
-                        ).bind_value(body.params, param)
+                        on_change=lambda e, dic=body, param=param: self.update_pattern_ui_state(dic, param, e.value, body_param=True)
+                        ) 
 
                 if param[0] == '_':
                     elem.disable()
@@ -182,13 +179,13 @@ class GUIState:
                         values.append(None)  # NOTE: Displayable value
                     ui.select(
                         values, value=val,
-                        on_change=lambda: self.update_pattern_ui_state()
-                    ).classes('w-full').bind_value(design_params[param], 'v')
+                        on_change=lambda e, dic=design_params, param=param: self.update_pattern_ui_state(dic, param, e.value)
+                    ).classes('w-full') 
                 elif p_type == 'bool':
                     ui.switch(
                         param, value=val, 
-                        on_change=lambda: self.update_pattern_ui_state()
-                    ).bind_value(design_params[param], 'v')
+                        on_change=lambda e, dic=design_params, param=param: self.update_pattern_ui_state(dic, param, e.value)
+                    )
                 elif p_type == 'float' or p_type == 'int':
                     ui.label(param)
                     ui.slider(
@@ -196,13 +193,14 @@ class GUIState:
                         min=p_range[0], 
                         max=p_range[1], 
                         step=0.025 if p_type == 'float' else 1,
-                    ).props('snap label').classes('w-full').bind_value(design_params[param], 'v') \
-                        .on('update:model-value', lambda: self.update_pattern_ui_state(),
+                    ).props('snap label').classes('w-full')  \
+                        .on('update:model-value', 
+                            lambda e, dic=design_params, param=param: self.update_pattern_ui_state(dic, param, e.args),
                             throttle=0.5, leading_events=False)
                     # NOTE Events control: https://nicegui.io/documentation/slider#throttle_events_with_leading_and_trailing_options
                 elif 'file' in p_type:
                     default_path = Path(design_params[param]['v'])
-                    # FIXME .bind_value(design_params[param], 'v')  -- doesn't work!
+                    # FIXME .bind_value(design_params[param], 'v')  -- doesn't work! (and also -- not a great idea)
                     ftype = p_type.split('_')[-1]
                     ui.upload(
                         label=str(default_path),
@@ -212,8 +210,8 @@ class GUIState:
                     print(f'GUI::WARNING::Unknown parameter type: {p_type}')
                     ui.input(label=param, value=val, placeholder='Type the value',
                         validation={'Input too long': lambda value: len(value) < 20},
-                        on_change=lambda: self.update_pattern_ui_state()
-                    ).classes('w-full').bind_value(design_params[param], 'v')
+                        on_change=lambda e, dic=design_params, param=param: self.update_pattern_ui_state(dic, param, e.value)
+                    ).classes('w-full')
                 
     def def_design_tab(self):
         # TODO selector of available options + upload is one of them
@@ -226,20 +224,15 @@ class GUIState:
 
         # FIXME Re-write event handlers to avoid binding and do regular updates
         # Allowing to update the interface once
-        async def random():
-            st_time = time.time()
-            self.enable_pattern_updates = False
-            self.pattern_state.sample_design(False)
-            # DEBUG 
-            await self.update_pattern_ui_state(force_update=True)
+        # TODO Update interface function
+        def random():
+            # self.update_pattern_ui_state(force_update=True)
+            pass
 
-            # FIXME How to properly enable it back? 
-            self.enable_pattern_updates = True
         
-        async def default():
-            
-            self.pattern_state.restore_design(False)
-            await self.update_pattern_ui_state()
+        def default():
+            # DRAFT self.pattern_state.restore_design(False)
+            pass
 
             
 
@@ -247,7 +240,7 @@ class GUIState:
         # FIXME Too many state updates are triggered by the whole dictionary update
         # -> slow response (extremely)
         with ui.row():
-            ui.button('Random').on('click.stop', random)    # DEBUG , on_click=random)
+            ui.button('Random', on_click=random)
             ui.button('Default', on_click=default)
             ui.button('Upload')   # TODO open a dialog with file uploads for both body and design
     
@@ -313,24 +306,20 @@ class GUIState:
 
     # SECTION -- Event callbacks
     # TODO Is this a pattern_state function?
-    async def update_pattern_ui_state(self, force_update=False):
-        """Params were updated -- update the visuals"""
+    async def update_pattern_ui_state(self, dic, param, new_value, body_param=False):
+        """UI was updated -- update the state of the pattern parameters and visuals"""
 
         # NOTE: Fix to the "same value" issue in lambdas 
         # https://github.com/zauberzeug/nicegui/wiki/FAQs#why-have-all-my-elements-the-same-value
    
-        # FIXME Armhole type switch does not seem to be working =(
-
-        # FIXME Update interface
-        # TODO Take in the parameter name, element ref and value
-        # Or update the whole tree if required
-
-        # Pattern display updates disables
-        if not force_update and not self.enable_pattern_updates:
-            return
-        
         # DEBUG
         print('Updating pattern')
+
+        # Update the values
+        if body_param:
+            dic[param] = new_value
+        else:
+            dic[param]['v'] = new_value
 
         # Quick update
         if not self.pattern_state.is_slow_design(): 
@@ -352,7 +341,7 @@ class GUIState:
     def _sync_update_state(self):
         # Update derivative body values (just in case)
         # TODOLOW only do that on body value updates
-        # TODO: The following two are fast and can be executed without async
+        # TODOLOW: The following two are fast and can be executed without async
         self.pattern_state.body_params.eval_dependencies()
 
         # Update the garment
