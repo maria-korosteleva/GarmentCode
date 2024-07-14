@@ -7,7 +7,12 @@ from assets.garment_programs.base_classes import StackableSkirtComponent
 class CircleArcPanel(pyp.Panel):
     """One panel circle skirt"""
 
-    def __init__(self, name, top_rad, length, angle) -> None:
+    def __init__(self, 
+                 name, 
+                 top_rad, length, angle, 
+                 match_top_int_proportion=None, 
+                 match_bottom_int_proportion=None
+            ) -> None:
         super().__init__(name)
 
         halfarc = angle / 2
@@ -35,8 +40,12 @@ class CircleArcPanel(pyp.Panel):
 
         # Interfaces
         self.interfaces = {
-            'top': pyp.Interface(self, self.edges[0]).reverse(True),
-            'bottom': pyp.Interface(self, self.edges[2]),
+            'top': pyp.Interface(self, self.edges[0],
+                                 ruffle=self.edges[0].length() / match_top_int_proportion if match_top_int_proportion is not None else 1.
+                                 ).reverse(True),
+            'bottom': pyp.Interface(self, self.edges[2],
+                                    ruffle=self.edges[2].length() / match_bottom_int_proportion if match_bottom_int_proportion is not None else 1.
+                                    ),
             'left': pyp.Interface(self, self.edges[1]),
             'right': pyp.Interface(self, self.edges[3])
         }
@@ -45,32 +54,37 @@ class CircleArcPanel(pyp.Panel):
         return self.interfaces['right'].edges.length()
     
     @staticmethod
-    def from_w_length_suns(name, length, top_width, sun_fraction):
+    def from_w_length_suns(name, length, top_width, sun_fraction, **kwargs):
         arc = sun_fraction * 2 * np.pi
         rad = top_width / arc
 
-        return CircleArcPanel(name, rad, length, arc)
+        return CircleArcPanel(name, rad, length, arc, **kwargs)
     
     @staticmethod
-    def from_all_length(name, length, top_width, bottom_width):
+    def from_all_length(name, length, top_width, bottom_width, **kwargs):
 
         diff = bottom_width - top_width
         arc = diff / length
         rad = top_width / arc
 
-        return CircleArcPanel(name, rad, length, arc)
+        return CircleArcPanel(name, rad, length, arc, **kwargs)
     
     @staticmethod
-    def from_length_rad(name, length, top_width, rad):
+    def from_length_rad(name, length, top_width, rad, **kwargs):
 
         arc = top_width / rad
 
-        return CircleArcPanel(name, rad, length, arc)
+        return CircleArcPanel(name, rad, length, arc, **kwargs)
 
 class AsymHalfCirclePanel(pyp.Panel):
     """Panel for a asymmetrci circle skirt"""
 
-    def __init__(self, name, top_rad, length_f, length_s) -> None:
+    def __init__(self, 
+                 name, 
+                 top_rad, length_f, length_s,
+                 match_top_int_proportion=None, 
+                 match_bottom_int_proportion=None
+                 ) -> None:
         """ Half a shifted arc section
         """
         super().__init__(name)
@@ -100,8 +114,12 @@ class AsymHalfCirclePanel(pyp.Panel):
 
         # Interfaces
         self.interfaces = {
-            'top': pyp.Interface(self, self.edges[0]).reverse(True),
-            'bottom': pyp.Interface(self, self.edges[2]),
+            'top': pyp.Interface(self, self.edges[0],
+                                 ruffle=self.edges[0].length() / match_top_int_proportion if match_top_int_proportion is not None else 1.
+                                 ).reverse(True),
+            'bottom': pyp.Interface(self, self.edges[2],
+                                    ruffle=self.edges[2].length() / match_bottom_int_proportion if match_bottom_int_proportion is not None else 1.
+                                    ),
             'left': pyp.Interface(self, self.edges[1]),
             'right': pyp.Interface(self, self.edges[3])
         }
@@ -130,11 +148,15 @@ class SkirtCircle(StackableSkirtComponent):
         if not asymm:  # Typical symmetric skirt
             self.front = CircleArcPanel.from_w_length_suns(
                 f'skirt_front_{tag}' if tag else 'skirt_front', 
-                length, waist / 2, suns / 2).translate_by([0, body['_waist_level'], 15])
+                length, waist / 2, suns / 2,
+                match_top_int_proportion=self.body['waist'] - self.body['waist_back_width'],
+                ).translate_by([0, body['_waist_level'], 15])
 
             self.back = CircleArcPanel.from_w_length_suns(
                 f'skirt_back_{tag}'  if tag else 'skirt_back', 
-                length, waist / 2, suns / 2).translate_by([0, body['_waist_level'], -15])
+                length, waist / 2, suns / 2,
+                match_top_int_proportion=self.body['waist_back_width'],
+                ).translate_by([0, body['_waist_level'], -15])
         else:
             # NOTE: Asymmetic front/back is only defined on full skirt (1 sun)
             w_rad = waist / 2 / np.pi
@@ -145,11 +167,15 @@ class SkirtCircle(StackableSkirtComponent):
 
             self.front = AsymHalfCirclePanel(
                 f'skirt_front_{tag}' if tag else 'skirt_front', 
-                w_rad, f_length, s_length).translate_by([0, body['_waist_level'], 15])
+                w_rad, f_length, s_length,
+                match_top_int_proportion=self.body['waist'] - self.body['waist_back_width'],
+                ).translate_by([0, body['_waist_level'], 15])
 
             self.back = AsymHalfCirclePanel(
                 f'skirt_back_{tag}'  if tag else 'skirt_back', 
-                w_rad, length, s_length).translate_by([0, body['_waist_level'], -15])
+                w_rad, length, s_length,
+                match_top_int_proportion=self.body['waist_back_width'],
+                ).translate_by([0, body['_waist_level'], -15])
 
         # Add a cut
         if design['cut']['add']['v'] and slit:
