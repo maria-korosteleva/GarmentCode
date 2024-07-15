@@ -39,6 +39,10 @@ class BodyParametrizationBase:
         self.params.update(dict)
         self.eval_dependencies()  # Parameters have been updated
 
+    def load_from_dict(self, in_dict):
+        self.params.update(in_dict)
+        self.eval_dependencies()  # Parameters have been updated 
+
     # Processing
     def eval_dependencies(self, key=None):
         """Evaluate dependent attributes, e.g. after a new value has been set

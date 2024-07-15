@@ -91,7 +91,9 @@ class GUIState:
 
         # Helpers
         self.def_pattern_waiting()
+        # TODO One dialog for both? 
         self.def_design_file_dialog()
+        self.def_body_file_dialog()
 
         # Configurator GUI
         self.path_static_img = '/img'
@@ -132,8 +134,11 @@ class GUIState:
 
     def def_body_tab(self):
     
-        # TODO selector of available options + upload is one of them
-        # NOTE: https://www.reddit.com/r/nicegui/comments/1393i2f/file_upload_with_restricted_types/
+        # Set of buttons
+        with ui.row():
+            ui.button('Upload', on_click=self.ui_body_dialog.open)  
+        
+        self.ui_body_refs = {}
         with ui.scroll_area().classes('w-full h-full p-0 m-0'): # NOTE: p-0 m-0 gap-0 dont' seem to have effect
             body = self.pattern_state.body_params
             for param in body:
@@ -144,12 +149,18 @@ class GUIState:
                         format='%.2f',
                         precision=2,
                         step=0.5,
-                        # NOTE: e.sender == UI object, e.value == new value
-                        on_change=lambda e, dic=body, param=param: self.update_pattern_ui_state(dic, param, e.value, body_param=True)
-                        ) 
+                ) 
 
-                if param[0] == '_':
+                # FIXME check ui update after other values are updated
+                if param[0] == '_':  # Info elements for calculatable parameters
                     elem.disable()
+                else:   # active elements accepting input
+                    # NOTE: e.sender == UI object, e.value == new value
+                    elem.on_value_change(lambda e, dic=body, param=param: self.update_pattern_ui_state(
+                        dic, param, e.value, body_param=True
+                    ))
+
+                self.ui_body_refs[param] = elem
 
     def def_flat_design_subtab(self, ui_elems, design_params, use_collapsible=False):
         """Group of design parameters"""
@@ -213,22 +224,22 @@ class GUIState:
                 
     def def_design_tab(self):
         async def random():
-            self.toggle_design_param_update_events(self.ui_design_refs)  # Don't react to value updates
+            self.toggle_param_update_events(self.ui_design_refs)  # Don't react to value updates
 
             self.pattern_state.sample_design(False)
             self.update_design_params_ui_state(self.ui_design_refs, self.pattern_state.design_params)
             await self.update_pattern_ui_state()
 
-            self.toggle_design_param_update_events(self.ui_design_refs)  # Re-do reaction to value updates
+            self.toggle_param_update_events(self.ui_design_refs)  # Re-do reaction to value updates
     
         async def default():
-            self.toggle_design_param_update_events(self.ui_design_refs)
+            self.toggle_param_update_events(self.ui_design_refs)
 
             self.pattern_state.restore_design(False)
             self.update_design_params_ui_state(self.ui_design_refs, self.pattern_state.design_params)
             await self.update_pattern_ui_state()
 
-            self.toggle_design_param_update_events(self.ui_design_refs)
+            self.toggle_param_update_events(self.ui_design_refs)
 
 
         # Set of buttons
@@ -300,6 +311,32 @@ class GUIState:
             # Styles https://quasar.dev/vue-components/spinners
             ui.spinner('hearts', size='15em').classes('fixed-center')   # NOTE: 'dots' 'ball' 
 
+    def def_body_file_dialog(self):
+        """ Dialog for loading parameter files (body)
+        """
+        async def handle_upload(e: events.UploadEventArguments):
+            param_dict = yaml.safe_load(e.content.read())['body']
+
+            self.toggle_param_update_events(self.ui_body_refs)
+
+            self.pattern_state.set_new_body_params(param_dict)
+            self.update_body_params_ui_state()            
+            await self.update_pattern_ui_state()
+
+            self.toggle_param_update_events(self.ui_body_refs)
+
+            ui.notify(f'Successfully applied {e.name}')
+            self.ui_body_dialog.close()
+
+        with ui.dialog() as self.ui_body_dialog, ui.card().classes('items-center'):
+            # NOTE: https://www.reddit.com/r/nicegui/comments/1393i2f/file_upload_with_restricted_types/
+            ui.upload(
+                label='Body parameters .yaml or .json',  
+                on_upload=handle_upload
+            ).classes('max-w-full').props('accept=".yaml,.json"')  
+            # TODOLOW a bit easier?
+            ui.button('Close without upload', on_click=self.ui_body_dialog.close)
+
     def def_design_file_dialog(self):
         """ Dialog for loading parameter files (design)
         """
@@ -307,13 +344,13 @@ class GUIState:
         async def handle_upload(e: events.UploadEventArguments):
             param_dict = yaml.safe_load(e.content.read())['design']
 
-            self.toggle_design_param_update_events(self.ui_design_refs)  # Don't react to value updates
+            self.toggle_param_update_events(self.ui_design_refs)  # Don't react to value updates
 
             self.pattern_state.set_new_design(param_dict)
             self.update_design_params_ui_state(self.ui_design_refs, self.pattern_state.design_params)
             await self.update_pattern_ui_state()
 
-            self.toggle_design_param_update_events(self.ui_design_refs)  # Re-enable reaction to value updates
+            self.toggle_param_update_events(self.ui_design_refs)  # Re-enable reaction to value updates
 
             ui.notify(f'Successfully applied {e.name}')
             self.ui_design_dialog.close()
@@ -426,13 +463,20 @@ class GUIState:
             else:
                 ui_elems[param].value = design_params[param]['v']
 
-    def toggle_design_param_update_events(self, ui_elems):
+    def toggle_param_update_events(self, ui_elems):
         """Enable/disable event handling on the ui elements related to GarmentCode parameters"""
         for param in ui_elems:
             if isinstance(ui_elems[param], dict):
-                self.toggle_design_param_update_events(ui_elems[param])
+                self.toggle_param_update_events(ui_elems[param])
             else:
                 if ui_elems[param].is_ignoring_events:  # -> disabled
                     ui_elems[param].enable()
                 else:
                     ui_elems[param].disable()
+
+    def update_body_params_ui_state(self):
+        """Sync ui params with the current state of the body params"""
+        for param in self.ui_body_refs: 
+            self.ui_body_refs[param].value = self.pattern_state.body_params[param]
+
+

@@ -44,6 +44,7 @@ class GUIPattern:
         )
         self.sew_pattern = None
 
+    # TODO Needed?
     def is_ready(self):
         """Check if the State is correct to load and save garments"""
         return self.body_file is not None and self.design_file is not None
@@ -117,6 +118,9 @@ class GUIPattern:
 
     def set_new_design(self, design):
         self._nested_sync(design, self.design_params)
+
+    def set_new_body_params(self, body_params):
+        self.body_params.load_from_dict(body_params)
 
     def sample_design(self, reload=True):
         """Random design parameters"""
