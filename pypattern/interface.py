@@ -60,6 +60,8 @@ class Interface:
             onto another panel
             NOTE: reflects current state of the edge object. Call this function
                 again if egdes change (e.g. their direction)
+            # FIXME projection only works w.r.t. the line connecting the first and 
+            # the last vertex of the edge sequence
         """
         # Per edge set ruffle application
         projected = self.edges.copy() if not on_oriented else self.oriented_edges()
@@ -97,6 +99,25 @@ class Interface:
                         next_edge.start = common_v
 
         return projected
+
+    # ANCHOR --- Projections for stitching -- to connect edges correctly and create correct ruffles
+    def projecting_lengths(self):
+        """Desired projected length of the interface edges, as specified by ruffle coefficients"""
+        projecting_lengths = []
+        for r in self.ruffle:
+            if not close_enough(r['coeff'], 1, 1e-3):
+                projecting_lengths += [e.length() / r['coeff'] for e in self.edges[r['sec'][0]:r['sec'][1]]]
+            else:
+                projecting_lengths += [e.length() for e in self.edges[r['sec'][0]:r['sec'][1]]]
+
+        return np.array(projecting_lengths)
+
+    def projecting_fractions(self):
+        """Desired projected fractions of the interface edges, as specified by ruffle coefficients
+            Fractions calculated w.r.t. to total projection lengths
+        """
+        projecting_lengths = self.projecting_lengths()
+        return projecting_lengths / projecting_lengths.sum()
 
     def needsFlipping(self, i):
         """ Check if particular edge (i) should be re-oriented to follow the
