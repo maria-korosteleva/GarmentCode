@@ -91,7 +91,7 @@ class GUIState:
 
         # Helpers
         self.def_pattern_waiting()
-        # TODO One dialog for both? 
+        # TODOLOW One dialog for both? 
         self.def_design_file_dialog()
         self.def_body_file_dialog()
 
@@ -138,11 +138,11 @@ class GUIState:
         with ui.row():
             ui.button('Upload', on_click=self.ui_body_dialog.open)  
         
-        self.ui_body_refs = {}
+        self.ui_active_body_refs = {}
+        self.ui_passive_body_refs = {}
         with ui.scroll_area().classes('w-full h-full p-0 m-0'): # NOTE: p-0 m-0 gap-0 dont' seem to have effect
             body = self.pattern_state.body_params
             for param in body:
-                # TODOLOW Squish a bit -- too long (failed to figure out)
                 elem = ui.number(
                         label=param, 
                         value=str(body[param]), 
@@ -151,16 +151,15 @@ class GUIState:
                         step=0.5,
                 ) 
 
-                # FIXME check ui update after other values are updated
                 if param[0] == '_':  # Info elements for calculatable parameters
                     elem.disable()
+                    self.ui_passive_body_refs[param] = elem
                 else:   # active elements accepting input
                     # NOTE: e.sender == UI object, e.value == new value
                     elem.on_value_change(lambda e, dic=body, param=param: self.update_pattern_ui_state(
                         dic, param, e.value, body_param=True
                     ))
-
-                self.ui_body_refs[param] = elem
+                    self.ui_active_body_refs[param] = elem
 
     def def_flat_design_subtab(self, ui_elems, design_params, use_collapsible=False):
         """Group of design parameters"""
@@ -317,13 +316,13 @@ class GUIState:
         async def handle_upload(e: events.UploadEventArguments):
             param_dict = yaml.safe_load(e.content.read())['body']
 
-            self.toggle_param_update_events(self.ui_body_refs)
+            self.toggle_param_update_events(self.ui_active_body_refs)
 
             self.pattern_state.set_new_body_params(param_dict)
-            self.update_body_params_ui_state()            
+            self.update_body_params_ui_state(self.ui_active_body_refs)            
             await self.update_pattern_ui_state()
 
-            self.toggle_param_update_events(self.ui_body_refs)
+            self.toggle_param_update_events(self.ui_active_body_refs)
 
             ui.notify(f'Successfully applied {e.name}')
             self.ui_body_dialog.close()
@@ -402,8 +401,9 @@ class GUIState:
     def _sync_update_state(self):
         # Update derivative body values (just in case)
         # TODOLOW only do that on body value updates
-        # TODOLOW: The following two are fast and can be executed without async
+        # TODOLOW: The following three are fast and can be executed without async
         self.pattern_state.body_params.eval_dependencies()
+        self.update_body_params_ui_state(self.ui_passive_body_refs) # Display evaluated dependencies
 
         # Update the garment
         # Sync left-right for easier editing
@@ -474,9 +474,9 @@ class GUIState:
                 else:
                     ui_elems[param].disable()
 
-    def update_body_params_ui_state(self):
+    def update_body_params_ui_state(self, ui_body_refs):
         """Sync ui params with the current state of the body params"""
-        for param in self.ui_body_refs: 
-            self.ui_body_refs[param].value = self.pattern_state.body_params[param]
+        for param in ui_body_refs: 
+            ui_body_refs[param].value = self.pattern_state.body_params[param]
 
 
