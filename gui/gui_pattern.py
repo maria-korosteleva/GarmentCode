@@ -125,7 +125,6 @@ class GUIPattern:
     def sample_design(self, reload=True):
         """Random design parameters"""
 
-        # DRAFT while True:
         new_design = self.design_sampler.randomize()
         # NOTE: re-assign the values instead up overwriting them
         self._nested_sync(new_design, self.design_params)
@@ -154,9 +153,8 @@ class GUIPattern:
     def restore_design(self, reload=True):
         """Restore design values to match the current loaded file"""
         new_design = self.design_sampler.default()
-        # FIXME re-assign the values instead up overwriting them
+        # re-assign the values instead up overwriting them
         self._nested_sync(new_design, self.design_params)
-        # DRAFT self.design_params.update(new_design)
         
         if reload:
             self.reload_garment()
@@ -209,15 +207,6 @@ class GUIPattern:
             self.svg_bbox = pattern.svg_bbox
         except pyp.EmptyPatternError:
             self.svg_filename = ''
-
-        # TODO the following is deprecated -- use for creating download files
-        # # Save as json file
-        # # NOTE: Using current timestamp to allow browsers to re-load the file easily
-        # folder = pattern.serialize(
-        #     self.tmp_path, 
-        #     tag='_' + str(time.time()),   # DRAFT datetime.now().strftime("%y%m%d-%H-%M-%S"), 
-        #     to_subfolder=True, 
-        #     with_3d=False, with_text=False, view_ids=False)
         
     def clear_tmp(self, root=False):
         """Clear tmp folder"""

@@ -114,8 +114,9 @@ class GUIState:
         with ui.right_drawer(fixed=False, value=False).props('bordered') as right_drawer:
             ui.label('Menu with useful links')
         with ui.footer(fixed=False, elevated=True).classes(f'h-[{self.h_footer}vh] items-center justify-center p-0 m-0'):
-            ui.label('Future copyright message IGL (c)')   # TODO 
+            ui.label('Copyright Interactive Geometry Lab 2024 ©')   # TODO proper copyright message
 
+    # !SECTION
     # SECTION -- Parameter menu
     def def_param_tabs_layout(self):
         """Layout of tabs with parameters"""
@@ -238,6 +239,8 @@ class GUIState:
 
             self.toggle_param_update_events(self.ui_design_refs)
 
+        # TODO Self-intersection indication
+        # TODO Random ends with crash
 
         # Set of buttons
         with ui.row():
@@ -273,6 +276,7 @@ class GUIState:
                                     use_collapsible=(param == 'left')
                                 )
                             
+    # !SECTION
     # SECTION -- Pattern visuals
     def def_pattern_display(self):
         """Prepare pattern display area"""
@@ -293,9 +297,9 @@ class GUIState:
                         ''
                     ).classes('bg-transparent p-0 m-0') 
                 
-            # TODO Add downloadable content (with timestamp)
             ui.button('Download Current Garment', on_click=lambda: self.state_download())
 
+    # !SECTION
     # SECTION -- Other UI details
     def def_pattern_waiting(self):
         """Define the waiting splashcreen with spinner 
@@ -331,7 +335,7 @@ class GUIState:
                 label='Body parameters .yaml or .json',  
                 on_upload=handle_upload
             ).classes('max-w-full').props('accept=".yaml,.json"')  
-            # TODOLOW a bit easier?
+
             ui.button('Close without upload', on_click=self.ui_body_dialog.close)
 
     def def_design_file_dialog(self):
@@ -358,11 +362,11 @@ class GUIState:
                 label='Design parameters .yaml or .json',  
                 on_upload=handle_upload
             ).classes('max-w-full').props('accept=".yaml,.json"')  
-            # TODOLOW a bit easier?
+
             ui.button('Close without upload', on_click=self.ui_design_dialog.close)
 
+    # !SECTION
     # SECTION -- Event callbacks
-    # TODOLOW Is this a pattern_state function?
     async def update_pattern_ui_state(self, param_dict=None, param=None, new_value=None, body_param=False):
         """UI was updated -- update the state of the pattern parameters and visuals"""
 
@@ -399,7 +403,6 @@ class GUIState:
     def _sync_update_state(self):
         # Update derivative body values (just in case)
         # TODOLOW only do that on body value updates
-        # TODOLOW: The following three are fast and can be executed without async
         self.pattern_state.body_params.eval_dependencies()
         self.update_body_params_ui_state(self.ui_passive_body_refs) # Display evaluated dependencies
 
@@ -481,3 +484,5 @@ class GUIState:
         """Download current state of a garment"""
         archive_path = self.pattern_state.save()
         ui.download(archive_path)
+
+    # !SECTION
