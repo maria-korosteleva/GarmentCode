@@ -165,15 +165,16 @@ class GUIState:
         """Group of design parameters"""
         for param in design_params: 
             if 'v' not in design_params[param]:
-                # TODOLOW Maybe use expansion for all?
                 ui_elems[param] = {}
                 if use_collapsible:
-                    # TODO font size?
-                    with ui.expansion(f'{param}:').classes('w-full'):
+                    with ui.expansion().classes('w-full') as expansion: 
+                        with expansion.add_slot('header'):
+                            ui.label(f'{param.capitalize()}').classes('text-base self-center w-full h-full p-0 m-0')
                         self.def_flat_design_subtab(ui_elems[param], design_params[param])
                 else:
-                    # TODO Header of the card!
+                    # TODO Card for Cuff inside the left -- no shadow???
                     with ui.card().classes('w-full'): 
+                        ui.label(f'{param.capitalize()}').classes('text-base self-center w-full h-full p-0 m-0')
                         self.def_flat_design_subtab(ui_elems[param], design_params[param])
             else:
                 # Leaf value
