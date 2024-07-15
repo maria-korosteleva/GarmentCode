@@ -272,6 +272,7 @@ class GUIPattern:
     def save(self):
         """Save current garment design to self.save_path """
 
+        # TODO add geomety when available
         pattern = self.sew_pattern.assembly()
 
         # Save as json file
@@ -292,5 +293,13 @@ class GUIPattern:
                 sort_keys=False
             )
 
+        # pack
+        archive = shutil.make_archive(
+            self.save_path / Path(folder).name, 'zip',
+            root_dir=folder
+        )
+
         print(f'Success! {self.sew_pattern.name} saved to {folder}')
+
+        return archive
 

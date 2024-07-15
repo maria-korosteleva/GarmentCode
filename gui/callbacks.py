@@ -45,7 +45,6 @@ class GUIState:
         self.ui_pattern_display = None
         self._async_executor = ThreadPoolExecutor(1)  
 
-        # TODO Callbacks on buttons and file loads
         self.pattern_state.reload_garment()
         self.stylings()
         self.layout()
@@ -80,7 +79,6 @@ class GUIState:
         # TODO License info? 
         # TODO error on mobile/small screens? (Or put the controls in the drawer -- figure it out?)
         # TODO Link to GitHub
-        # TODO Randomize & Restore default buttons
 
         # as % of viewport width/height
         self.h_header = 5
@@ -296,7 +294,7 @@ class GUIState:
                     ).classes('bg-transparent p-0 m-0') 
                 
             # TODO Add downloadable content (with timestamp)
-            ui.button('Download Current Garment', on_click=lambda: ui.download('https://nicegui.io/logo.png'))
+            ui.button('Download Current Garment', on_click=lambda: self.state_download())
 
     # SECTION -- Other UI details
     def def_pattern_waiting(self):
@@ -479,4 +477,7 @@ class GUIState:
         for param in ui_body_refs: 
             ui_body_refs[param].value = self.pattern_state.body_params[param]
 
-
+    def state_download(self):
+        """Download current state of a garment"""
+        archive_path = self.pattern_state.save()
+        ui.download(archive_path)
