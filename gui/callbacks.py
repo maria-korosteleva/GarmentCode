@@ -86,7 +86,8 @@ class GUIState:
         self.h_header = 5
         self.h_footer = 3
         self.h_content = 85
-        self.w_pattern_display = 65  # TODO Not great for height control though..
+        self.w_pattern_display = 65
+        self.w_splitter_design = 32
 
         # Helpers
         self.def_pattern_waiting()
@@ -98,7 +99,6 @@ class GUIState:
         app.add_static_files(self.path_static_img, './assets/img')
         app.add_static_files(self.path_ui_pattern, self.pattern_state.tmp_path)
         with ui.row(wrap=False).classes('w-full h-full'):  
-
             # Tabs
             self.def_param_tabs_layout()
             
@@ -124,23 +124,17 @@ class GUIState:
             with ui.tabs() as tabs:
                 self.ui_design_tab = ui.tab('Design parameters')
                 self.ui_body_tab = ui.tab('Body parameters')
-            with ui.tab_panels(tabs, value=self.ui_design_tab, animated=True):  
-                with ui.tab_panel(self.ui_design_tab).classes('items-center p-0 m-0'):
+            with ui.tab_panels(tabs, value=self.ui_design_tab, animated=True).classes('w-full h-full items-center'):  
+                with ui.tab_panel(self.ui_design_tab).classes('w-full h-full items-center p-0 m-0'):
                     self.def_design_tab()
-                with ui.tab_panel(self.ui_body_tab).classes('items-center p-0 m-0'):
+                with ui.tab_panel(self.ui_body_tab).classes('w-full h-full items-center p-0 m-0'):
                     self.def_body_tab()
 
     def def_body_tab(self):
     
         # TODO selector of available options + upload is one of them
         # NOTE: https://www.reddit.com/r/nicegui/comments/1393i2f/file_upload_with_restricted_types/
-        self.ui_body_file = ui.upload(
-            label=str(self.pattern_state.body_file.name),  
-            on_upload=lambda e: ui.notify(f'Uploaded {e.name}')
-        ).classes('max-w-full').props('accept=".yaml,.json"')  
-        
-        self.body_elems = []
-        with ui.scroll_area().classes(f'w-full h-[{self.h_content - 10}vh]'):   # NOTE: p-0 m-0 gap-0 dont' seem to have effect
+        with ui.scroll_area().classes('w-full h-full p-0 m-0'): # NOTE: p-0 m-0 gap-0 dont' seem to have effect
             body = self.pattern_state.body_params
             for param in body:
                 # TODOLOW Squish a bit -- too long (failed to figure out)
@@ -246,9 +240,9 @@ class GUIState:
         # Design parameters
         design_params = self.pattern_state.design_params
         self.ui_design_refs = {}
-        with ui.splitter(value=32).classes(f'w-full h-[{self.h_content - 10}vh] p-0 m-0') as splitter:
+        with ui.splitter(value=self.w_splitter_design).classes('w-full h-full p-0 m-0') as splitter:
             with splitter.before:
-                with ui.tabs().props('vertical').classes('w-full') as tabs:
+                with ui.tabs().props('vertical').classes('w-full h-full') as tabs:
                     for param in design_params:
                         if 'v' in design_params[param]:
                             # TODO Error message
@@ -261,10 +255,10 @@ class GUIState:
                         self.ui_design_refs[param] = {}
 
             with splitter.after:
-                with ui.tab_panels(tabs, value=self.ui_design_subtabs['meta']).props('vertical').classes('w-full'):  # DRAFT h-full
+                with ui.tab_panels(tabs, value=self.ui_design_subtabs['meta']).props('vertical').classes('w-full h-full'):
                     for param, tab_elem in self.ui_design_subtabs.items():
-                        with ui.tab_panel(tab_elem).classes('p-0 m-0'): 
-                            with ui.scroll_area().classes(f'w-full h-[{self.h_content - 19}vh] p-0 m-0'):
+                        with ui.tab_panel(tab_elem).classes('w-full h-full p-0 m-0'): 
+                            with ui.scroll_area().classes('w-full h-full p-0 m-0'):
                                 self.def_flat_design_subtab(
                                     self.ui_design_refs[param],
                                     design_params[param],
