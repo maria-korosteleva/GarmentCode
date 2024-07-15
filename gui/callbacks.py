@@ -5,8 +5,9 @@
 from copy import copy
 from pathlib import Path
 import time
+import yaml
 
-from nicegui import ui, app
+from nicegui import ui, app, events
 from nicegui.events import ValueChangeEventArguments
 
 from .gui_pattern import GUIPattern
@@ -89,6 +90,7 @@ class GUIState:
 
         # Helpers
         self.def_pattern_waiting()
+        self.def_design_file_dialog()
 
         # Configurator GUI
         self.path_static_img = '/img'
@@ -216,13 +218,6 @@ class GUIState:
                     ).classes('w-full')
                 
     def def_design_tab(self):
-        # TODO Upload as a dialog
-        # NOTE: https://www.reddit.com/r/nicegui/comments/1393i2f/file_upload_with_restricted_types/
-        # self.ui_design_file = ui.upload(
-        #     label=str(self.pattern_state.design_file.name),  
-        #     on_upload=lambda e: ui.notify(f'Uploaded {e.name}')
-        # ).classes('max-w-full').props('accept=".yaml,.json"')  
-
         async def random():
             self.toggle_design_param_update_events(self.ui_design_refs)  # Don't react to value updates
 
@@ -246,7 +241,7 @@ class GUIState:
         with ui.row():
             ui.button('Random', on_click=random)
             ui.button('Default', on_click=default)
-            ui.button('Upload')   # TODO open a dialog with file uploads for both body and design
+            ui.button('Upload', on_click=self.ui_design_dialog.open)  
     
         # Design parameters
         design_params = self.pattern_state.design_params
@@ -311,8 +306,35 @@ class GUIState:
             # Styles https://quasar.dev/vue-components/spinners
             ui.spinner('hearts', size='15em').classes('fixed-center')   # NOTE: 'dots' 'ball' 
 
+    def def_design_file_dialog(self):
+        """ Dialog for loading parameter files (design)
+        """
+
+        async def handle_upload(e: events.UploadEventArguments):
+            param_dict = yaml.safe_load(e.content.read())['design']
+
+            self.toggle_design_param_update_events(self.ui_design_refs)  # Don't react to value updates
+
+            self.pattern_state.set_new_design(param_dict)
+            self.update_design_params_ui_state(self.ui_design_refs, self.pattern_state.design_params)
+            await self.update_pattern_ui_state()
+
+            self.toggle_design_param_update_events(self.ui_design_refs)  # Re-enable reaction to value updates
+
+            ui.notify(f'Successfully applied {e.name}')
+            self.ui_design_dialog.close()
+
+        with ui.dialog() as self.ui_design_dialog, ui.card().classes('items-center'):
+            # NOTE: https://www.reddit.com/r/nicegui/comments/1393i2f/file_upload_with_restricted_types/
+            ui.upload(
+                label='Design parameters .yaml or .json',  
+                on_upload=handle_upload
+            ).classes('max-w-full').props('accept=".yaml,.json"')  
+            # TODOLOW a bit easier?
+            ui.button('Close without upload', on_click=self.ui_design_dialog.close)
+
     # SECTION -- Event callbacks
-    # TODO Is this a pattern_state function?
+    # TODOLOW Is this a pattern_state function?
     async def update_pattern_ui_state(self, param_dict=None, param=None, new_value=None, body_param=False):
         """UI was updated -- update the state of the pattern parameters and visuals"""
 
@@ -401,7 +423,6 @@ class GUIState:
             else:
                 # TODO restore default body placement
                 self.ui_pattern_display.set_source('')
-
 
     def update_design_params_ui_state(self, ui_elems, design_params):
         """Sync ui params with the current state of the design params"""

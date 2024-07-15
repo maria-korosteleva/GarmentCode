@@ -48,6 +48,7 @@ class GUIPattern:
         """Check if the State is correct to load and save garments"""
         return self.body_file is not None and self.design_file is not None
 
+    # TODO Deprecated??
     def new_body_file(self, path):
         self.body_file = path
         self.body_params = BodyParameters(path)
@@ -114,13 +115,15 @@ class GUIPattern:
 
                 self.reload_garment()
 
+    def set_new_design(self, design):
+        self._nested_sync(design, self.design_params)
+
     def sample_design(self, reload=True):
         """Random design parameters"""
 
         # DRAFT while True:
         new_design = self.design_sampler.randomize()
-        # FIXME re-assign the values instead up overwriting them
-        # self.design_params.update(new_design)
+        # NOTE: re-assign the values instead up overwriting them
         self._nested_sync(new_design, self.design_params)
 
 
