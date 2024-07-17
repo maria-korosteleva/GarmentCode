@@ -252,30 +252,34 @@ class GUIState:
         # Design parameters
         design_params = self.pattern_state.design_params
         self.ui_design_refs = {}
-        with ui.splitter(value=self.w_splitter_design).classes('w-full h-full p-0 m-0') as splitter:
-            with splitter.before:
-                with ui.tabs().props('vertical').classes('w-full h-full') as tabs:
-                    for param in design_params:
-                        if 'v' in design_params[param]:
-                            # TODO Error message
-                            # sg.popup_error_with_traceback(
-                            #     f'Leaf parameter on top level of design hierarchy: {param}!!'
-                            # )
-                            continue
-                        # Tab
-                        self.ui_design_subtabs[param] = ui.tab(param)
-                        self.ui_design_refs[param] = {}
+        if self.pattern_state.is_design_sectioned():
+            # Use tabs to represent top-level sections
+            with ui.splitter(value=self.w_splitter_design).classes('w-full h-full p-0 m-0') as splitter:
+                with splitter.before:
+                    with ui.tabs().props('vertical').classes('w-full h-full') as tabs:
+                        for param in design_params:
+                            # Tab
+                            self.ui_design_subtabs[param] = ui.tab(param)
+                            self.ui_design_refs[param] = {}
 
-            with splitter.after:
-                with ui.tab_panels(tabs, value=self.ui_design_subtabs['meta']).props('vertical').classes('w-full h-full p-0 m-0'):
-                    for param, tab_elem in self.ui_design_subtabs.items():
-                        with ui.tab_panel(tab_elem).classes('w-full h-full p-0 m-0'): 
-                            with ui.scroll_area().classes('w-full h-full p-0 m-0'):
-                                self.def_flat_design_subtab(
-                                    self.ui_design_refs[param],
-                                    design_params[param],
-                                    use_collapsible=(param == 'left')
-                                )
+                with splitter.after:
+                    with ui.tab_panels(tabs, value=self.ui_design_subtabs['meta']).props('vertical').classes('w-full h-full p-0 m-0'):
+                        for param, tab_elem in self.ui_design_subtabs.items():
+                            with ui.tab_panel(tab_elem).classes('w-full h-full p-0 m-0'): 
+                                with ui.scroll_area().classes('w-full h-full p-0 m-0'):
+                                    self.def_flat_design_subtab(
+                                        self.ui_design_refs[param],
+                                        design_params[param],
+                                        use_collapsible=(param == 'left')
+                                    )
+        else:
+            # Simplified display of designs
+            with ui.scroll_area().classes('w-full h-full p-0 m-0'):
+                self.def_flat_design_subtab(
+                    self.ui_design_refs,
+                    design_params,
+                    use_collapsible=True
+                )
                             
     # !SECTION
     # SECTION -- Pattern visuals

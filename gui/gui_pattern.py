@@ -146,6 +146,15 @@ class GUIPattern:
             self.tmp_path.mkdir(parents=True, exist_ok=True)
 
     # Current state
+    def is_design_sectioned(self):
+        """Check if design parameters are grouped by sections: 
+            the top level of design dictionary does not contain actual parameters    
+        """
+        for param in self.design_params:
+            if 'v' in self.design_params[param]:
+                return False
+        return True
+
     def is_slow_design(self) -> bool:
         """Check is parameters that result in slow pattern generation are enabled
 
