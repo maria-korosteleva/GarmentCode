@@ -30,7 +30,7 @@ class GUIPattern:
         self.body_file = None
         self.design_file = None
         self._load_body_file(
-            Path.cwd() / 'assets/body_measurments/f_smpl_avg.yaml'
+            Path.cwd() / 'assets/default_bodies/mean_all.yaml'
         )
         self._load_design_file(
             Path.cwd() / 'assets/design_params/default.yaml'
