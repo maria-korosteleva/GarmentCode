@@ -270,12 +270,12 @@ class BodiceHalf(pyp.Component):
         )
 
         _, f_sleeve_int = pyp.ops.cut_corner(
-            self.sleeve.interfaces['in_front_shape'].projecting_edges(), 
+            self.sleeve.interfaces['in_front_shape'].edges, 
             self.ftorso.interfaces['shoulder_corner'], 
             verbose=self.verbose
         )
         _, b_sleeve_int = pyp.ops.cut_corner(
-            self.sleeve.interfaces['in_back_shape'].projecting_edges(), 
+            self.sleeve.interfaces['in_back_shape'].edges, 
             self.btorso.interfaces['shoulder_corner'],
             verbose=self.verbose
         )

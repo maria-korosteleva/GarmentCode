@@ -31,8 +31,8 @@ class StitchingRule:
             self.match_interfaces()
 
         if verbose and not close_enough(
-                len1 := int1.projecting_edges().length(),
-                len2 := int2.projecting_edges().length(),
+                len1 := int1.projecting_lengths().sum(),
+                len2 := int2.projecting_lengths().sum(),
                 tol=0.3):   # NOTE = 3 mm
             print(
                 f'{self.__class__.__name__}::WARNING::Projected edges do not match in the stitch: \n'
@@ -41,8 +41,8 @@ class StitchingRule:
     def isMatching(self, tol=0.05):
         # if both the breakdown and relative partitioning is similar
 
-        frac1 = self.int1.projecting_edges(on_oriented=True).fractions()
-        frac2 = self.int2.projecting_edges(on_oriented=True).fractions()
+        frac1 = self.int1.projecting_fractions()
+        frac2 = self.int2.projecting_fractions()
 
         return len(self.int1) == len(self.int2) and np.allclose(frac1, frac2, atol=tol)
 
@@ -58,8 +58,8 @@ class StitchingRule:
 
         # Eval the fractions corresponding to every segment in the interfaces
         # Using projecting edges to match desired gather patterns
-        frac1 = self.int1.projecting_edges(on_oriented=True).fractions()
-        frac2 = self.int2.projecting_edges(on_oriented=True).fractions()
+        frac1 = self.int1.projecting_fractions()
+        frac2 = self.int2.projecting_fractions()
         min_frac = min(min(frac1), min(frac2))  # projection tolerance should not be larger than the smallest fraction
 
         self._match_to_fractions(self.int1, frac2, tol=min(1e-3, min_frac / 2))
@@ -84,12 +84,13 @@ class StitchingRule:
         # Go over the edges keeping track of their fractions
         add_id, in_id = 0, 0
         covered_init, covered_added = 0, 0
-        total_len = inter.projecting_edges().length()
-
+        curr_fractions = inter.projecting_fractions()
+        
         while in_id < len(inter.edges) and add_id < len(to_add):
             # projected edges since they represent the stitch sizes
             # NOTE: sometimes overshoots slightly due to error accumulation -> bounding by 1.
-            next_init = min(covered_init + inter.projecting_edges()[in_id].length() / total_len, 1.)
+            
+            next_init = min(covered_init + curr_fractions[in_id], 1.)
             next_added = min(covered_added + to_add[add_id], 1.)
             if close_enough(next_init, next_added, tol):
                 # the vertex exists, skip
@@ -103,7 +104,7 @@ class StitchingRule:
             else:
                 # add a vertex to the edge at the new location
                 # Eval on projected edge
-                in_frac = inter.projecting_edges()[in_id].length() / total_len
+                in_frac = curr_fractions[in_id]
                 new_v_loc = in_frac - (next_init - next_added)
                 split_frac = new_v_loc / in_frac
                 base_edge, base_panel = inter.edges[in_id], inter.panel[in_id]
@@ -131,13 +132,14 @@ class StitchingRule:
 
                 # TODO what if these edges are used in other interfaces? Do they need to be updated as well?
                 # next step
-                # These are now matched
-                covered_init, covered_added = next_added, next_added 
+                curr_fractions = inter.projecting_fractions()
+                covered_init += curr_fractions[in_id]
+                covered_added = next_added 
                 in_id += 1
                 add_id += 1
 
         if add_id != len(to_add):
-            raise RuntimeError(f'{self.__class__.__name__}::ERROR::Projection failed')
+            raise RuntimeError(f'{self.__class__.__name__}::ERROR::Projection on {inter.panel_names()} failed')
 
     def assembly(self):
         """Produce a stitch that connects two interfaces

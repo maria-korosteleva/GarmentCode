@@ -461,9 +461,9 @@ class CircleEdge(Edge):
         """Eval arc angle from control point"""
         rel_rad = self._rel_radius()
         
-        # NOTE: rounding to avoind out of bounds errors
+        # NOTE: Bound the sin to avoid out of bounds errors
         # due to floating point error accumulation
-        arc = 2 * np.arcsin(round(1 / rel_rad / 2, 5))  
+        arc = 2 * np.arcsin(min(max(1 / rel_rad / 2, -1.), 1.))  
 
         if self._is_large_arc():
             arc = 2 * np.pi - arc
