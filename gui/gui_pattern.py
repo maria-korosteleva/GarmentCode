@@ -35,6 +35,8 @@ class GUIPattern:
         self._load_design_file(
             Path.cwd() / 'assets/design_params/default.yaml'
         )
+
+        self.is_self_intersecting = False
         
         self.reload_garment()
 
@@ -92,6 +94,7 @@ class GUIPattern:
         """
         self.sew_pattern = MetaGarment(
             'Configured_design', self.body_params, self.design_params)
+        self.is_self_intersecting = self.sew_pattern.is_self_intersecting()
         self._view_serialize()
 
     @staticmethod

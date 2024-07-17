@@ -68,6 +68,7 @@ class GUIState:
         # Here: https://quasar.dev/style/theme-builder
         # TODO Develop the theme more
         # TODO Global links style?
+        # TODO Warning color
         ui.colors(primary='#d984cc')
         
     def layout(self):
@@ -241,8 +242,7 @@ class GUIState:
 
             self.toggle_param_update_events(self.ui_design_refs)
 
-        # TODO Self-intersection indication
-        # TODO Random ends with crash
+        # TODO error processing if Random ends with crash
 
         # Set of buttons
         with ui.row():
@@ -284,9 +284,15 @@ class GUIState:
         """Prepare pattern display area"""
         with ui.column().classes('w-full items-center p-0 m-0'): 
             with ui.column().classes('p-0 m-0'):
-                switch = ui.switch(
-                    'Body Silhouette', value=True, 
-                ).props('dense left-label').classes('text-stone-800')
+                with ui.row().classes('w-full p-0 m-0 justify-between'):
+                    switch = ui.switch(
+                        'Body Silhouette', value=True, 
+                    ).props('dense left-label').classes('text-stone-800')
+
+                    self.ui_self_intersect = ui.label(
+                        'WARNING: Garment panels are self-intersecting!'
+                    ).classes('font-semibold text-purple-600 border border-purple-600 py-0 px-1.5 rounded-md') \
+                    .bind_visibility(self.pattern_state, 'is_self_intersecting')
                 with ui.image(f'{self.path_static_img}/millimiter_paper_1500_900.png').classes(f'w-[{self.w_pattern_display}vw]') as self.ui_pattern_bg:
                     self.ui_body_outline = ui.image(f'{self.path_static_img}/ggg_outline_mean_all.svg') \
                         .classes('bg-transparent h-full overflow-visible absolute top-[0%] left-[0%]') 
