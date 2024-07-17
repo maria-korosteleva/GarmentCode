@@ -139,7 +139,7 @@ class StitchingRule:
                 add_id += 1
 
         if add_id != len(to_add):
-            raise RuntimeError(f'{self.__class__.__name__}::ERROR::Projection failed')
+            raise RuntimeError(f'{self.__class__.__name__}::ERROR::Projection on {inter.panel_names()} failed')
 
     def assembly(self):
         """Produce a stitch that connects two interfaces
