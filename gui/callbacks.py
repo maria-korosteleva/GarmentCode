@@ -4,6 +4,7 @@
 
 from pathlib import Path
 import yaml
+import traceback
 
 from nicegui import ui, app, events
 
@@ -242,8 +243,6 @@ class GUIState:
 
             self.toggle_param_update_events(self.ui_design_refs)
 
-        # TODO error processing if Random ends with crash
-
         # Set of buttons
         with ui.row():
             ui.button('Random', on_click=random)
@@ -392,21 +391,36 @@ class GUIState:
                 param_dict[param]['v'] = new_value
 
         # Quick update
-        if not self.pattern_state.is_slow_design(): 
-            self._sync_update_state()
-            return
+        try:
+            if not self.pattern_state.is_slow_design(): 
+                self._sync_update_state()
+                return
 
-        # Display waiting spinner untill getting the result
-        # NOTE Splashscreen solution to block users from modifying params while updating
-        # https://github.com/zauberzeug/nicegui/discussions/1988
+            # Display waiting spinner untill getting the result
+            # NOTE Splashscreen solution to block users from modifying params while updating
+            # https://github.com/zauberzeug/nicegui/discussions/1988
 
-        self.spin_dialog.open()   
-        # NOTE: Using threads for async call 
-        # https://stackoverflow.com/questions/49822552/python-asyncio-typeerror-object-dict-cant-be-used-in-await-expression
-        self.loop = asyncio.get_event_loop()
-        await self.loop.run_in_executor(self._async_executor, self._sync_update_state)
-        
-        self.spin_dialog.close()
+            self.spin_dialog.open()   
+            # NOTE: Using threads for async call 
+            # https://stackoverflow.com/questions/49822552/python-asyncio-typeerror-object-dict-cant-be-used-in-await-expression
+            self.loop = asyncio.get_event_loop()
+            await self.loop.run_in_executor(self._async_executor, self._sync_update_state)
+            
+            self.spin_dialog.close()
+
+        except KeyboardInterrupt as e:
+            raise e
+        except BaseException as e:
+            traceback.print_exc()
+            print(e)
+            self.spin_dialog.close()  # If open
+            ui.notify(
+                'Failed to generate pattern correctly. Try different parameter values',
+                type='negative',
+                close_button=True,
+                position='center'
+            )
+
 
     def _sync_update_state(self):
         # Update derivative body values (just in case)
