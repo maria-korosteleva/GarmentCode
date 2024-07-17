@@ -296,13 +296,13 @@ class GUIState:
                     self.ui_self_intersect = ui.label(
                         'WARNING: Garment panels are self-intersecting!'
                     ).classes('font-semibold text-purple-600 border border-purple-600 py-0 px-1.5 rounded-md') \
-                    .bind_visibility(self.pattern_state, 'is_self_intersecting')   # DRAFT border-4 border-purple-600
+                    .bind_visibility(self.pattern_state, 'is_self_intersecting')
 
                 with ui.image(f'{self.path_static_img}/millimiter_paper_1500_900.png').classes(f'w-[{self.w_pattern_display}vw] p-0 m-0') as self.ui_pattern_bg:       
                     # NOTE: Positioning: https://github.com/zauberzeug/nicegui/discussions/957 
                     with ui.row().classes('w-full h-full p-0 m-0 bg-transparent absolute top-[0%] left-[0%]'):
                         self.ui_body_outline = ui.image(f'{self.path_static_img}/ggg_outline_mean_all.svg') \
-                            .classes('bg-transparent h-full overflow-visible absolute top-[0%] left-[0%] p-0 m-0') 
+                            .classes('bg-transparent h-full absolute top-[0%] left-[0%] p-0 m-0') 
                         switch.bind_value(self.ui_body_outline, 'visible')
                     
                     # NOTE: ui.row allows for correct classes application (e.g. no padding on svg pattern)
@@ -384,8 +384,7 @@ class GUIState:
     # SECTION -- Event callbacks
     async def update_pattern_ui_state(self, param_dict=None, param=None, new_value=None, body_param=False):
         """UI was updated -- update the state of the pattern parameters and visuals"""
-
-        # NOTE: Fix to the "same value" issue in lambdas 
+        # NOTE: Fixing to the "same value" issue in lambdas 
         # https://github.com/zauberzeug/nicegui/wiki/FAQs#why-have-all-my-elements-the-same-value
    
         # DEBUG
