@@ -167,13 +167,13 @@ class GUIState:
             if 'v' not in design_params[param]:
                 ui_elems[param] = {}
                 if use_collapsible:
-                    with ui.expansion().classes('w-full') as expansion: 
+                    with ui.expansion().classes('w-full p-0 m-0') as expansion: 
                         with expansion.add_slot('header'):
                             ui.label(f'{param.capitalize()}').classes('text-base self-center w-full h-full p-0 m-0')
-                        self.def_flat_design_subtab(ui_elems[param], design_params[param])
+                        with ui.row().classes('w-full h-full p-0 m-0'):  # Ensures correct application of style classes for children
+                            self.def_flat_design_subtab(ui_elems[param], design_params[param])
                 else:
-                    # TODO Card for Cuff inside the left -- no shadow???
-                    with ui.card().classes('w-full'): 
+                    with ui.card().classes('w-full shadow-md border m-0 rounded-md'): 
                         ui.label(f'{param.capitalize()}').classes('text-base self-center w-full h-full p-0 m-0')
                         self.def_flat_design_subtab(ui_elems[param], design_params[param])
             else:
@@ -268,7 +268,7 @@ class GUIState:
                         self.ui_design_refs[param] = {}
 
             with splitter.after:
-                with ui.tab_panels(tabs, value=self.ui_design_subtabs['meta']).props('vertical').classes('w-full h-full'):
+                with ui.tab_panels(tabs, value=self.ui_design_subtabs['meta']).props('vertical').classes('w-full h-full p-0 m-0'):
                     for param, tab_elem in self.ui_design_subtabs.items():
                         with ui.tab_panel(tab_elem).classes('w-full h-full p-0 m-0'): 
                             with ui.scroll_area().classes('w-full h-full p-0 m-0'):
