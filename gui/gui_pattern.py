@@ -160,9 +160,6 @@ class GUIPattern:
 
             E.g. curved armhole evaluation
         """
-
-        # TODO add Hoody!
-
         # Pants
         if (self.design_params['meta']['bottom']['v'] == 'Pants'):
             return True
@@ -181,6 +178,10 @@ class GUIPattern:
         is_strapless = is_fitted and is_strapless
         is_asymm_strapless = is_fitted and is_asymm_strapless
 
+        # Has a hoody
+        collar_component = self.design_params['collar']['component']['style']['v']
+        has_hoody = collar_component is not None and 'Hood' in collar_component
+
         # Sleeve potential setup
         sleeves = self.design_params['sleeve']        
         is_sleeveless = sleeves['sleeveless']['v']
@@ -196,7 +197,7 @@ class GUIPattern:
             left_check = (not is_asymm_strapless) and is_asymm_curve
             return right_check or left_check
         else:
-            return (not is_strapless) and is_curve
+            return (not is_strapless) and is_curve or has_hoody
 
     def save(self):
         """Save current garment design to self.save_path """
