@@ -35,9 +35,10 @@ class GUIState:
         # Pattern display constants
         self.canvas_aspect_ratio = 1500 / 900   # Millimiter paper
         self.w_rel_body_size = 0.5  # Body size as fraction of horisontal canvas axis
+        self.h_rel_body_size = 0.95
         self.background_body_scale = 1 / 171.99   # Inverse of the mean_all body height from GGG
         self.background_body_canvas_center = 0.27  # Fraction of the canvas (millimiter paper)
-        self.w_svg_pad, self.h_svg_pad = 5, 5   # compensation for automatic svg padding, ~okay on big screens
+        self.w_canvas_pad, self.h_canvas_pad = 0.011, 0.04
 
         # Elements
         self.ui_design_subtabs = {}
@@ -295,18 +296,21 @@ class GUIState:
                     self.ui_self_intersect = ui.label(
                         'WARNING: Garment panels are self-intersecting!'
                     ).classes('font-semibold text-purple-600 border border-purple-600 py-0 px-1.5 rounded-md') \
-                    .bind_visibility(self.pattern_state, 'is_self_intersecting')
-                with ui.image(f'{self.path_static_img}/millimiter_paper_1500_900.png').classes(f'w-[{self.w_pattern_display}vw]') as self.ui_pattern_bg:
-                    self.ui_body_outline = ui.image(f'{self.path_static_img}/ggg_outline_mean_all.svg') \
-                        .classes('bg-transparent h-full overflow-visible absolute top-[0%] left-[0%]') 
-                    switch.bind_value(self.ui_body_outline, 'visible')
-                    
+                    .bind_visibility(self.pattern_state, 'is_self_intersecting')   # DRAFT border-4 border-purple-600
+
+                with ui.image(f'{self.path_static_img}/millimiter_paper_1500_900.png').classes(f'w-[{self.w_pattern_display}vw] p-0 m-0') as self.ui_pattern_bg:       
                     # NOTE: Positioning: https://github.com/zauberzeug/nicegui/discussions/957 
+                    with ui.row().classes('w-full h-full p-0 m-0 bg-transparent absolute top-[0%] left-[0%]'):
+                        self.ui_body_outline = ui.image(f'{self.path_static_img}/ggg_outline_mean_all.svg') \
+                            .classes('bg-transparent h-full overflow-visible absolute top-[0%] left-[0%] p-0 m-0') 
+                        switch.bind_value(self.ui_body_outline, 'visible')
                     
-                    # NOTE: Automatically updates from source
-                    self.ui_pattern_display = ui.interactive_image(
-                        ''
-                    ).classes('bg-transparent p-0 m-0') 
+                    # NOTE: ui.row allows for correct classes application (e.g. no padding on svg pattern)
+                    with ui.row().classes('w-full h-full p-0 m-0 bg-transparent'):
+                        # Automatically updates from source
+                        self.ui_pattern_display = ui.interactive_image(
+                            ''
+                        ).classes('bg-transparent p-0 m-0')                    
                 
             ui.button('Download Current Garment', on_click=lambda: self.state_download())
 
@@ -439,47 +443,54 @@ class GUIState:
         # NOTE This is the slow part 
         self.pattern_state.reload_garment()
 
+        # FIXME the pattern is floating around when collars are added.. 
+        # TODO: overflowing elements -- one can check that margins are negative
         # Update display
         if self.ui_pattern_display is not None:
 
             if self.pattern_state.svg_filename:
+
                 # Re-align the canvas and body with the new pattern
                 p_bbox_size = self.pattern_state.svg_bbox_size
                 p_bbox = self.pattern_state.svg_bbox
 
-                # Attempt on fixing the svg padding 
-                # TODO this should be scaling-independent somehow (applies after, it seems)
-                # it grows w.r.t. viepowt, constand w.r.t screen size
-                # TODO Github issue for NiceGUI team
-                p_bbox_size[0] += self.w_svg_pad * 2
-                p_bbox_size[1] += self.h_svg_pad * 2
-                p_bbox[0] -= self.w_svg_pad
-                p_bbox[1] += self.w_svg_pad
-                p_bbox[2] -= self.h_svg_pad
-                p_bbox[3] += self.h_svg_pad
-
-                # FIXME overflowing elements -- one can check that margins are negative
-
                 # Margin calculations w.r.t. canvas size
                 # s.t. the pattern scales correctly
                 w_shift = abs(p_bbox[0])  # Body feet location in width direction w.r.t top-left corner of the pattern
-                h_shift = abs(p_bbox[3])  # Body feet location in height direction w.r.t top-left corner of the pattern
-                m_top = 1 - (h_shift + p_bbox_size[1]) * self.background_body_scale - 0.01
+                m_top = (1. - abs(p_bbox[2]) * self.background_body_scale) * self.h_rel_body_size + (1. - self.h_rel_body_size) / 2 
                 m_left = self.background_body_canvas_center - w_shift * self.background_body_scale * self.w_rel_body_size
                 m_right = 1 - m_left - p_bbox_size[0] * self.background_body_scale * self.w_rel_body_size
 
+                # Canvas padding adjustment
+                m_top -= self.h_canvas_pad
+                m_left -= self.w_canvas_pad
+                m_right += self.w_canvas_pad
+
+                # DEBUG
+                print('Garment box ', p_bbox_size)
+                print(p_bbox)
+                # print('margins ', m_top, m_top / self.canvas_aspect_ratio, m_bottom, m_bottom / self.canvas_aspect_ratio)
+                # print('LR ', m_left, m_right)
+                print(f'final percents ml-[{(m_left * 100)}%] '
+                      f' mr-[{(m_right * 100)}%] ' 
+                      f' mt-[{(m_top * 100 / self.canvas_aspect_ratio)}%]'
+                )
+
+                # New pattern image
                 self.ui_pattern_display.set_source(
                     f'{self.path_ui_pattern}/' + self.pattern_state.svg_filename if self.pattern_state.svg_filename else '')
-            
+                # New placement
+                # mb-[{m_bottom * 100 / self.canvas_aspect_ratio}%]
                 self.ui_pattern_display.classes(
                     replace=f"""bg-transparent p-0
-                            mt-[{int(m_top * 100 / self.canvas_aspect_ratio)}%]
-                            ml-[{int(m_left * 100)}%] 
-                            mr-[{int(m_right * 100)}%] 
-                            object-contain
+                            mt-[{m_top * 100 / self.canvas_aspect_ratio}%]
+                            ml-[{m_left * 100}%] 
+                            mr-[{m_right * 100}%] 
+                            mb-auto
+                            absolute top-[0%] left-[0%]
                     """)
             else:
-                # TODO restore default body placement
+                # TODO restore default body placement if needed
                 self.ui_pattern_display.set_source('')
 
     def update_design_params_ui_state(self, ui_elems, design_params):
