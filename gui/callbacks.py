@@ -211,13 +211,10 @@ class GUIState:
 
                     # NOTE Events control: https://nicegui.io/documentation/slider#throttle_events_with_leading_and_trailing_options
                 elif 'file' in p_type:
-                    default_path = Path(design_params[param]['v'])
-                    # FIXME .bind_value(design_params[param], 'v')  -- doesn't work! (and also -- not a great idea)
-                    ftype = p_type.split('_')[-1]
-                    ui_elems[param] = ui.upload(
-                        label=str(default_path),
-                        on_upload=lambda: self.update_pattern_ui_state()
-                    ).classes('max-w-full').props(f'accept=".{ftype}"')
+                    print(f'GUI::NotImplementedERROR::{param}::'
+                          '"file" parameter type is not yet supported in Web GarmentCode. '
+                          'Creation of corresponding UI element skipped'
+                    )
                 else:
                     print(f'GUI::WARNING::Unknown parameter type: {p_type}')
                     ui_elems[param] = ui.input(label=param, value=val, placeholder='Type the value',
@@ -442,7 +439,7 @@ class GUIState:
         # NOTE This is the slow part 
         self.pattern_state.reload_garment()
 
-        # FIXME the pattern is floating around when collars are added.. 
+        # TODOLOW the pattern is floating around when collars are added.. 
         # TODO: overflowing elements -- one can check that margins are negative
         # Update display
         if self.ui_pattern_display is not None:

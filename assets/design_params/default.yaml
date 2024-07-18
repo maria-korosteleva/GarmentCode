@@ -765,15 +765,8 @@ design:
       range: 
       - Sun
       - SIGGRAPH_logo
-      - SVGFile
       type: select_null
       default_prob: 1.
-    style_side_file:
-      v: assets\img\test_shape.svg
-      range: # NOTE: Range is only needed for sampling
-      - assets\img\Logo_adjusted.svg
-      - assets\img\test_shape.svg  
-      type: file_svg
   levels-skirt:  
     base:
       v: PencilSkirt
