@@ -1,9 +1,9 @@
 from pathlib import Path
-from datetime import datetime
 import time
 import yaml
 import shutil 
-import numpy as np
+import string
+import random
 
 # Custom 
 from assets.garment_programs.meta_garment import MetaGarment
@@ -12,12 +12,26 @@ import pypattern as pyp
 
 verbose = False
 
+def _id_generator(size=10, chars=string.ascii_uppercase + string.digits):
+        """Generate a random string of a given size, see
+        https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits
+        """
+        return ''.join(random.choices(chars, k=size))
+
 class GUIPattern:
     def __init__(self) -> None:
-        self.save_path = Path.cwd() / 'Logs' 
+        # Unique id to distiguish tab sessions correctly
+        self.id = _id_generator(20)
+
+        # Paths setup
+        self.save_path_root = Path.cwd() / 'tmp_downloads'
+        self.tmp_path_root = Path.cwd() / 'tmp_display'
+        self.save_path = self.save_path_root / self.id
         self.svg_filename = None
-        self.tmp_path = Path.cwd() / 'tmp'
-        
+        self.saved_garment_archive = ''
+        self.saved_garment_folder = ''
+        self.tmp_path = self.tmp_path_root / self.id 
+
         # create paths
         self.save_path.mkdir(parents=True, exist_ok=True)
         self.tmp_path.mkdir(parents=True, exist_ok=True)
@@ -40,6 +54,11 @@ class GUIPattern:
         
         self.reload_garment()
 
+    def __del__(self):
+        """Clean up tmp files after the session"""
+        shutil.rmtree(self.save_path)
+        shutil.rmtree(self.tmp_path)
+
     def _load_body_file(self, path):
         self.body_file = path
         self.body_params = BodyParameters(path)
@@ -58,6 +77,9 @@ class GUIPattern:
         # Update param sampler
         self.design_sampler.load(path)
 
+    def svg_path(self):
+        return self.tmp_path / self.svg_filename
+
     def set_new_design(self, design):
         self._nested_sync(design, self.design_params)
 
@@ -70,7 +92,6 @@ class GUIPattern:
         new_design = self.design_sampler.randomize()
         # NOTE: re-assign the values instead up overwriting them
         self._nested_sync(new_design, self.design_params)
-
 
         if 'left' in self.design_params and not self.design_params['left']['enable_asym']['v']:
             self.sync_left()
@@ -121,10 +142,11 @@ class GUIPattern:
         """Save a sewing pattern svg representation to tmp folder be used
         for display"""
 
-        # Clear up the folder from previous version -- it's not needed any more
-        self.clear_tmp()
+        # Get the flat representation
         pattern = self.sew_pattern.assembly()
 
+        # Clear up the folder from previous version -- it's not needed any more
+        self.clear_previous_svg()
         try:
             self.svg_filename = f'pattern_{time.time()}.svg'
             dwg = pattern.get_svg(self.tmp_path / self.svg_filename, 
@@ -138,12 +160,21 @@ class GUIPattern:
             self.svg_bbox = pattern.svg_bbox
         except pyp.EmptyPatternError:
             self.svg_filename = ''
-        
-    def clear_tmp(self, root=False):
-        """Clear tmp folder"""
-        shutil.rmtree(self.tmp_path)
-        if not root:
-            self.tmp_path.mkdir(parents=True, exist_ok=True)
+    
+    def clear_previous_svg(self):
+        """Clear previous svg display file"""
+        if self.svg_filename:
+            (self.tmp_path / self.svg_filename).unlink()
+            self.svg_filename = ''
+    
+    def clear_previous_download(self):
+        """Clear previous download package display file"""
+        if self.saved_garment_folder:
+            shutil.rmtree(self.saved_garment_folder)
+            self.saved_garment_folder = ''
+        if self.saved_garment_archive:
+            self.saved_garment_archive.unlink()
+            self.saved_garment_archive = ''
 
     # Current state
     def is_design_sectioned(self):
@@ -205,17 +236,20 @@ class GUIPattern:
         # TODO add geomety when available
         pattern = self.sew_pattern.assembly()
 
+        # Clenup -- free space for new download
+        self.clear_previous_download()
+
         # Save as json file
-        folder = pattern.serialize(
+        self.saved_garment_folder = pattern.serialize(
             self.save_path, 
-            tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
             to_subfolder=True, 
-            with_3d=True, with_text=False, view_ids=False, 
+            with_3d=False, with_text=False, view_ids=False, 
             empty_ok=True)
 
-        self.body_params.save(folder)
+        self.saved_garment_folder = Path(self.saved_garment_folder)
+        self.body_params.save(self.saved_garment_folder)
 
-        with open(Path(folder) / 'design_params.yaml', 'w') as f:
+        with open(self.saved_garment_folder / 'design_params.yaml', 'w') as f:
             yaml.dump(
                 {'design': self.design_params}, 
                 f,
@@ -224,12 +258,12 @@ class GUIPattern:
             )
 
         # pack
-        archive = shutil.make_archive(
-            self.save_path / Path(folder).name, 'zip',
-            root_dir=folder
-        )
+        self.saved_garment_archive = Path(shutil.make_archive(
+            self.save_path / self.saved_garment_folder.name, 'zip',
+            root_dir=self.saved_garment_folder
+        ))
 
-        print(f'Success! {self.sew_pattern.name} saved to {folder}')
+        print(f'Success! {self.sew_pattern.name} saved to {self.saved_garment_folder}')
 
-        return archive
+        return self.saved_garment_archive
 
