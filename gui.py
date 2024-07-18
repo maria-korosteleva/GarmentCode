@@ -2,8 +2,11 @@ import os
 import sys
 from pathlib import Path
 sys.path.append(str((Path(os.getcwd()) / 'external').resolve()))
-from gui.callbacks import GUIState
 from nicegui import ui
+
+# Custom
+from gui.callbacks import GUIState
+import gui.error_pages
 
 # TODO Instructions
 
