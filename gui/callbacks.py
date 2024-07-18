@@ -69,7 +69,7 @@ class GUIState:
         # Theme
         # Here: https://quasar.dev/style/theme-builder
         # TODO Develop the theme more
-        # TODO Global links style?
+        # TODO Global links color?
         # TODO Warning color
         ui.colors(primary='#d984cc')
         
@@ -146,13 +146,14 @@ class GUIState:
         with ui.scroll_area().classes('w-full h-full p-0 m-0'): # NOTE: p-0 m-0 gap-0 dont' seem to have effect
             body = self.pattern_state.body_params
             for param in body:
+                param_name = param.replace('_', ' ').capitalize()
                 elem = ui.number(
-                        label=param, 
+                        label=param_name, 
                         value=str(body[param]), 
                         format='%.2f',
                         precision=2,
                         step=0.5,
-                ) 
+                ).classes('text-[0.85rem]')
 
                 if param[0] == '_':  # Info elements for calculatable parameters
                     elem.disable()
@@ -167,17 +168,18 @@ class GUIState:
     def def_flat_design_subtab(self, ui_elems, design_params, use_collapsible=False):
         """Group of design parameters"""
         for param in design_params: 
+            param_name = param.replace('_', ' ').capitalize()
             if 'v' not in design_params[param]:
                 ui_elems[param] = {}
                 if use_collapsible:
                     with ui.expansion().classes('w-full p-0 m-0') as expansion: 
                         with expansion.add_slot('header'):
-                            ui.label(f'{param.capitalize()}').classes('text-base self-center w-full h-full p-0 m-0')
+                            ui.label(f'{param_name}').classes('text-base self-center w-full h-full p-0 m-0')
                         with ui.row().classes('w-full h-full p-0 m-0'):  # Ensures correct application of style classes for children
                             self.def_flat_design_subtab(ui_elems[param], design_params[param])
                 else:
                     with ui.card().classes('w-full shadow-md border m-0 rounded-md'): 
-                        ui.label(f'{param.capitalize()}').classes('text-base self-center w-full h-full p-0 m-0')
+                        ui.label(f'{param_name}').classes('text-base self-center w-full h-full p-0 m-0')
                         self.def_flat_design_subtab(ui_elems[param], design_params[param])
             else:
                 # Leaf value
@@ -188,17 +190,18 @@ class GUIState:
                     values = design_params[param]['range']
                     if 'null' in p_type and None not in values: 
                         values.append(None)  # NOTE: Displayable value
+                    ui.label(param_name).classes('p-0 m-0 mt-2 text-stone-500 text-[0.85rem]') 
                     ui_elems[param] = ui.select(
                         values, value=val,
                         on_change=lambda e, dic=design_params, param=param: self.update_pattern_ui_state(dic, param, e.value)
                     ).classes('w-full') 
                 elif p_type == 'bool':
                     ui_elems[param] = ui.switch(
-                        param, value=val, 
+                        param_name, value=val, 
                         on_change=lambda e, dic=design_params, param=param: self.update_pattern_ui_state(dic, param, e.value)
-                    )
+                    ).classes('text-stone-500')
                 elif p_type == 'float' or p_type == 'int':
-                    ui.label(param)
+                    ui.label(param_name).classes('p-0 m-0 mt-2 text-stone-500 text-[0.85rem]')
                     ui_elems[param] = ui.slider(
                         value=val, 
                         min=p_range[0], 
@@ -217,7 +220,7 @@ class GUIState:
                     )
                 else:
                     print(f'GUI::WARNING::Unknown parameter type: {p_type}')
-                    ui_elems[param] = ui.input(label=param, value=val, placeholder='Type the value',
+                    ui_elems[param] = ui.input(label=param_name, value=val, placeholder='Type the value',
                         validation={'Input too long': lambda value: len(value) < 20},
                         on_change=lambda e, dic=design_params, param=param: self.update_pattern_ui_state(dic, param, e.value)
                     ).classes('w-full')
@@ -263,8 +266,8 @@ class GUIState:
                 with splitter.after:
                     with ui.tab_panels(tabs, value=self.ui_design_subtabs['meta']).props('vertical').classes('w-full h-full p-0 m-0'):
                         for param, tab_elem in self.ui_design_subtabs.items():
-                            with ui.tab_panel(tab_elem).classes('w-full h-full p-0 m-0'): 
-                                with ui.scroll_area().classes('w-full h-full p-0 m-0'):
+                            with ui.tab_panel(tab_elem).classes('w-full h-full p-0 m-0').style('gap: 0px'): 
+                                with ui.scroll_area().classes('w-full h-full p-0 m-0').style('gap: 0px'):
                                     self.def_flat_design_subtab(
                                         self.ui_design_refs[param],
                                         design_params[param],
