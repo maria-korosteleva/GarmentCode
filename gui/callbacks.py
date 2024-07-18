@@ -136,7 +136,7 @@ class GUIState:
             with ui.link(target='https://arxiv.org/abs/2306.03642', new_tab=True):
                 ui.html(icon_arxiv).classes('w-16 bg-transparent')
             ui.button(
-                'Dataset', 
+                'Dataset',  # TODO Update the link once project page is out!
                 on_click=lambda: ui.navigate.to('https://arxiv.org/abs/2405.17609', new_tab=True)
                 ).props('flat color=white')
             with ui.link(target='https://github.com/maria-korosteleva/GarmentCode', new_tab=True):
