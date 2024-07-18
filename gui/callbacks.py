@@ -68,10 +68,17 @@ class GUIState:
         """Theme definition"""
         # Theme
         # Here: https://quasar.dev/style/theme-builder
-        # TODO Develop the theme more
-        # TODO Global links color?
-        # TODO Warning color
-        ui.colors(primary='#d984cc')
+        ui.colors(
+            # DRAFT primary='#d984cc'
+            primary='#ed7ea7',  
+            secondary='#a33e6c',
+            accent='#a82c64',
+            dark='#4d1f48',
+            positive='#22ba38',
+            negative='#f50000',
+            info='#31CCEC',
+            warning='#9333ea'
+        )
         
     def layout(self):
         """Overall page layout"""
@@ -295,7 +302,7 @@ class GUIState:
 
                     self.ui_self_intersect = ui.label(
                         'WARNING: Garment panels are self-intersecting!'
-                    ).classes('font-semibold text-purple-600 border border-purple-600 py-0 px-1.5 rounded-md') \
+                    ).classes('font-semibold text-purple-600 border-purple-600 border py-0 px-1.5 rounded-md') \
                     .bind_visibility(self.pattern_state, 'is_self_intersecting')
 
                 with ui.image(f'{self.path_static_img}/millimiter_paper_1500_900.png').classes(f'w-[{self.w_pattern_display}vw] p-0 m-0') as self.ui_pattern_bg:       
