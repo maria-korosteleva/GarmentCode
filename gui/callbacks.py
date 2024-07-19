@@ -64,6 +64,7 @@ class GUIState:
         self.background_body_scale = 1 / 171.99   # Inverse of the mean_all body height from GGG
         self.background_body_canvas_center = 0.27  # Fraction of the canvas (millimiter paper)
         self.w_canvas_pad, self.h_canvas_pad = 0.011, 0.04
+        self.body_transform_classes = ''   # Application of pattern&body scaling when it overflows
 
         # Elements
         self.ui_design_subtabs = {}
@@ -485,11 +486,13 @@ class GUIState:
                 m_top = (1. - abs(p_bbox[2]) * self.background_body_scale) * self.h_rel_body_size + (1. - self.h_rel_body_size) / 2 
                 m_left = self.background_body_canvas_center - w_shift * self.background_body_scale * self.w_rel_body_size
                 m_right = 1 - m_left - p_bbox_size[0] * self.background_body_scale * self.w_rel_body_size
+                m_bottom = 1 - m_top - p_bbox_size[1] * self.background_body_scale * self.h_rel_body_size
 
                 # Canvas padding adjustment
                 m_top -= self.h_canvas_pad
                 m_left -= self.w_canvas_pad
                 m_right += self.w_canvas_pad
+                m_bottom -= self.h_canvas_pad
 
                 # DEBUG
                 print('Garment box ', p_bbox_size)
@@ -498,14 +501,40 @@ class GUIState:
                 # print('LR ', m_left, m_right)
                 print(f'final percents ml-[{(m_left * 100)}%] '
                       f' mr-[{(m_right * 100)}%] ' 
-                      f' mt-[{(m_top * 100 / self.canvas_aspect_ratio)}%]'
+                      f' mt-[{(m_top * 100)}%]'
+                      f' mb-[{(m_bottom * 100)}%]'
                 )
+
+                # New placement
+                if m_top < 0 or m_bottom < 0 or m_left < 0 or m_right < 0:
+                    # Calculate the fraction
+                    y_scale = abs(min(m_top, 0.)) + 1. + abs(min(m_bottom, 0.))
+                    x_scale = abs(min(m_left, 0.)) + 1. + abs(min(m_right, 0.))
+
+                    scale = min(1. / y_scale, 1. / x_scale)
+
+                    # DEBUG
+                    print(f'X: {x_scale}, Y: {y_scale}, S: {scale}')
+
+                    # TODO Make sure it aligns with the body
+                    # TODO Avoid cutting the extra things
+                    # Rescale the body
+                    self.body_transform_classes = f'scale-[{scale}] origin-center'
+                    self.ui_body_outline.classes(add=self.body_transform_classes)
+
+                    # Recalculate positioning & width
+                    m_top = (1. - abs(p_bbox[2]) * self.background_body_scale) * self.h_rel_body_size * scale + (1. - self.h_rel_body_size * scale) / 2 
+                    m_left = self.background_body_canvas_center - w_shift * self.background_body_scale * self.w_rel_body_size * scale
+                    m_right = 1 - m_left - p_bbox_size[0] * self.background_body_scale * self.w_rel_body_size * scale
+
+
+                else:  # Display normally 
+                    # Remove body transforms if any were applied
+                    self.ui_body_outline.classes(remove=self.body_transform_classes)
 
                 # New pattern image
                 self.ui_pattern_display.set_source(
                     str(self.pattern_state.svg_path()) if self.pattern_state.svg_filename else '')
-                # New placement
-                # mb-[{m_bottom * 100 / self.canvas_aspect_ratio}%]
                 self.ui_pattern_display.classes(
                         replace=f"""bg-transparent p-0 m-0
                                 absolute 
@@ -514,9 +543,10 @@ class GUIState:
                                 w-[{(1. - m_right - m_left) * 100}%]
                                 height-auto
                         """)  
+                    
             else:
-                # TODO restore default body placement if needed
                 self.ui_pattern_display.set_source('')
+                self.ui_body_outline.classes(remove=self.body_transform_classes)
 
     def update_design_params_ui_state(self, ui_elems, design_params):
         """Sync ui params with the current state of the design params"""
