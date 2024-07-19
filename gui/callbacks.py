@@ -328,7 +328,7 @@ class GUIState:
 
                 with ui.image(f'{self.path_static_img}/millimiter_paper_1500_900.png').classes(f'w-[{self.w_pattern_display}vw] p-0 m-0') as self.ui_pattern_bg:       
                     # NOTE: Positioning: https://github.com/zauberzeug/nicegui/discussions/957 
-                    with ui.row().classes('w-full h-full p-0 m-0 bg-transparent absolute top-[0%] left-[0%]'):
+                    with ui.row().classes('w-full h-full p-0 m-0 bg-transparent relative'):
                         self.ui_body_outline = ui.image(f'{self.path_static_img}/ggg_outline_mean_all.svg') \
                             .classes('bg-transparent h-full absolute top-[0%] left-[0%] p-0 m-0') 
                         switch.bind_value(self.ui_body_outline, 'visible')
@@ -516,17 +516,22 @@ class GUIState:
                     # DEBUG
                     print(f'X: {x_scale}, Y: {y_scale}, S: {scale}')
 
-                    # TODO Make sure it aligns with the body
                     # TODO Avoid cutting the extra things
+                    # FIXME scaling still cuts the hood out -- calculation is not correct
                     # Rescale the body
-                    self.body_transform_classes = f'scale-[{scale}] origin-center'
+                    self.body_transform_classes = f'origin-center scale-[{scale}]'
                     self.ui_body_outline.classes(add=self.body_transform_classes)
 
                     # Recalculate positioning & width
+                    body_center = 0.5 - self.background_body_canvas_center
                     m_top = (1. - abs(p_bbox[2]) * self.background_body_scale) * self.h_rel_body_size * scale + (1. - self.h_rel_body_size * scale) / 2 
-                    m_left = self.background_body_canvas_center - w_shift * self.background_body_scale * self.w_rel_body_size * scale
+                    m_left = (0.5 - body_center * scale) - w_shift * self.background_body_scale * self.w_rel_body_size * scale
                     m_right = 1 - m_left - p_bbox_size[0] * self.background_body_scale * self.w_rel_body_size * scale
 
+                    # Canvas padding adjustment
+                    # DRAFT m_top -= self.h_canvas_pad * scale
+                    m_left -= self.w_canvas_pad * scale
+                    m_right += self.w_canvas_pad * scale
 
                 else:  # Display normally 
                     # Remove body transforms if any were applied
