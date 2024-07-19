@@ -333,7 +333,7 @@ class GUIState:
                         switch.bind_value(self.ui_body_outline, 'visible')
                     
                     # NOTE: ui.row allows for correct classes application (e.g. no padding on svg pattern)
-                    with ui.row().classes('w-full h-full p-0 m-0 bg-transparent'):
+                    with ui.row().classes('w-full h-full p-0 m-0 bg-transparent relative'):
                         # Automatically updates from source
                         self.ui_pattern_display = ui.interactive_image(
                             ''
@@ -455,7 +455,6 @@ class GUIState:
                 position='center'
             )
 
-
     def _sync_update_state(self):
         # Update derivative body values (just in case)
         # TODOLOW only do that on body value updates
@@ -508,13 +507,13 @@ class GUIState:
                 # New placement
                 # mb-[{m_bottom * 100 / self.canvas_aspect_ratio}%]
                 self.ui_pattern_display.classes(
-                    replace=f"""bg-transparent p-0
-                            mt-[{m_top * 100 / self.canvas_aspect_ratio}%]
-                            ml-[{m_left * 100}%] 
-                            mr-[{m_right * 100}%] 
-                            mb-auto
-                            absolute top-[0%] left-[0%]
-                    """)
+                        replace=f"""bg-transparent p-0 m-0
+                                absolute 
+                                left-[{m_left * 100}%]
+                                top-[{m_top * 100}%] 
+                                w-[{(1. - m_right - m_left) * 100}%]
+                                height-auto
+                        """)  
             else:
                 # TODO restore default body placement if needed
                 self.ui_pattern_display.set_source('')
