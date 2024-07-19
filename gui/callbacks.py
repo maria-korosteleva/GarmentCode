@@ -64,7 +64,7 @@ class GUIState:
         self.background_body_scale = 1 / 171.99   # Inverse of the mean_all body height from GGG
         self.background_body_canvas_center = 0.27  # Fraction of the canvas (millimiter paper)
         self.w_canvas_pad, self.h_canvas_pad = 0.011, 0.04
-        self.body_transform_classes = ''   # Application of pattern&body scaling when it overflows
+        self.body_outline_classes = ''   # Application of pattern&body scaling when it overflows
 
         # Elements
         self.ui_design_subtabs = {}
@@ -329,8 +329,9 @@ class GUIState:
                 with ui.image(f'{self.path_static_img}/millimiter_paper_1500_900.png').classes(f'w-[{self.w_pattern_display}vw] p-0 m-0') as self.ui_pattern_bg:       
                     # NOTE: Positioning: https://github.com/zauberzeug/nicegui/discussions/957 
                     with ui.row().classes('w-full h-full p-0 m-0 bg-transparent relative'):
+                        self.body_outline_classes = 'bg-transparent h-full absolute top-[0%] left-[0%] p-0 m-0'
                         self.ui_body_outline = ui.image(f'{self.path_static_img}/ggg_outline_mean_all.svg') \
-                            .classes('bg-transparent h-full absolute top-[0%] left-[0%] p-0 m-0') 
+                            .classes(self.body_outline_classes) 
                         switch.bind_value(self.ui_body_outline, 'visible')
                     
                     # NOTE: ui.row allows for correct classes application (e.g. no padding on svg pattern)
@@ -416,7 +417,7 @@ class GUIState:
         # https://github.com/zauberzeug/nicegui/wiki/FAQs#why-have-all-my-elements-the-same-value
    
         # DEBUG
-        print('Updating pattern')
+        print('Updating pattern...')
 
         # Update the values
         if param_dict is not None:
@@ -470,7 +471,6 @@ class GUIState:
         self.pattern_state.reload_garment()
 
         # TODOLOW the pattern is floating around when collars are added.. 
-        # TODO: overflowing elements -- one can check that margins are negative
         # Update display
         if self.ui_pattern_display is not None:
 
@@ -491,36 +491,23 @@ class GUIState:
                 # Canvas padding adjustment
                 m_top -= self.h_canvas_pad
                 m_left -= self.w_canvas_pad
-                m_right += self.w_canvas_pad
+                m_right += self.w_canvas_pad  # preserve evaluated width
                 m_bottom -= self.h_canvas_pad
-
-                # DEBUG
-                print('Garment box ', p_bbox_size)
-                print(p_bbox)
-                # print('margins ', m_top, m_top / self.canvas_aspect_ratio, m_bottom, m_bottom / self.canvas_aspect_ratio)
-                # print('LR ', m_left, m_right)
-                print(f'final percents ml-[{(m_left * 100)}%] '
-                      f' mr-[{(m_right * 100)}%] ' 
-                      f' mt-[{(m_top * 100)}%]'
-                      f' mb-[{(m_bottom * 100)}%]'
-                )
 
                 # New placement
                 if m_top < 0 or m_bottom < 0 or m_left < 0 or m_right < 0:
                     # Calculate the fraction
-                    y_scale = abs(min(m_top, 0.)) + 1. + abs(min(m_bottom, 0.))
-                    x_scale = abs(min(m_left, 0.)) + 1. + abs(min(m_right, 0.))
+                    scale_margin = 1.2
+                    y_top_scale = abs(min(m_top * scale_margin, 0.)) + 1.
+                    y_bot_scale = 1. + abs(min(m_bottom * scale_margin, 0.))
+                    x_left_scale = abs(min(m_left * scale_margin, 0.)) + 1.
+                    x_right_scale = abs(min(m_right * scale_margin, 0.)) + 1.
+                    scale = min(1. / y_top_scale, 1. / y_bot_scale, 1. / x_left_scale, 1. / x_right_scale)
 
-                    scale = min(1. / y_scale, 1. / x_scale)
-
-                    # DEBUG
-                    print(f'X: {x_scale}, Y: {y_scale}, S: {scale}')
-
-                    # TODO Avoid cutting the extra things
-                    # FIXME scaling still cuts the hood out -- calculation is not correct
                     # Rescale the body
-                    self.body_transform_classes = f'origin-center scale-[{scale}]'
-                    self.ui_body_outline.classes(add=self.body_transform_classes)
+                    self.ui_body_outline.classes(
+                        replace=self.body_outline_classes + f' origin-center scale-[{scale}]'
+                    )
 
                     # Recalculate positioning & width
                     body_center = 0.5 - self.background_body_canvas_center
@@ -529,13 +516,13 @@ class GUIState:
                     m_right = 1 - m_left - p_bbox_size[0] * self.background_body_scale * self.w_rel_body_size * scale
 
                     # Canvas padding adjustment
-                    # DRAFT m_top -= self.h_canvas_pad * scale
+                    # TODOLOW For some reason top adjustment is not needed here: m_top -= self.h_canvas_pad * scale
                     m_left -= self.w_canvas_pad * scale
                     m_right += self.w_canvas_pad * scale
 
                 else:  # Display normally 
                     # Remove body transforms if any were applied
-                    self.ui_body_outline.classes(remove=self.body_transform_classes)
+                    self.ui_body_outline.classes(replace=self.body_outline_classes)
 
                 # New pattern image
                 self.ui_pattern_display.set_source(
@@ -550,8 +537,9 @@ class GUIState:
                         """)  
                     
             else:
+                # Restore default state
                 self.ui_pattern_display.set_source('')
-                self.ui_body_outline.classes(remove=self.body_transform_classes)
+                self.ui_body_outline.classes(replace=self.body_outline_classes)
 
     def update_design_params_ui_state(self, ui_elems, design_params):
         """Sync ui params with the current state of the design params"""
