@@ -45,7 +45,7 @@ def Sun(width, depth, n_rays=8, d_rays=5, **kwargs):
 def SIGGRAPH_logo(width, depth=None, **kwargs):
     """Shape of SIGGRAPH Logo (split vertically)"""
 
-    filename='./assets/img/Logo_adjusted.svg'   # NOTE assumes the script is run from the root
+    filename='./assets/img/siggraph_logo_thick_connection.svg'   # NOTE assumes the script is run from the root
     # TODOLOW path w.r.t. current file
     left_seq, right_seq = pyp.EdgeSeqFactory.halfs_from_svg(
         filename, target_height=width)

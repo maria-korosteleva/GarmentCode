@@ -527,8 +527,8 @@ design:
       type: select_null
 
     style_side_file:
-      v: assets\img\logo_thick_connection.svg
-      range: [assets\img\Logo_adjusted.svg, assets\img\test_shape.svg]  # NOTE: Only for sampling
+      v: assets\img\siggraph_logo_thick_connection.svg   # NOTE: Any SVG file with a "hole" outline shape will work
+      range: [assets\img\siggraph_logo_thick_connection.svg]  
       type: file_svg
 
   levels-skirt:
