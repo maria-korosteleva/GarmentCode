@@ -27,7 +27,7 @@ from assets.garment_programs.meta_garment import MetaGarment, IncorrectElementCo
 from assets.garment_programs.bands import *
 from assets.body_measurments.body_params import BodyParameters
 import pypattern as pyp
-import stats_utils
+import assets.garment_programs.stats_utils as stats_utils
 
 def get_command_args():
     """command line arguments to control the run"""
