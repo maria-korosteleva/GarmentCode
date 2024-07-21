@@ -1,7 +1,7 @@
 body:
   arm_pose_angle: 40
-  arm_length: 80  # TODO Check
-  wrist: 17  # TODO Check
+  arm_length: 80 
+  wrist: 17 
   armscye_depth: 14
   back_width: 38 # 35
   bum_points: 18

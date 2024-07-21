@@ -7,7 +7,7 @@ import random
 
 # Custom 
 from assets.garment_programs.meta_garment import MetaGarment
-from assets.body_measurments.body_params import BodyParameters
+from assets.bodies.body_params import BodyParameters
 import pypattern as pyp
 
 verbose = False

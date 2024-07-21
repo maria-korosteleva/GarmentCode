@@ -25,7 +25,7 @@ from assets.garment_programs.bodice import *
 from assets.garment_programs.pants import *
 from assets.garment_programs.meta_garment import MetaGarment, IncorrectElementConfiguration
 from assets.garment_programs.bands import *
-from assets.body_measurments.body_params import BodyParameters
+from assets.bodies.body_params import BodyParameters
 import pypattern as pyp
 import assets.garment_programs.stats_utils as stats_utils
 
