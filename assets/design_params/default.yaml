@@ -212,7 +212,7 @@ design:
         default_prob: 0.6
   sleeve:
     sleeveless:
-      v: false
+      v: true
       range:
       - true
       - false
@@ -444,7 +444,7 @@ design:
         default_prob: 0.8
     sleeve:
       sleeveless:
-        v: false
+        v: true
         range:
         - true
         - false
@@ -765,15 +765,8 @@ design:
       range: 
       - Sun
       - SIGGRAPH_logo
-      - SVGFile
       type: select_null
       default_prob: 1.
-    style_side_file:
-      v: assets\img\test_shape.svg
-      range: # NOTE: Range is only needed for sampling
-      - assets\img\Logo_adjusted.svg
-      - assets\img\test_shape.svg  
-      type: file_svg
   levels-skirt:  
     base:
       v: PencilSkirt

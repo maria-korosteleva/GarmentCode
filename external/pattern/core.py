@@ -41,6 +41,11 @@ panel_spec_template = {
     'edges': []
 }
 
+# FIXME too many abs_to_rel and rel_to_abs functions
+
+class EmptyPatternError(BaseException):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
 
 # ------------ Patterns --------
 class BasicPattern(object):

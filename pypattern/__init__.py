@@ -23,3 +23,7 @@ import pypattern.generic_utils as utils
 # Parameter support
 from pypattern.params import *
 
+# Errors
+# TODO pattern lib should be part of the pygarment lib
+from external.pattern.core import EmptyPatternError
+

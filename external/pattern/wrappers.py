@@ -18,6 +18,7 @@ if 'Windows' in os.environ.get('OS',''):
 
 import cairosvg
 import svgpathtools as svgpath
+import svgwrite as sw
 
 import matplotlib.pyplot as plt
 
@@ -220,18 +221,14 @@ class VisPattern(core.ParametrizedPattern):
                                  font_size='7', 
                                  text_anchor='middle'))
 
-    def _save_as_image(
-            self, svg_filename, png_filename,
+    def get_svg(self, svg_filename,
             with_text=True, view_ids=True, 
-            margin=2):  
-        """
-            Saves current pattern in svg and png format for visualization
+            margin=2) -> sw.Drawing:
+        """Convert pattern to writable svg representation"""
 
-            * with_text: include panel names
-            * view_ids: include ids of vertices and edges in the output image
-            * margin: small amount of free space around the svg drawing (to correctly display the line width)
-
-        """
+        if len(self.panel_order()) == 0:  # If we are still here, but pattern is empty, don't generate an image
+            raise core.EmptyPatternError()
+        
         # Get svg representation per panel
         # Order by depth (=> most front panels render in front)
         # TODOLOW Even smarter way is needed for prettier allignment
@@ -274,9 +271,9 @@ class VisPattern(core.ParametrizedPattern):
             dims[1] + 2 * margin
         )
 
-        # "floor" level for a pattern
-        self.body_bottom_shift = -viewbox[0] * self.px_per_unit, -viewbox[1] * self.px_per_unit 
-        self.png_size = viewbox[2:]
+        # Pattern info for correct placement 
+        self.svg_bbox = [np.min(arrdims[:, 0]), np.max(arrdims[:, 1]), np.min(arrdims[:, 2]), np.max(arrdims[:, 3])]
+        self.svg_bbox_size = [viewbox[2], viewbox[3]]
 
         # Save
         attributes = attributes_f + attributes_b
@@ -297,6 +294,24 @@ class VisPattern(core.ParametrizedPattern):
                 if panel is not None:
                     self._add_panel_annotations(
                         dwg, panel, paths[i], with_text, view_ids)
+        
+        return dwg
+
+
+    def _save_as_image(
+            self, svg_filename, png_filename,
+            with_text=True, view_ids=True, 
+            margin=2):  
+        """
+            Saves current pattern in svg and png format for visualization
+
+            * with_text: include panel names
+            * view_ids: include ids of vertices and edges in the output image
+            * margin: small amount of free space around the svg drawing (to correctly display the line width)
+
+        """
+        
+        dwg = self.get_svg(svg_filename, with_text, view_ids, margin)
         
         dwg.save(pretty=True)
 

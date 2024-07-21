@@ -319,7 +319,7 @@ class PencilSkirt(StackableSkirtComponent):
             style_shape_l, style_shape_r = shape_class(
                 width=depth * 1.5, 
                 depth=depth, n_rays=6, d_rays=depth*0.2,
-                filename=design['style_side_file']['v']
+                filename=design['style_side_file']['v'] if 'style_side_file' in design else None
             )
         else:
             style_shape_l, style_shape_r = None, None
