@@ -79,12 +79,12 @@ if __name__ == '__main__':
 
     # TODO As argument
     in_body_mes = [
-        r"C:\Users\MariaKo\Documents\Code\Procedural-Garments\assets\default_bodies\mean_female.yaml",
+        r"C:\Users\MariaKo\Documents\Code\Procedural-Garments\assets\bodies\mean_female.yaml",
         r"G:\My Drive\GarmentCode\sewing_siggraph_garment\measurements\Maria_updated.yaml",
         r"G:\My Drive\GarmentCode\sewing_siggraph_garment\measurements\Olga_updated.yaml",
         r"G:\My Drive\GarmentCode\sewing_siggraph_garment\measurements\Jana_updated.yaml"
     ]
-    # in_body_mes = r"C:\Users\MariaKo\Documents\Code\Procedural-Garments\assets\default_bodies\mean_male.yaml"
+    # in_body_mes = r"C:\Users\MariaKo\Documents\Code\Procedural-Garments\assets\bodies\mean_male.yaml"
 
     body_samples_path = Path(system_props['body_samples_path']) / body_samples_folder
     body_options = gather_body_options(body_samples_path)
