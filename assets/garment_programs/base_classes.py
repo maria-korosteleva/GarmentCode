@@ -1,6 +1,6 @@
-import pypattern as pyp
+import pygarment as pyg
 
-class BaseBodicePanel(pyp.Panel):
+class BaseBodicePanel(pyg.Panel):
     """Base class for bodice panels that defines expected interfaces and common functions"""
     def __init__(self, name, body, design) -> None:
         super().__init__(name)
@@ -37,7 +37,7 @@ class BaseBodicePanel(pyp.Panel):
         return (level * x / y) + self.body['shoulder_w'] / 2
 
 
-class BaseBottoms(pyp.Component):
+class BaseBottoms(pyg.Component):
     """A base class for all the bottom components.
         Defines common elements: 
         * List of interfaces
@@ -69,9 +69,9 @@ class BaseBottoms(pyp.Component):
         waist, hips = self.body['waist'], self.body['hips']
         hips_level = self.body['hips_line']
         self.adj_hips_depth = rise * hips_level
-        self.adj_waist = pyp.utils.lin_interpolation(hips, waist, rise)
+        self.adj_waist = pyg.utils.lin_interpolation(hips, waist, rise)
 
-        self_adj_back_waist = pyp.utils.lin_interpolation(
+        self_adj_back_waist = pyg.utils.lin_interpolation(
             self.body['hip_back_width'], self.body['waist_back_width'], rise)
 
         return self.adj_waist, self.adj_hips_depth, self_adj_back_waist
@@ -101,7 +101,7 @@ class StackableSkirtComponent(BaseBottoms):
         }
 
 
-class BaseBand(pyp.Component):
+class BaseBand(pyg.Component):
     def __init__(self, body, design, tag='', rise=None) -> None:
         """Base band initialization
         """

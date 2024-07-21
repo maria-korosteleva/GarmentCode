@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import numpy as np
 
-from pypattern.connector import Stitches
+from pygarment.connector import Stitches
 
 
 class BaseComponent(ABC):

@@ -1,9 +1,9 @@
 import numpy as np
 
-import pypattern as pyp
+import pygarment as pyg
 
 
-class BodyParameters(pyp.BodyParametrizationBase):
+class BodyParameters(pyg.BodyParametrizationBase):
     """Custom class that defines calculated body parameters"""
 
     def __init__(self, param_file='') -> None:

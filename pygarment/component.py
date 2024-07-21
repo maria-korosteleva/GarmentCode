@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from pypattern.base import BaseComponent
+from pygarment.base import BaseComponent
 from external.pattern.wrappers import VisPattern
 
 

@@ -1,13 +1,13 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-import pypattern as pyp
+import pygarment as pyg
 from assets.garment_programs.base_classes import StackableSkirtComponent
 from assets.garment_programs.base_classes import BaseBottoms
 from assets.garment_programs import shapes
 
 
-class SkirtPanel(pyp.Panel):
+class SkirtPanel(pyg.Panel):
     """One panel of a panel skirt with ruffles on the waist"""
 
     def __init__(self, 
@@ -26,27 +26,27 @@ class SkirtPanel(pyp.Panel):
         x_shift_top = (low_width - top_width) / 2  # to account for flare at the bottom
 
         # define edge loop
-        self.right = pyp.EdgeSeqFactory.side_with_cut(
+        self.right = pyg.EdgeSeqFactory.side_with_cut(
             [0, 0],
             [x_shift_top, length],
-            start_cut=bottom_cut / length) if bottom_cut else pyp.EdgeSequence(
-            pyp.Edge([0, 0], [x_shift_top, length]))
-        self.waist = pyp.Edge(
+            start_cut=bottom_cut / length) if bottom_cut else pyg.EdgeSequence(
+            pyg.Edge([0, 0], [x_shift_top, length]))
+        self.waist = pyg.Edge(
             self.right[-1].end, [x_shift_top + top_width, length])
-        self.left = pyp.EdgeSeqFactory.side_with_cut(
+        self.left = pyg.EdgeSeqFactory.side_with_cut(
             self.waist.end, [low_width, 0],
-            end_cut=bottom_cut / length) if bottom_cut else pyp.EdgeSequence(
-            pyp.Edge(self.waist.end, [low_width, 0]))
-        self.bottom = pyp.Edge(self.left[-1].end, self.right[0].start)
+            end_cut=bottom_cut / length) if bottom_cut else pyg.EdgeSequence(
+            pyg.Edge(self.waist.end, [low_width, 0]))
+        self.bottom = pyg.Edge(self.left[-1].end, self.right[0].start)
         
         # define interface
         self.interfaces = {
-            'right': pyp.Interface(self, self.right[-1]),
-            'top': pyp.Interface(self, self.waist,
+            'right': pyg.Interface(self, self.right[-1]),
+            'top': pyg.Interface(self, self.waist,
                                  ruffle=self.waist.length() / match_top_int_to if match_top_int_to is not None else ruffles
             ).reverse(True),
-            'left': pyp.Interface(self, self.left[0]),
-            'bottom': pyp.Interface(self, self.bottom)
+            'left': pyg.Interface(self, self.left[0]),
+            'bottom': pyg.Interface(self, self.bottom)
         }
         # Single sequence for correct assembly
         self.edges = self.right
@@ -59,7 +59,7 @@ class SkirtPanel(pyp.Panel):
         self.center_x()  # Already know that this panel should be centered over Y
 
 
-class ThinSkirtPanel(pyp.Panel):
+class ThinSkirtPanel(pyg.Panel):
     """One panel of a panel skirt"""
 
     def __init__(self, name, top_width=10, bottom_width=20, length=70, b_curvature=0) -> None:
@@ -67,15 +67,15 @@ class ThinSkirtPanel(pyp.Panel):
 
         # define edge loop
         self.flare = (bottom_width - top_width) / 2
-        self.edges = pyp.EdgeSeqFactory.from_verts(
+        self.edges = pyg.EdgeSeqFactory.from_verts(
             [0, 0], [self.flare, length], [self.flare + top_width, length],
             [self.flare * 2 + top_width, 0])
 
-        if pyp.utils.close_enough(b_curvature, 0):
+        if pyg.utils.close_enough(b_curvature, 0):
             self.edges.close_loop()
         else:
             self.edges.append(
-                pyp.CircleEdgeFactory.from_three_points(
+                pyg.CircleEdgeFactory.from_three_points(
                     self.edges[-1].end,
                     self.edges[0].start,
                     [0.5, b_curvature], 
@@ -87,14 +87,14 @@ class ThinSkirtPanel(pyp.Panel):
         self.set_pivot(self.edges[0].end)
 
         self.interfaces = {
-            'right': pyp.Interface(self, self.edges[0]),
-            'top': pyp.Interface(self, self.edges[1]),
-            'left': pyp.Interface(self, self.edges[2]),
-            'bottom': pyp.Interface(self, self.edges[-1])
+            'right': pyg.Interface(self, self.edges[0]),
+            'top': pyg.Interface(self, self.edges[1]),
+            'left': pyg.Interface(self, self.edges[2]),
+            'bottom': pyg.Interface(self, self.edges[-1])
         }
 
 
-class FittedSkirtPanel(pyp.Panel):
+class FittedSkirtPanel(pyg.Panel):
     """Fitted panel for a pencil skirt"""
     def __init__(
             self, name, body, design, 
@@ -138,60 +138,60 @@ class FittedSkirtPanel(pyp.Panel):
 
         # --- Edges definition ---
         # Right
-        if pyp.close_enough(flare, 1):  # skip optimization
-            right_bottom = pyp.Edge(    
+        if pyg.close_enough(flare, 1):  # skip optimization
+            right_bottom = pyg.Edge(    
                 [hips - low_width, angle_shift], 
                 [0, length]
             )
         else:
-            right_bottom = pyp.EdgeSeqFactory.curve_from_tangents(
+            right_bottom = pyg.EdgeSeqFactory.curve_from_tangents(
                 [hips - low_width, angle_shift], 
                 [0, length],
                 target_tan1=np.array([0, 1]), 
                 # initial guess places control point closer to the hips 
                 initial_guess=[0.75, 0]
             )
-        right_top = pyp.EdgeSeqFactory.curve_from_tangents(
+        right_top = pyg.EdgeSeqFactory.curve_from_tangents(
             right_bottom.end,
             [hw_shift, length + adj_hips_depth],
             target_tan0=np.array([0, 1]),
             initial_guess=[0.5, 0] 
         )
-        right = pyp.EdgeSequence(right_bottom, right_top)
+        right = pyg.EdgeSequence(right_bottom, right_top)
 
         # top
-        top = pyp.Edge(right[-1].end, [hips * 2 - hw_shift, length + adj_hips_depth])
+        top = pyg.Edge(right[-1].end, [hips * 2 - hw_shift, length + adj_hips_depth])
 
         # left
-        left_top = pyp.EdgeSeqFactory.curve_from_tangents(
+        left_top = pyg.EdgeSeqFactory.curve_from_tangents(
             top.end,    
             [hips * 2, length],
             target_tan1=np.array([0, -1]),
             initial_guess=[0.5, 0]
         )
-        if pyp.close_enough(flare, 1):  # skip optimization for straight skirt
-            left_bottom = pyp.Edge(  
+        if pyg.close_enough(flare, 1):  # skip optimization for straight skirt
+            left_bottom = pyg.Edge(  
                 left_top.end, 
                 [hips + low_width, -angle_shift], 
             )
         else:
-            left_bottom = pyp.EdgeSeqFactory.curve_from_tangents(  
+            left_bottom = pyg.EdgeSeqFactory.curve_from_tangents(  
                 left_top.end, 
                 [hips + low_width, -angle_shift], 
                 target_tan0=np.array([0, -1]),
                 # initial guess places control point closer to the hips 
                 initial_guess=[0.25, 0]  
             )
-        left = pyp.EdgeSequence(left_top, left_bottom)
+        left = pyg.EdgeSequence(left_top, left_bottom)
 
         # fin
-        self.edges = pyp.EdgeSequence(right, top, left).close_loop()
+        self.edges = pyg.EdgeSequence(right, top, left).close_loop()
         bottom = self.edges[-1]
 
         if slit:  # add a slit
             # Use long and thin disconnected dart for a cutout
-            new_edges, _, int_edges = pyp.ops.cut_into_edge(
-                pyp.EdgeSeqFactory.dart_shape(2, depth=slit * length),  # a very thin cutout
+            new_edges, _, int_edges = pyg.ops.cut_into_edge(
+                pyg.EdgeSeqFactory.dart_shape(2, depth=slit * length),  # a very thin cutout
                 bottom, 
                 offset=bottom.length() / 2,
                 right=True)
@@ -216,7 +216,7 @@ class FittedSkirtPanel(pyp.Panel):
         if side_cut is not None:
             try:
                 # Add a stylistic cutout to the skirt
-                new_edges, _, int_edges = pyp.ops.cut_into_edge(
+                new_edges, _, int_edges = pyg.ops.cut_into_edge(
                     side_cut, left_bottom, 
                     offset=left_bottom.length() / 2, 
                     right=True, flip_target=flip_side_cut)
@@ -234,9 +234,9 @@ class FittedSkirtPanel(pyp.Panel):
         # Out interfaces (easier to define before adding a dart)
         # Adding ruffle factor on the hip line extention (used in back panel)
         self.interfaces = {
-            'bottom': pyp.Interface(self, bottom),
-            'right': pyp.Interface(self, right, [1] * (len(right) - 1) + [hipline_ext]), 
-            'left': pyp.Interface(self, left, [hipline_ext] + [1] * (len(left) - 1)),  
+            'bottom': pyg.Interface(self, bottom),
+            'right': pyg.Interface(self, right, [1] * (len(right) - 1) + [hipline_ext]), 
+            'left': pyg.Interface(self, left, [hipline_ext] + [1] * (len(left) - 1)),  
         }
         self.interfaces['left'].edges_flipping[0] = True
         self.interfaces['right'].edges_flipping[-1] = True
@@ -246,13 +246,13 @@ class FittedSkirtPanel(pyp.Panel):
             dart_width = w_diff - hw_shift
             top_edges, int_edges = self.add_darts(top, dart_width, dart_depth, dart_position, double_dart=double_dart)
 
-            self.interfaces['top'] = pyp.Interface(
+            self.interfaces['top'] = pyg.Interface(
                 self, int_edges,
                 ruffle=int_edges.length() / match_top_int_to if match_top_int_to is not None else 1.
             ) 
             self.edges.substitute(top, top_edges)
         else:
-            self.interfaces['top'] = pyp.Interface(
+            self.interfaces['top'] = pyg.Interface(
                 self, top,
                 ruffle=top.length() / match_top_int_to if match_top_int_to is not None else 1.
             ) 
@@ -270,8 +270,8 @@ class FittedSkirtPanel(pyp.Panel):
             ]
 
             # dart_shape = pyp.EdgeSeqFactory.dart_shape(dart_width, dart_depth)
-            dart_shape_full = pyp.EdgeSeqFactory.dart_shape(dart_width / 2, dart_depth)
-            dart_shape_small = pyp.EdgeSeqFactory.dart_shape(dart_width / 2, dart_depth * 0.9)
+            dart_shape_full = pyg.EdgeSeqFactory.dart_shape(dart_width / 2, dart_depth)
+            dart_shape_small = pyg.EdgeSeqFactory.dart_shape(dart_width / 2, dart_depth * 0.9)
             darts = [
                 dart_shape_small, 
                 dart_shape_full, 
@@ -284,12 +284,12 @@ class FittedSkirtPanel(pyp.Panel):
                 dart_position + dart_width / 2,
             ]
 
-            dart_shape = pyp.EdgeSeqFactory.dart_shape(dart_width, dart_depth)
+            dart_shape = pyg.EdgeSeqFactory.dart_shape(dart_width, dart_depth)
             darts = [
                 dart_shape, 
                 dart_shape, 
             ]
-        top_edges, int_edges = pyp.EdgeSequence(top), pyp.EdgeSequence(top)
+        top_edges, int_edges = pyg.EdgeSequence(top), pyg.EdgeSequence(top)
 
         for off, dart in zip(offsets_mid, darts):
             left_edge_len = top_edges[-1].length()
@@ -369,7 +369,7 @@ class PencilSkirt(StackableSkirtComponent):
             flip_side_cut=False,
         ).translate_to([0, body['_waist_level'], -20])
 
-        self.stitching_rules = pyp.Stitches(
+        self.stitching_rules = pyg.Stitches(
             (self.front.interfaces['right'], self.back.interfaces['right']),
             (self.front.interfaces['left'], self.back.interfaces['left'])
         )
@@ -378,13 +378,13 @@ class PencilSkirt(StackableSkirtComponent):
         self.interfaces = {
             'top_f': self.front.interfaces['top'],
             'top_b': self.back.interfaces['top'],
-            'top': pyp.Interface.from_multiple(
+            'top': pyg.Interface.from_multiple(
                 self.front.interfaces['top'].flip_edges(),
                 self.back.interfaces['top'].reverse(with_edge_dir_reverse=True)
             ),
             'bottom_f': self.front.interfaces['bottom'],
             'bottom_b': self.back.interfaces['bottom'],
-            'bottom': pyp.Interface.from_multiple(
+            'bottom': pyg.Interface.from_multiple(
                 self.front.interfaces['bottom'], self.back.interfaces['bottom']
             )
         }
@@ -429,7 +429,7 @@ class Skirt2(StackableSkirtComponent):
             match_top_int_to=body['waist_back_width']
         ).translate_to([0, body['_waist_level'], -20])
 
-        self.stitching_rules = pyp.Stitches(
+        self.stitching_rules = pyg.Stitches(
             (self.front.interfaces['right'], self.back.interfaces['right']),
             (self.front.interfaces['left'], self.back.interfaces['left'])
         )
@@ -438,12 +438,12 @@ class Skirt2(StackableSkirtComponent):
         self.interfaces = {
             'top_f': self.front.interfaces['top'],
             'top_b': self.back.interfaces['top'],
-            'top': pyp.Interface.from_multiple(
+            'top': pyg.Interface.from_multiple(
                 self.front.interfaces['top'], self.back.interfaces['top']
             ),
             'bottom_f': self.front.interfaces['bottom'],
             'bottom_b': self.back.interfaces['bottom'],
-            'bottom': pyp.Interface.from_multiple(
+            'bottom': pyg.Interface.from_multiple(
                 self.front.interfaces['bottom'], self.back.interfaces['bottom']
             )
         }
@@ -492,7 +492,7 @@ class SkirtManyPanels(BaseBottoms):
         self.front.interfaces['top'].reverse(True)
 
         # Create new panels
-        self.subs = pyp.ops.distribute_Y(self.front, n_panels, name_tag='skirt_panel')
+        self.subs = pyg.ops.distribute_Y(self.front, n_panels, name_tag='skirt_panel')
 
         # Stitch new components
         for i in range(1, n_panels):
@@ -504,7 +504,7 @@ class SkirtManyPanels(BaseBottoms):
 
         # Define the interface
         self.interfaces = {
-            'top': pyp.Interface.from_multiple(*[sub.interfaces['top']
+            'top': pyg.Interface.from_multiple(*[sub.interfaces['top']
                                                  for sub in self.subs])
         }
     

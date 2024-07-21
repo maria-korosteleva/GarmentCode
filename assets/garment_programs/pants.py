@@ -1,12 +1,12 @@
 from copy import deepcopy
 import numpy as np
 
-import pypattern as pyp
+import pygarment as pyg
 from assets.garment_programs.base_classes import BaseBottoms
 from assets.garment_programs import bands
 
 
-class PantPanel(pyp.Panel):
+class PantPanel(pyg.Panel):
     def __init__(
             self, name, body, design, 
             length,
@@ -46,37 +46,37 @@ class PantPanel(pyp.Panel):
 
         # --- Edges definition ---
         # Right
-        if pyp.close_enough(design['flare']['v'], 1):  # skip optimization
-            right_bottom = pyp.Edge(    
+        if pyg.close_enough(design['flare']['v'], 1):  # skip optimization
+            right_bottom = pyg.Edge(    
                 [-flare, 0], 
                 [0, length]
             )
         else:
-            right_bottom = pyp.EdgeSeqFactory.curve_from_tangents(
+            right_bottom = pyg.EdgeSeqFactory.curve_from_tangents(
                 [-flare, 0], 
                 [0, length],
                 target_tan1=np.array([0, 1]), 
                 # initial guess places control point closer to the hips 
                 initial_guess=[0.75, 0]
             )
-        right_top = pyp.EdgeSeqFactory.curve_from_tangents(
+        right_top = pyg.EdgeSeqFactory.curve_from_tangents(
             right_bottom.end,    
             [hw_shift, length + hips_depth],
             target_tan0=np.array([0, 1]),
             initial_guess=[0.5, 0]
         )
        
-        top = pyp.Edge(
+        top = pyg.Edge(
             right_top.end, 
             [w_diff + waist, length + hips_depth] 
         )
 
-        crotch_top = pyp.Edge(
+        crotch_top = pyg.Edge(
             top.end, 
             [hips, length + 0.45 * hips_depth]  # A bit higher than hip line
             # NOTE: The point should be lower than the minimum rise value (0.5)
         )
-        crotch_bottom = pyp.EdgeSeqFactory.curve_from_tangents(
+        crotch_bottom = pyg.EdgeSeqFactory.curve_from_tangents(
             crotch_top.end,
             [hips + crotch_extention, length - crotch_depth_diff], 
             target_tan0=np.array([0, -1]),
@@ -84,7 +84,7 @@ class PantPanel(pyp.Panel):
             initial_guess=[0.5, -0.5] 
         )
 
-        left = pyp.EdgeSeqFactory.curve_from_tangents(
+        left = pyg.EdgeSeqFactory.curve_from_tangents(
             crotch_bottom.end,    
             [
                 # NOTE "Magic value" (-2 cm) which we use to define default width:
@@ -101,7 +101,7 @@ class PantPanel(pyp.Panel):
             initial_guess=[0.3, 0]
         )
 
-        self.edges = pyp.EdgeSequence(
+        self.edges = pyg.EdgeSequence(
             right_bottom, right_top, top, crotch_top, crotch_bottom, left
             ).close_loop()
         bottom = self.edges[-1]
@@ -112,13 +112,13 @@ class PantPanel(pyp.Panel):
 
         # Out interfaces (easier to define before adding a dart)
         self.interfaces = {
-            'outside': pyp.Interface(
+            'outside': pyg.Interface(
                 self, 
-                pyp.EdgeSequence(right_bottom, right_top), 
+                pyg.EdgeSequence(right_bottom, right_top), 
                 ruffle=[1, hipline_ext]),
-            'crotch': pyp.Interface(self, pyp.EdgeSequence(crotch_top, crotch_bottom)),
-            'inside': pyp.Interface(self, left),
-            'bottom': pyp.Interface(self, bottom)
+            'crotch': pyg.Interface(self, pyg.EdgeSequence(crotch_top, crotch_bottom)),
+            'inside': pyg.Interface(self, left),
+            'bottom': pyg.Interface(self, bottom)
         }
 
         # Add top dart
@@ -127,13 +127,13 @@ class PantPanel(pyp.Panel):
         if w_diff > hw_shift:
             top_edges, int_edges = self.add_darts(
                 top, dart_width, dart_depth, dart_position, double_dart=double_dart)
-            self.interfaces['top'] = pyp.Interface(
+            self.interfaces['top'] = pyg.Interface(
                 self, int_edges, 
                 ruffle=waist / match_top_int_to if match_top_int_to is not None else 1.
             ) 
             self.edges.substitute(top, top_edges)
         else:
-            self.interfaces['top'] = pyp.Interface(
+            self.interfaces['top'] = pyg.Interface(
                 self, top, 
                 ruffle=waist / match_top_int_to if match_top_int_to is not None else 1.
         ) 
@@ -151,17 +151,17 @@ class PantPanel(pyp.Panel):
             ]
 
             darts = [
-                pyp.EdgeSeqFactory.dart_shape(dart_width / 2, dart_depth * 0.9), # smaller
-                pyp.EdgeSeqFactory.dart_shape(dart_width / 2, dart_depth)
+                pyg.EdgeSeqFactory.dart_shape(dart_width / 2, dart_depth * 0.9), # smaller
+                pyg.EdgeSeqFactory.dart_shape(dart_width / 2, dart_depth)
             ]
         else:
             offsets_mid = [
                 - dart_position - dart_width / 2,
             ]
             darts = [
-                pyp.EdgeSeqFactory.dart_shape(dart_width, dart_depth)
+                pyg.EdgeSeqFactory.dart_shape(dart_width, dart_depth)
             ]
-        top_edges, int_edges = pyp.EdgeSequence(top), pyp.EdgeSequence(top)
+        top_edges, int_edges = pyg.EdgeSequence(top), pyg.EdgeSequence(top)
 
         for off, dart in zip(offsets_mid, darts):
             left_edge_len = top_edges[-1].length()
@@ -228,7 +228,7 @@ class PantsHalf(BaseBottoms):
             double_dart=True
             ).translate_by([0, body['_waist_level'] - 5, -20])
 
-        self.stitching_rules = pyp.Stitches(
+        self.stitching_rules = pyg.Stitches(
             (self.front.interfaces['outside'], self.back.interfaces['outside']),
             (self.front.interfaces['inside'], self.back.interfaces['inside'])
         )
@@ -237,7 +237,7 @@ class PantsHalf(BaseBottoms):
         # TODOLOW This process is the same for sleeves -- make a function?
         if design['cuff']['type']['v']:
             
-            pant_bottom = pyp.Interface.from_multiple(
+            pant_bottom = pyg.Interface.from_multiple(
                 self.front.interfaces['bottom'],
                 self.back.interfaces['bottom'])
 
@@ -285,18 +285,18 @@ class Pants(BaseBottoms):
         self.right = PantsHalf('r', body, design, rise)
         self.left = PantsHalf('l', body, design, rise).mirror()
 
-        self.stitching_rules = pyp.Stitches(
+        self.stitching_rules = pyg.Stitches(
             (self.right.interfaces['crotch_f'], self.left.interfaces['crotch_f']),
             (self.right.interfaces['crotch_b'], self.left.interfaces['crotch_b']),
         )
 
         self.interfaces = {
-            'top_f': pyp.Interface.from_multiple(
+            'top_f': pyg.Interface.from_multiple(
                 self.right.interfaces['top_f'], self.left.interfaces['top_f']),
-            'top_b': pyp.Interface.from_multiple(
+            'top_b': pyg.Interface.from_multiple(
                 self.right.interfaces['top_b'], self.left.interfaces['top_b']),
             # Some are reversed for correct connection
-            'top': pyp.Interface.from_multiple(   # around the body starting from front right
+            'top': pyg.Interface.from_multiple(   # around the body starting from front right
                 self.right.interfaces['top_f'].flip_edges(),
                 self.left.interfaces['top_f'].reverse(with_edge_dir_reverse=True),
                 self.left.interfaces['top_b'].flip_edges(),

@@ -25,7 +25,7 @@ from assets.garment_programs.pants import *
 from assets.garment_programs.meta_garment import *
 from assets.garment_programs.bands import *
 from assets.bodies.body_params import BodyParameters
-import pypattern as pyp
+import pygarment as pyg
 
 def _create_data_folder(properties, path=Path('')):
     """ Create a new directory to put dataset in 

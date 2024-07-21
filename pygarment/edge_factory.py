@@ -3,13 +3,13 @@ from numpy.linalg import norm
 import svgpathtools as svgpath
 from scipy.optimize import minimize
 
-from pypattern.edge import EdgeSequence, Edge, CurveEdge
-from pypattern.edge import CircleEdge
-from pypattern.generic_utils import vector_angle
-from pypattern.generic_utils import bbox_paths
-from pypattern.generic_utils import close_enough
-from pypattern.generic_utils import c_to_list
-from pypattern.generic_utils import list_to_c
+from pygarment.edge import EdgeSequence, Edge, CurveEdge
+from pygarment.edge import CircleEdge
+from pygarment.generic_utils import vector_angle
+from pygarment.generic_utils import bbox_paths
+from pygarment.generic_utils import close_enough
+from pygarment.generic_utils import c_to_list
+from pygarment.generic_utils import list_to_c
 
 
 class EdgeFactory:

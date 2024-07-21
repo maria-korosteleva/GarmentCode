@@ -1,10 +1,10 @@
 import numpy as np
-import pypattern as pyp
+import pygarment as pyg
 
 from assets.garment_programs.base_classes import StackableSkirtComponent
 
 
-class CircleArcPanel(pyp.Panel):
+class CircleArcPanel(pyg.Panel):
     """One panel circle skirt"""
 
     def __init__(self, 
@@ -23,15 +23,15 @@ class CircleArcPanel(pyp.Panel):
         vert_len = length * np.cos(halfarc)
 
         # top
-        self.edges.append(pyp.CircleEdgeFactory.from_points_radius(
+        self.edges.append(pyg.CircleEdgeFactory.from_points_radius(
             [-dist_w/2, 0], [dist_w/2, 0], 
             radius=top_rad, large_arc=halfarc > np.pi / 2))
 
-        self.edges.append(pyp.Edge(
+        self.edges.append(pyg.Edge(
             self.edges[-1].end, [dist_out / 2, -vert_len]))
         
         # Bottom
-        self.edges.append(pyp.CircleEdgeFactory.from_points_radius(
+        self.edges.append(pyg.CircleEdgeFactory.from_points_radius(
             self.edges[-1].end, [- dist_out / 2, -vert_len], 
             radius=top_rad + length,
             large_arc=halfarc > np.pi / 2, right=False))
@@ -40,14 +40,14 @@ class CircleArcPanel(pyp.Panel):
 
         # Interfaces
         self.interfaces = {
-            'top': pyp.Interface(self, self.edges[0],
+            'top': pyg.Interface(self, self.edges[0],
                                  ruffle=self.edges[0].length() / match_top_int_proportion if match_top_int_proportion is not None else 1.
                                  ).reverse(True),
-            'bottom': pyp.Interface(self, self.edges[2],
+            'bottom': pyg.Interface(self, self.edges[2],
                                     ruffle=self.edges[2].length() / match_bottom_int_proportion if match_bottom_int_proportion is not None else 1.
                                     ),
-            'left': pyp.Interface(self, self.edges[1]),
-            'right': pyp.Interface(self, self.edges[3])
+            'left': pyg.Interface(self, self.edges[1]),
+            'right': pyg.Interface(self, self.edges[3])
         }
 
     def length(self, *args):
@@ -76,7 +76,7 @@ class CircleArcPanel(pyp.Panel):
 
         return CircleArcPanel(name, rad, length, arc, **kwargs)
 
-class AsymHalfCirclePanel(pyp.Panel):
+class AsymHalfCirclePanel(pyg.Panel):
     """Panel for a asymmetrci circle skirt"""
 
     def __init__(self, 
@@ -95,16 +95,16 @@ class AsymHalfCirclePanel(pyp.Panel):
         # DRAFT vert_len = length * np.cos(halfarc)
 
         # top
-        self.edges.append(pyp.CircleEdgeFactory.from_points_radius(
+        self.edges.append(pyg.CircleEdgeFactory.from_points_radius(
             [-dist_w/2, 0], [dist_w/2, 0], 
             radius=top_rad, large_arc=False))
 
-        self.edges.append(pyp.Edge(
+        self.edges.append(pyg.Edge(
             self.edges[-1].end, [dist_out / 2, 0]))
         
         # Bottom
         self.edges.append(
-            pyp.CircleEdgeFactory.from_three_points(
+            pyg.CircleEdgeFactory.from_three_points(
                 self.edges[-1].end, [- dist_out / 2, 0], 
                 point_on_arc=[0, -(top_rad + length_f)]
             )
@@ -114,14 +114,14 @@ class AsymHalfCirclePanel(pyp.Panel):
 
         # Interfaces
         self.interfaces = {
-            'top': pyp.Interface(self, self.edges[0],
+            'top': pyg.Interface(self, self.edges[0],
                                  ruffle=self.edges[0].length() / match_top_int_proportion if match_top_int_proportion is not None else 1.
                                  ).reverse(True),
-            'bottom': pyp.Interface(self, self.edges[2],
+            'bottom': pyg.Interface(self, self.edges[2],
                                     ruffle=self.edges[2].length() / match_bottom_int_proportion if match_bottom_int_proportion is not None else 1.
                                     ),
-            'left': pyp.Interface(self, self.edges[1]),
-            'right': pyp.Interface(self, self.edges[3])
+            'left': pyg.Interface(self, self.edges[1]),
+            'right': pyg.Interface(self, self.edges[3])
         }
     
     def length(self, *args):
@@ -184,17 +184,17 @@ class SkirtCircle(StackableSkirtComponent):
                 design, length)
 
         # Stitches
-        self.stitching_rules = pyp.Stitches(
+        self.stitching_rules = pyg.Stitches(
             (self.front.interfaces['right'], self.back.interfaces['right']),
             (self.front.interfaces['left'], self.back.interfaces['left'])
         )
 
         # Interfaces
         self.interfaces = {
-            'top': pyp.Interface.from_multiple(self.front.interfaces['top'], self.back.interfaces['top']),
+            'top': pyg.Interface.from_multiple(self.front.interfaces['top'], self.back.interfaces['top']),
             'bottom_f': self.front.interfaces['bottom'],
             'bottom_b': self.back.interfaces['bottom'],
-            'bottom': pyp.Interface.from_multiple(self.front.interfaces['bottom'], self.back.interfaces['bottom'])
+            'bottom': pyg.Interface.from_multiple(self.front.interfaces['bottom'], self.back.interfaces['bottom'])
         }
         
     def add_cut(self, panel, design, sk_length):
@@ -213,9 +213,9 @@ class SkirtCircle(StackableSkirtComponent):
         right = target_edge.start[0] > target_edge.end[0]
 
         # Make a cut
-        cut_shape = pyp.EdgeSeqFactory.dart_shape(width, depth=depth)
+        cut_shape = pyg.EdgeSeqFactory.dart_shape(width, depth=depth)
 
-        new_edges, _, interf_edges = pyp.ops.cut_into_edge(
+        new_edges, _, interf_edges = pyg.ops.cut_into_edge(
             cut_shape, target_edge, 
             offset=offset, 
             right=right

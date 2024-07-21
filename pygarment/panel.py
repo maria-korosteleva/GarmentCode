@@ -4,11 +4,11 @@ from argparse import Namespace
 from scipy.spatial.transform import Rotation as R
 
 from external.pattern.core import BasicPattern
-from pypattern.base import BaseComponent
-from pypattern.edge import Edge, EdgeSequence, CircleEdge
-from pypattern.generic_utils import close_enough, vector_align_3D
-from pypattern.operators import cut_into_edge
-from pypattern.interface import Interface
+from pygarment.base import BaseComponent
+from pygarment.edge import Edge, EdgeSequence, CircleEdge
+from pygarment.generic_utils import close_enough, vector_align_3D
+from pygarment.operators import cut_into_edge
+from pygarment.interface import Interface
 
 
 class Panel(BaseComponent):

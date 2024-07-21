@@ -17,7 +17,7 @@ class IncorrectElementConfiguration(BaseException):
     """Error indicating that given pattern is an empty garment"""
     pass
 
-class MetaGarment(pyp.Component):
+class MetaGarment(pyg.Component):
     """Meta garment component
         Depending on parameter values it can generate sewing patterns
     for various dresses and jumpsuit styles and fit them to the body

@@ -26,7 +26,7 @@ from assets.garment_programs.pants import *
 from assets.garment_programs.meta_garment import MetaGarment, IncorrectElementConfiguration
 from assets.garment_programs.bands import *
 from assets.bodies.body_params import BodyParameters
-import pypattern as pyp
+import pygarment as pyg
 import assets.garment_programs.stats_utils as stats_utils
 
 def get_command_args():
@@ -224,7 +224,7 @@ def generate(path, properties, sys_paths, verbose=False):
     start_time = time.time()
 
     default_body = BodyParameters(Path(sys_paths['bodies_default_path']) / (properties['body_default'] + '.yaml'))
-    sampler = pyp.params.DesignSampler(properties['design_file'])
+    sampler = pyg.params.DesignSampler(properties['design_file'])
     for i in range(properties['size']):
         # log properties every time
         properties.serialize(data_folder / 'dataset_properties.yaml')

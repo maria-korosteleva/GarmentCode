@@ -2,7 +2,7 @@
     Note that the code is very similar to Bodice. 
 """
 import numpy as np
-import pypattern as pyp
+import pygarment as pyg
 
 from assets.garment_programs.base_classes import BaseBodicePanel
 
@@ -38,7 +38,7 @@ class TorsoFrontHalfPanel(BaseBodicePanel):
         fb_diff = (frac - (0.5 - frac)) * body['bust']
         length = length - sh_tan * fb_diff
 
-        self.edges = pyp.EdgeSeqFactory.from_verts(
+        self.edges = pyg.EdgeSeqFactory.from_verts(
             [0, 0], 
             [-b_width, 0], 
             [-self.width, length], 
@@ -48,14 +48,14 @@ class TorsoFrontHalfPanel(BaseBodicePanel):
 
         # Interfaces
         self.interfaces = {
-            'outside':  pyp.Interface(self, self.edges[1]),   
-            'inside': pyp.Interface(self, self.edges[-1]),
-            'shoulder': pyp.Interface(self, self.edges[-2]),
-            'bottom': pyp.Interface(self, self.edges[0], ruffle=self.width / ((body['waist'] - body['waist_back_width']) / 2)),
+            'outside':  pyg.Interface(self, self.edges[1]),   
+            'inside': pyg.Interface(self, self.edges[-1]),
+            'shoulder': pyg.Interface(self, self.edges[-2]),
+            'bottom': pyg.Interface(self, self.edges[0], ruffle=self.width / ((body['waist'] - body['waist_back_width']) / 2)),
             
             # Reference to the corner for sleeve and collar projections
-            'shoulder_corner': pyp.Interface(self, [self.edges[-3], self.edges[-2]]),
-            'collar_corner': pyp.Interface(self, [self.edges[-2], self.edges[-1]])
+            'shoulder_corner': pyg.Interface(self, [self.edges[-3], self.edges[-2]]),
+            'collar_corner': pyg.Interface(self, [self.edges[-2], self.edges[-1]])
         }
 
         # default placement
@@ -89,7 +89,7 @@ class TorsoBackHalfPanel(BaseBodicePanel):
         shoulder_incl = (np.tan(np.deg2rad(body['_shoulder_incl']))) * self.width
         length = design['length']['v'] * body['waist_line']
 
-        self.edges = pyp.EdgeSeqFactory.from_verts(
+        self.edges = pyg.EdgeSeqFactory.from_verts(
             [0, 0], 
             [-b_width, 0], 
             [-self.width, length], 
@@ -99,14 +99,14 @@ class TorsoBackHalfPanel(BaseBodicePanel):
 
         # Interfaces
         self.interfaces = {
-            'outside':  pyp.Interface(self, self.edges[1]),   
-            'inside': pyp.Interface(self, self.edges[-1]),
-            'shoulder': pyp.Interface(self, self.edges[-2]),
-            'bottom': pyp.Interface(self, self.edges[0], ruffle=self.width / (body['waist_back_width'] / 2)),
+            'outside':  pyg.Interface(self, self.edges[1]),   
+            'inside': pyg.Interface(self, self.edges[-1]),
+            'shoulder': pyg.Interface(self, self.edges[-2]),
+            'bottom': pyg.Interface(self, self.edges[0], ruffle=self.width / (body['waist_back_width'] / 2)),
             
             # Reference to the corner for sleeve and collar projections
-            'shoulder_corner': pyp.Interface(self, [self.edges[-3], self.edges[-2]]),
-            'collar_corner': pyp.Interface(self, [self.edges[-2], self.edges[-1]])
+            'shoulder_corner': pyg.Interface(self, [self.edges[-3], self.edges[-2]]),
+            'collar_corner': pyg.Interface(self, [self.edges[-2], self.edges[-1]])
         }
 
         # default placement
