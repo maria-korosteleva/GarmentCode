@@ -13,8 +13,8 @@ from external.customconfig import Properties
 if __name__ == '__main__':
 
     # 
-    # body_file = './assets/body_measurments/f_smpl_avg.yaml'
-    body_file = './assets/default_bodies/mean_all.yaml'
+    # body_file = './assets/bodies/f_smpl_avg.yaml'
+    body_file = './assets/bodies/mean_all.yaml'
     # body_file = 
 
     body = BodyParameters(body_file)
