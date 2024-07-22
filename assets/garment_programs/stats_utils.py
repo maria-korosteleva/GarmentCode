@@ -1,6 +1,6 @@
 """Design analysis routines to supply intresting stats"""
 
-import external.pattern.core as pattern
+import pygarment.pattern.core as pattern
 import yaml
 
 # panels
