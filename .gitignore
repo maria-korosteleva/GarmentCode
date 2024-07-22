@@ -25,3 +25,4 @@ system.json
 tmp*
 *tmp*.mb
 Logs*
+output*

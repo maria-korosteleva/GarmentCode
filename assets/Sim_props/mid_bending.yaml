@@ -1,0 +1,94 @@
+sim:
+  config:
+    optimize_storage: true
+    
+    max_sim_steps: 2400
+    max_frame_time: 30
+    max_meshgen_time: 60
+    max_sim_time: 600
+    static_threshold: 0.03
+    non_static_percent: 1.5
+
+    max_body_collisions: 35
+    max_self_collisions: 300 
+
+    zero_gravity_steps: 10
+    self_collision_steps: 0
+    resolution_scale: 1.0
+    ground: false
+    material:
+      garment_tri_ka: 10000.0
+      garment_edge_ke: 100.0
+      garment_tri_ke: 10000.0
+      spring_ke: 50000.0
+      garment_edge_kd: 10.0
+      garment_tri_kd: 1.0
+      spring_kd: 10.0
+      fabric_density: 1.0
+      fabric_thickness: 0.1
+      fabric_friction: 0.5
+    options:
+      enable_particle_particle_collisions: false
+      enable_triangle_particle_collisions: true
+      enable_edge_edge_collisions: true
+      enable_stitch_editing: false
+      enable_body_collision_filters: true
+      enable_global_collision_filter: true
+
+      global_damping_factor: 0.25
+      global_damping_effective_velocity: 0.0
+      global_max_velocity: 25.0
+
+      enable_attachment_constraint: true   
+      attachment_stiffness: 
+      - 1000.
+      - 1000.   
+      - 1000. 
+      - 1000.
+      attachment_damping: 
+      - 10.
+      - 0.  
+      - 0. 
+      - 0.
+      attachment_frames: 400
+      attachment_label_names: 
+      - lower_interface
+      - right_collar
+      - left_collar
+      - strapless_top
+
+      enable_cloth_reference_drag: true 
+      cloth_reference_margin: 0.1
+      enable_body_smoothing: false
+      smoothing_total_smoothing_factor: 1.0
+      smoothing_recover_start_frame: 150
+      smoothing_num_steps: 100
+      smoothing_frame_gap_between_steps: 1
+      body_collision_thickness: 0.25
+      body_friction: 0.5
+  stats:
+    fails: {}
+    sim_time: {}
+    spf: {}
+    fin_frame: {}
+    self_collisions: {}
+    body_collisions: {}
+render:
+  config:
+    resolution:
+    - 800
+    - 800
+    sides:
+    - front
+    - back
+    front_camera_location:
+    - 0
+    - 0.97
+    - 4.15
+    uv_texture:
+      seam_width: 0.5
+      dpi: 1500
+      fabric_grain_texture_path: ./assets/img/fabric_texture.png
+      fabric_grain_resolution: 5
+  stats:
+    render_time: {}
