@@ -1,3 +1,7 @@
+"""
+    The module contain Porperties class to manage paramters & stats in various parts of the system
+"""
+
 from datetime import timedelta
 import json
 import yaml
@@ -7,21 +11,53 @@ import sys
 from pathlib import Path
 import numpy as np
 
+# for system info
 import platform
 import psutil
+# TODO -- make optional?
+import warp  # To get device info : Note: only because we are using warp already
 
 
-if 'windows' in platform.system() or 'Windows' in platform.system():
-    import wmi  # pip install wmi
+# --- Nice dumping of floats ---
+def float_representer(dumper, data):
 
-# FIXME merge carefully on the integration with sim
+    if data != data or (data == 0.0 and data == 1.0):
+        value = '.nan'
+    elif data == dumper.inf_value:
+        value = '.inf'
+    elif data == -dumper.inf_value:
+        value = '-.inf'
+    else:
+        # DRAFT -- default representer: https://github.com/yaml/pyyaml/blob/48838a3c768e3d1bcab44197d800145cfd0719d6/lib/yaml/representer.py#L171 
+        # value = repr(data).lower()
+        # # Note that in some cases `repr(data)` represents a float number
+        # # without the decimal parts.  For instance:
+        # #   >>> repr(1e17)
+        # #   '1e17'
+        # # Unfortunately, this is not a valid float representation according
+        # # to the definition of the `!!float` tag.  We fix this by adding
+        # # '.0' before the 'e' symbol.
+        # if '.' not in value and 'e' in value:
+        #     value = value.replace('e', '.0e', 1)
 
-class Properties:
-    """Keeps, loads, and saves configuration & statistic information
+        # Custom representation: 
+        # https://stackoverflow.com/a/33944926
+        value = f'{data:.3g}'
+        if '.' not in value or 'e' in value:   # e only appears for large int numbers with this precision
+            # An integer hidden as a float
+            value = f'{int(data):d}.0'
+
+    return dumper.represent_scalar('tag:yaml.org,2002:float', value)
+yaml.add_representer(float, float_representer)
+
+
+# --- Main class ----
+class Properties():
+    """Keeps, loads, and saves cofiguration & statistic information
         Supports gets&sets as a dictionary
         Provides shortcuts for batch-init configurations
 
-        One of the usages -- store system-dependent basic configuration
+        One of the usages -- store system-dependent basic cofiguration
     """
     def __init__(self, filename="", clean_stats=False):
         self.properties = {}
@@ -127,13 +163,14 @@ class Properties:
 
         return False, None
 
-    def count_fails(self):
+    def count_fails(self, log=False):
         """
             Number of (unique) datapoints marked as fail
         """
         fails = []
         for section_key in self.properties:
             section = self.properties[section_key]
+            section_fails = []
             if isinstance(section, dict) and 'stats' in section and ('fails' in section['stats']):
                 if isinstance(section['stats']['fails'], dict):
                     for key in section['stats']['fails']:
@@ -142,16 +179,33 @@ class Properties:
                                 'Properties::ERROR:: Fails subsections of the type {} is not supported'.format(
                                     type(section['stats']['fails'][key])))
                                     
-                        fails += section['stats']['fails'][key]  # expects a list as value
+                        section_fails += section['stats']['fails'][key] # expects a list as value
 
                 elif isinstance(section['stats']['fails'], list):
-                    fails += section['stats']['fails']
+                    section_fails += section['stats']['fails']
                 else:
-                    raise NotImplementedError('Properties::ERROR:: Fails subsections of the type {} is not supported'.format(type(section['stats']['fails'])))
+                    raise NotImplementedError('Properties::Error:: Fails subsections of the type {} is not supported'.format(type(section['stats']['fails'])))
+
+                if log:
+                    section['stats']['fails_count'] = len(list(set(section_fails)))
+
+                fails += section_fails
 
         fails = list(set(fails))
 
         return len(fails), fails
+
+    def add_fail(self, section_name, fail_type, info):
+        """Write a failure case to a requested section's stats"""
+
+        section = self.properties[section_name]
+        if 'fails' not in section['stats']:
+            section['stats']['fails'] = {}
+        try:
+            section['stats']['fails'][fail_type].append(info)
+        except KeyError:
+            section['stats']['fails'][fail_type] = [info]
+            
 
     # ---------- Properties updates ---------------
     def set_basic(self, **kwconfig):
@@ -235,7 +289,7 @@ class Properties:
                         if log_min:
                             section['stats'][key + "_min"] = str(timedelta(seconds=min(stats_values))) if as_time else min(stats_values)
                             updated = True
-                        if log_min:
+                        if log_max:
                             section['stats'][key + "_max"] = str(timedelta(seconds=max(stats_values))) if as_time else max(stats_values)
                             updated = True
         return updated
@@ -258,10 +312,13 @@ class Properties:
         self.properties['system_info']['processor'] = platform.processor()
         self.properties['system_info']['ram'] = str(round(psutil.virtual_memory().total / (1024.0 ** 3))) + " GB"
 
-        if 'windows' in platform.system() or 'Windows' in platform.system():
-            # only works on WIndows machines
-            computer = wmi.WMI() 
-            self.properties['system_info']['GPU'] = [computer.Win32_VideoController()[i].name for i in range(len(computer.Win32_VideoController()))]
+        if warp.context.runtime is None:
+            # runtime = warp.context.Runtime()
+            warp.init()
+        else:
+            print(f'{self.__class__.__name__}::INFO::Saving GPU info -- warp already initialized')
+        curr_device = warp.get_device()   
+        self.properties['system_info']['GPU'] = curr_device.name if curr_device.is_cuda else 'Not used'
 
     def stats_summary(self):
         """
@@ -274,10 +331,20 @@ class Properties:
         updated_scan = self.summarize_stats('processing_time', log_sum=True, log_avg=True, as_time=True)
         updated_scan_faces = self.summarize_stats('faces_removed', log_avg=True)
 
+        updated_self_collisions = self.summarize_stats(
+            'self_collisions', log_avg=True, log_median=True, log_80=True, log_95=True)
+        updated_body_collisions = self.summarize_stats(
+            'body_collisions', log_avg=True, log_median=True, log_80=True, log_95=True)
+        
+        updated_face_count = self.summarize_stats(
+            'face_count', log_avg=True, log_median=True, log_min=True, log_max=True)
         updated_panel_count = self.summarize_stats(
             'panel_count', log_avg=True, log_median=True, log_min=True, log_max=True)
+ 
+        # fails
+        self.count_fails(log=True)
 
-        if not (updated_frames and updated_render and updated_sim_time and updated_spf):
+        if not (updated_frames and updated_render and updated_sim_time and updated_spf and updated_self_collisions and updated_body_collisions):
             print('CustomConfig::WARNING::Sim stats summary requested, but not all sections were updated')
 
     # ---- Private utils ----
