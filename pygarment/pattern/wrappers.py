@@ -23,7 +23,7 @@ import svgwrite as sw
 import matplotlib.pyplot as plt
 
 # my
-import customconfig
+from pygarment import customconfig
 from . import core
 from .utils import *
 

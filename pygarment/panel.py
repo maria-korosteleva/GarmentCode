@@ -3,7 +3,7 @@ from copy import copy
 from argparse import Namespace
 from scipy.spatial.transform import Rotation as R
 
-from external.pattern.core import BasicPattern
+from pygarment.pattern.core import BasicPattern
 from pygarment.base import BaseComponent
 from pygarment.edge import Edge, EdgeSequence, CircleEdge
 from pygarment.generic_utils import close_enough, vector_align_3D

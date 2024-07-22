@@ -15,7 +15,7 @@ Implementation of GarmentCode architecture and garment programs.
 * matplotlib
 * [svgpathtools](https://github.com/mathandy/svgpathtools)
 * [cairoSVG](https://cairosvg.org/)
-    NOTE: this lib has some quirks on Windows, which we relove with including needed dlls in `./patttern/cairo_dlls` and adding the ditrectory to PATH in runtime
+    NOTE: this lib has some quirks on Windows, which we relove with including needed dlls in `./external/cairo_dlls` and adding the ditrectory to PATH in runtime
 * [PySimpleGUI](https://github.com/PySimpleGUI/PySimpleGUI) to run GUI script
 
 All python dependencies can be installed with 
@@ -91,7 +91,7 @@ The entry script for garment viewer is the same as in the original project and c
 Additional dependencies in this version: 
 * [svgpathtools](https://github.com/mathandy/svgpathtools)
 * [cairoSVG](https://cairosvg.org/)
-    NOTE: this lib has some quirks on Windows, which we relove with including needed dlls in `./patttern/cairo_dlls` and adding the ditrectory to PATH in runtime
+    NOTE: this lib has some quirks on Windows, which we relove with including needed dlls in `./external/cairo_dlls` and adding the ditrectory to PATH in runtime
 * -svglib- removed!
 
 These are need to be installed in Maya Python with the rest of the libs from original project.

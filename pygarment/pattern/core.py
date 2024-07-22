@@ -976,36 +976,3 @@ class ParametrizedPattern(BasicPattern):
                 self.parameters[parameter]['value'] = self._new_value(param_ranges)
 
 
-# ---------- test -------------
-if __name__ == "__main__":
-    import customconfig
-    from pattern.wrappers import VisPattern
-
-    # np.set_printoptions(precision=4, suppress=True)
-
-    system_config = customconfig.Properties('./system.json')
-    base_path = system_config['output']
-    pattern = ParametrizedPattern(os.path.join(system_config['templates_path'], 'basic tee', 'tee_rotated.json'))
-    # pattern = ParametrizedPattern(os.path.join(system_config['templates_path'], 'skirts', 'skirt_4_panels.json'))
-    # pattern = BasicPattern(os.path.join(system_config['datasets_path'], 'data_1000_tee_200527-14-50-42_regen_200612-16-56-43', 'tee_8O9CU32Q8G', 'specification.json'))
-    # pattern_init = BasicPattern(os.path.join(base_path, 'nn_pred_data_1000_tee_200527-14-50-42_regen_200612-16-56-43201106-14-46-31', 'test', 'tee_8O9CU32Q8G', 'specification.json'))
-    # pattern_predicted = BasicPattern(os.path.join(base_path, 'nn_pred_data_1000_tee_200527-14-50-42_regen_200612-16-56-43201106-14-46-31', 'test', 'tee_8O9CU32Q8G', '_predicted_specification.json'))
-    # pattern = VisPattern()
-    empty_pattern = BasicPattern()
-    print(pattern.panel_order())
-
-    # print(pattern.stitches_as_tags())
-
-    # print(len(pattern.pattern_as_tensors(with_placement=True, with_stitches=True, with_stitch_tags=True)))
-
-    # tensor, num_panels, rot, transl, stitches, stitch_num, stitch_tags = pattern.pattern_as_tensors(with_placement=True, with_stitches=True, with_stitch_tags=True)
-
-    # empty_pattern.pattern_from_tensors(tensor, rot, transl, stitches, padded=True)
-    # print(pattern.pattern['stitches'])
-    # print(empty_pattern.panel_order())
-
-    pattern.name = pattern.name + '_save_pattern_order' + '_' + datetime.now().strftime('%y%m%d-%H-%M-%S')
-    # empty_pattern.serialize(system_config['output'], to_subfolder=True)
-    pattern.serialize(system_config['output'], to_subfolder=True)
-
-

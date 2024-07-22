@@ -6,6 +6,7 @@
 """
 
 # TODO allow direct access to mayaqltools? 
+# TODO Access to pattern lib?
 
 # Building blocks
 from pygarment.component import Component
@@ -26,6 +27,5 @@ import pygarment.generic_utils as utils
 from pygarment.params import *
 
 # Errors
-# TODO pattern lib should be part of the pygarment lib
-from external.pattern.core import EmptyPatternError
+from pygarment.pattern.core import EmptyPatternError
 

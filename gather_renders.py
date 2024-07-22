@@ -1,6 +1,6 @@
 """In simulated dataset, gather all the scene images in one folder"""
 
-import customconfig
+from pygarment import customconfig
 from pathlib import Path
 import shutil
 

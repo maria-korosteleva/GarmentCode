@@ -15,8 +15,8 @@ from maya import cmds
 import maya.mel as mel
 
 # My modules
-import mayaqltools as mymaya
-import customconfig
+from pygarment import mayaqltools as mymaya
+from pygarment import customconfig
 
 
 # -------- Main call - Draw the UI -------------
