@@ -10,8 +10,6 @@ from scipy.spatial.transform import Rotation as R
 
 # Correct dependencies on Win
 # https://stackoverflow.com/questions/46265677/get-cairosvg-working-in-windows
-# NOTE: I took the dlls from Inkscape
-# NOTE: paths are relative to the running location, not to the current file
 if 'Windows' in os.environ.get('OS',''):
     dir_path = os.path.dirname(os.path.realpath(__file__))
     os.environ['path'] += f';{os.path.abspath(dir_path + "/cairo_dlls/")}'
