@@ -7,7 +7,7 @@ sys.path.insert(0, './external/')
 sys.path.insert(1, './')
 
 # Custom
-from external.customconfig import Properties
+from pygarment.customconfig import Properties
 from garment_sampler import gather_body_options
 
 def load_mesurements(body_folder_path, body_options):

@@ -8,7 +8,7 @@ sys.path.append(str((Path(os.getcwd()) / 'external').resolve()))
 
 from assets.garment_programs.meta_garment import MetaGarment
 from assets.bodies.body_params import BodyParameters
-from external.customconfig import Properties
+from pygarment.customconfig import Properties
 
 if __name__ == '__main__':
 
