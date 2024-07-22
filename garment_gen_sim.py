@@ -116,8 +116,8 @@ if __name__ == "__main__":
         in_element_path=os.path.join(os.path.dirname(__file__), 'assets', 'Patterns'),  # TODO Path()
         out_path=os.path.join(os.path.dirname(__file__), 'output'),
         tag=garment_name,
-        body_name='mean_all',   #'01808_straight',   # '00088_apart','f_average_A40',   # 
-        smpl_body=False,   # NOTE: depends on chosen body model
+        body_name='f_smpl_average_A40',  # 'mean_all',   #'01808_straight',   # '00088_apart','f_average_A40',   # 
+        smpl_body=True,   # NOTE: depends on chosen body model
         add_timestamp=True
     )
 
