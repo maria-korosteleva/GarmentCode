@@ -114,19 +114,3 @@ def remove_invisible(target, obstacles=[], num_rays=30, visibile_rays=4):
 
     return len(to_delete), passed.total_seconds()
     
-
-if __name__ == "__main__":
-    # Sample script that can be run within Maya for testing purposes
-    # Copy the following block to Maya script editor and modify to 
-    import maya.cmds as cmds
-    import mayaqltools as mymaya
-    from importlib import reload
-    reload(mymaya)
-
-    body = cmds.ls('*f_smpl*:Mesh')[0]
-    garment = cmds.ls('*tee*:Mesh')[0]  # :Mesh
-    # cam_surface = cmds.ls('*camera_surface*')[0]
-
-    mymaya.scan_imitation.remove_invisible(garment, [body], 20, 2)
-    # cube = mymaya.scan_imitation.camera_surface(garment, [body])
-    # print cube

@@ -62,8 +62,3 @@ def SVGFile(width, filename, depth=None, **kwargs):
     left_seq, right_seq = pyg.EdgeSeqFactory.halfs_from_svg(
         filename, target_height=width)
     return left_seq, right_seq
-
-
-# TODO: ami - is this necesasry anymore?
-if __name__ == '__main__':
-    Sun(30, 15)

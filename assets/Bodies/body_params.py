@@ -37,11 +37,3 @@ class BodyParameters(pyg.BodyParametrizationBase):
         # Add ease to armhole
         if key in ['armscye_depth', None]:
             self.params['_armscye_depth'] = self.params['armscye_depth'] + 2.5
-
-
-# TODO: - ami - do we need this function ?
-if __name__ == "__main__":
-
-    body_file = './assets/body_measurments/f_smpl_avg.yaml'
-    body = BodyParameters(body_file)
-    body.save('./Logs')

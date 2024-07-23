@@ -390,33 +390,3 @@ class RandomPattern(VisPattern):
         https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits
         """
         return ''.join(random.choices(chars, k=size))
-
-
-if __name__ == "__main__":
-    from datetime import datetime
-    import time
-
-    timestamp = int(time.time())
-    random.seed(timestamp)
-
-    system_config = customconfig.Properties('./system.json')
-    base_path = system_config['output']
-    # pattern = VisPattern(os.path.join(system_config['templates_path'], 'skirts', 'skirt_4_panels.json'))
-    # pattern = VisPattern(os.path.join(system_config['templates_path'], 'basic tee', 'tee.json'))
-    pattern = VisPattern(os.path.join(
-        base_path, 
-        'nn_pred_data_1000_tee_200527-14-50-42_regen_200612-16-56-43200803-10-10-41', 
-        'test', 'tee_00A2ZO1ELB', '_predicted_specification.json'))
-    # newpattern = RandomPattern(os.path.join(system_config['templates_path'], 'basic tee', 'tee.json'))
-
-    # log to file
-    log_folder = 'panel_vissize_' + datetime.now().strftime('%y%m%d-%H-%M-%S')
-    log_folder = os.path.join(base_path, log_folder)
-    os.makedirs(log_folder)
-
-    pattern.serialize(log_folder, to_subfolder=False)
-    # newpattern.serialize(log_folder, to_subfolder=False)
-
-    # log random seed
-    with open(log_folder + '/random_seed.txt', 'w') as f_rand:
-        f_rand.write(str(timestamp))
