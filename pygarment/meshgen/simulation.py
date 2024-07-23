@@ -235,7 +235,7 @@ def run_sim(
         print("Simulation failed")
         props.add_fail('sim', 'gt_edges_creation', cloth_name)
     except BaseException as e:
-        print(f'Sim::{cloth_name}::crashed')
+        print(f'Sim::{cloth_name}::crashed with {e}')
 
         if isinstance(e, KeyboardInterrupt):
             # Allow to stop simulation loops by keyboard interrupt

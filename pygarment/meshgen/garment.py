@@ -54,6 +54,7 @@ class Cloth:
         # apply damping when vel > min_vel_damp, and clamp vel below max_vel after damping
         self.model.global_viscous_damping = wp.vec3(
             (config.global_damping_factor, config.global_damping_effective_velocity, config.global_max_velocity))
+        self.model.particle_max_velocity = config.global_max_velocity
         
         # TODO Inside the builder like with other parameters?
         self.model.ground = config.ground   # TODO Inside the builder like with other parameters?
@@ -156,7 +157,8 @@ class Cloth:
             spring_kd=config.spring_kd,
         )
 
-        # ------------ Add a body -----------       
+        # ------------ Add a body -----------      
+        # TODO Used? 
         if self.enable_body_smoothing:
             smoothing_total_smoothing_factor = config.smoothing_total_smoothing_factor
             smoothing_num_steps = config.smoothing_num_steps
@@ -264,7 +266,7 @@ class Cloth:
         )  
 
         # ------- Finalize --------------
-        self.model = builder.finalize(device = self.device) #data is transferred to warp tensors, object used in simulation
+        self.model: wp.sim.Model = builder.finalize(device = self.device) #data is transferred to warp tensors, object used in simulation
 
     def _add_attachment_labels(self, builder, config):
         with open(self.paths.in_body_mes, 'r') as file:
