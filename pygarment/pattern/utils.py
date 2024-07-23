@@ -25,3 +25,13 @@ def vector_angle(v1, v2):
     if abs(cross) > 1e-5:
         angle *= np.sign(cross)
     return angle
+
+def c_to_list(num):
+    """Convert complex number to a list of 2 elements
+        Allows processing of lists of complex numbers
+    """
+
+    if isinstance(num, (list, tuple, set, np.ndarray)):
+        return [c_to_list(n) for n in num]
+    else:
+        return [num.real, num.imag]

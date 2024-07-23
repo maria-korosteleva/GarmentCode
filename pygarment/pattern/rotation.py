@@ -9,21 +9,21 @@ import sys
 
 # Thanks to https://www.meccanismocomplesso.org/en/3d-rotations-and-euler-angles-in-python/ for the code
 def _Rx(theta):
-    return np.array([
+    return np.matrix([
         [1, 0           , 0           ],
         [0, m.cos(theta), -m.sin(theta)],
         [0, m.sin(theta), m.cos(theta)]])
 
 
 def _Ry(theta):
-    return np.array([
+    return np.matrix([
         [m.cos(theta), 0, m.sin(theta)],
         [0           , 1, 0           ],
         [-m.sin(theta), 0, m.cos(theta)]])
 
 
 def _Rz(theta):
-    return np.array([
+    return np.matrix([
         [m.cos(theta), -m.sin(theta), 0],
         [m.sin(theta), m.cos(theta) , 0],
         [0           , 0            , 1]])
