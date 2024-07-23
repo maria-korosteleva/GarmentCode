@@ -195,7 +195,6 @@ def init_sim_props(props, batch_run=False, force_restart=False):
             'enable_particle_particle_collisions': False,
             'enable_triangle_particle_collisions': True,  # TODO MK: I don't see these being used??
             'enable_edge_edge_collisions': True,
-            'enable_stitch_editing': False,
             'enable_body_collision_filters': True,
 
             'enable_attachment_constraint': True,   

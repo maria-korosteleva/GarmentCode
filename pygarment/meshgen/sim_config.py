@@ -221,10 +221,6 @@ class SimConfig:
         if self.smoothing_num_steps == 0:
             self.enable_body_smoothing = False
 
-        # Stitch editting options  # FIXME Functionality should be removed (not finished, don't plan to use)
-        self.enable_stitch_editing = self.get_sim_props_value(
-            sim_props_option, 'enable_stitch_editing', False)
-
         # ----- Fabric material properties ----- 
         # Bending 
         self.garment_edge_ke = self.get_sim_props_value(

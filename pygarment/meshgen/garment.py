@@ -11,7 +11,6 @@ import warp as wp
 import warp.sim.render
 from warp.sim.utils import implicit_laplacian_smoothing
 import warp.collision.panel_assignment as assign
-import warp.collision.stitch_editing as stitch
 from warp.sim.collide import count_self_intersections, count_body_cloth_intersections
 from warp.sim.integrator_xpbd import replace_mesh_points
 
@@ -45,7 +44,6 @@ class Cloth:
         
         # collision resolution options
         self.enable_body_smoothing = config.enable_body_smoothing
-        self.enable_stitch_editing = config.enable_stitch_editing
         self.enable_cloth_reference_drag = config.enable_cloth_reference_drag
 
         # Build the stage -- model object, colliders, etc.
@@ -80,10 +78,6 @@ class Cloth:
         self.model.particle_mu = config.particle_mu
         self.model.particle_cohesion = config.particle_cohesion
         self.model.particle_adhesion = config.particle_adhesion
-
-        # TODO This functionality was not finished -- should be removed
-        if self.enable_stitch_editing:
-            stitch.edit_stitching(cloth_vertices, cloth_indices, cloth_seg_dict, cloth_reference_labels, self.body_parts_names2index, self.model)
 
         #self.integrator = wp.sim.SemiImplicitIntegrator() #intialize semi-implicit time-integrator
         self.integrator = wp.sim.XPBDIntegrator() #intialize semi-implicit time-integrator

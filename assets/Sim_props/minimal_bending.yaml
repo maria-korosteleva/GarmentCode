@@ -31,7 +31,6 @@ sim:
       enable_particle_particle_collisions: false
       enable_triangle_particle_collisions: true
       enable_edge_edge_collisions: true
-      enable_stitch_editing: false
       enable_body_collision_filters: true
       enable_global_collision_filter: true
 
