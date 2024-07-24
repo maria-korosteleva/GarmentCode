@@ -7,8 +7,8 @@ import random
 
 # Custom 
 from assets.garment_programs.meta_garment import MetaGarment
-from assets.body_measurments.body_params import BodyParameters
-import pypattern as pyp
+from assets.bodies.body_params import BodyParameters
+import pygarment as pyg
 
 verbose = False
 
@@ -38,13 +38,13 @@ class GUIPattern:
 
         self.body_params = None
         self.design_params = {}
-        self.design_sampler = pyp.params.DesignSampler()
+        self.design_sampler = pyg.params.DesignSampler()
         self.sew_pattern = None
 
         self.body_file = None
         self.design_file = None
         self._load_body_file(
-            Path.cwd() / 'assets/default_bodies/mean_all.yaml'
+            Path.cwd() / 'assets/bodies/mean_all.yaml'
         )
         self._load_design_file(
             Path.cwd() / 'assets/design_params/default.yaml'
@@ -158,7 +158,7 @@ class GUIPattern:
 
             self.svg_bbox_size = pattern.svg_bbox_size
             self.svg_bbox = pattern.svg_bbox
-        except pyp.EmptyPatternError:
+        except pyg.EmptyPatternError:
             self.svg_filename = ''
     
     def clear_previous_svg(self):

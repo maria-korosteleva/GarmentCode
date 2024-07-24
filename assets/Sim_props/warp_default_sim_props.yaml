@@ -24,7 +24,6 @@ sim:
       enable_particle_particle_collisions: false
       enable_triangle_particle_collisions: true
       enable_edge_edge_collisions: true
-      enable_stitch_editing: false
       global_damping_factor: 0.25
       global_damping_effective_velocity: 0.0
       global_max_velocity: 25.0

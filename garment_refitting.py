@@ -16,7 +16,7 @@ sys.path.insert(0, './external/')
 sys.path.insert(1, './')
 
 # Custom
-from external.customconfig import Properties
+from pygarment.customconfig import Properties
 from assets.garment_programs.skirt_paneled import *
 from assets.garment_programs.tee import *
 from assets.garment_programs.godet import *
@@ -24,8 +24,8 @@ from assets.garment_programs.bodice import *
 from assets.garment_programs.pants import *
 from assets.garment_programs.meta_garment import *
 from assets.garment_programs.bands import *
-from assets.body_measurments.body_params import BodyParameters
-import pypattern as pyp
+from assets.bodies.body_params import BodyParameters
+import pygarment as pyg
 
 def _create_data_folder(properties, path=Path('')):
     """ Create a new directory to put dataset in 

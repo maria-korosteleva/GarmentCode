@@ -7,14 +7,14 @@ import os
 sys.path.append(str((Path(os.getcwd()) / 'external').resolve()))
 
 from assets.garment_programs.meta_garment import MetaGarment
-from assets.body_measurments.body_params import BodyParameters
-from external.customconfig import Properties
+from assets.bodies.body_params import BodyParameters
+from pygarment.customconfig import Properties
 
 if __name__ == '__main__':
 
     # 
-    # body_file = './assets/body_measurments/f_smpl_avg.yaml'
-    body_file = './assets/default_bodies/mean_all.yaml'
+    # body_file = './assets/bodies/f_smpl_avg.yaml'
+    body_file = './assets/bodies/mean_all.yaml'
     # body_file = 
 
     body = BodyParameters(body_file)

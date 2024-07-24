@@ -4,7 +4,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 from assets.garment_programs import bands
-import pypattern as pyp
+import pygarment as pyg
 
 
 # ------  Armhole shapes ------
@@ -17,13 +17,13 @@ def ArmholeSquare(incl, width, angle,  invert=True, **kwargs):
         returns edge sequence and part to be preserved  inverted 
     """
 
-    edges = pyp.EdgeSeqFactory.from_verts([0, 0], [incl, 0],  [incl, width])
+    edges = pyg.EdgeSeqFactory.from_verts([0, 0], [incl, 0],  [incl, width])
     if not invert:
         return edges, None
     
     sina, cosa = np.sin(angle), np.cos(angle)
     l = edges[0].length()
-    sleeve_edges = pyp.EdgeSeqFactory.from_verts(
+    sleeve_edges = pyg.EdgeSeqFactory.from_verts(
         [incl + l*sina, - l*cosa], 
         [incl, 0],  [incl, width])
     
@@ -37,14 +37,14 @@ def ArmholeAngle(incl, width, angle, incl_coeff=0.2, w_coeff=0.2,
                  invert=True, **kwargs):
     """Piece-wise smooth armhole shape"""
     diff_incl = incl * (1 - incl_coeff)
-    edges = pyp.EdgeSeqFactory.from_verts(
+    edges = pyg.EdgeSeqFactory.from_verts(
         [0, 0], [diff_incl, w_coeff * width], [incl, width])
     if not invert:
         return edges, None
 
     sina, cosa = np.sin(angle), np.cos(angle)
     l = edges[0].length()
-    sleeve_edges = pyp.EdgeSeqFactory.from_verts(
+    sleeve_edges = pyg.EdgeSeqFactory.from_verts(
         [diff_incl + l*sina, w_coeff * width - l*cosa], 
         [diff_incl, w_coeff * width],  [incl, width])
     # TODOLOW Bend instead of rotating to avoid sharp connection
@@ -58,8 +58,8 @@ def ArmholeCurve(incl, width, angle, bottom_angle_mix=0, invert=True, verbose=Fa
     """
     # Curvature as parameters?
     cps = [[0.5, 0.2], [0.8, 0.35]]
-    edge = pyp.CurveEdge([incl, width], [0, 0], cps)
-    edge_as_seq = pyp.EdgeSequence(edge.reverse())
+    edge = pyg.CurveEdge([incl, width], [0, 0], cps)
+    edge_as_seq = pyg.EdgeSequence(edge.reverse())
 
     if not invert:
         return edge_as_seq, None
@@ -69,7 +69,7 @@ def ArmholeCurve(incl, width, angle, bottom_angle_mix=0, invert=True, verbose=Fa
     down_direction = np.array([0, -1])  # Full opening is vertically aligned
     inv_cps = deepcopy(cps)
     inv_cps[-1][1] *= -1  # Invert the last 
-    inv_edge = pyp.CurveEdge(
+    inv_edge = pyg.CurveEdge(
         start=[incl, width], 
         end=(np.array([incl, width]) + down_direction * edge._straight_len()).tolist(), 
         control_points=inv_cps
@@ -89,7 +89,7 @@ def ArmholeCurve(incl, width, angle, bottom_angle_mix=0, invert=True, verbose=Fa
         mix_factor * down_direction if mix_factor > 0 else (- mix_factor * left_direction))
 
     # TODOLOW Remember relative curvature results and reuse them? (speed)
-    fin_inv_edge = pyp.ops.curve_match_tangents(
+    fin_inv_edge = pyg.ops.curve_match_tangents(
         inv_edge.as_curve(), 
         down_direction,  # Full opening is vertically aligned
         dir,
@@ -98,12 +98,12 @@ def ArmholeCurve(incl, width, angle, bottom_angle_mix=0, invert=True, verbose=Fa
         verbose=verbose
     )
 
-    return edge_as_seq, pyp.EdgeSequence(fin_inv_edge.reverse())
+    return edge_as_seq, pyg.EdgeSequence(fin_inv_edge.reverse())
 
 
 # -------- New sleeve definitions -------
 
-class SleevePanel(pyp.Panel):
+class SleevePanel(pyg.Panel):
     """Trying proper sleeve panel"""
 
     def __init__(self, name, body, design, open_shape, length_shift=0, _standing_margin=5):
@@ -129,7 +129,7 @@ class SleevePanel(pyp.Panel):
         end_width = max(end_width, body['wrist'] / 2)
 
         # Ruffles at opening
-        if not pyp.utils.close_enough(design['connect_ruffle']['v'], 1):
+        if not pyg.utils.close_enough(design['connect_ruffle']['v'], 1):
             open_shape.extend(design['connect_ruffle']['v'])
 
         # -- Main body of a sleeve --
@@ -140,7 +140,7 @@ class SleevePanel(pyp.Panel):
         # NOTE: Asked to reduce by too much: reduce as much as possible
         length = max(length + length_shift, MIN_LENGTH)
 
-        self.edges = pyp.EdgeSeqFactory.from_verts(
+        self.edges = pyg.EdgeSeqFactory.from_verts(
             [0, 0], [0, -end_width], [length, -arm_width]
         )
 
@@ -160,7 +160,7 @@ class SleevePanel(pyp.Panel):
                 x_shift = len * np.cos(rest_angle - shoulder_angle)
                 y_shift = len * np.sin(rest_angle - shoulder_angle)
 
-                standing_edge = pyp.Edge(
+                standing_edge = pyg.Edge(
                     start=start,
                     end=[start[0] - x_shift, start[1] + y_shift]
                 )
@@ -179,10 +179,10 @@ class SleevePanel(pyp.Panel):
         # Interfaces
         self.interfaces = {
             # NOTE: interface needs reversing because the open_shape was reversed for construction
-            'in': pyp.Interface(self, open_shape, ruffle=design['connect_ruffle']['v']),
-            'out': pyp.Interface(self, self.edges[0], ruffle=design['cuff']['top_ruffle']['v']),
-            'top': pyp.Interface(self, self.edges[-2:] if standing else self.edges[-1]),  
-            'bottom': pyp.Interface(self, self.edges[1])
+            'in': pyg.Interface(self, open_shape, ruffle=design['connect_ruffle']['v']),
+            'out': pyg.Interface(self, self.edges[0], ruffle=design['cuff']['top_ruffle']['v']),
+            'top': pyg.Interface(self, self.edges[-2:] if standing else self.edges[-1]),  
+            'bottom': pyg.Interface(self, self.edges[1])
         }
 
         # Default placement
@@ -197,7 +197,7 @@ class SleevePanel(pyp.Panel):
         return self.interfaces['bottom'].edges.length()
 
 
-class Sleeve(pyp.Component):
+class Sleeve(pyg.Component):
     """Trying to do a proper sleeve"""
     def __init__(self, tag, body, design, front_w, back_w): 
         """Defintion of a sleeve: 
@@ -250,8 +250,8 @@ class Sleeve(pyp.Component):
         )
         
         self.interfaces = {
-            'in_front_shape': pyp.Interface(self, front_project),
-            'in_back_shape': pyp.Interface(self, back_project)
+            'in_front_shape': pyg.Interface(self, front_project),
+            'in_back_shape': pyg.Interface(self, back_project)
         }
 
         if design['sleeveless']['v']:
@@ -259,7 +259,7 @@ class Sleeve(pyp.Component):
             return
         
         if front_w != back_w: 
-            front_opening, back_opening = pyp.ops.even_armhole_openings(
+            front_opening, back_opening = pyg.ops.even_armhole_openings(
                 front_opening, back_opening, 
                 tol=0.2 / front_opening.length(), # ~2mm tolerance as a fraction of length
                 verbose=self.verbose
@@ -279,7 +279,7 @@ class Sleeve(pyp.Component):
             ).translate_by([0, 0, -15])
 
         # Connect panels
-        self.stitching_rules = pyp.Stitches(
+        self.stitching_rules = pyg.Stitches(
             (self.f_sleeve.interfaces['top'],
              self.b_sleeve.interfaces['top']),
             (self.f_sleeve.interfaces['bottom'],
@@ -288,11 +288,11 @@ class Sleeve(pyp.Component):
 
         # Interfaces
         self.interfaces.update({
-            'in': pyp.Interface.from_multiple(
+            'in': pyg.Interface.from_multiple(
                 self.f_sleeve.interfaces['in'], 
                 self.b_sleeve.interfaces['in'].reverse(with_edge_dir_reverse=True)
             ),
-            'out': pyp.Interface.from_multiple(
+            'out': pyg.Interface.from_multiple(
                     self.f_sleeve.interfaces['out'], 
                     self.b_sleeve.interfaces['out']
                 ),

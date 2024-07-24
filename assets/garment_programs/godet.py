@@ -1,23 +1,23 @@
 import math
 import numpy as np
 
-import pypattern as pyp
+import pygarment as pyg
 
 from assets.garment_programs.base_classes import BaseBottoms
 from assets.garment_programs import skirt_paneled as skirts
 
 
-class Insert(pyp.Panel):
+class Insert(pyg.Panel):
     def __init__(self, id, width=30, depth=30) -> None:
         super().__init__(f'Insert_{id}')
 
-        self.edges = pyp.EdgeSeqFactory.from_verts(
+        self.edges = pyg.EdgeSeqFactory.from_verts(
             [0, 0],
             [width/2, depth],
             [width, 0], loop=True)
 
         self.interfaces = [
-            pyp.Interface(self, self.edges[:2])
+            pyg.Interface(self, self.edges[:2])
         ]
         self.top_center_pivot()
         self.center_x()
@@ -76,7 +76,7 @@ class GodetSkirt(BaseBottoms):
         # Insert panels
         insert = Insert(0, width=ins_w, depth=ins_depth).translate_by([
             x_shift - num_inserts * ins_w / 2 + ins_w / 2, y_base + ins_depth, z_transl])
-        self.subs += pyp.ops.distribute_horisontally(
+        self.subs += pyg.ops.distribute_horisontally(
             insert, num_inserts, -ins_w, 'ins_' + panel.name)
 
         # make appropriate cuts and stitches
@@ -93,7 +93,7 @@ class GodetSkirt(BaseBottoms):
                     'is too wide for given inserts. '
                     f'Using the maximum possible width ({cut_width:.2f})')
         
-        cut_shape = pyp.EdgeSeqFactory.from_verts(
+        cut_shape = pyg.EdgeSeqFactory.from_verts(
             [0, 0], [cut_width / 2, cut_depth], [cut_width, 0])
 
         right = z_transl < 0    # NOTE: heuristic corresponding to skirts in our collection
@@ -101,12 +101,12 @@ class GodetSkirt(BaseBottoms):
         for i in range(num_inserts):
             offset = cut_width / 2 + (cuts_dist / 2 if i == 0 else cuts_dist)   #  start_offest + i * stride
 
-            new_bottom, cutted, _ = pyp.ops.cut_into_edge(
+            new_bottom, cutted, _ = pyg.ops.cut_into_edge(
                 cut_shape, bottom_edge, offset=offset, right=right)
             panel.edges.substitute(bottom_edge, new_bottom)
             bottom_edge = new_bottom[-1]  # New edge that needs to be cutted -- on the next step
 
-            cut_interface = pyp.Interface(panel, cutted)
+            cut_interface = pyg.Interface(panel, cutted)
             if right: 
                 cut_interface.reverse()
 
