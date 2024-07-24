@@ -95,3 +95,55 @@ Additional dependencies in this version:
 * -svglib- removed!
 
 These are need to be installed in Maya Python with the rest of the libs from original project.
+
+## Instructions from old sim repo
+
+Run mesh generation, simulation and image rendering of a pattern:
+--------------------------------------------------------------------
+1. Put your pattern .json file into: "meshgen > assets > Patterns" folder and please name the json file such that it ends with "_specification.json" (e.g. "dress_specification.json)
+
+2. Open garment_gen_sim.py:
+   - Adapt the garment_name (line 66) to your garment name (without "_specification": e.g. "dress")
+   - Set appropriate body_name: default is ['non_centered','f_average_A40']
+     -> use 'centered' for an old data sample, i.e. if the body is centered at the origin
+     -> models: "f_average_A40", "m_average_A40", "f_model_A40", "f_fluffy_A40", "f_smpl_template" 
+     -> for a custom model, place it into the "meshgen > assets > Bodies > centered or uncentered" folder
+
+3. Run garment_gen_sim.py:
+   - See the output in the "output" folder :)
+     -> panels: .obj file of each panel
+     -> simulation: 
+        - "body.obj" (body as .obj file)
+        - the .png renders
+        - "...-simulated.obj" (simulated cloth as .obj file) 
+        - "...-simulation.usd" (simulation file, can be viewed in Blender or Omniverse Create XR)
+           -> "meshgen > gui > blenderGUI.blend" displays simulation with segmentation 
+              (see instructions in Scripting window)
+   
+
+
+
+Run dataset:
+-------------
+1. Generate your dataset
+2. In datasim.py change the path_to_Proc_Garm (line 44) to your Procedural Garment root directory and run it with 
+   --data "name of your dataset" (e.g. --data data_40_230829-11-07-59)
+3. Ouput: See the output in the "dataset_properties.yaml file" in the folder of your dataset
+
+
+To metion:
+------------
+1. using trimesh lib to load garments with textures
+   ```
+   print('Reloading exported ply ', path_to_out)
+   mesh_again: trimesh.Trimesh = trimesh.load_mesh(path_to_out, process=False)
+   # 
+   print(mesh_again.visual.uv.shape, type(mesh_again.visual))
+
+   tex_image = PIL.Image.open(tex_path)
+   tex = trimesh.visual.TextureVisuals(mesh_again.visual.uv, image=tex_image)
+   mesh_again.visual = tex
+
+   mesh_again.show()
+   ```
+1. How to restore the texture used in the data renders from the optimized version
