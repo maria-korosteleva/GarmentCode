@@ -4,11 +4,17 @@ import yaml
 import shutil 
 import string
 import random
+import trimesh
+from copy import deepcopy
 
 # Custom 
 from assets.garment_programs.meta_garment import MetaGarment
 from assets.bodies.body_params import BodyParameters
 import pygarment as pyg
+from pygarment.meshgen.boxmeshgen import BoxMesh
+from pygarment.meshgen.simulation import run_sim
+import pygarment.customconfig as customconfig
+from pygarment.meshgen.sim_config import PathCofig
 
 verbose = False
 
@@ -31,6 +37,7 @@ class GUIPattern:
         self.saved_garment_archive = ''
         self.saved_garment_folder = ''
         self.tmp_path = self.tmp_path_root / self.id 
+        self.paths_3d = None
 
         # create paths
         self.save_path.mkdir(parents=True, exist_ok=True)
@@ -46,12 +53,15 @@ class GUIPattern:
         self._load_body_file(
             Path.cwd() / 'assets/bodies/mean_all.yaml'
         )
+        self.default_body_params = deepcopy(self.body_params)
         self._load_design_file(
             Path.cwd() / 'assets/design_params/default.yaml'
         )
 
+        # Status
         self.is_self_intersecting = False
-        
+        self.is_in_3D = False
+
         self.reload_garment()
 
     def __del__(self):
@@ -176,6 +186,67 @@ class GUIPattern:
             self.saved_garment_archive.unlink()
             self.saved_garment_archive = ''
 
+    def clear_3d(self):
+        if self.paths_3d is not None:
+            shutil.rmtree(self.paths_3d.out_el)
+            self.paths_3d = None
+
+    # 3D
+    def drape_3d(self):
+        """Run the draping of the current frame"""
+
+        # Config setup 
+        props = customconfig.Properties('./assets/Sim_props/mid_bending.yaml')   # TODOLOW Parameter?
+        props.set_section_stats('sim', fails={}, sim_time={}, spf={}, fin_frame={}, body_collisions={}, self_collisions={})
+        props.set_section_stats('render', render_time={})
+
+        # Force the design to be fitted to mean body shape 
+        # TODOLOW Support body shape estimation from measurements
+
+        def_sew_pattern = MetaGarment(
+            'Configured_design', self.default_body_params, self.design_params)
+
+        # Save the pattern
+        pattern_folder = self.save(False, save_pattern=def_sew_pattern)
+
+        # Paths
+        paths = PathCofig(
+            in_element_path=pattern_folder, 
+            out_path=self.save_path,
+            in_name=def_sew_pattern.name,
+            out_name=self.sew_pattern.name + '_3D',
+            body_name='mean_all',  
+            smpl_body=False,   # NOTE: depends on chosen body model
+            add_timestamp=False
+        )
+
+        # Generate and save garment box mesh (if not existent)
+        garment_box_mesh = BoxMesh(paths.in_g_spec, props['sim']['config']['resolution_scale'])
+        garment_box_mesh.load()
+        garment_box_mesh.serialize(
+            paths, store_panels=False, uv_config=props['render']['config']['uv_texture'])
+
+        # TODOLOW Don't print progress to console with so many lines
+        run_sim(
+            garment_box_mesh.name, 
+            props, 
+            paths,
+            flat=False,  # TODO Debug flat sim paths integration + warp recent updates 
+            save_v_norms=False,
+            store_usd=False,  # NOTE: False for fast simulation!, 
+            optimize_storage=False,
+            verbose=False
+        )
+
+        # Convert to displayable element
+        mesh = trimesh.load_mesh(paths.g_sim)
+        mesh.export(paths.g_sim_glb)
+
+        self.paths_3d = paths
+        self.is_in_3D = True
+
+        return paths.out_el, paths.g_sim_glb.name
+
     # Current state
     def is_design_sectioned(self):
         """Check if design parameters are grouped by sections: 
@@ -230,14 +301,14 @@ class GUIPattern:
         else:
             return (not is_strapless) and is_curve or has_hoody
 
-    def save(self):
+    def save(self, pack=True, save_pattern: MetaGarment|None =None):
         """Save current garment design to self.save_path """
 
-        # TODO add geomety when available
-        pattern = self.sew_pattern.assembly()
+        # Save current pattern
+        if save_pattern is None:
+            save_pattern = self.sew_pattern
 
-        # Clenup -- free space for new download
-        self.clear_previous_download()
+        pattern = save_pattern.assembly()
 
         # Save as json file
         self.saved_garment_folder = pattern.serialize(
@@ -258,12 +329,16 @@ class GUIPattern:
             )
 
         # pack
-        self.saved_garment_archive = Path(shutil.make_archive(
-            self.save_path / self.saved_garment_folder.name, 'zip',
-            root_dir=self.saved_garment_folder
-        ))
+        if pack: 
+            # Only add geometry if design didn't change since last drape
+            if not self.is_in_3D:
+                self.clear_3d()  # Clean any saved 3D if it's not synced with current design
+            self.saved_garment_archive = Path(shutil.make_archive(
+                self.save_path / '..' / f'{self.saved_garment_folder.name}_{self.id}', 'zip',
+                root_dir=self.save_path
+            ))
 
         print(f'Success! {self.sew_pattern.name} saved to {self.saved_garment_folder}')
 
-        return self.saved_garment_archive
+        return self.saved_garment_archive if pack else self.saved_garment_folder
 

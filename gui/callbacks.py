@@ -6,6 +6,9 @@ import yaml
 import traceback
 from datetime import datetime
 from argparse import Namespace
+import numpy as np
+import shutil
+from pathlib import Path
 
 from nicegui import ui, app, events
 
@@ -58,13 +61,25 @@ class GUIState:
         self.pattern_state = GUIPattern()
 
         # Pattern display constants
-        self.canvas_aspect_ratio = 1500 / 900   # Millimiter paper
+        self.canvas_aspect_ratio = 1500. / 900   # Millimiter paper
         self.w_rel_body_size = 0.5  # Body size as fraction of horisontal canvas axis
         self.h_rel_body_size = 0.95
         self.background_body_scale = 1 / 171.99   # Inverse of the mean_all body height from GGG
-        self.background_body_canvas_center = 0.27  # Fraction of the canvas (millimiter paper)
+        self.background_body_canvas_center = 0.273  # Fraction of the canvas (millimiter paper)
         self.w_canvas_pad, self.h_canvas_pad = 0.011, 0.04
         self.body_outline_classes = ''   # Application of pattern&body scaling when it overflows
+
+        # Paths setup
+        # Static images for GUI
+        self.path_static_img = '/img'
+        app.add_static_files(self.path_static_img, './assets/img')
+        
+        # 3D updates
+        self.path_static_3d = '/geo'
+        self.garm_3d_filename = f'garm_3d_{self.pattern_state.id}.glb'
+        self.local_path_3d = Path('./output/garm_3d')
+        app.add_static_files(self.path_static_3d, self.local_path_3d)
+        app.add_static_files('/body', './assets/bodies')
 
         # Elements
         self.ui_design_subtabs = {}
@@ -74,9 +89,6 @@ class GUIState:
         self.pattern_state.reload_garment()
         self.stylings()
         self.layout()
-
-        # New
-        # TODO 3D scene visualisation
 
     # Initial definitions
     def stylings(self):
@@ -93,7 +105,8 @@ class GUIState:
             info=theme_colors.info,
             warning=theme_colors.warning
         )
-        
+
+    # SECTION Top level layout        
     def layout(self):
         """Overall page layout"""
 
@@ -101,10 +114,11 @@ class GUIState:
 
         # as % of viewport width/height
         self.h_header = 5
-        self.h_footer = 3
-        self.h_content = 85
-        self.w_pattern_display = 65
+        self.h_params_content = 88
+        self.h_garment_display = 74 
+        self.w_garment_display = 65
         self.w_splitter_design = 32
+        self.scene_base_resoltion = (1024, 800)
 
         # Helpers
         self.def_pattern_waiting()
@@ -112,17 +126,13 @@ class GUIState:
         self.def_design_file_dialog()
         self.def_body_file_dialog()
 
-        # Static images for GUI
-        self.path_static_img = '/img'
-        app.add_static_files(self.path_static_img, './assets/img')
-
         # Configurator GUI
-        with ui.row(wrap=False).classes('w-full h-full'):  
+        with ui.row(wrap=False).classes(f'w-full h-[{self.h_params_content}dvh] p-0 m-0 '): 
             # Tabs
             self.def_param_tabs_layout()
             
             # Pattern visual
-            self.def_pattern_display()
+            self.view_tabs_layout()
 
         # Overall wrapping
         # NOTE: https://nicegui.io/documentation/section_pages_routing#page_layout
@@ -141,7 +151,7 @@ class GUIState:
             with ui.link(target='https://github.com/maria-korosteleva/GarmentCode', new_tab=True):
                 ui.html(icon_github).classes('w-8 bg-transparent')
         # NOTE No ui.left_drawer(), no ui.right_drawer()
-        with ui.footer(fixed=False, elevated=True).classes(f'h-[{self.h_footer}vh] items-center justify-center p-0 m-0'):
+        with ui.footer(fixed=False, elevated=True).classes('items-center justify-center p-0 m-0'): 
             # https://www.termsfeed.com/blog/sample-copyright-notices/
             ui.link(
                 '© 2024 Interactive Geometry Lab', 
@@ -149,11 +159,25 @@ class GUIState:
                 new_tab=True
             ).classes('text-white')
 
+    def view_tabs_layout(self):
+        """2D/3D view tabs"""
+        with ui.column(wrap=False).classes(f'h-[{self.h_params_content}vh] w-full items-center'):
+            with ui.tabs() as tabs: 
+                self.ui_2d_tab = ui.tab('Sewing Pattern')
+                self.ui_3d_tab = ui.tab('3D view')
+            with ui.tab_panels(tabs, value=self.ui_2d_tab, animated=True).classes('w-full h-full items-center'):  
+                with ui.tab_panel(self.ui_2d_tab).classes('w-full h-full items-center justify-center p-0 m-0'):
+                    self.def_pattern_display()
+                with ui.tab_panel(self.ui_3d_tab).classes('w-full h-full items-center p-0 m-0'):
+                    self.def_3d_scene()
+
+            ui.button('Download Current Garment', on_click=lambda: self.state_download()).classes('justify-self-end')
+
     # !SECTION
     # SECTION -- Parameter menu
     def def_param_tabs_layout(self):
         """Layout of tabs with parameters"""
-        with ui.column(wrap=False).classes(f'h-[{self.h_content}vh]'):
+        with ui.column(wrap=False).classes(f'h-[{self.h_params_content}vh]'):
             with ui.tabs() as tabs:
                 self.ui_design_tab = ui.tab('Design parameters')
                 self.ui_body_tab = ui.tab('Body parameters')
@@ -314,34 +338,112 @@ class GUIState:
     # SECTION -- Pattern visuals
     def def_pattern_display(self):
         """Prepare pattern display area"""
-        with ui.column().classes('w-full items-center p-0 m-0'): 
-            with ui.column().classes('p-0 m-0'):
-                with ui.row().classes('w-full p-0 m-0 justify-between'):
-                    switch = ui.switch(
-                        'Body Silhouette', value=True, 
-                    ).props('dense left-label').classes('text-stone-800')
+        with ui.column().classes('h-full p-0 m-0'):
+            with ui.row().classes('w-full p-0 m-0 justify-between'):
+                switch = ui.switch(
+                    'Body Silhouette', value=True, 
+                ).props('dense left-label').classes('text-stone-800')
 
-                    self.ui_self_intersect = ui.label(
-                        'WARNING: Garment panels are self-intersecting!'
-                    ).classes('font-semibold text-purple-600 border-purple-600 border py-0 px-1.5 rounded-md') \
-                    .bind_visibility(self.pattern_state, 'is_self_intersecting')
+                self.ui_self_intersect = ui.label(
+                    'WARNING: Garment panels are self-intersecting!'
+                ).classes('font-semibold text-purple-600 border-purple-600 border py-0 px-1.5 rounded-md') \
+                .bind_visibility(self.pattern_state, 'is_self_intersecting')
 
-                with ui.image(f'{self.path_static_img}/millimiter_paper_1500_900.png').classes(f'w-[{self.w_pattern_display}vw] p-0 m-0') as self.ui_pattern_bg:       
-                    # NOTE: Positioning: https://github.com/zauberzeug/nicegui/discussions/957 
-                    with ui.row().classes('w-full h-full p-0 m-0 bg-transparent relative'):
-                        self.body_outline_classes = 'bg-transparent h-full absolute top-[0%] left-[0%] p-0 m-0'
-                        self.ui_body_outline = ui.image(f'{self.path_static_img}/ggg_outline_mean_all.svg') \
-                            .classes(self.body_outline_classes) 
-                        switch.bind_value(self.ui_body_outline, 'visible')
-                    
-                    # NOTE: ui.row allows for correct classes application (e.g. no padding on svg pattern)
-                    with ui.row().classes('w-full h-full p-0 m-0 bg-transparent relative'):
-                        # Automatically updates from source
-                        self.ui_pattern_display = ui.interactive_image(
-                            ''
-                        ).classes('bg-transparent p-0 m-0')                    
+            with ui.image(
+                    f'{self.path_static_img}/millimiter_paper_1500_900.png'
+                ).classes(f'aspect-[{self.canvas_aspect_ratio}] h-[95%] p-0 m-0')  as self.ui_pattern_bg:  
+                # NOTE: Positioning: https://github.com/zauberzeug/nicegui/discussions/957 
+                with ui.row().classes('w-full h-full p-0 m-0 bg-transparent relative top-[0%] left-[0%]'):
+                    self.body_outline_classes = 'bg-transparent h-full absolute top-[0%] left-[0%] p-0 m-0'
+                    self.ui_body_outline = ui.image(f'{self.path_static_img}/ggg_outline_mean_all.svg') \
+                        .classes(self.body_outline_classes) 
+                    switch.bind_value(self.ui_body_outline, 'visible')
                 
-            ui.button('Download Current Garment', on_click=lambda: self.state_download())
+                # NOTE: ui.row allows for correct classes application (e.g. no padding on svg pattern)
+                with ui.row().classes('w-full h-full p-0 m-0 bg-transparent relative'):
+                    # Automatically updates from source
+                    self.ui_pattern_display = ui.interactive_image(
+                        ''
+                    ).classes('bg-transparent p-0 m-0')                    
+
+    # !SECTION
+    # SECTION 3D view
+    def create_lights(self, scene:ui.scene, intensity=30.0):
+        light_positions = np.array([
+            [1.60614, 1.23701, 1.5341,],
+            [1.31844, -2.52238, 1.92831],
+            [-2.80522, 2.34624, 1.2594],
+            [0.160261, 3.52215, 1.81789],
+            [-2.65752, -1.26328, 1.41194]
+        ])
+        light_colors = [
+            '#ffffff',
+            '#ffffff',
+            '#ffffff',
+            '#ffffff',
+            '#ffffff'
+        ]
+        z_dirs = np.arctan2(light_positions[:, 1], light_positions[:, 0])
+
+        # Add lights to the scene
+        for i in range(len(light_positions)):
+            scene.spot_light(
+                color=light_colors[i], intensity=intensity,
+                angle=np.pi,
+                ).rotate(0., 0., -z_dirs[i]).move(light_positions[i][0], light_positions[i][1], light_positions[i][2])
+
+    def create_camera(self, cam_location, fov, scale=1.):
+        camera = ui.scene.perspective_camera(fov=fov)
+        camera.x = cam_location[0] * scale
+        camera.y = cam_location[1] * scale
+        camera.z = cam_location[2] * scale
+
+        # direction
+        camera.look_at_x = 0
+        camera.look_at_y = 0
+        camera.look_at_z = cam_location[2] * scale * 2/3
+
+        return camera
+
+    def def_3d_scene(self):
+        y_fov = np.pi / 6. 
+        camera_location = [0, -200., 1.25]  
+        bg_color='#ffffff'
+
+        def body_visibility(value):
+            self.ui_body_3d.visible(value)
+
+        with ui.row().classes('w-full p-0 m-0 justify-between items-center'):
+            self.ui_body_3d_switch = ui.switch(
+                'Body Silhouette', 
+                value=True, 
+                on_change=lambda e: body_visibility(e.value) 
+            ).props('dense left-label').classes('text-stone-800')
+
+            ui.button('Drape current design', on_click=lambda: self.update_3d_scene())
+
+            ui.label(
+                'INFO: it takes a few minutes'
+            ).classes(f'font-semibold text-[{theme_colors.primary}] border-[{theme_colors.primary}] '
+                    'border py-0 px-1.5 rounded-md')
+
+        camera = self.create_camera(camera_location, y_fov)
+        with ui.scene(
+            width=self.scene_base_resoltion[0], 
+            height=self.scene_base_resoltion[1], 
+            camera=camera, 
+            grid=False, 
+            background_color=bg_color   
+            ).classes(f'w-[{self.w_garment_display}vw] h-[90%] p-0 m-0') as self.ui_3d_scene:
+            # Lights setup
+            self.create_lights(self.ui_3d_scene, intensity=60.)
+            # NOTE: texture is there, just needs a better setup
+            self.ui_garment_3d = None
+            # FIXME body is mixing with the garment..
+            # TODOLOW Update body model to a correct shape
+            self.ui_body_3d = self.ui_3d_scene.stl(
+                    '/body/mean_all.stl' 
+                ).rotate(np.pi / 2, 0., 0.).material(color='#000000')
 
     # !SECTION
     # SECTION -- Other UI details
@@ -416,8 +518,7 @@ class GUIState:
         # NOTE: Fixing to the "same value" issue in lambdas 
         # https://github.com/zauberzeug/nicegui/wiki/FAQs#why-have-all-my-elements-the-same-value
    
-        # DEBUG
-        print('Updating pattern...')
+        print('INFO::Updating pattern...')
 
         # Update the values
         if param_dict is not None:
@@ -425,10 +526,11 @@ class GUIState:
                 param_dict[param] = new_value
             else:
                 param_dict[param]['v'] = new_value
-
-        # Quick update
+                self.pattern_state.is_in_3D = False   # Design param changes -> 3D model is not synced with the param
+ 
         try:
             if not self.pattern_state.is_slow_design(): 
+                # Quick update
                 self._sync_update_state()
                 return
 
@@ -475,7 +577,6 @@ class GUIState:
         if self.ui_pattern_display is not None:
 
             if self.pattern_state.svg_filename:
-
                 # Re-align the canvas and body with the new pattern
                 p_bbox_size = self.pattern_state.svg_bbox_size
                 p_bbox = self.pattern_state.svg_bbox
@@ -565,9 +666,77 @@ class GUIState:
         for param in ui_body_refs: 
             ui_body_refs[param].value = self.pattern_state.body_params[param]
 
+    async def update_3d_scene(self):
+        """According the whatever pattern current state"""
+
+        print('INFO::Updating 3D...')
+
+        # Cleanup 
+        if self.ui_garment_3d is not None:
+            self.ui_garment_3d.delete()
+            self.ui_garment_3d = None
+        
+        if not self.pattern_state.svg_filename:
+            print('INFO::Current garment is empty, skipped 3D update')
+            ui.notify('Current garment is empty. Chose a design to start simulating!')
+            self.ui_body_3d.visible(True)
+            self.ui_body_3d_switch.set_value(True)
+            return
+
+        try:
+            # Display waiting spinner untill getting the result
+            # NOTE Splashscreen solution to block users from modifying params while updating
+            # https://github.com/zauberzeug/nicegui/discussions/1988
+
+            self.spin_dialog.open()   
+            self.ui_3d_scene.set_visibility(False)
+            # NOTE: Using threads for async call 
+            # https://stackoverflow.com/questions/49822552/python-asyncio-typeerror-object-dict-cant-be-used-in-await-expression
+            self.loop = asyncio.get_event_loop()
+            await self.loop.run_in_executor(self._async_executor, self._sync_update_3d)
+
+            # Update ui
+            # https://github.com/zauberzeug/nicegui/discussions/1269
+            with self.ui_3d_scene:
+                self.ui_garment_3d = self.ui_3d_scene.gltf(
+                            f'geo/{self.garm_3d_filename}', 
+                        ).scale(0.01).rotate(np.pi / 2, 0., 0.).material(side='double')  # NOTE the latter seem to have no effect
+            
+            # Body invisible by default due to occlusion artifacts
+            self.ui_body_3d.visible(False)
+            self.ui_body_3d_switch.set_value(False)
+
+            # Show the result! =)
+            self.ui_3d_scene.set_visibility(True)
+            self.spin_dialog.close()
+
+        except KeyboardInterrupt as e:
+            raise e
+        except BaseException as e:
+            traceback.print_exc()
+            print(e)
+            self.ui_3d_scene.set_visibility(True)
+            self.spin_dialog.close()  # If open
+            ui.notify(
+                'Failed to generate 3D model correctly. Try different parameter values',
+                type='negative',
+                close_button=True,
+                position='center'
+            )
+    
+    def _sync_update_3d(self):
+        """Update 3d model"""
+
+        # Run simulation
+        path, filename = self.pattern_state.drape_3d()
+
+        # NOTE: The files will be available publically at the static point
+        # However, we cannot do much about it, since it won't be available for the interface otherwise
+        shutil.copy2(path / filename, self.local_path_3d / self.garm_3d_filename)
+
+    # !SECTION
+
     def state_download(self):
         """Download current state of a garment"""
         archive_path = self.pattern_state.save()
         ui.download(archive_path, f'Configured_design_{datetime.now().strftime("%y%m%d-%H-%M-%S")}.zip')
-
-    # !SECTION

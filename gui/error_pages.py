@@ -33,36 +33,36 @@ def error_handler(err_type, text, exception: Exception):
 # https://www.pixelfish.com.au/blog/most-common-website-errors/
 @app.exception_handler(404)
 async def exception_handler_404(request, exception: Exception):
-    with Client(page('')) as client:
+    with Client(page(''), request=None) as client:
         error_handler('404', 'You are looking for something that doesn\'t exist', exception)
     return client.build_response(request, 404)
 
 @app.exception_handler(500)
 async def exception_handler_500(request, exception: Exception):
-    with Client(page('')) as client:
+    with Client(page(''), request=None) as client:
         error_handler('500', 'Oops! Server error. We are fixing it ASAP =)', exception)
     return client.build_response(request, 500)
 
 @app.exception_handler(400)
 async def exception_handler_400(request, exception: Exception):
-    with Client(page('')) as client:
+    with Client(page(''), request=None) as client:
         error_handler('400', 'Oh no, bad request', exception)
     return client.build_response(request, 400)
 
 @app.exception_handler(401)
 async def exception_handler_401(request, exception: Exception):
-    with Client(page('')) as client:
+    with Client(page(''), request=None) as client:
         error_handler('401', 'You don\'t have access to this place', exception)
     return client.build_response(request, 401)
 
 @app.exception_handler(403)
 async def exception_handler_403(request, exception: Exception):
-    with Client(page('')) as client:
+    with Client(page(''), request=None) as client:
         error_handler('403', 'Sorry, you cannot come here', exception)
     return client.build_response(request, 403)
 
 @app.exception_handler(503)
 async def exception_handler_503(request, exception: Exception):
-    with Client(page('')) as client:
+    with Client(page(''), request=None) as client:
         error_handler('503', 'We are unavailable, but will be back soon!', exception)
     return client.build_response(request, 503)

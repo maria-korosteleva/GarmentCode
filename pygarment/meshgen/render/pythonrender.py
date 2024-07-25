@@ -199,7 +199,7 @@ def load_meshes(paths:PathCofig, body_v, body_f, flat):
 
     #Load garment mesh
     garm_mesh = trimesh.load_mesh(str(paths.g_sim))  # NOTE: Includes the texture
-    garm_mesh.vertices = garm_mesh.vertices / 100   # scale to cm
+    garm_mesh.vertices = garm_mesh.vertices / 100   # scale to m
 
     # Material adjustments
     material = garm_mesh.visual.material.to_pbr()

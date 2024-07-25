@@ -114,7 +114,7 @@ if __name__ == "__main__":
     paths = PathCofig(
         in_element_path=os.path.join(os.path.dirname(__file__), 'assets', 'Patterns'),  # TODO Path()
         out_path=os.path.join(os.path.dirname(__file__), 'output'),
-        tag=garment_name,
+        in_name=garment_name,
         body_name='mean_all',    # 'f_smpl_average_A40',  # 
         smpl_body=False,   # NOTE: depends on chosen body model
         add_timestamp=True

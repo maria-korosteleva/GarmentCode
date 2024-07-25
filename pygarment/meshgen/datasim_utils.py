@@ -70,7 +70,7 @@ def batch_sim(data_path, output_path, dataset_props,
             paths = PathCofig(
                 in_element_path=data_path / pattern_name,
                 out_path=output_path,
-                tag=pattern_name,
+                in_name=pattern_name,
                 body_name=dataset_props['body_default'],
                 samples_name=dataset_props['body_samples'],
                 default_body=run_default_body

@@ -7,7 +7,7 @@ from pygarment.customconfig import Properties
 class PathCofig:
     """Routines for getting paths to various relevant objects with standard names"""
     def __init__(self, 
-                 in_element_path, out_path, tag, 
+                 in_element_path, out_path, in_name, out_name=None, 
                  body_name='', samples_name='', default_body=True,
                  smpl_body=False,
                  add_timestamp=False):
@@ -25,10 +25,12 @@ class PathCofig:
         self.use_smpl_seg = smpl_body
 
         # Tags
-        self.in_tag = tag
-        self.out_folder_tag = f'{tag}_{datetime.now().strftime("%y%m%d-%H-%M-%S")}' if add_timestamp else tag
-        self.sim_tag = tag   # TODOLOW Use as an "additional" tag to the input tag, not as full tag
-        self.boxmesh_tag = tag
+        if out_name is None:
+            out_name = in_name
+        self.in_tag = in_name
+        self.out_folder_tag = f'{out_name}_{datetime.now().strftime("%y%m%d-%H-%M-%S")}' if add_timestamp else out_name
+        self.sim_tag = out_name 
+        self.boxmesh_tag = out_name
 
         # Base paths
         self.input = Path(in_element_path)
@@ -85,6 +87,7 @@ class PathCofig:
         
     def update_sim_paths(self):
         self.g_sim = self.out_el / f'{self.sim_tag}_sim.obj'
+        self.g_sim_glb = self.out_el / f'{self.sim_tag}_sim.glb'
         self.g_sim_compressed = self.out_el / f'{self.sim_tag}_sim.ply'
         self.usd = self.out_el / f'{self.sim_tag}_simulation.usd'
 
