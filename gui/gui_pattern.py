@@ -6,6 +6,7 @@ import string
 import random
 import trimesh
 from copy import deepcopy
+from typing import Optional
 
 # Custom 
 from assets.garment_programs.meta_garment import MetaGarment
@@ -301,7 +302,7 @@ class GUIPattern:
         else:
             return (not is_strapless) and is_curve or has_hoody
 
-    def save(self, pack=True, save_pattern: MetaGarment|None =None):
+    def save(self, pack=True, save_pattern: Optional[MetaGarment]=None):
         """Save current garment design to self.save_path """
 
         # Save current pattern
