@@ -2,7 +2,7 @@ import os
 import sys
 from pathlib import Path
 sys.path.append(str((Path(os.getcwd()) / 'external').resolve()))
-from nicegui import ui
+from nicegui import ui, Client
 
 # Custom
 from gui.callbacks import GUIState
@@ -14,9 +14,15 @@ icon_image_b64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABc
 
 # FIXME Cleaning up the data at the end of the session? 
 @ui.page('/')
-async def index():
+async def index(client: Client):
     # Start the interface!
-    GUIState()
+    gui_st = GUIState()
+
+    # Connection end
+    await client.disconnected()
+    print('Closed connection ', gui_st.pattern_state.id, '. Deleting files...')
+    # DRAFT gui_st.pattern_state.__del__()
+    gui_st.release()
 
 if __name__ == '__main__':
     ui.run(

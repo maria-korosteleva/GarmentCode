@@ -65,8 +65,9 @@ class GUIPattern:
 
         self.reload_garment()
 
-    def __del__(self):
+    def release(self):
         """Clean up tmp files after the session"""
+        self.clear_previous_download()
         shutil.rmtree(self.save_path)
         shutil.rmtree(self.tmp_path)
 
@@ -172,6 +173,7 @@ class GUIPattern:
         except pyg.EmptyPatternError:
             self.svg_filename = ''
     
+    # Cleaning
     def clear_previous_svg(self):
         """Clear previous svg display file"""
         if self.svg_filename:
