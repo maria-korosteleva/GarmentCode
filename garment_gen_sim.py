@@ -56,7 +56,7 @@ if __name__ == "__main__":
         'enable_cloth_reference_drag': True,  # DRAFT  True,  # TODO Filter in drag as well
         'cloth_reference_margin': 0.1,
 
-        'enable_body_smoothing': True,  # True,  # FIXME CUDA errors when running with this script
+        'enable_body_smoothing': False,  # True,  # FIXME CUDA errors when running with this script
         'smoothing_total_smoothing_factor': 1.0,
         'smoothing_recover_start_frame': 150,
         'smoothing_num_steps': 100,
