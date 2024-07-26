@@ -164,6 +164,7 @@ class GUIPattern:
             dwg = pattern.get_svg(self.tmp_path / self.svg_filename, 
                                   with_text=False, 
                                   view_ids=False,
+                                  flat=False,
                                   margin=0
             )
             dwg.save()
@@ -318,7 +319,9 @@ class GUIPattern:
             self.save_path, 
             to_subfolder=True, 
             with_3d=False, with_text=False, view_ids=False, 
-            empty_ok=True)
+            with_printable=True,
+            empty_ok=True
+        )
 
         self.saved_garment_folder = Path(self.saved_garment_folder)
         self.body_params.save(self.saved_garment_folder)
