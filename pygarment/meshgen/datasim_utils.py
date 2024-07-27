@@ -352,7 +352,6 @@ def template_simulation(paths: PathCofig, props, caching=False):
             garment.name,  
             props, 
             paths,
-            flat=False,  # TODO Higher level parameter
             save_v_norms=vertex_normals,
             store_usd=caching,  # NOTE: False for fast simulation!, 
             optimize_storage=sim_props['config']['optimize_storage'],

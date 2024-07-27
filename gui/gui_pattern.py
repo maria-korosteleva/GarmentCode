@@ -231,7 +231,6 @@ class GUIPattern:
             garment_box_mesh.name, 
             props, 
             paths,
-            flat=False,  # TODO Debug flat sim paths integration + warp recent updates 
             save_v_norms=False,
             store_usd=False,  # NOTE: False for fast simulation!, 
             optimize_storage=False,
