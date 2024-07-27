@@ -31,7 +31,6 @@ class Cloth:
         self.sim_fps = config.sim_fps
         self.sim_substeps = config.sim_substeps
         self.zero_gravity_steps = config.zero_gravity_steps
-        self.self_collision_steps = config.self_collision_steps
         self.sim_dt = (1.0 / self.sim_fps) / self.sim_substeps
         self.usd_frame_time = 0.0 
         self.sim_use_graph = False   # DEBUG wp.get_device().is_cuda
@@ -65,6 +64,7 @@ class Cloth:
         self.model.cloth_reference_k = config.cloth_reference_k
         self.model.cloth_reference_watertight_whole_shape_index = 0
         self.model.enable_particle_particle_collisions = config.enable_particle_particle_collisions
+        self.model.enable_self_collision = True   # TODO More fine-grained controls from config
         self.model.attachment_constraint = config.enable_attachment_constraint
 
         self.model.soft_contact_margin = config.soft_contact_margin
@@ -380,10 +380,6 @@ class Cloth:
                 self.model.particle_grid.build(self.state_0.particle_q, self.model.particle_max_radius * 2.0)
             if frame == self.zero_gravity_steps:
                 self.model.gravity = np.array((0.0, -9.81, 0.0))
-                if self.sim_use_graph:
-                    self.create_graph()
-            if frame == self.self_collision_steps:
-                self.model.enable_self_collision = True
                 if self.sim_use_graph:
                     self.create_graph()
             if self.enable_body_smoothing and frame in self.body_smoothing_frames:

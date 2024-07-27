@@ -126,8 +126,6 @@ class SimConfig:
 
         
         # Self-collision prevention properties
-        self.self_collision_steps = self.get_sim_props_value(
-            sim_props, 'self_collision_steps', 5)
         self.enable_particle_particle_collisions = self.get_sim_props_value(
             sim_props_option,
             'enable_particle_particle_collisions', False)

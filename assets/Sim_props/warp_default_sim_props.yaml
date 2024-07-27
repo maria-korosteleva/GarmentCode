@@ -5,7 +5,6 @@ sim:
     max_meshgen_time: 20
     max_sim_time: 1500
     zero_gravity_steps: 10
-    self_collision_steps: 0
     static_threshold: 0.03
     non_static_percent: 1.5
     resolution_scale: 1.0

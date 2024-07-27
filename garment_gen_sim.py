@@ -1,6 +1,6 @@
 import os
 from pygarment.meshgen.boxmeshgen import BoxMesh
-# DRAFT from pygarment.meshgen.simulation import run_sim
+from pygarment.meshgen.simulation import run_sim
 
 import pygarment.customconfig as customconfig
 from pygarment.meshgen.sim_config import PathCofig
@@ -15,8 +15,6 @@ if __name__ == "__main__":
         'ground': False,   # TODO The following belong in 'options'
         'resolution_scale':  1.0, 
         'zero_gravity_steps': 10,
-        # TODO Remove -- old!
-        'self_collision_steps': 0,  # NOTE: put to big number to remove self-collision resolution
 
         # Stopping criteria
         'max_sim_steps': 1000,   
@@ -36,7 +34,6 @@ if __name__ == "__main__":
         'options': {},
     }
     sim_props['options'] = {
-        # Reason is unknown
         'enable_particle_particle_collisions': False,
         'enable_triangle_particle_collisions': True,  # TODO MK: I don't see these being used??
         'enable_edge_edge_collisions': True,
@@ -53,10 +50,10 @@ if __name__ == "__main__":
         'global_max_velocity': 25.,  #  20
 
         'enable_global_collision_filter': True,
-        'enable_cloth_reference_drag': True,  # DRAFT  True,  # TODO Filter in drag as well
+        'enable_cloth_reference_drag': True, 
         'cloth_reference_margin': 0.1,
 
-        'enable_body_smoothing': True,  # True,  # FIXME CUDA errors when running with this script
+        'enable_body_smoothing': True, # FIXME CUDA errors when running with this script
         'smoothing_total_smoothing_factor': 1.0,
         'smoothing_recover_start_frame': 150,
         'smoothing_num_steps': 100,
@@ -66,18 +63,18 @@ if __name__ == "__main__":
         'body_friction': 0.5
     }
 
-    sim_props['material'] = { # MK's experiments
-        'garment_tri_ka': 10000.0,  # 100.0,  # NOTE: Not used in XPBD
+    sim_props['material'] = { 
+        'garment_tri_ka': 10000.0, # NOTE: Not used in XPBD
 
         'garment_edge_ke': 1.,   # 100., 500.,  # NOTE: Bending
-        'garment_tri_ke': 10000., # 100.0,    # NOTE: Not used in XPBD
-        'spring_ke': 50000.,   # Testing 1000000.,  #10000.,    # NOTE: Stiffness
+        'garment_tri_ke': 10000., # NOTE: Not used in XPBD
+        'spring_ke': 50000.,  # NOTE: Stiffness
     
-        'garment_edge_kd': 10.0,  # 0.0,
-        'garment_tri_kd': 1.0,  # 10.0,       # NOTE: Not used in XPBD
-        'spring_kd': 10.,  # 100.0,
+        'garment_edge_kd': 10.0, 
+        'garment_tri_kd': 1.0,      # NOTE: Not used in XPBD
+        'spring_kd': 10.,  
 
-        'fabric_density':  1.,  #  1.0,
+        'fabric_density':  1.,  
         'fabric_thickness': 0.1,
         'fabric_friction': 0.5
     }
@@ -102,7 +99,7 @@ if __name__ == "__main__":
     props.set_section_config('render', **render_props)
     props.set_section_stats('render', render_time={})
     res = sim_props['resolution_scale']
-    garment_name = "dress_pencil_top_position"  # "shirt_mean"    # "dbg_wb" # "dbg_fit_top_pants_smpl" # "dbg_fit_top_pants"
+    garment_name = "shirt_mean"   
     
     # "to_waist_levels_circle2" 
     
@@ -131,16 +128,14 @@ if __name__ == "__main__":
 
     props.serialize(paths.element_sim_props)
 
-    # FIXME the progress bar is not printed correctly
-    # run_sim(
-    #     garment_box_mesh.name, 
-    #     props, 
-    #     paths,
-    #     flat=False,  # TODO Debug flat sim paths integration + warp recent updates 
-    #     save_v_norms=False,
-    #     store_usd=False,  # NOTE: False for fast simulation!, 
-    #     optimize_storage=sim_props['optimize_storage'],
-    #     verbose=False
-    # )
+    run_sim(
+        garment_box_mesh.name, 
+        props, 
+        paths,
+        save_v_norms=False,
+        store_usd=False,  # NOTE: False for fast simulation!, 
+        optimize_storage=sim_props['optimize_storage'],
+        verbose=False
+    )
     
-    # props.serialize(paths.element_sim_props)
+    props.serialize(paths.element_sim_props)

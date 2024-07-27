@@ -160,7 +160,6 @@ def init_sim_props(props, batch_run=False, force_restart=False):
             max_frame_time= 15, #in seconds, affects speed
             max_sim_time= 1500, #in seconds, affects speed
             zero_gravity_steps=10,  # 0.01  # depends on the units used, #affects speed
-            self_collision_steps=0,
             static_threshold=0.03, #affects speed
             non_static_percent=1.5, #affects speed
             max_body_collisions=0,

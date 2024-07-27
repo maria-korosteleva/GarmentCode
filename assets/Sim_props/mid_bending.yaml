@@ -13,7 +13,6 @@ sim:
     max_self_collisions: 300 
 
     zero_gravity_steps: 10
-    self_collision_steps: 0
     resolution_scale: 1.0
     ground: false
     material:
