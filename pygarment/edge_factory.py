@@ -151,12 +151,74 @@ class CircleEdgeFactory:
             start, end, radius=rad,
             large_arc=mid_dist > rad, right=angle > 0)
 
+class CurveEdgeFactory:
+    @staticmethod
+    def curve_3_points(start, end, target, verbose=False):
+        """Create (Quadratic) curve edge between start and end that
+            passes through the target point 
+        """
+        rel_target = _abs_to_rel_2d(start, end, target)
 
+        if rel_target[0] > 1 or rel_target[0] < 0:
+            raise NotImplementedError(
+                "CurveEdgeFactory::Curve_by_3_points::ERROR::requested target point's projection "
+                "is outside of the base edge, which is not yet supported"
+            )
+
+        # Initialization with a target point as control point
+        # Ensures very smooth, minimal solution
+        out = minimize(
+            _fit_pass_point, 
+            rel_target,    
+            args=(rel_target)
+        )
+
+        if not out.success:
+            if verbose:
+                print('Curve From Extreme::WARNING::Optimization not successful')
+                print(out)
+
+        cp = out.x.tolist()
+
+        return CurveEdge(start, end, control_points=[cp], relative=True)
+
+    @staticmethod
+    def curve_from_tangents(start, end, target_tan0=None, target_tan1=None,
+                            initial_guess=None, verbose=False):
+        """Create Quadratic Bezier curve connecting given points with the target tangents
+            (both or any of the two can be specified)
+        
+            NOTE: Target tangent vectors are automatically normalized
+        """
+
+        if target_tan0 is not None:
+            target_tan0 = _abs_to_rel_2d_vector(start, end, target_tan0)
+            target_tan0 /= norm(target_tan0)
+        
+        if target_tan1 is not None:
+            target_tan1 = _abs_to_rel_2d_vector(start, end, target_tan1)
+            target_tan1 /= norm(target_tan1)
+        
+        # Initialization with a target point as control point
+        # Ensures very smooth, minimal solution
+        out = minimize(
+            _fit_tangents, 
+            [0.5, 0] if initial_guess is None else initial_guess,
+            args=(target_tan0, target_tan1)
+        )
+
+        if not out.success:
+            print('CurveEdgeFactory::Curve From Tangents::WARNING::Optimization not successful')
+            if verbose:
+                print(out)
+
+        cp = out.x.tolist()
+
+        return CurveEdge(start, end, control_points=[cp], relative=True)
 
 class EdgeSeqFactory:
     """Create EdgeSequence objects for some common edge sequence patterns
     """
-
     @staticmethod
     def from_svg_path(path: svgpath.Path, dist_tol=0.05, verbose=False):
         """Convert SVG path given as svgpathtool Path object to an EdgeSequence
@@ -317,72 +379,6 @@ class EdgeSeqFactory:
                 p.reverse()
 
         return left_seqs, right_seqs
-
-    # --- Curve fittings ---- 
-    # TODO These should be in CurveEdge factory
-    @staticmethod
-    def curve_3_points(start, end, target, verbose=False):
-        """Create (Quadratic) curve edge between start and end that
-            passes through the target point 
-        """
-        rel_target = _abs_to_rel_2d(start, end, target)
-
-        if rel_target[0] > 1 or rel_target[0] < 0:
-            raise NotImplementedError(
-                f"EdgeFactory::Curve_by_3_points::ERROR::requested target point's projection "
-                "is outside of the base edge, which is not yet supported"
-            )
-
-        # Initialization with a target point as control point
-        # Ensures very smooth, minimal solution
-        out = minimize(
-            _fit_pass_point, 
-            rel_target,    
-            args=(rel_target)
-        )
-
-        if not out.success:
-            if verbose:
-                print('Curve From Extreme::WARNING::Optimization not successful')
-                print(out)
-
-        cp = out.x.tolist()
-
-        return CurveEdge(start, end, control_points=[cp], relative=True)
-
-    @staticmethod
-    def curve_from_tangents(start, end, target_tan0=None, target_tan1=None,
-                            initial_guess=None, verbose=False):
-        """Create Quadratic Bezier curve connecting given points with the target tangents
-            (both or any of the two can be specified)
-        
-            NOTE: Target tangent vectors are automatically normalized
-        """
-
-        if target_tan0 is not None:
-            target_tan0 = _abs_to_rel_2d_vector(start, end, target_tan0)
-            target_tan0 /= norm(target_tan0)
-        
-        if target_tan1 is not None:
-            target_tan1 = _abs_to_rel_2d_vector(start, end, target_tan1)
-            target_tan1 /= norm(target_tan1)
-        
-        # Initialization with a target point as control point
-        # Ensures very smooth, minimal solution
-        out = minimize(
-            _fit_tangents, 
-            [0.5, 0] if initial_guess is None else initial_guess,
-            args=(target_tan0, target_tan1)
-        )
-
-        if not out.success:
-            print('Curve From Tangents::WARNING::Optimization not successful')
-            if verbose:
-                print(out)
-
-        cp = out.x.tolist()
-
-        return CurveEdge(start, end, control_points=[cp], relative=True)
 
 
 def _rel_to_abs_coords(start, end, vrel):

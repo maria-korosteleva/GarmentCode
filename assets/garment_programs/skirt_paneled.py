@@ -144,14 +144,14 @@ class FittedSkirtPanel(pyg.Panel):
                 [0, length]
             )
         else:
-            right_bottom = pyg.EdgeSeqFactory.curve_from_tangents(
+            right_bottom = pyg.CurveEdgeFactory.curve_from_tangents(
                 [hips - low_width, angle_shift], 
                 [0, length],
                 target_tan1=np.array([0, 1]), 
                 # initial guess places control point closer to the hips 
                 initial_guess=[0.75, 0]
             )
-        right_top = pyg.EdgeSeqFactory.curve_from_tangents(
+        right_top = pyg.CurveEdgeFactory.curve_from_tangents(
             right_bottom.end,
             [hw_shift, length + adj_hips_depth],
             target_tan0=np.array([0, 1]),
@@ -163,7 +163,7 @@ class FittedSkirtPanel(pyg.Panel):
         top = pyg.Edge(right[-1].end, [hips * 2 - hw_shift, length + adj_hips_depth])
 
         # left
-        left_top = pyg.EdgeSeqFactory.curve_from_tangents(
+        left_top = pyg.CurveEdgeFactory.curve_from_tangents(
             top.end,    
             [hips * 2, length],
             target_tan1=np.array([0, -1]),
@@ -175,7 +175,7 @@ class FittedSkirtPanel(pyg.Panel):
                 [hips + low_width, -angle_shift], 
             )
         else:
-            left_bottom = pyg.EdgeSeqFactory.curve_from_tangents(  
+            left_bottom = pyg.CurveEdgeFactory.curve_from_tangents(  
                 left_top.end, 
                 [hips + low_width, -angle_shift], 
                 target_tan0=np.array([0, -1]),

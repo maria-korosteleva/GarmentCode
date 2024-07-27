@@ -105,7 +105,7 @@ class BodiceBackHalf(BaseBodicePanel):
         length = body['waist_line'] - back_adjustment
 
         # Base edge loop
-        edge_0 = pyg.EdgeSeqFactory.curve_from_tangents(
+        edge_0 = pyg.CurveEdgeFactory.curve_from_tangents(
             start=[0, shoulder_incl / 4],  # back a little shorter 
             end=[-waist_width, 0],
             target_tan0=[-1, 0]

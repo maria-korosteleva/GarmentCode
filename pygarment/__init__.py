@@ -17,6 +17,7 @@ from pygarment.interface import Interface
 from pygarment.edge_factory import EdgeSeqFactory
 from pygarment.edge_factory import CircleEdgeFactory
 from pygarment.edge_factory import EdgeFactory
+from pygarment.edge_factory import CurveEdgeFactory
 
 
 # Operations

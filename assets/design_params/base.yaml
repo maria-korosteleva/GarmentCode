@@ -12,11 +12,11 @@ design:
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
-      v: null # FittedWB 
+      v: FittedWB 
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
-      v: PencilSkirt 
+      v: Pants 
       range: 
         - SkirtCircle
         - GodetSkirt

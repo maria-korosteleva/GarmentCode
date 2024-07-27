@@ -52,14 +52,14 @@ class PantPanel(pyg.Panel):
                 [0, length]
             )
         else:
-            right_bottom = pyg.EdgeSeqFactory.curve_from_tangents(
+            right_bottom = pyg.CurveEdgeFactory.curve_from_tangents(
                 [-flare, 0], 
                 [0, length],
                 target_tan1=np.array([0, 1]), 
                 # initial guess places control point closer to the hips 
                 initial_guess=[0.75, 0]
             )
-        right_top = pyg.EdgeSeqFactory.curve_from_tangents(
+        right_top = pyg.CurveEdgeFactory.curve_from_tangents(
             right_bottom.end,    
             [hw_shift, length + hips_depth],
             target_tan0=np.array([0, 1]),
@@ -76,7 +76,7 @@ class PantPanel(pyg.Panel):
             [hips, length + 0.45 * hips_depth]  # A bit higher than hip line
             # NOTE: The point should be lower than the minimum rise value (0.5)
         )
-        crotch_bottom = pyg.EdgeSeqFactory.curve_from_tangents(
+        crotch_bottom = pyg.CurveEdgeFactory.curve_from_tangents(
             crotch_top.end,
             [hips + crotch_extention, length - crotch_depth_diff], 
             target_tan0=np.array([0, -1]),
@@ -84,7 +84,7 @@ class PantPanel(pyg.Panel):
             initial_guess=[0.5, -0.5] 
         )
 
-        left = pyg.EdgeSeqFactory.curve_from_tangents(
+        left = pyg.CurveEdgeFactory.curve_from_tangents(
             crotch_bottom.end,    
             [
                 # NOTE "Magic value" (-2 cm) which we use to define default width:
