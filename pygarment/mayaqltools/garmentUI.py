@@ -16,7 +16,7 @@ import maya.mel as mel
 
 # My modules
 from pygarment import mayaqltools as mymaya
-from pygarment import customconfig
+from pygarment import data_config
 
 
 # -------- Main call - Draw the UI -------------
@@ -106,7 +106,7 @@ class State(object):
         self.save_to = None
         self.saving_prefix = None
         self.body_file = None
-        self.config = customconfig.Properties()
+        self.config = data_config.Properties()
         self.scenes_path = ''
         self.segmented = False
         mymaya.simulation.init_sim_props(self.config)  # use default setup for simulation -- for now
@@ -281,7 +281,7 @@ def load_props_callback(view_field, state, *args):
     cmds.textField(view_field, edit=True, text=file)
     
     # Edit the incoming config to reflect explicit choiced made in other UI elements
-    in_config = customconfig.Properties(file)
+    in_config = data_config.Properties(file)
 
     # Use current body info instead of one from config
     if state.body_file is not None:

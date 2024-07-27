@@ -333,7 +333,8 @@ class Properties():
         self.count_fails(log=True)
 
         if not (updated_frames and updated_render and updated_sim_time and updated_spf and updated_self_collisions and updated_body_collisions):
-            print('CustomConfig::WARNING::Sim stats summary requested, but not all sections were updated')
+            print(f'{self.__class__.__name__}::WARNING::Sim stats summary '
+                  'requested, but not all sections were updated')
 
     # ---- Private utils ----
     def _from_file(self, filename):

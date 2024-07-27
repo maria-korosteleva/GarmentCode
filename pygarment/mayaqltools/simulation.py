@@ -58,7 +58,7 @@ def batch_sim(resources, data_path, dataset_props,
                 * body_path -- path to folder with body meshes
                 * data_path -- path to folder with the dataset
                 * scenes_path -- path to folder with rendering scenes
-            * dataset_props -- dataset properties. Properties has to be of custom customconfig.Properties() class and contain
+            * dataset_props -- dataset properties. Properties has to be of custom data_config.Properties() class and contain
                     * dataset folder (inside data_path) 
                     * name of pattern template
                     * name of body .obj file

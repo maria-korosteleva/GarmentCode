@@ -1,13 +1,13 @@
 """In simulated dataset, gather all the scene images in one folder"""
 
-import meshgen.external.customconfig as customconfig
+import pygarment.data_config as config
 from pathlib import Path
 import shutil
 
 from datasim import gather_renders
 
 
-system_props = customconfig.Properties('./system.json')
+system_props = config.Properties('./system.json')
 dataset = 'unpacking_test'
 datapaths = [
     Path(system_props['output']) / dataset / 'default_body', 

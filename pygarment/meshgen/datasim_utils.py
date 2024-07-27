@@ -28,7 +28,7 @@ def batch_sim(data_path, output_path, dataset_props,
         Parameters:
             * data_path -- path to folder with patterns (for given body type)
             * output_path -- path to folder with the sumulated dataset
-            * dataset_props -- dataset properties. Properties has to be of custom customconfig.Properties() class and contain
+            * dataset_props -- dataset properties. Properties has to be of custom data_config.Properties() class and contain
                     * dataset folder (inside data_path)
                     * type of dataset structure (with/without subfolders for patterns)
                     * list of processed samples if processing of dataset was already attempted

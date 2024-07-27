@@ -13,7 +13,7 @@ from assets.bodies.body_params import BodyParameters
 import pygarment as pyg
 from pygarment.meshgen.boxmeshgen import BoxMesh
 from pygarment.meshgen.simulation import run_sim
-import pygarment.customconfig as customconfig
+import pygarment.data_config as data_config
 from pygarment.meshgen.sim_config import PathCofig
 
 verbose = False
@@ -196,7 +196,7 @@ class GUIPattern:
         """Run the draping of the current frame"""
 
         # Config setup 
-        props = customconfig.Properties('./assets/Sim_props/mid_bending.yaml')   # TODOLOW Parameter?
+        props = data_config.Properties('./assets/Sim_props/mid_bending.yaml')   # TODOLOW Parameter?
         props.set_section_stats('sim', fails={}, sim_time={}, spf={}, fin_frame={}, body_collisions={}, self_collisions={})
         props.set_section_stats('render', render_time={})
 

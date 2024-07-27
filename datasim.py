@@ -17,10 +17,10 @@ from pathlib import Path
 
 
 # My modules
-import pygarment.customconfig as customconfig
+import pygarment.data_config as data_config
 import pygarment.meshgen.datasim_utils as sim
 
-reload(customconfig)
+reload(data_config)
 
 
 def get_command_args():
@@ -57,7 +57,7 @@ def gather_renders(out_data_path: Path, verbose=False):
 if __name__ == "__main__":
 
     command_args = get_command_args()
-    system_config = customconfig.Properties('./system.json') 
+    system_config = data_config.Properties('./system.json') 
 
     # ------ Dataset ------
     dataset = command_args.data
@@ -75,7 +75,7 @@ if __name__ == "__main__":
         shutil.copy(str(init_dataset_file), str(dataset_file_body))
     dataset_file = dataset_file_body
 
-    props = customconfig.Properties(dataset_file_body)
+    props = data_config.Properties(dataset_file_body)
     if 'frozen' in props and props['frozen']: #Where is this set?
         # avoid accidential re-runs of data
         print('Warning: dataset is frozen, processing is skipped')

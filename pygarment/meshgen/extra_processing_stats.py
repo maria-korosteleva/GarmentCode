@@ -1,5 +1,5 @@
 from pathlib import Path
-from customconfig import Properties
+from pygarment.data_config import Properties
 
 
 

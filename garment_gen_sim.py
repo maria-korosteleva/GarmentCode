@@ -2,7 +2,7 @@ import os
 from pygarment.meshgen.boxmeshgen import BoxMesh
 from pygarment.meshgen.simulation import run_sim
 
-import pygarment.customconfig as customconfig
+import pygarment.data_config as data_config
 from pygarment.meshgen.sim_config import PathCofig
 
 # TODO command line args
@@ -94,7 +94,7 @@ if __name__ == "__main__":
         }
     }
 
-    props = customconfig.Properties() 
+    props = data_config.Properties() 
     props.set_section_config('sim', **sim_props)
     props.set_section_stats('sim', fails={}, sim_time={}, spf={}, fin_frame={}, body_collisions={}, self_collisions={})
     props.set_section_config('render', **render_props)
