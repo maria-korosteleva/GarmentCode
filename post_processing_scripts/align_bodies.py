@@ -48,7 +48,6 @@ if __name__ == "__main__":
     for file in body_objs_path.iterdir():
         process_body(file, out_path / file.name)
 
-        # DEBUG
         print(file.name)
 
     

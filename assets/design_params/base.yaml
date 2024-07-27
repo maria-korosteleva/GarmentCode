@@ -4,7 +4,6 @@
 # May specify sampling range per parameter for automatic 
 # design sampling
 # Final designs might not use all the parameters specified
-# TODO Rename Ruffle to Gather
 design: 
   meta: 
     upper: 
@@ -473,11 +472,11 @@ design:
       type: select
     insert_w: 
       v: 30
-      range: [10, 50]  # TODO ranges don't work that well..
+      range: [10, 50]  
       type: int
     insert_depth:   # Cannot be longer then length
       v: 40
-      range: [10, 50]  # TODO DEpends on the skirt length though
+      range: [10, 50] 
       type: int
     num_inserts:  # total
       v: 8     # NOTE this should be divisible by 2 (front/back panels of base)
@@ -485,7 +484,7 @@ design:
       type: select
     cuts_distance:
       v: 5
-      range: [0, 10]  # TODO this param needs to depend on the num_inserts and skirt width
+      range: [0, 10] 
       type: int
 
   pencil-skirt: 
@@ -505,7 +504,7 @@ design:
       v: 0
       range: [-30, 30]
       type: int
-    front_slit: # TODO Not to be used with low_angle!
+    front_slit: 
       v: 0
       range: [0, 0.9]   # 1 = length
       type: float
@@ -586,7 +585,7 @@ design:
         range: [CuffBand, CuffSkirt, CuffBandSkirt]
         type: select_null
       top_ruffle: 
-        v: 1.    # TODO Depend on body measurements?
+        v: 1.   
         range: [1, 2]
         type: float
       cuff_len: 

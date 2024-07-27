@@ -92,8 +92,6 @@ class AsymHalfCirclePanel(pyg.Panel):
         dist_w = 2 * top_rad 
         dist_out = 2 * (top_rad + length_s)
 
-        # DRAFT vert_len = length * np.cos(halfarc)
-
         # top
         self.edges.append(pyg.CircleEdgeFactory.from_points_radius(
             [-dist_w/2, 0], [dist_w/2, 0], 

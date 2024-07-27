@@ -231,7 +231,7 @@ class SimpleLapel(pyg.Component):
         
         self.front = SimpleLapelPanel(
             f'{tag}_collar_front', length_f, depth).translate_by(
-            [-depth * 2, height_p, 35])  # FIXME This should be related with the bodice panels' placement
+            [-depth * 2, height_p, 35])  # TODOLOW This should be related with the bodice panels' placement
 
         if standing:
             self.back = StraightBandPanel(

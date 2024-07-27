@@ -31,8 +31,6 @@ from pygarment.meshgen.sim_config import SimConfig, PathCofig
 
 wp.init()
 
-# TODO Move to a new mesh_query interface in custom kernels in warp
-
 class SimulationError(BaseException):
     """To be rised when panel stitching cannot be executed correctly"""
     pass

@@ -358,7 +358,7 @@ class BodiceHalf(pyg.Component):
         b_in_depth = design['collar']['b_strapless_depth']['v']
 
         # Shoulder adjustment for the back
-        # TODO Shoulder adj evaluation should be a function
+        # TODOLOW Shoulder adj evaluation should be a function
         shoulder_angle = np.deg2rad(body['_shoulder_incl'])
         sleeve_balance = body['_base_sleeve_balance'] / 2
         back_w = self.btorso.get_width(0)

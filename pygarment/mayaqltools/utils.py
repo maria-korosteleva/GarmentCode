@@ -123,7 +123,7 @@ def test_ray_intersect(mesh, raySource, rayVector, accelerator=None, hit_tol=Non
     hitFaces = OpenMaya.MIntArray()
     hit = mesh.allIntersections(
         raySource, rayVector, None, None, False, OpenMaya.MSpace.kWorld, maxParam, testBothDirections, accelerator, sortHits,
-        hitPoints, hitRayParams, hitFaces, None, None, None, 1e-6)   # TODO anyIntersection
+        hitPoints, hitRayParams, hitFaces, None, None, None, 1e-6)  
     
     if hit and hit_tol is not None:
         hit = any([dist > hit_tol for dist in hitRayParams])

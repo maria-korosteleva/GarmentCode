@@ -79,7 +79,7 @@ class ThinSkirtPanel(pyg.Panel):
                     self.edges[-1].end,
                     self.edges[0].start,
                     [0.5, b_curvature], 
-                    relative=True   # TODO Relative coordinate system!
+                    relative=True  
                 )
             )
 
@@ -120,7 +120,6 @@ class FittedSkirtPanel(pyg.Panel):
         low_width = body['hips'] * (flare - 1) / 4 + hips  # Distribute the difference equally 
                                                                            # between front and back
         # adjust for a rise
-        # TODO Make evaluations on a higher level?
         adj_hips_depth = hips_depth * hipline_ext
         dart_depth = hips_depth * dart_frac
         dart_depth = max(dart_depth - (hips_depth - adj_hips_depth), 0)
