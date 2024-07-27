@@ -543,7 +543,8 @@ class BasicPattern(object):
             return False
         return True
 
-
+# NOTE: Deprecated. Preserved for backward compatibility 
+# with the first dataset of 3D garments and sewing patterns
 class ParametrizedPattern(BasicPattern):
     """
         Extention to BasicPattern that can work with parametrized patterns
@@ -837,7 +838,7 @@ class ParametrizedPattern(BasicPattern):
                 target_len = []
                 for panel_influence in constraint['influence']:
                     for edge in panel_influence['edge_list']:
-                        # TODO constraints along a custom vector are not well tested
+                        # NOTE: constraints along a custom vector are not well tested
                         _, _, _, length = self._meta_edge(panel_influence['panel'], edge)
                         edge['length'] = length
                         target_len.append(length)

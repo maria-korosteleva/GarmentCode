@@ -120,7 +120,8 @@ class VisPattern(core.ParametrizedPattern):
             start = vertices[edge['endpoints'][0]]
             end = vertices[edge['endpoints'][1]]
             if ('curvature' in edge):
-                if isinstance(edge['curvature'], list) or edge['curvature']['type'] == 'quadratic':  # FIXME placeholder for old curves
+                # NOTE: supports old curves
+                if isinstance(edge['curvature'], list) or edge['curvature']['type'] == 'quadratic':  
                     control_scale = self._flip_y(edge['curvature'] if isinstance(edge['curvature'], list) else edge['curvature']['params'][0])
                     control_point = self.control_to_abs_coord(
                         start, end, control_scale)
@@ -138,7 +139,6 @@ class VisPattern(core.ParametrizedPattern):
                         end=list_to_c(end)
                     ))
 
-                    # TODO Support full circle separately (?)
                 elif edge['curvature']['type'] == 'cubic':
                     cps = []
                     for p in edge['curvature']['params']:
@@ -173,9 +173,6 @@ class VisPattern(core.ParametrizedPattern):
             origin=list_to_c(vertices[0])
         )
         path = path.translated(list_to_c(translation))  # NOTE: rot/transl order is important!
-
-        # TODO Collisions of non-2D panels when drawn together? 
-        # Just overlap correctly, I guess
 
         return path, attributes, panel['translation'][-1] >= 0
 
@@ -323,6 +320,8 @@ class VisPattern(core.ParametrizedPattern):
     def _save_as_image_3D(self, png_filename):
         """Save the patterns with 3D positioning using matplotlib visualization"""
 
+        # NOTE: this routine is mostly needed for debugging
+
         fig = plt.figure(figsize=(30 / 2.54, 30 / 2.54))
         ax = fig.add_subplot(projection='3d')
 
@@ -347,8 +346,6 @@ class VisPattern(core.ParametrizedPattern):
         ax.view_init(elev=115, azim=-59, roll=30)
         ax.set_aspect('equal')
         fig.savefig(png_filename, dpi=300, transparent=False)
-        # DEBUG 
-        # plt.show()
 
         plt.close(fig)  # Cleanup
 

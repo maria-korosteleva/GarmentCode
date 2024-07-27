@@ -124,7 +124,6 @@ class State(object):
                 config=self.config['sim']['config']
             )
             self.scene.reset_garment_color()   # in case there was a segmentation display
-                                               # TODO save segmentations with the original renders?
         else:
             self.garment.load(config=self.config['sim']['config'])
 
@@ -234,8 +233,8 @@ def template_field_callback(view_field, state, *args):
 
     # create new grament
     if state.garment is not None:
-        state.garment.clean(delete=True)  # sometimes cleaning by garbage collector (gc) is late => call for clearning manually
-        # TODO check what objects cause the late cleaning by checking references in gc
+        # Cleanup
+        state.garment.clean(delete=True)  
 
     state.garment = mymaya.MayaGarmentWithUI(template_file, True) 
     state.reload_garment()
