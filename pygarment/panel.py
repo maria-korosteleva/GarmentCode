@@ -36,33 +36,6 @@ class Panel(BaseComponent):
         self.edges = EdgeSequence()
 
     # Info
-    # DRAFT 
-    def is_right_inside_edge(self, edge: Edge):
-        """ Check if the inside of the panel is on the right side
-            of an edge
-        """
-        # FIXME This one is not working reliably =(
-        norm = self.norm()
-
-        test_edge = edge.linearize()
-        if isinstance(test_edge, EdgeSequence): 
-            # NOTE: side is the same for all edges in linearized sequence
-            # so it's enough to chech just one
-            test_edge = test_edge[0]
-
-        test_edge_3d = [self.point_to_3D(test_edge.start),
-                        self.point_to_3D(test_edge.end)]
-        test_vec_3d = test_edge_3d[1] - test_edge_3d[0]
-
-        center_of_mass = self.point_to_3D(self._center_2D())
-
-        # We can determine the side based on relationship between the norm and 
-        # the edge knowing that the norm is defined by counterclockwise
-        # direction of edges
-        cross = np.cross(test_vec_3d, center_of_mass - test_edge_3d[0])
-
-        return np.dot(cross, norm) < 0
-
     def pivot_3D(self):
         """Pivot point of a panel in 3D"""
         return self.point_to_3D([0, 0])
@@ -113,7 +86,7 @@ class Panel(BaseComponent):
         return False
 
     # ANCHOR - Operations -- update object in-place 
-    def set_panel_label(self, label: str, overwrite=True):  # TODOLOW add to the base component? 
+    def set_panel_label(self, label: str, overwrite=True): 
         """If overwrite is not enabled, only updates the label if it's empty."""
         if not self.label or overwrite:
             self.label = label
@@ -297,7 +270,8 @@ class Panel(BaseComponent):
 
          NOTE: panel EdgeSequence is assumed to be a single loop of edges
         """
-        # FIXME Some panels have weird resulting alignemnt when this pivot setup is removed -- there is a bug somewhere
+        # FIXME Some panels have weird resulting alignemnt when th
+        # is pivot setup is removed -- there is a bug somewhere
 
         # always start from zero for consistency between panels
         self.set_pivot(self.edges[0].start, replicate_placement=True)

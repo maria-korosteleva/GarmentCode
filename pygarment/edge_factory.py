@@ -189,11 +189,9 @@ class EdgeSeqFactory:
 
     @staticmethod
     def from_verts(*verts, loop=False):
-        """Generate edge sequence from given vertices. If loop==True,
+        """Generate sequence of straight edges from given vertices. If loop==True,
          the method also closes the edge sequence as a loop
         """
-        # TODO Curvatures -- on the go
-
         seq = EdgeSequence(Edge(verts[0], verts[1]))
         for i in range(2, len(verts)):
             seq.append(Edge(seq[-1].end, verts[i]))
@@ -201,7 +199,7 @@ class EdgeSeqFactory:
         if loop:
             seq.append(Edge(seq[-1].end, seq[0].start))
         
-        seq.isChained()  # TODO: ami - why do we check this here and not use it ?
+        seq.isChained()  # print warning if smth is wrong
         return seq
 
     @staticmethod
@@ -212,7 +210,6 @@ class EdgeSeqFactory:
             * frac -- list of legth fractions. Every entry is in (0, 1], 
                 all entries sums up to 1
         """
-        # TODOLOW Deprecated?
         frac = [abs(f) for f in frac]
         if not close_enough(fsum := sum(frac), 1, 1e-4):
             raise RuntimeError(f'EdgeSequence::ERROR::fraction is incorrect. The sum {fsum} is not 1')
@@ -506,10 +503,8 @@ def _fit_tangents(cp, target_tangent_start, target_tangent_end, reg_strength=0.0
         target1 = target_tangent_end[0] + 1j*target_tangent_end[1]
         fin += (abs(curve.unit_tangent(1) - target1))**2
 
-    # NOTE: tried regularizing based on Y value in relative coordinates (for speed), 
-    # But it doesn't produce good results
-    # DRAFT fin += _max_curvature(curve_inverse, points_estimates=point_estimates)**2
-
+    # NOTE: Tried _max_curvature() and Y value regularizaton, 
+    # but it seems like they are not needed
     return fin
 
 

@@ -138,8 +138,6 @@ class Component(BaseComponent):
         """Unique set of subcomponents defined in the `self.subs` list or as
         attributes of the object"""
 
-        # TODO: ami - is this the right way to do it? what if we start using
-        #  other attributes?
         all_attrs = [getattr(self, name)
                      for name in dir(self)
                      if name[:2] != '__' and name[-2:] != '__']

@@ -16,7 +16,7 @@ datapaths = [
 
 for datapath in datapaths:
     # Check packing
-    tar_path = datapath / 'output.tar.gz'
+    tar_path = datapath / 'data.tar.gz'
     if tar_path.exists():
         shutil.unpack_archive(tar_path, datapath)
         # Finally -- clean up

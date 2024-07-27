@@ -61,7 +61,7 @@ class Interface:
             NOTE: reflects current state of the edge object. Call this function
                 again if egdes change (e.g. their direction)
             # FIXME projection only works w.r.t. the line connecting the first and 
-            # the last vertex of the edge sequence
+            # the last vertex of the edge sequence -> use with cation 
         """
         # Per edge set ruffle application
         projected = self.edges.copy() if not on_oriented else self.oriented_edges()
@@ -208,7 +208,7 @@ class Interface:
             Reversal is useful for reordering interface edges for correct
                 matching in the multi-stitches
         """
-        self.edges.edges.reverse()   # TODOLOW Condition on edge sequence reverse 
+        self.edges.edges.reverse()
         self.panel.reverse()
         self.edges_flipping.reverse()
         if with_edge_dir_reverse:
@@ -235,7 +235,7 @@ class Interface:
         
         return self
 
-
+    # TODO Edge Sequence Function?
     def reorder(self, curr_edge_ids, projected_edge_ids):
         """Change the order of edges from curr_edge_ids to projected_edge_ids
             in the interface
@@ -244,7 +244,6 @@ class Interface:
             edges e.g. if moving 0 -> 1, specify the new location for 1 as well
         """
         
-        # TODOLOW Edge Sequence Function wrapper?
         for i, j in zip(curr_edge_ids, projected_edge_ids):
             for r in self.ruffle:
                 if (i >= r['sec'][0] and i < r['sec'][1] 

@@ -53,7 +53,6 @@ class StitchingRule:
         
             Serializable format does not natively support t-stitches, 
             so the longer edges needs to be broken down into matching segments
-            # SIM specific
         """
 
         # Eval the fractions corresponding to every segment in the interfaces

@@ -285,11 +285,9 @@ class Edge:
         """Returns the dict-based representation of edges, 
             compatible with core -> BasePattern JSON (dict) 
         """
-        # TODO Propagate to subclasses
         properties = {"endpoints": [0, 1]}
         if self.label:
             properties['label'] = self.label
-
 
         return [self.start, self.end], properties
 
@@ -368,7 +366,7 @@ class CircleEdge(Edge):
         # So parent implementation is ok
         # TODOLOW Implementation is very similar to CurveEdge param-based subdivision
 
-        from pygarment.edge_factory import EdgeFactory  # TODO: ami - better solution?
+        from pygarment.edge_factory import EdgeFactory  # TODOLOW: ami - better solution?
         frac = [abs(f) for f in fractions]
         if not close_enough(fsum := sum(frac), 1, 1e-4):
             raise RuntimeError(f'Edge Subdivision::ERROR::fraction is incorrect. The sum {fsum} is not 1')
@@ -478,12 +476,9 @@ class CircleEdge(Edge):
         """Returns the dict-based representation of edges, 
             compatible with core -> BasePattern JSON (dict) 
         """
-
-        # TODOLOW Try the 3-point representation in JSON? Might be more compact + more continious
-        # How much human readible this one should be?
-        # Even one number (Y axis) could be enough 
         ends, props = super().assembly()
 
+        # NOTE: arc representation is the same as in SVG
         rad, large_arc, right = self.as_radius_flag()
         props['curvature'] = {
                     "type": 'circle',
@@ -518,8 +513,6 @@ class CurveEdge(Edge):
         if end is None:
             end = [0, 0]
         super().__init__(start, end, label=label)
-
-        # FIXME Self-intersections tests
 
         self.control_points = control_points
 

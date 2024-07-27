@@ -14,7 +14,7 @@ import numpy as np
 # for system info
 import platform
 import psutil
-# TODO -- make optional?
+# TODO -- make optional? Only is installed?
 import warp  # To get device info : Note: only because we are using warp already
 
 
@@ -28,18 +28,6 @@ def float_representer(dumper, data):
     elif data == -dumper.inf_value:
         value = '-.inf'
     else:
-        # DRAFT -- default representer: https://github.com/yaml/pyyaml/blob/48838a3c768e3d1bcab44197d800145cfd0719d6/lib/yaml/representer.py#L171 
-        # value = repr(data).lower()
-        # # Note that in some cases `repr(data)` represents a float number
-        # # without the decimal parts.  For instance:
-        # #   >>> repr(1e17)
-        # #   '1e17'
-        # # Unfortunately, this is not a valid float representation according
-        # # to the definition of the `!!float` tag.  We fix this by adding
-        # # '.0' before the 'e' symbol.
-        # if '.' not in value and 'e' in value:
-        #     value = value.replace('e', '.0e', 1)
-
         # Custom representation: 
         # https://stackoverflow.com/a/33944926
         value = f'{data:.3g}'

@@ -171,7 +171,7 @@ def cut_into_edge(target_shape, base_edge:Edge, offset=0, right=True,
         * Edges that lie on the original base edge 
     """
 
-    # TODOLOW Not only for Y-aligned shapes
+    # TODO Not only for Y-aligned shapes
     # TODOLOW Add a parameter: Align target_shape by center or from the start of the offset
         # NOTE: the optimization routine might be different for the two options
 

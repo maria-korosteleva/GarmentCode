@@ -141,7 +141,6 @@ def curve_extreme_points(curve, on_x=False, on_y=True):
     """Return extreme points of the current edge
         NOTE: this does NOT include the border vertices of an edge
     """
-    # TODOLOW it repeats code from Edge() class in a way
     # Variation of https://github.com/mathandy/svgpathtools/blob/5c73056420386753890712170da602493aad1860/svgpathtools/bezier.py#L197
     poly = svgpath.bezier2polynomial(curve, return_poly1d=True)
 

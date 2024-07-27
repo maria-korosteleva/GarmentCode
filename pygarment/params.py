@@ -109,8 +109,6 @@ class DesignSampler:
         range = nested_get(random_params, path + ['range'])
         p_type = nested_get(random_params, path + ['type'])
         
-        # TODO Add various options for sampling distribution
-
         # Check Defaults
         try: 
             def_prob = nested_get(random_params, path + ['default_prob'])
