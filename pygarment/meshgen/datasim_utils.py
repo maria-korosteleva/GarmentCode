@@ -65,7 +65,6 @@ def batch_sim(data_path, output_path, dataset_props,
         _serialize_props_with_sim_stats(dataset_props,
                                         data_props_file)  # save info of processed files before potential crash
 
-        # TODO Update the tag instead of creating new object for every garment?
         try:
             paths = PathCofig(
                 in_element_path=data_path / pattern_name,
@@ -171,18 +170,18 @@ def init_sim_props(props, batch_run=False, force_restart=False):
         )
 
     if 'material' not in props['sim']['config']:
-        props['sim']['config']['material'] = {  # fluffy
-            'garment_tri_ka': 10000.0,  # 100.0,
+        props['sim']['config']['material'] = {  
+            'garment_tri_ka': 10000.0,  
 
-            'garment_edge_ke': 1.0,  # 100.0,  # 100.,
-            'garment_tri_ke': 10000.0, # 100.0,
-            'spring_ke': 50000.0,  #10000.,   # DRAFT 10000.,
+            'garment_edge_ke': 1.0,  
+            'garment_tri_ke': 10000.0,
+            'spring_ke': 50000.0,  
 
-            'garment_edge_kd': 10.0,  # 0.0,
-            'garment_tri_kd': 1.0,  # 10.0,
-            'spring_kd': 10.0,  # 100.0,
+            'garment_edge_kd': 10.0,
+            'garment_tri_kd': 1.0,  
+            'spring_kd': 10.0, 
 
-            'fabric_density':  1.0,  #  1.0,
+            'fabric_density':  1.0,  
             'fabric_thickness': 0.1,
             'fabric_friction': 0.5
 
@@ -190,8 +189,6 @@ def init_sim_props(props, batch_run=False, force_restart=False):
 
     if 'options' not in props['sim']['config']:
         props['sim']['config']['options'] = {
-            # FIXME: Produces cuda errors when activated together with "enable_cloth_reference_drag"
-            # Reason is unknown
             'enable_particle_particle_collisions': False,
             'enable_triangle_particle_collisions': True,  # TODO MK: I don't see these being used??
             'enable_edge_edge_collisions': True,
@@ -208,10 +205,10 @@ def init_sim_props(props, batch_run=False, force_restart=False):
             'global_max_velocity': 25.0,
 
             'enable_global_collision_filter': True,
-            'enable_cloth_reference_drag': False,     # FIXME Another potential CUDA errors
+            'enable_cloth_reference_drag': False,    
             'cloth_reference_margin': 0.1,
 
-            'enable_body_smoothing': False,  # FIXME True Re-writes mesh references causing CUDA errors when referencing meshes other than the body
+            'enable_body_smoothing': False,  # FIXME Re-writes mesh references causing CUDA errors when referencing meshes other than the body
             'smoothing_total_smoothing_factor': 1.0,
             'smoothing_recover_start_frame': 150,
             'smoothing_num_steps': 100,

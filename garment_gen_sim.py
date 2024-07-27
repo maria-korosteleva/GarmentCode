@@ -1,6 +1,6 @@
 import os
 from pygarment.meshgen.boxmeshgen import BoxMesh
-from pygarment.meshgen.simulation import run_sim
+# DRAFT from pygarment.meshgen.simulation import run_sim
 
 import pygarment.customconfig as customconfig
 from pygarment.meshgen.sim_config import PathCofig
@@ -102,7 +102,7 @@ if __name__ == "__main__":
     props.set_section_config('render', **render_props)
     props.set_section_stats('render', render_time={})
     res = sim_props['resolution_scale']
-    garment_name = "shirt_mean"    # "dbg_wb" # "dbg_fit_top_pants_smpl" # "dbg_fit_top_pants"
+    garment_name = "dress_pencil_top_position"  # "shirt_mean"    # "dbg_wb" # "dbg_fit_top_pants_smpl" # "dbg_fit_top_pants"
     
     # "to_waist_levels_circle2" 
     
@@ -131,15 +131,16 @@ if __name__ == "__main__":
 
     props.serialize(paths.element_sim_props)
 
-    run_sim(
-        garment_box_mesh.name, 
-        props, 
-        paths,
-        flat=False,  # TODO Debug flat sim paths integration + warp recent updates 
-        save_v_norms=False,
-        store_usd=False,  # NOTE: False for fast simulation!, 
-        optimize_storage=sim_props['optimize_storage'],
-        verbose=False
-    )
+    # FIXME the progress bar is not printed correctly
+    # run_sim(
+    #     garment_box_mesh.name, 
+    #     props, 
+    #     paths,
+    #     flat=False,  # TODO Debug flat sim paths integration + warp recent updates 
+    #     save_v_norms=False,
+    #     store_usd=False,  # NOTE: False for fast simulation!, 
+    #     optimize_storage=sim_props['optimize_storage'],
+    #     verbose=False
+    # )
     
-    props.serialize(paths.element_sim_props)
+    # props.serialize(paths.element_sim_props)

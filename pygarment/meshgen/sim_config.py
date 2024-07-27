@@ -1,4 +1,4 @@
-from pathlib import Path   # TODO Use Path everywhere!
+from pathlib import Path 
 import yaml
 from datetime import datetime
 
@@ -101,21 +101,6 @@ class PathCofig:
 class SimConfig:
     def __init__(self, sim_props):
         # ---- Paths ----
-        #TODO: delete later
-        #output_path = r"C:\Users\mariako\Documents\Code\garmentsimwarp\output\intersection-1.0\simulation"
-        #cloth_specs_path = "./output/intersection-1.0/intersection/intersection"
-        #cloth_name = 'intersection'
-        # output_path = r'.\output\grid-1.0\simulation'
-        # cloth_specs_path = r".\output\grid-1.0\grid\grid"
-        # cloth_name = 'grid'
-        # output_path = r'D:\Work\GarmentSimWarp\garmentsimwarp-code\output\shirt-int-1.0\simulation'
-        # cloth_specs_path = r"D:\Work\GarmentSimWarp\garmentsimwarp-code\output\shirt-int-1.0\shirt-int\shirt-int"
-        # cloth_name = 'shirt-int'
-        # output_path = r'D:\Work\GarmentSimWarp\garmentsimwarp-code\output\2triangles-1.0\simulation'
-        # cloth_specs_path = r"D:\Work\GarmentSimWarp\garmentsimwarp-code\output\2triangles-1.0\2triangles\2triangles"
-        # cloth_name = '2triangles'
-        #
-        
         # Sim props sections
         self.props = sim_props
         sim_props_option = sim_props['options']
@@ -243,9 +228,9 @@ class SimConfig:
 
         # Thickness
         self.garment_density = self.get_sim_props_value(
-            sim_props_material,'fabric_density', 1.0)  # default = 1.0  # TODO Material
+            sim_props_material,'fabric_density', 1.0)  
         self.garment_radius = self.get_sim_props_value(
-            sim_props_material,'fabric_thickness', 0.1)  #default = 0.1  # TODO Material 
+            sim_props_material,'fabric_thickness', 0.1)  
 
         # Spring properties (Distance constraints)
         self.spring_ke = self.get_sim_props_value(
@@ -254,10 +239,10 @@ class SimConfig:
             sim_props_material,'spring_kd', 10.0)
 
         # Soft contact properties (contact between cloth and body)
-        self.soft_contact_margin = 0.2 #default = 0.2
-        self.soft_contact_ke = 1000.0 #default = 1000.0
-        self.soft_contact_kd = 10.0 #default = 10.0
-        self.soft_contact_kf = 1000.0 #default = 1000.0
+        self.soft_contact_margin = 0.2 
+        self.soft_contact_ke = 1000.0 
+        self.soft_contact_kd = 10.0 
+        self.soft_contact_kf = 1000.0 
         self.soft_contact_mu = self.get_sim_props_value(
             sim_props_material, 'fabric_friction', 0.5
         )
@@ -266,13 +251,14 @@ class SimConfig:
         self.body_thickness = self.get_sim_props_value(sim_props_option,'body_collision_thickness', 0.0)
         self.body_friction = self.get_sim_props_value(sim_props_option,'body_friction', 0.5)
 
-        # particle properties  # TODO Do we use them?
-        self.particle_ke = 1.0e3 #default = 1000.0
-        self.particle_kd = 1.0e2 #default = 100.0
-        self.particle_kf = 100.0  #default = 100.0
-        self.particle_mu = 0.5 #default = 0.5
-        self.particle_cohesion = 0.0 #default = 0.0
-        self.particle_adhesion = 0.0 #default = 0.0
+        # particle properties  
+        # Some default values -- not used in cloth sim
+        self.particle_ke = 1.0e3 
+        self.particle_kd = 1.0e2 
+        self.particle_kf = 100.0  
+        self.particle_mu = 0.5 
+        self.particle_cohesion = 0.0 
+        self.particle_adhesion = 0.0 
 
         # After the initialization
         self.update_min_steps()

@@ -96,7 +96,7 @@ class ClothFlat(Cloth):
         return (-mean_y_value, most_negative_z_index, 0.0)
 
     # TODO Use routine from the parent object once it's disentangled
-    def save_frame(self,final): #stores only v and f (okay for cache)
+    def save_frame(self, final): #stores only v and f (okay for cache)
         v_Cloth_end = self.current_verts
         f_Cloth = self.f_cloth
 

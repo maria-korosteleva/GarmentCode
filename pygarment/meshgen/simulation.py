@@ -33,7 +33,6 @@ from pygarment.meshgen.sim_config import SimConfig, PathCofig
 wp.init()
 
 # TODO Move to a new mesh_query interface in custom kernels
-# TODO GUI Integration
 
 class SimulationError(BaseException):
     """To be rised when panel stitching cannot be executed correctly"""
@@ -95,7 +94,7 @@ def sim_frame_sequence(garment, config, store_usd=False, verbose=False):
         else:
             update_progress(frame, config.max_sim_steps)
 
-        garment.frame = frame  # TODO Inside garment class
+        garment.frame = frame 
 
         #Run frame and raise FrameTimeOutError if frame takes too long to simulate
 
@@ -186,9 +185,7 @@ def run_flat_sim(config, props, paths: PathCofig, garment, store_usd=False, verb
         pass
 
     # Postprocessing 
-    # TODO Sim speed stats 
-
-    cloth_flat.save_frame(final=True)
+    cloth_flat.save_frame()
 
     # Render images
     s_time = time.time()
@@ -206,13 +203,6 @@ def run_sim(
     !! Important !! 
         'store_usd' parameter slows down the simulation to CPU rates because of required CPU-GPU copies and file writes. Use only for debugging
     """
-    
-    # DEBUG Configurations
-    # wp.config.mode = "debug"
-    # wp.config.verify_cuda = True
-    # wp.config.print_launches = True
-    # wp.set_device('cpu')
-    
     sim_props = props['sim']
     render_props = props['render']
 
@@ -284,9 +274,7 @@ def run_sim(
     sim_props['stats']['spf'][cloth_name] = sim_time / frame if frame else sim_time
     sim_props['stats']['fin_frame'][cloth_name] = frame
 
-    garment.save_frame(final=True, save_v_norms=save_v_norms) #saving after stats
-
-    # TODO GUI integration
+    garment.save_frame(save_v_norms=save_v_norms) #saving after stats
 
     # Render images
     s_time = time.time()
