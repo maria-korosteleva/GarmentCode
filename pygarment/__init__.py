@@ -5,9 +5,6 @@
 
 """
 
-# TODO allow direct access to mayaqltools? 
-# TODO Access to pattern lib?
-
 # Building blocks
 from pygarment.component import Component
 from pygarment.panel import Panel
