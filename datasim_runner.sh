@@ -1,32 +1,12 @@
 #!/bin/bash
-#SBATCH --gpus=rtx_4090:1
-#SBATCH --mem-per-cpu=8G
-#SBATCH --time=1-5
-#SBATCH --job-name=data_200_240116-14-25-39
-#SBATCH --output=/cluster/work/sorkine/leonhard/mkorosteleva/output/data_200_240116-14-25-39/data_200_240116-14-25-39.out #TODO:depends on output path!
-
-dataset_name=test_texture_5_240710-20-49-07
-config=default_sim_props.yaml 
-sim_default_bodies=false
-
-# This script is needed to autorestart execution of simulating datapoints for a dataset in case of crashes
-# Use something like git bash to run this script on Win
-# Note you might want to suppress Maya crash report requests to stop getting annoyin windows
-#   * https://knowledge.autodesk.com/support/maya/troubleshooting/caas/sfdcarticles/sfdcarticles/How-to-Disable-or-Enable-Crash-Error-Reports-s.html
-#   * https://forums.autodesk.com/t5/installation-licensing/disable-error-reporting/td-p/4071164
-
-# ensure killing is possible
-# https://www.linuxjournal.com/article/10815
-
+# This script is needed to autorestart execution of simulating datapoints for a dataset 
+# in case of crashes and/or using mini-batches
 # sh ./datasim_runner.sh 3>&1 2>&1 > C:\Users\out.txt   (path to output file)
 
-# Use Ctrl-C to stop this script after currently running mini-batch finishes
-sigint()
-{
-   echo "Ctrl-C signal INT received, script ending after returning from datasim execution"
-   exit 1
-}
-trap 'sigint'  INT
+dataset_name=my_dataset
+config=default_sim_props.yaml 
+sim_default_bodies=false
+batch_size=100
 
 # -- Main calls --
 ret_code=1
@@ -35,9 +15,9 @@ STARTTIME=$(date +%s)
 while [ $ret_code != 0 ]  # failed for any reason
 do
     if [ "$sim_default_bodies" = "true" ]; then
-        python ./datasim.py --data $dataset_name --default_body --config $config
+        python ./datasim.py --data $dataset_name --default_body --config $config -b $batch_size
     else
-        python ./datasim.py --data $dataset_name --config $config
+        python ./datasim.py --data $dataset_name --config $config -b $batch_size
     fi
 
     ret_code=$?

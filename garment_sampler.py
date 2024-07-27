@@ -80,7 +80,6 @@ def gather_body_options(body_path: Path):
         b_name = file.stem.split('_')[0]
         bodies[b_name] = {}
 
-        # TODO With or withough subpath? -- check integration with sim loading
         # Get obj options
         bodies[b_name]['objs'] = dict(
             straight=f'meshes/{b_name}_straight.obj', 

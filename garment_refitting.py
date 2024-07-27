@@ -1,5 +1,5 @@
-"""A modified version of the data generation file from here: 
-https://github.com/maria-korosteleva/Garment-Pattern-Generator/blob/master/data_generation/datagenerator.py
+"""
+    Fitting of one design on a set of vairous body shapes
 """
 
 from datetime import datetime
@@ -153,7 +153,6 @@ def generate(path, properties, sys_paths, verbose=False):
 
         try:
             # On random body shape
-            # TODO Straight vs apart -- needed??
             rand_body = body_sample(
                 i + properties['body_sample_start_id'],
                 body_options,
@@ -226,6 +225,6 @@ if __name__ == '__main__':
     gather_visuals(body_sample_path)
 
     # At the end -- it takes some time to gather the info
-    # DRAFT props.add_sys_info()  # update this info regardless of the basic config    
+    props.add_sys_info()  
 
     print('Data generation completed!')

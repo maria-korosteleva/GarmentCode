@@ -40,10 +40,6 @@ if __name__ == "__main__":
     out_path = body_folder_path / 'meshes_aligned'
     out_path.mkdir(parents=True, exist_ok=True)
 
-    # body_path = r"C:\Users\mariako\Documents\Code\garmentsimwarp\assets\default_bodies\mean_all_apart.obj"
-    # out_body_path = r"C:\Users\mariako\Documents\Code\garmentsimwarp\assets\default_bodies\mean_all_apart_y_aligned.obj"
-    # process_body(body_path, out_body_path)
-
     # loop over all meshes
     for file in body_objs_path.iterdir():
         process_body(file, out_path / file.name)
