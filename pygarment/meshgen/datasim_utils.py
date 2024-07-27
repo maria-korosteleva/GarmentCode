@@ -189,7 +189,7 @@ def init_sim_props(props, batch_run=False, force_restart=False):
     if 'options' not in props['sim']['config']:
         props['sim']['config']['options'] = {
             'enable_particle_particle_collisions': False,
-            'enable_triangle_particle_collisions': True,  # TODO MK: I don't see these being used??
+            'enable_triangle_particle_collisions': True, 
             'enable_edge_edge_collisions': True,
             'enable_body_collision_filters': True,
 
@@ -207,7 +207,8 @@ def init_sim_props(props, batch_run=False, force_restart=False):
             'enable_cloth_reference_drag': False,    
             'cloth_reference_margin': 0.1,
 
-            'enable_body_smoothing': False,  # FIXME Re-writes mesh references causing CUDA errors when referencing meshes other than the body
+            # FIXME Re-writes mesh references causing occasional CUDA errors when referencing meshes other than the body
+            'enable_body_smoothing': False,  
             'smoothing_total_smoothing_factor': 1.0,
             'smoothing_recover_start_frame': 150,
             'smoothing_num_steps': 100,

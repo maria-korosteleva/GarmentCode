@@ -12,7 +12,7 @@ if __name__ == "__main__":
 
     # Basic simulation properties
     sim_props = {
-        'ground': False,   # TODO The following belong in 'options'
+        'ground': False, 
         'resolution_scale':  1.0, 
         'zero_gravity_steps': 10,
 
@@ -53,7 +53,8 @@ if __name__ == "__main__":
         'enable_cloth_reference_drag': True, 
         'cloth_reference_margin': 0.1,
 
-        'enable_body_smoothing': True, # FIXME CUDA errors when running with this script
+        # NOTE: Not used in the final setup -- occasional CUDA errors
+        'enable_body_smoothing': False,
         'smoothing_total_smoothing_factor': 1.0,
         'smoothing_recover_start_frame': 150,
         'smoothing_num_steps': 100,

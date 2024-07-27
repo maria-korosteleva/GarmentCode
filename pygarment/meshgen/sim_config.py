@@ -18,7 +18,7 @@ class PathCofig:
             * samples_name -- specify to indicate use of body sampling (reading body name from measurments file)
         """
 
-        self._system = Properties('./system.json')  # TODO More stable path?
+        self._system = Properties('./system.json')  # TODOlOW More stable path?
         self._body_name = body_name
         self._samples_folder_name = samples_name
         self._use_default_body = default_body

@@ -33,7 +33,7 @@ class Cloth:
         self.zero_gravity_steps = config.zero_gravity_steps
         self.sim_dt = (1.0 / self.sim_fps) / self.sim_substeps
         self.usd_frame_time = 0.0 
-        self.sim_use_graph = False   # DEBUG wp.get_device().is_cuda
+        self.sim_use_graph = wp.get_device().is_cuda
         self.device = wp.get_device() if wp.get_device().is_cuda else 'cpu' 
         self.frame = -1
 
@@ -158,8 +158,8 @@ class Cloth:
         )
 
         # ------------ Add a body -----------      
-        # TODO Used? 
         if self.enable_body_smoothing:
+            # Starts sim from smoothed-out body and slowly restores original details
             smoothing_total_smoothing_factor = config.smoothing_total_smoothing_factor
             smoothing_num_steps = config.smoothing_num_steps
             smoothing_recover_start_frame = config.smoothing_recover_start_frame
@@ -236,8 +236,6 @@ class Cloth:
             self._add_attachment_labels(builder, config)
 
         # ----- Global collision resolution error ---- 
-        # TODO This should be a subfunction
-        
         for part in body_parts:
             part_v, part_inds = assign.extract_submesh(body_vertices, body_indices, body_parts[part])
             builder.add_cloth_reference_shape_mesh(
@@ -247,7 +245,6 @@ class Cloth:
                 rot = body_rot,
                 scale = (1.0,1.0,1.0) #performed body scaling above
             )
-        # TODO this should either be side-effect only, or no side-effects at all
         # NOTE: has a side-effect of filling up model.particle_reference_label array 
         self.body_parts_names2index = builder.add_cloth_reference_labels(
             cloth_reference_labels, 
