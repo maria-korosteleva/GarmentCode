@@ -123,8 +123,7 @@ class VisPattern(core.ParametrizedPattern):
                 # NOTE: supports old curves
                 if isinstance(edge['curvature'], list) or edge['curvature']['type'] == 'quadratic':  
                     control_scale = self._flip_y(edge['curvature'] if isinstance(edge['curvature'], list) else edge['curvature']['params'][0])
-                    control_point = self.control_to_abs_coord(
-                        start, end, control_scale)
+                    control_point = rel_to_abs_2d(start, end, control_scale)
                     segs.append(svgpath.QuadraticBezier(*list_to_c([start, control_point, end])))
                 elif edge['curvature']['type'] == 'circle':  # Assuming circle
                     # https://svgwrite.readthedocs.io/en/latest/classes/path.html#svgwrite.path.Path.push_arc
@@ -143,8 +142,7 @@ class VisPattern(core.ParametrizedPattern):
                     cps = []
                     for p in edge['curvature']['params']:
                         control_scale = self._flip_y(p)
-                        control_point = self.control_to_abs_coord(
-                            start, end, control_scale)
+                        control_point = rel_to_abs_2d(start, end, control_scale)
                         cps.append(control_point)
 
                     segs.append(svgpath.CubicBezier(*list_to_c([start, *cps, end])))

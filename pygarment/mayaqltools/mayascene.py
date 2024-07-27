@@ -22,7 +22,7 @@ import mtoa.core
 # My modules
 import pattern.core as core
 import pattern.wrappers as wrappers
-from pattern.utils import vector_angle
+from pattern.utils import vector_angle, rel_to_abs_2d
 from mayaqltools import qualothwrapper as qw
 from mayaqltools import utils
 reload(core)
@@ -702,7 +702,7 @@ class MayaGarment(wrappers.VisPattern):
         # NOTE: Legacy curvature representation
         if 'curvature' in edge:
             if isinstance(edge['curvature'], list):  
-                abs_points = self.control_to_abs_coord(
+                abs_points = rel_to_abs_2d(
                     points[0], points[1], edge['curvature']
                 )
                 abs_points = [abs_points]
@@ -713,7 +713,7 @@ class MayaGarment(wrappers.VisPattern):
             elif edge['curvature']['type'] == 'cubic' or edge['curvature']['type'] == 'quadratic':
                 abs_points = []
                 for p in edge['curvature']['params']:
-                    abs_points.append(self.control_to_abs_coord(
+                    abs_points.append(rel_to_abs_2d(
                         points[0], points[1], p))
                 points = np.r_[
                     [points[0]], abs_points, [points[1]]

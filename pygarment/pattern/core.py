@@ -3,7 +3,6 @@
 """
 # Basic
 import copy
-from datetime import datetime
 import errno
 import json
 import numpy as np
@@ -12,6 +11,7 @@ import random
 
 # My
 from . import rotation as rotation_tools
+from . import utils
 
 standard_filenames = [
     'specification',  # e.g. used by dataset generation
@@ -40,8 +40,6 @@ panel_spec_template = {
     'vertices': [],
     'edges': []
 }
-
-# FIXME too many abs_to_rel and rel_to_abs functions
 
 class EmptyPatternError(BaseException):
     def __init__(self, *args: object) -> None:
@@ -262,7 +260,7 @@ class BasicPattern(object):
                 edges = self.pattern['panels'][panel]['edges']
                 for edge in edges:
                     if 'curvature' in edge:
-                        edge['curvature'] = self._control_to_relative_coord(
+                        edge['curvature'] = utils.abs_to_rel_2d(
                             vertices[edge['endpoints'][0]], 
                             vertices[edge['endpoints'][1]], 
                             edge['curvature']
@@ -401,45 +399,6 @@ class BasicPattern(object):
         return rotated_edge_ids, flipped
 
     # -- sub-utils --
-    @staticmethod
-    def control_to_abs_coord(start, end, control_scale):
-        """
-        Derives absolute coordinates of Bezier control point given as an offset
-        """
-        edge = end - start
-        edge_perp = np.array([-edge[1], edge[0]])
-
-        control_start = start + control_scale[0] * edge
-        control_point = control_start + control_scale[1] * edge_perp
-
-        return control_point 
-    
-    def _control_to_relative_coord(self, start, end, control_point):
-        """
-        Derives relative (local) coordinates of Bezier control point given as 
-        a absolute (world) coordinates
-        """
-        start, end, control_point = np.array(start), np.array(end), \
-            np.array(control_point)
-
-        control_scale = [None, None]
-        edge_vec = end - start
-        edge_len = np.linalg.norm(edge_vec)
-        control_vec = control_point - start
-        
-        # X
-        # project control_vec on edge_vec by dot product properties
-        control_projected_len = edge_vec.dot(control_vec) / edge_len 
-        control_scale[0] = control_projected_len / edge_len
-        # Y
-        control_projected = edge_vec * control_scale[0]
-        vert_comp = control_vec - control_projected  
-        control_scale[1] = np.linalg.norm(vert_comp) / edge_len
-        # Distinguish left&right curvature
-        control_scale[1] *= np.sign(np.cross(control_point, edge_vec))
-
-        return control_scale 
-
     def _edge_length(self, panel, edge):
         panel = self.pattern['panels'][panel]
         v_id_start, v_id_end = tuple(panel['edges'][edge]['endpoints'])
@@ -506,8 +465,8 @@ class BasicPattern(object):
             edge_ids = edge['endpoints']
             edge_coords = vertices[edge_ids]
             if 'curvature' in edge and isinstance(edge['curvature'], list):
-                # FIXME Legacy curvature representation
-                curv_abs = self.control_to_abs_coord(edge_coords[0], edge_coords[1], edge['curvature'])
+                # NOTE: Legacy curvature representation
+                curv_abs = utils.rel_to_abs_2d(edge_coords[0], edge_coords[1], edge['curvature'])
                 # view curvy edge as two segments
                 # NOTE this aproximation might lead to False positives in intersection tests
                 # FIXME Use linearization (same as in GarmentCode) for better approximation

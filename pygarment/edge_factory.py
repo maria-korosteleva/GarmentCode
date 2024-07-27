@@ -10,6 +10,7 @@ from pygarment.generic_utils import bbox_paths
 from pygarment.generic_utils import close_enough
 from pygarment.generic_utils import c_to_list
 from pygarment.generic_utils import list_to_c
+from pygarment.pattern.utils import rel_to_abs_2d, abs_to_rel_2d
 
 
 class EdgeFactory:
@@ -127,7 +128,7 @@ class CircleEdgeFactory:
             NOTE: points should not be on the same line
         """
         if relative:
-            point_on_arc = _rel_to_abs_coords(start, end, point_on_arc)
+            point_on_arc = rel_to_abs_2d(start, end, point_on_arc)
 
         nstart, nend, npoint_on_arc = np.asarray(start), np.asarray(
             end), np.asarray(point_on_arc)
@@ -157,7 +158,7 @@ class CurveEdgeFactory:
         """Create (Quadratic) curve edge between start and end that
             passes through the target point 
         """
-        rel_target = _abs_to_rel_2d(start, end, target)
+        rel_target = abs_to_rel_2d(start, end, target)
 
         if rel_target[0] > 1 or rel_target[0] < 0:
             raise NotImplementedError(
@@ -192,11 +193,11 @@ class CurveEdgeFactory:
         """
 
         if target_tan0 is not None:
-            target_tan0 = _abs_to_rel_2d_vector(start, end, target_tan0)
+            target_tan0 = abs_to_rel_2d(start, end, target_tan0, as_vector=True)
             target_tan0 /= norm(target_tan0)
         
         if target_tan1 is not None:
-            target_tan1 = _abs_to_rel_2d_vector(start, end, target_tan1)
+            target_tan1 = abs_to_rel_2d(start, end, target_tan1, as_vector=True)
             target_tan1 /= norm(target_tan1)
         
         # Initialization with a target point as control point
@@ -380,68 +381,6 @@ class EdgeSeqFactory:
 
         return left_seqs, right_seqs
 
-
-def _rel_to_abs_coords(start, end, vrel):
-    """Convert coordinates specified relative to vector v2 - v1 to world
-    coords"""
-    # TODOLOW It's in the edges?
-    start, end, vrel = np.asarray(start), np.asarray(end), np.asarray(vrel)
-    vec = end - start
-    vec_perp = np.array([-vec[1], vec[0]])
-
-    new_start = start + vrel[0] * vec
-    new_point = new_start + vrel[1] * vec_perp
-
-    return new_point
-
-def _abs_to_rel_2d(start, end, point):
-    """Convert control points coordinates from absolute to relative"""
-    # TODOLOW It's in the edge class?
-    start, end = np.asarray(start), np.asarray(end)
-    edge = end - start
-    edge_len = norm(edge)
-
-    point_vec = np.asarray(point) - start
-
-    converted = [None, None]
-    # X
-    # project control_vec on edge by dot product properties
-    projected_len = edge.dot(point_vec) / edge_len
-    converted[0] = projected_len / edge_len
-    # Y
-    control_projected = edge * converted[0]
-    vert_comp = point_vec - control_projected
-    converted[1] = norm(vert_comp) / edge_len
-
-    # Distinguish left&right curvature
-    converted[1] *= -np.sign(np.cross(point_vec, edge))
-
-    return np.asarray(converted)
-
-
-def _abs_to_rel_2d_vector(start, end, vec):
-    """Convert control points coordinates from absolute to relative"""
-    # TODOLOW It's in the edge class?
-    start, end = np.asarray(start), np.asarray(end)
-    edge = end - start
-    edge_len = norm(edge)
-
-    converted = [None, None]
-    # X
-    # project vec on edge by dot product properties
-    projected_len = edge.dot(vec) / edge_len 
-    converted[0] = projected_len / edge_len
-    # Y
-    control_projected = edge * converted[0]
-    vert_comp = vec - control_projected  
-    converted[1] = norm(vert_comp) / edge_len
-
-    # Distinguish left&right curvature
-    converted[1] *= -np.sign(np.cross(vec, edge)) 
-    
-    return np.asarray(converted)
-
-
 # --- For Curves ---
 def _fit_pass_point(cp, target_location):
     """ Fit the control point of basic [[0, 0] -> [1, 0]] Quadratic Bezier s.t. 
@@ -492,11 +431,12 @@ def _fit_tangents(cp, target_tangent_start, target_tangent_end, reg_strength=0.0
 
     fin = 0
     if target_tangent_start is not None: 
-        target0 = target_tangent_start[0] + 1j*target_tangent_start[1]
+        # NOTE: tangents seems to use opposite left/right convention
+        target0 = target_tangent_start[0] + 1j*(- target_tangent_start[1])
         fin += (abs(curve.unit_tangent(0) - target0))**2
     
     if target_tangent_end is not None: 
-        target1 = target_tangent_end[0] + 1j*target_tangent_end[1]
+        target1 = target_tangent_end[0] + 1j*(- target_tangent_end[1])
         fin += (abs(curve.unit_tangent(1) - target1))**2
 
     # NOTE: Tried _max_curvature() and Y value regularizaton, 

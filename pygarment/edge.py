@@ -8,6 +8,7 @@ from pygarment.generic_utils import R2D
 from pygarment.generic_utils import close_enough
 from pygarment.generic_utils import c_to_list
 from pygarment.generic_utils import list_to_c
+from pygarment.pattern.utils import rel_to_abs_2d, abs_to_rel_2d
 
 ILENGTH_S_TOL = 1e-10   # NOTE: tolerance value for evaluating curve parameter (t) from acr length
 
@@ -140,41 +141,6 @@ class Edge:
         seq.append(Edge(seq[-1].end, self.end))
 
         return seq
-
-    # Support for relative coordinate system
-    def _rel_to_abs_2d(self, point):
-        """Convert coordinates expressed relative to an edge into absolute """
-        start, end = np.array(self.start), np.array(self.end)
-        edge = end - start
-        edge_perp = np.array([-edge[1], edge[0]])
-
-        conv_start = self.start + point[0] * edge
-        conv_point = conv_start + point[1] * edge_perp
-        
-        return conv_point
-
-    def _abs_to_rel_2d(self, point):
-        """Convert control points coordinates from absolute to relative"""
-        start, end = np.array(self.start), np.array(self.end)
-        edge = end - start
-        edge_len = norm(edge)
-
-        point_vec = np.asarray(point) - start
-
-        converted = [None, None]
-        # X
-        # project control_vec on edge by dot product properties
-        projected_len = edge.dot(point_vec) / edge_len 
-        converted[0] = projected_len / edge_len
-        # Y
-        control_projected = edge * converted[0]
-        vert_comp = point_vec - control_projected  
-        converted[1] = norm(vert_comp) / edge_len
-
-        # Distinguish left&right curvature
-        converted[1] *= -np.sign(np.cross(point_vec, edge)) 
-        
-        return np.asarray(converted)
 
     # Actions
     def reverse(self):
@@ -337,7 +303,7 @@ class CircleEdge(Edge):
     
     def midpoint(self):
         """Center of the edge"""
-        return self._rel_to_abs_2d([0.5, self.control_y])
+        return rel_to_abs_2d(self.start, self.end, [0.5, self.control_y])
 
     # Actions
     def reverse(self):
@@ -522,7 +488,7 @@ class CurveEdge(Edge):
         # Storing control points as relative since it preserves overall curve
         # shape during edge extension/contraction
         if not relative:
-            self.control_points = [self._abs_to_rel_2d(c).tolist()
+            self.control_points = [abs_to_rel_2d(self.start, self.end, c).tolist()
                                    for c in self.control_points]
 
     def length(self):
@@ -552,7 +518,7 @@ class CurveEdge(Edge):
             splitting its curve parametrization or overall length according to 
             fractions while preserving the overall shape
         """
-        from pygarment.edge_factory import EdgeFactory  # TODO: ami - better solution?
+        from pygarment.edge_factory import EdgeFactory  # TODOLOW: ami - better solution?
         curve = self.as_curve()
 
         # Sub-curves
@@ -610,7 +576,7 @@ class CurveEdge(Edge):
         """
         # Get the nodes correcly
         if absolute:
-            cp = [self._rel_to_abs_2d(c) for c in self.control_points]
+            cp = [rel_to_abs_2d(self.start, self.end, c) for c in self.control_points]
             nodes = np.vstack((self.start, cp, self.end))
         else:
             cp = self.control_points
@@ -625,10 +591,7 @@ class CurveEdge(Edge):
            NOTE: n_verts_inside = number of vertices (excluding the start
            and end vertices) used to create a linearization of the edge
 
-        """
-        # TODO Use linearization for more correct 3D visualization 
-        # and self-intersection estimation
-
+        """        
         n = n_verts_inside + 1
         tvals_init = np.linspace(0, 1, n, endpoint=False)[1:]
 
@@ -636,7 +599,7 @@ class CurveEdge(Edge):
         curve_lengths = tvals_init * curve.length()
         tvals = [curve.ilength(c_len, s_tol=ILENGTH_S_TOL) for c_len in curve_lengths]
 
-        edge_verts = [self._rel_to_abs_2d(c_to_list(curve.point(t))) for t in tvals]
+        edge_verts = [rel_to_abs_2d(self.start, self.end, c_to_list(curve.point(t))) for t in tvals]
         seq = self.to_edge_sequence(edge_verts)
 
         return seq
@@ -655,7 +618,7 @@ class CurveEdge(Edge):
             dy, realroots=True, condition=lambda r: 0 < r < 1)
 
         extreme_points = np.array(
-            [self._rel_to_abs_2d(c_to_list(curve.point(t)))
+            [rel_to_abs_2d(self.start, self.end, c_to_list(curve.point(t)))
              for t in y_extremizers]
         )
 

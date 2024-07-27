@@ -416,7 +416,7 @@ class Edge:
         if 'curvature' in edge:
             if isinstance(edge['curvature'], list) or edge['curvature']['type'] == 'quadratic':  # NOTE: placeholder for old curves for backward compatibility
                 control_scale = edge['curvature'] if isinstance(edge['curvature'], list) else edge['curvature']['params'][0] #maya _flip_y
-                control_point = core.BasicPattern.control_to_abs_coord(start, end, control_scale)
+                control_point = pat_utils.rel_to_abs_2d(start, end, control_scale)
                 self.curve = svgpath.QuadraticBezier(*pat_utils.list_to_c([start, control_point, end]))
 
             elif edge['curvature']['type'] == 'circle':  # Assuming circle
@@ -436,8 +436,7 @@ class Edge:
                 cps = []
                 for p in edge['curvature']['params']:
                     control_scale = p #maya: self.flip_y(p)
-                    control_point = core.BasicPattern.control_to_abs_coord(
-                        start, end, control_scale)
+                    control_point = pat_utils.rel_to_abs_2d(start, end, control_scale)
                     cps.append(control_point)
 
                 self.curve = svgpath.CubicBezier(*pat_utils.list_to_c([start, *cps, end]))
