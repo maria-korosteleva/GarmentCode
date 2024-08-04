@@ -76,6 +76,6 @@ def abs_to_rel_2d(start, end, abs_point, as_vector=False):
     rel_point[1] = np.linalg.norm(vert_comp) / edge_len
 
     # Distinguish left&right curvature
-    rel_point[1] *= np.sign(np.cross(abs_point, edge_vec))
+    rel_point[1] *= np.sign(np.cross(edge_vec, point_vec))
 
     return np.asarray(rel_point)

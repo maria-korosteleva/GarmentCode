@@ -7,15 +7,15 @@
 design: 
   meta: 
     upper: 
-      v: Shirt
+      v: FittedShirt
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
-      v: StraightWB 
+      v: FittedWB 
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
-      v: SkirtManyPanels 
+      v: Pants 
       range: 
         - SkirtCircle
         - GodetSkirt

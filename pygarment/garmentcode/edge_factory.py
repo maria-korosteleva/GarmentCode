@@ -432,11 +432,11 @@ def _fit_tangents(cp, target_tangent_start, target_tangent_end, reg_strength=0.0
     fin = 0
     if target_tangent_start is not None: 
         # NOTE: tangents seems to use opposite left/right convention
-        target0 = target_tangent_start[0] + 1j*(- target_tangent_start[1])
+        target0 = target_tangent_start[0] + 1j*target_tangent_start[1]
         fin += (abs(curve.unit_tangent(0) - target0))**2
     
     if target_tangent_end is not None: 
-        target1 = target_tangent_end[0] + 1j*(- target_tangent_end[1])
+        target1 = target_tangent_end[0] + 1j*target_tangent_end[1]
         fin += (abs(curve.unit_tangent(1) - target1))**2
 
     # NOTE: Tried _max_curvature() and Y value regularizaton, 
