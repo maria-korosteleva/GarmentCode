@@ -4,7 +4,7 @@ from numpy.linalg import norm
 import numpy as np
 
 from pygarment.garmentcode.edge import EdgeSequence, Edge
-from pygarment.garmentcode.generic_utils import close_enough
+from pygarment.garmentcode.utils import close_enough
 
 
 class Interface:

@@ -9,8 +9,8 @@ import svgpathtools as svgpath
 
 from pygarment.garmentcode.edge import Edge, CurveEdge, EdgeSequence, ILENGTH_S_TOL
 from pygarment.garmentcode.interface import Interface
-from pygarment.garmentcode.generic_utils import vector_angle, close_enough, c_to_list, c_to_np
-from pygarment.garmentcode.generic_utils import list_to_c
+from pygarment.garmentcode.utils import vector_angle, close_enough, c_to_list, c_to_np
+from pygarment.garmentcode.utils import list_to_c
 from pygarment.garmentcode.base import BaseComponent
 
 

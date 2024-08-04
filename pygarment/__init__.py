@@ -19,7 +19,7 @@ from pygarment.garmentcode.edge_factory import CurveEdgeFactory
 
 # Operations
 import pygarment.garmentcode.operators as ops
-import pygarment.garmentcode.generic_utils as utils
+import pygarment.garmentcode.utils as utils
 
 # Parameter support
 from pygarment.garmentcode.params import BodyParametrizationBase, DesignSampler
