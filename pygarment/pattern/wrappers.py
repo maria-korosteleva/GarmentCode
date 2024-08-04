@@ -53,6 +53,7 @@ class VisPattern(core.ParametrizedPattern):
     def serialize(
             self, path, to_subfolder=True, tag='', 
             with_3d=True, with_text=True, view_ids=True, 
+            with_printable=False,
             empty_ok=False):
 
         log_dir = super().serialize(path, to_subfolder, tag=tag, empty_ok=empty_ok)
@@ -62,14 +63,18 @@ class VisPattern(core.ParametrizedPattern):
         if tag:
             tag = '_' + tag
         svg_file = os.path.join(log_dir, (self.name + tag + '_pattern.svg'))
+        svg_printable_file = os.path.join(log_dir, (self.name + tag + '_print_pattern.svg'))
         png_file = os.path.join(log_dir, (self.name + tag + '_pattern.png')) 
+        pdf_file = os.path.join(log_dir, (self.name + tag + '_print_pattern.pdf')) 
         png_3d_file = os.path.join(log_dir, (self.name + tag + '_3d_pattern.png'))
 
         # save visualtisation
         self._save_as_image(svg_file, png_file, with_text, view_ids)
         if with_3d:
             self._save_as_image_3D(png_3d_file)
-            
+        if with_printable:
+            self._save_as_pdf(svg_printable_file, pdf_file, with_text, view_ids)
+
         return log_dir
 
     # -------- Drawing ---------
@@ -93,7 +98,7 @@ class VisPattern(core.ParametrizedPattern):
         flipped_point[1] *= -1
         return flipped_point
 
-    def _draw_a_panel(self, panel_name):
+    def _draw_a_panel(self, panel_name, apply_transform=True, fill=True):
         """
         Adds a requested panel to the svg drawing with given offset and scaling
         Assumes (!!) 
@@ -102,7 +107,7 @@ class VisPattern(core.ParametrizedPattern):
             the lower-right vertex coordinate for the convenice of future offsetting.
         """
         attributes = {
-            'fill':  'rgb(227,175,186)',  
+            'fill':  'rgb(227,175,186)' if fill else 'rgb(255,255,255)',    # fill with white
             'stroke': 'rgb(51,51,51)', 
             'stroke-width': '0.2'
         }
@@ -152,25 +157,24 @@ class VisPattern(core.ParametrizedPattern):
 
             else:
                 segs.append(svgpath.Line(*list_to_c([start, end])))
-        
-        # Placement and rotation according to the 3D location
-        # But flatterened on 2D
         path = svgpath.Path(*segs)
-        
-        # Z-fist rotation to only reflect rotation visible in XY plane
-        # NOTE: Heuristic, might be bug-prone
-        rotation = R.from_euler('XYZ', panel['rotation'], degrees=True)   # XYZ
+        if apply_transform:
+            # Placement and rotation according to the 3D location
+            # But flatterened on 2D
+            # Z-fist rotation to only reflect rotation visible in XY plane
+            # NOTE: Heuristic, might be bug-prone
+            rotation = R.from_euler('XYZ', panel['rotation'], degrees=True)   # XYZ
 
-        # Estimate degree of rotation of Y axis
-        # NOTE: Ox sometimes gets flipped because of 
-        # Gimbal locks of this Euler angle representation
-        res = rotation.apply([0, 1, 0])
-        flat_rot_angle = np.rad2deg(vector_angle([0, 1], res[:2]))
-        path = path.rotated(
-            degs=-flat_rot_angle, 
-            origin=list_to_c(vertices[0])
-        )
-        path = path.translated(list_to_c(translation))  # NOTE: rot/transl order is important!
+            # Estimate degree of rotation of Y axis
+            # NOTE: Ox sometimes gets flipped because of 
+            # Gimbal locks of this Euler angle representation
+            res = rotation.apply([0, 1, 0])
+            flat_rot_angle = np.rad2deg(vector_angle([0, 1], res[:2]))
+            path = path.rotated(
+                degs=-flat_rot_angle, 
+                origin=list_to_c(vertices[0])
+            )
+            path = path.translated(list_to_c(translation))  # NOTE: rot/transl order is important!
 
         return path, attributes, panel['translation'][-1] >= 0
 
@@ -216,6 +220,7 @@ class VisPattern(core.ParametrizedPattern):
 
     def get_svg(self, svg_filename,
             with_text=True, view_ids=True, 
+            flat=False, fill_panels=True,
             margin=2) -> sw.Drawing:
         """Convert pattern to writable svg representation"""
 
@@ -233,9 +238,24 @@ class VisPattern(core.ParametrizedPattern):
         paths_front, paths_back = [], []
         attributes_f, attributes_b = [], []
         names_f, names_b = [], []
+        shift_x_front, shift_x_back = margin, margin
         for panel in z_sorted_panels:
             if panel is not None:
-                path, attr, front = self._draw_a_panel(panel)
+                path, attr, front = self._draw_a_panel(
+                    panel, 
+                    apply_transform=not flat, 
+                    fill=fill_panels
+                )
+                if flat:
+                    path = path.translated(list_to_c([
+                        shift_x_front if front else shift_x_back, 
+                        0]))
+                    bbox = path.bbox()
+                    diff = (bbox[1] - bbox[0]) + margin
+                    if front:
+                        shift_x_front += diff
+                    else:
+                        shift_x_back += diff
                 if front:
                     paths_front.append(path) 
                     attributes_f.append(attr) 
@@ -250,7 +270,14 @@ class VisPattern(core.ParametrizedPattern):
             front_max_x = max([path.bbox()[1] for path in paths_front]) 
             back_min_x = min([path.bbox()[0] for path in paths_back]) 
             shift_x = front_max_x - back_min_x + 10   # A little spacing
-            paths_back = [path.translated(shift_x+0j) for path in paths_back]
+            if flat:
+                front_max_y = max([path.bbox()[3] for path in paths_front]) 
+                back_min_y = min([path.bbox()[2] for path in paths_back]) 
+                shift_y = front_max_y - back_min_y + 10   # A little spacing
+                shift_x = 0
+            else:
+                shift_y = 0
+            paths_back = [path.translated(list_to_c([shift_x, shift_y])) for path in paths_back]
         
         # SVG convert
         paths = paths_front + paths_back
@@ -290,7 +317,6 @@ class VisPattern(core.ParametrizedPattern):
         
         return dwg
 
-
     def _save_as_image(
             self, svg_filename, png_filename,
             with_text=True, view_ids=True, 
@@ -304,7 +330,13 @@ class VisPattern(core.ParametrizedPattern):
 
         """
         
-        dwg = self.get_svg(svg_filename, with_text, view_ids, margin)
+        dwg = self.get_svg(
+            svg_filename, 
+            with_text=with_text, 
+            view_ids=view_ids, 
+            flat=False,
+            margin=margin
+        )
         
         dwg.save(pretty=True)
 
@@ -347,6 +379,28 @@ class VisPattern(core.ParametrizedPattern):
 
         plt.close(fig)  # Cleanup
 
+    def _save_as_pdf(self, svg_filename, pdf_filename,
+            with_text=True, view_ids=True, 
+            margin=2):
+        """Save a pattern as a pdf with non-overlapping panels and no filling 
+            Suitable for printing
+        """
+        dwg = self.get_svg(
+            svg_filename, 
+            with_text=with_text, 
+            view_ids=view_ids, 
+            flat=True,
+            fill_panels=False,
+            margin=margin
+        )
+        dwg.save(pretty=True)
+
+        # to pdf
+        # NOTE: Assuming the pattern uses cm
+        # 3 px == 1 cm
+        # DPI = 96 (default) px/inch == 96/2.54 px/cm
+        cairosvg.svg2pdf(
+            url=svg_filename, write_to=pdf_filename, dpi=2.54*self.px_per_unit)
 
 class RandomPattern(VisPattern):
     """

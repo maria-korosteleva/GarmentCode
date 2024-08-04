@@ -75,9 +75,11 @@ class GUIState:
         app.add_static_files(self.path_static_img, './assets/img')
         
         # 3D updates
+        # TODO suitable location for tmp files? -- for publication
         self.path_static_3d = '/geo'
         self.garm_3d_filename = f'garm_3d_{self.pattern_state.id}.glb'
-        self.local_path_3d = Path('./output/garm_3d')
+        self.local_path_3d = Path('./tmp_gui/garm_3d')
+        self.local_path_3d.mkdir(parents=True, exist_ok=True)
         app.add_static_files(self.path_static_3d, self.local_path_3d)
         app.add_static_files('/body', './assets/bodies')
 
@@ -89,6 +91,11 @@ class GUIState:
         self.pattern_state.reload_garment()
         self.stylings()
         self.layout()
+
+    def release(self):
+        """Clean-up after the sesssion"""
+        self.pattern_state.release()
+        (self.local_path_3d / self.garm_3d_filename).unlink(missing_ok=True)
 
     # Initial definitions
     def stylings(self):

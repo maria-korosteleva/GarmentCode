@@ -6,6 +6,7 @@ import string
 import random
 import trimesh
 from copy import deepcopy
+from typing import Optional
 
 # Custom 
 from assets.garment_programs.meta_garment import MetaGarment
@@ -30,8 +31,8 @@ class GUIPattern:
         self.id = _id_generator(20)
 
         # Paths setup
-        self.save_path_root = Path.cwd() / 'tmp_downloads'
-        self.tmp_path_root = Path.cwd() / 'tmp_display'
+        self.save_path_root = Path.cwd() / 'tmp_gui' / 'downloads'   # TODO suitable location for tmp files? 
+        self.tmp_path_root = Path.cwd() / 'tmp_gui' / 'display'
         self.save_path = self.save_path_root / self.id
         self.svg_filename = None
         self.saved_garment_archive = ''
@@ -64,8 +65,9 @@ class GUIPattern:
 
         self.reload_garment()
 
-    def __del__(self):
+    def release(self):
         """Clean up tmp files after the session"""
+        self.clear_previous_download()
         shutil.rmtree(self.save_path)
         shutil.rmtree(self.tmp_path)
 
@@ -162,6 +164,7 @@ class GUIPattern:
             dwg = pattern.get_svg(self.tmp_path / self.svg_filename, 
                                   with_text=False, 
                                   view_ids=False,
+                                  flat=False,
                                   margin=0
             )
             dwg.save()
@@ -171,6 +174,7 @@ class GUIPattern:
         except pyg.EmptyPatternError:
             self.svg_filename = ''
     
+    # Cleaning
     def clear_previous_svg(self):
         """Clear previous svg display file"""
         if self.svg_filename:
@@ -300,7 +304,7 @@ class GUIPattern:
         else:
             return (not is_strapless) and is_curve or has_hoody
 
-    def save(self, pack=True, save_pattern: MetaGarment|None =None):
+    def save(self, pack=True, save_pattern: Optional[MetaGarment]=None):
         """Save current garment design to self.save_path """
 
         # Save current pattern
@@ -314,7 +318,9 @@ class GUIPattern:
             self.save_path, 
             to_subfolder=True, 
             with_3d=False, with_text=False, view_ids=False, 
-            empty_ok=True)
+            with_printable=True,
+            empty_ok=True
+        )
 
         self.saved_garment_folder = Path(self.saved_garment_folder)
         self.body_params.save(self.saved_garment_folder)
