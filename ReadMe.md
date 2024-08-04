@@ -1,149 +1,66 @@
-
 # GarmentCode: Programming Parametric Sewing Patterns
 
-Implementation of GarmentCode architecture and garment programs.
+# TODO Re-write for GarmentCodeData
 
-## Installation
+![Examples of garments sampled from GarmentCode configurator](https://github.com/maria-korosteleva/GarmentCode/raw/main/assets/img/header.png)
 
-### Install python with dependencies:
+Official Implementation of [GarmentCode: Programming Parametric Sewing Patterns](https://igl.ethz.ch/projects/garmentcode/), including architecture and garment programs.
 
-* Python 3.9 or 3.11
-* numpy
-* scipy
-* [svgwrite](https://pypi.org/project/svgwrite/)
-* psutil
-* matplotlib
-* [svgpathtools](https://github.com/mathandy/svgpathtools)
-* [cairoSVG](https://cairosvg.org/)
-    NOTE: this lib has some quirks on Windows, which we relove with including needed dlls in `./external/cairo_dlls` and adding the ditrectory to PATH in runtime
-* [PySimpleGUI](https://github.com/PySimpleGUI/PySimpleGUI) to run GUI script
+## Documents
 
-All python dependencies can be installed with 
+1. Detailed Installtion instructions: [Installation](https://github.com/maria-korosteleva/GarmentCode/blob/main/docs/Installation.md)
+2. How to run the configurator & adjust parameters: [Running](https://github.com/maria-korosteleva/GarmentCode/blob/main/docs/Running.md)
 
+## Navigation
+
+### Library
+
+[PyGarment](https://github.com/maria-korosteleva/GarmentCode/tree/main/pygarment) is the core library described in the GarmentCode paper. It contains the base types (Edge, Panel, Component, Interface, etc.), as well as edge factory and various helpers and operators that help you design sewing patterns.  
+
+Install with 
 ```
-conda env create -f environment.yml
-```
-or 
-
-```
-pip install -r requirements.txt
+pip install pygarment
 ```
 
-NOTE: 
-* The dependency on [Pattern Generator](https://github.com/maria-korosteleva/Garment-Pattern-Generator) is included in the repo (`./external`), and will be loaded automatically by test script
-* The environemtal variables needed for correct lib loading are set up in the test script
+### Examples
 
-### Configuration of local paths
+* [assets/garment_programs/](https://github.com/maria-korosteleva/GarmentCode/tree/main/assets/garment_programs/) contains the code of garment components designed using PyGarment. 
+* [assets/design_params/](https://github.com/maria-korosteleva/GarmentCode/tree/main/assets/design_params/), [assets/body_measurements/](https://github.com/maria-korosteleva/GarmentCode/tree/main/assets/body_measurments/) contain examples of design and body measurements presets corresponding to the designs and retargeting results showcased in our GarmentCode paper. They can be used in both GarmentCode GUI and `test_garments.py` script.
 
-Same as here: https://github.com/maria-korosteleva/Garment-Pattern-Generator/blob/master/docs/Installation.md#local-paths-setup
-
-NOTE: ATM only the 'output' path is actually used, so setting only that one is enough
+> NOTE: [assets/design_params/default.yaml](https://github.com/maria-korosteleva/GarmentCode/blob/main/assets/design_params/default.yaml) is the setup used by GUI on load. Changing this file results in changes in the GUI initial state =) 
 
 
-## How to run (command line)
+## Citation
 
-From the root directory run
+If you are using our system in your research, please cite our paper:
+
 ```
-python test_garments.py
+@article{GarmentCode2023,
+  author = {Korosteleva, Maria and Sorkine-Hornung, Olga},
+  title = {{GarmentCode}: Programming Parametric Sewing Patterns},
+  year = {2023},
+  issue_date = {December 2023},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  volume = {42},
+  number = {6},
+  doi = {10.1145/3618351},
+  journal = {ACM Transaction on Graphics},
+  note = {SIGGRAPH ASIA 2023 issue},
+  numpages = {16},
+  keywords = {sewing patterns, garment modeling}
+}
 ```
 
-It will create sewing pattern for the current state of `assets/design_params/base.yaml` for average SMPL body, and put it to the logs folder. Modify the parameters inside the script as needed.
+## Issues, questions, suggestions
 
-## How to run (GUI)
+Please post your issues and questions to [GitHub Issues](https://github.com/maria-korosteleva/GarmentCode/issues).
 
-WARNING: Currently in active development, quality not guaranteed 😅
-
-From the root directory run
-```
-python gui.py
-```
-
-It can load body and design parameter files and display the corresponding sewing pattern right away.
-Design files should be compatible with `MetaGarment` object (all examples provided in `assets\design_params` are compatible).
-
-SOON: displaying garment parameters for direct manipulation
-
-## Modifying the parameters
-
-`./assets/design_params/base.yaml` contains the full set of style parameters for creating samples of our garment configurator.
-
-* Update some of parameter values ('v:' field under parameter name) withing a given range 
-* run `test_garments.py` 
-* `./Logs/base_<timestamp>` will contain the sewing patterns corresponding to given values
+For other requests you can find my info on https://korosteleva.com/.  
 
 
-## Attribution
-We are using samples from [SMPL](https://smpl.is.tue.mpg.de/) body model as base for [Body Model examples](assets/Bodies). 
+## Attribution & Body use disclaimer
+We are using samples from [SMPL](https://smpl.is.tue.mpg.de/) body model as base for [Body Model examples](https://github.com/maria-korosteleva/GarmentCode/tree/main/assets/Bodies). 
 
-
-## TODO
-
-### Notes
-* cairo_dlls windows
-
-### Installation for Maya
-The contects of this directory are modified from the code of https://github.com/maria-korosteleva/Garment-Pattern-Generator (pattern package)
-
-Add current directory (`./external`) to PYTHONPATH for Maya to use this version when loading garment viewer or running batch sumulation. 
-
-The entry script for garment viewer is the same as in the original project and can be taken from there.
-
-Additional dependencies in this version: 
-* [svgpathtools](https://github.com/mathandy/svgpathtools)
-* [cairoSVG](https://cairosvg.org/)
-    NOTE: this lib has some quirks on Windows, which we relove with including needed dlls in `./external/cairo_dlls` and adding the ditrectory to PATH in runtime
-* -svglib- removed!
-
-These are need to be installed in Maya Python with the rest of the libs from original project.
-
-## Instructions from old sim repo
-
-Run mesh generation, simulation and image rendering of a pattern:
---------------------------------------------------------------------
-1. Put your pattern .json file into: "meshgen > assets > Patterns" folder and please name the json file such that it ends with "_specification.json" (e.g. "dress_specification.json)
-
-2. Open garment_gen_sim.py:
-   - Adapt the garment_name (line 66) to your garment name (without "_specification": e.g. "dress")
-   - Set appropriate body_name: default is ['non_centered','f_average_A40']
-     -> use 'centered' for an old data sample, i.e. if the body is centered at the origin
-     -> models: "f_average_A40", "m_average_A40", "f_model_A40", "f_fluffy_A40", "f_smpl_template" 
-     -> for a custom model, place it into the "meshgen > assets > Bodies > centered or uncentered" folder
-
-3. Run garment_gen_sim.py:
-   - See the output in the "output" folder :)
-     -> panels: .obj file of each panel
-     -> simulation: 
-        - "body.obj" (body as .obj file)
-        - the .png renders
-        - "...-simulated.obj" (simulated cloth as .obj file) 
-        - "...-simulation.usd" (simulation file, can be viewed in Blender or Omniverse Create XR)
-           -> "meshgen > gui > blenderGUI.blend" displays simulation with segmentation 
-              (see instructions in Scripting window)
-   
-
-
-
-Run dataset:
--------------
-1. Generate your dataset
-2. In datasim.py change the path_to_Proc_Garm (line 44) to your Procedural Garment root directory and run it with 
-   --data "name of your dataset" (e.g. --data data_40_230829-11-07-59)
-3. Ouput: See the output in the "dataset_properties.yaml file" in the folder of your dataset
-
-
-To metion:
-------------
-1. using trimesh lib to load garments with textures
-   ```
-   print('Reloading exported ply ', path_to_out)
-   mesh_again: trimesh.Trimesh = trimesh.load_mesh(path_to_out, process=False)
-   # 
-   print(mesh_again.visual.uv.shape, type(mesh_again.visual))
-
-   tex_image = PIL.Image.open(tex_path)
-   tex = trimesh.visual.TextureVisuals(mesh_again.visual.uv, image=tex_image)
-   mesh_again.visual = tex
-
-   mesh_again.show()
-   ```
-1. How to restore the texture used in the data renders from the optimized version
+### Disclaimer
+Due to the restrictions of the SMPL license, we cannot share all 3D models of the body shapes used in our paper, except for the base average bodies for male and female versions of SMPL. We nevertheless share the approximate body measurements of the thin and the full-bodied models to showcase the adaptation of the patterns to different body types. 
