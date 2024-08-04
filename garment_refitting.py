@@ -9,11 +9,9 @@ import sys
 import shutil 
 import time
 import random
-import string
 import traceback
 
-sys.path.insert(0, './external/')
-sys.path.insert(1, './')
+sys.path.insert(0, './')
 
 # Custom
 from pygarment.data_config import Properties
@@ -25,7 +23,8 @@ from assets.garment_programs.pants import *
 from assets.garment_programs.meta_garment import *
 from assets.garment_programs.bands import *
 from assets.bodies.body_params import BodyParameters
-import pygarment as pyg
+
+# TODO Command line interface
 
 def _create_data_folder(properties, path=Path('')):
     """ Create a new directory to put dataset in 
@@ -203,12 +202,12 @@ if __name__ == '__main__':
     if new:
         props = Properties()
         props.set_basic(
-            design_file='./assets/design_params/jumpsuit_fit.yaml',
+            design_file='./assets/design_params/base.yaml',
             body_default='mean_all',
             body_samples='garment-first-samples',
             body_sample_start_id=0,
-            name='refit_30',
-            size=30,
+            name='fit_3',
+            size=3,
             to_subfolders=True)
         props.set_section_config('generator')
     else:

@@ -13,8 +13,7 @@ import string
 import traceback
 import argparse
 
-sys.path.insert(0, './external/')
-sys.path.insert(1, './')
+sys.path.insert(0, './')
 
 # Custom
 from pygarment.data_config import Properties
@@ -223,7 +222,7 @@ def generate(path, properties, sys_paths, verbose=False):
     start_time = time.time()
 
     default_body = BodyParameters(Path(sys_paths['bodies_default_path']) / (properties['body_default'] + '.yaml'))
-    sampler = pyg.params.DesignSampler(properties['design_file'])
+    sampler = pyg.DesignSampler(properties['design_file'])
     for i in range(properties['size']):
         # log properties every time
         properties.serialize(data_folder / 'dataset_properties.yaml')
