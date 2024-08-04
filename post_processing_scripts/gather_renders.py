@@ -4,7 +4,7 @@ import pygarment.data_config as config
 from pathlib import Path
 import shutil
 
-from datasim import gather_renders
+from pattern_data_sim import gather_renders
 
 
 system_props = config.Properties('./system.json')

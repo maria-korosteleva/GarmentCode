@@ -15,9 +15,9 @@ STARTTIME=$(date +%s)
 while [ $ret_code != 0 ]  # failed for any reason
 do
     if [ "$sim_default_bodies" = "true" ]; then
-        python ./datasim.py --data $dataset_name --default_body --config $config -b $batch_size
+        python ./pattern_data_sim.py --data $dataset_name --default_body --config $config -b $batch_size
     else
-        python ./datasim.py --data $dataset_name --config $config -b $batch_size
+        python ./pattern_data_sim.py --data $dataset_name --config $config -b $batch_size
     fi
 
     ret_code=$?

@@ -1,4 +1,4 @@
-name: garment
+name: garment   # TODO Update conda env 
 channels:
   - conda-forge
   - defaults
