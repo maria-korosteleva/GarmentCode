@@ -137,7 +137,7 @@ class FittedSkirtPanel(pyg.Panel):
 
         # --- Edges definition ---
         # Right
-        if pyg.close_enough(flare, 1):  # skip optimization
+        if pyg.utils.close_enough(flare, 1):  # skip optimization
             right_bottom = pyg.Edge(    
                 [hips - low_width, angle_shift], 
                 [0, length]
@@ -168,7 +168,7 @@ class FittedSkirtPanel(pyg.Panel):
             target_tan1=np.array([0, -1]),
             initial_guess=[0.5, 0]
         )
-        if pyg.close_enough(flare, 1):  # skip optimization for straight skirt
+        if pyg.utils.close_enough(flare, 1):  # skip optimization for straight skirt
             left_bottom = pyg.Edge(  
                 left_top.end, 
                 [hips + low_width, -angle_shift], 

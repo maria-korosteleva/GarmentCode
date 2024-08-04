@@ -7,15 +7,15 @@
 design: 
   meta: 
     upper: 
-      v: FittedShirt
+      v: Shirt
       range: [FittedShirt, Shirt]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     wb: 
-      v: FittedWB 
+      v: StraightWB 
       range: [StraightWB, FittedWB]    # For curves debug CurvyProjection, for sleeves ExperimentalSleeve
       type: select_null
     bottom: 
-      v: Pants 
+      v: SkirtManyPanels 
       range: 
         - SkirtCircle
         - GodetSkirt
@@ -120,7 +120,7 @@ design:
       type: bool
     component:
       style: 
-        v: SimpleLapel 
+        v: Hood2Panels 
         range: [Turtle, SimpleLapel, Hood2Panels]
         type: select_null
       depth: 
@@ -142,7 +142,7 @@ design:
      
   sleeve:
     sleeveless: 
-      v: True
+      v: False
       range: [True, False]
       type: bool
     armhole_shape: 

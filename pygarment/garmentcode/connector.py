@@ -1,7 +1,7 @@
 import numpy as np
 
-from pygarment.interface import Interface
-from pygarment.generic_utils import close_enough
+from pygarment.garmentcode.interface import Interface
+from pygarment.garmentcode.generic_utils import close_enough
 
 
 class StitchingRule:

@@ -46,7 +46,7 @@ class PantPanel(pyg.Panel):
 
         # --- Edges definition ---
         # Right
-        if pyg.close_enough(design['flare']['v'], 1):  # skip optimization
+        if pyg.utils.close_enough(design['flare']['v'], 1):  # skip optimization
             right_bottom = pyg.Edge(    
                 [-flare, 0], 
                 [0, length]
