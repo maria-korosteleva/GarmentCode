@@ -46,7 +46,7 @@ class GUIPattern:
 
         self.body_params = None
         self.design_params = {}
-        self.design_sampler = pyg.params.DesignSampler()
+        self.design_sampler = pyg.DesignSampler()
         self.sew_pattern = None
 
         self.body_file = None
