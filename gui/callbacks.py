@@ -705,9 +705,10 @@ class GUIState:
             # Update ui
             # https://github.com/zauberzeug/nicegui/discussions/1269
             with self.ui_3d_scene:
+                # NOTE: material is defined in the glb file
                 self.ui_garment_3d = self.ui_3d_scene.gltf(
                             f'geo/{self.garm_3d_filename}', 
-                        ).scale(0.01).rotate(np.pi / 2, 0., 0.).material(side='double')  # NOTE the latter seem to have no effect
+                        ).scale(0.01).rotate(np.pi / 2, 0., 0.)
             
             # Body invisible by default due to occlusion artifacts
             self.ui_body_3d.visible(False)
