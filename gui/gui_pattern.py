@@ -243,6 +243,12 @@ class GUIPattern:
 
         # Convert to displayable element
         mesh = trimesh.load_mesh(paths.g_sim)
+
+        # enable double-sided material for nice viewing
+        pbr_material = mesh.visual.material.to_pbr()
+        pbr_material.doubleSided = True
+        mesh.visual.material = pbr_material
+        # export
         mesh.export(paths.g_sim_glb)
 
         self.paths_3d = paths
