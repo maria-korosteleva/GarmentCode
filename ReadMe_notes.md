@@ -147,3 +147,14 @@ To metion:
    mesh_again.show()
    ```
 1. How to restore the texture used in the data renders from the optimized version
+
+1. trimesh issue with the vertex duplication https://github.com/mikedh/trimesh/issues/1057
+
+```
+def v_id_map(vertices):
+    v_map = [None] * len(vertices)
+    v_map[0] = 0
+    for i in range(1, len(vertices)):
+        v_map[i] = v_map[i-1] if all(vertices[i - 1] == vertices[i]) else v_map[i-1] + 1
+    return v_map
+```
