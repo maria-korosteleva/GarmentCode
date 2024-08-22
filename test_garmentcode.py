@@ -10,6 +10,8 @@ from assets.garment_programs.meta_garment import MetaGarment
 from assets.bodies.body_params import BodyParameters
 from pygarment.data_config import Properties
 
+# TODO Release version
+
 if __name__ == '__main__':
 
     # 

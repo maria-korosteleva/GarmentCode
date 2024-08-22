@@ -5,7 +5,7 @@ from pygarment.meshgen.simulation import run_sim
 import pygarment.data_config as data_config
 from pygarment.meshgen.sim_config import PathCofig
 
-# TODO command line args
+# TODO command line args -- release version
 
 
 if __name__ == "__main__":
