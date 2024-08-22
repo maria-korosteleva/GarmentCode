@@ -18,6 +18,7 @@ Design files should be compatible with `MetaGarment` object (all examples provid
 * Depending on your setup you might experience small lags in the interface responsiveness. This is due to the need for solving optimization problems when working with some of garment elements, e.g. sleeve curve inversion -- their implemetation is somewhat below realtime. 
     * If the lags are severe, we recommend to choose a different armhole shape for sleeves as a workaround solution. 
 * All the 3D drapes are currently fitted to a neutral body model with the current design parameters. 
+* [assets/design_params/default.yaml](../assets/design_params/default.yaml)  is the setup used by GUI on load. Changing this file results in changes in the GUI initial state =)
 
 ## How to run GarmentCode (command line)
 
@@ -42,12 +43,11 @@ NOTE:
 ​
 ### Changing body measurements
 
-# TODO Update with the new script
 To use another set of body measurements (among the ones used in the paper): 
  In `test_garmentcode.py` change `body_to_use` variable to another key from `bodies_measurements` dictionary to use 
 ​
- * Options: 'avg', 'thin', 'full-bodied', 'man'
- * Default: 'avg'  (=average female body shape)
+ * Options: 'neutral', 'mean_female', 'mean_male', 'f_smpl', 'm_smpl'
+ * Default: 'neutral'  (=gender neutral average body shape)
 ​
 
 The values for body measurements can be updated in corresponding configuration files (`./assets/body_measurements`). 

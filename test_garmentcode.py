@@ -20,7 +20,7 @@ if __name__ == '__main__':
         'f_smpl': './assets/bodies/f_smpl_average_A40.yaml',
         'm_smpl': './assets/bodies/m_smpl_average_A40.yaml'
     }
-    body_to_use = 'f_smpl'   # CHANGE HERE to use different set of body measurements
+    body_to_use = 'neutral'   # CHANGE HERE to use different set of body measurements
 
     body = BodyParameters(bodies_measurements[body_to_use])
 
