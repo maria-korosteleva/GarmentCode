@@ -1,131 +1,63 @@
 import os
+import argparse
+from pathlib import Path
+
 from pygarment.meshgen.boxmeshgen import BoxMesh
 from pygarment.meshgen.simulation import run_sim
-
 import pygarment.data_config as data_config
 from pygarment.meshgen.sim_config import PathCofig
 
-# TODO command line args -- release version
+
+def get_command_args():
+    """command line arguments to control the run"""
+    # https://stackoverflow.com/questions/40001892/reading-named-command-arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--pattern_spec', '-p', 
+        help='pattern specification JSON file. File name should end with "_specification.json"', 
+        type=str, 
+        default='./assets/Patterns/shirt_mean_specification.json')
+    parser.add_argument(
+        '--sim_config', '-s', 
+        help='Path to simulation config', 
+        type=str, 
+        default='./assets/Sim_props/default_sim_props.yaml')
+
+    args = parser.parse_args()
+    print('Commandline arguments: ', args)
+
+    return args
 
 
 if __name__ == "__main__":
 
-    # Basic simulation properties
-    sim_props = {
-        'ground': False, 
-        'resolution_scale':  1.0, 
-        'zero_gravity_steps': 10,
+    args = get_command_args()
 
-        # Stopping criteria
-        'max_sim_steps': 1000,   
-        'max_frame_time': 15,
-        'max_meshgen_time': 20,  # in seconds, affects speed
-        'max_sim_time': 30 * 60,
-        'static_threshold': 0.03,  # 0.01  #1 #depends on the units used,
-        'non_static_percent': 1.5 , 
-
-        # Quality Filter
-        'max_body_collisions': 30, 
-        'max_self_collisions': 500,   
-        
-        'optimize_storage': False,  
-
-        'material': {},
-        'options': {},
-    }
-    sim_props['options'] = {
-        'enable_particle_particle_collisions': False,
-        'enable_triangle_particle_collisions': True,  # TODO MK: I don't see these being used??
-        'enable_edge_edge_collisions': True,
-        'enable_body_collision_filters': True,  
-
-        'enable_attachment_constraint': True, 
-        'attachment_frames': 400,   
-        'attachment_label_names': ['lower_interface', 'right_collar', 'left_collar', 'strapless_top'], 
-        'attachment_stiffness': [1000., 1000., 1000., 100000.],  # NOTE: nice with the top hanging over
-        'attachment_damping': [10., 1., 1., 0.], 
-
-        'global_damping_factor': 0.25,  # 0.1   
-        'global_damping_effective_velocity': 0.0,  
-        'global_max_velocity': 25.,  #  20
-
-        'enable_global_collision_filter': True,
-        'enable_cloth_reference_drag': True, 
-        'cloth_reference_margin': 0.1,
-
-        # NOTE: Not used in the final setup -- occasional CUDA errors
-        'enable_body_smoothing': False,
-        'smoothing_total_smoothing_factor': 1.0,
-        'smoothing_recover_start_frame': 150,
-        'smoothing_num_steps': 100,
-        'smoothing_frame_gap_between_steps': 1,
-
-        'body_collision_thickness': 0.25,
-        'body_friction': 0.5
-    }
-
-    sim_props['material'] = { 
-        'garment_tri_ka': 10000.0, # NOTE: Not used in XPBD
-
-        'garment_edge_ke': 1.,   # 100., 500.,  # NOTE: Bending
-        'garment_tri_ke': 10000., # NOTE: Not used in XPBD
-        'spring_ke': 50000.,  # NOTE: Stiffness
-    
-        'garment_edge_kd': 10.0, 
-        'garment_tri_kd': 1.0,      # NOTE: Not used in XPBD
-        'spring_kd': 10.,  
-
-        'fabric_density':  1.,  
-        'fabric_thickness': 0.1,
-        'fabric_friction': 0.5
-    }
-
-
-    # Basic rendering properties
-    render_props = {
-        'resolution':[800, 800], #[1080, 1080],
-        'sides':['front','back'],
-        'front_camera_location': [0, 0.97, 4.15], # if None, evaluated automatically  # NOTE: Evaluated to fit the tallest body in the dataset 
-        'uv_texture': {
-            'seam_width': 0.5,
-            'dpi': 1500,
-            'fabric_grain_texture_path': './assets/img/fabric_texture.png',  # Or NONE
-            'fabric_grain_resolution': 5,
-        }
-    }
-
-    props = data_config.Properties() 
-    props.set_section_config('sim', **sim_props)
+    props = data_config.Properties(args.sim_config) 
     props.set_section_stats('sim', fails={}, sim_time={}, spf={}, fin_frame={}, body_collisions={}, self_collisions={})
-    props.set_section_config('render', **render_props)
     props.set_section_stats('render', render_time={})
-    res = sim_props['resolution_scale']
-    garment_name = "shirt_mean"   
-    
-    # "to_waist_levels_circle2" 
-    
-    # "tex_error_rand_3W491I74TU"
 
-    # "dress_pencil_top_position"   
-     # "js_mean_all"  # "shirt_mean"  
+    spec_path = Path(args.pattern_spec)
+    garment_name, _, _ = spec_path.stem.rpartition('_')  # assuming ending in '_specification'
 
+    sys_props = data_config.Properties('./system.json')
     paths = PathCofig(
-        in_element_path=os.path.join(os.path.dirname(__file__), 'assets', 'Patterns'),  # TODO Path()
-        out_path=os.path.join(os.path.dirname(__file__), 'output'),
+        in_element_path=spec_path.parent,  
+        out_path=sys_props['output'], 
         in_name=garment_name,
-        body_name='mean_all',    # 'f_smpl_average_A40',  # 
+        body_name='mean_all',    # 'f_smpl_average_A40'
         smpl_body=False,   # NOTE: depends on chosen body model
         add_timestamp=True
     )
 
     # Generate and save garment box mesh (if not existent)
-    print(f"Generate box mesh of {garment_name} with resolution {res}...")
+    print(f"Generate box mesh of {garment_name} with resolution {props['sim']['config']['resolution_scale']}...")
     print('\nGarment load: ', paths.in_g_spec)
 
-    garment_box_mesh = BoxMesh(paths.in_g_spec, sim_props['resolution_scale'])
+    garment_box_mesh = BoxMesh(paths.in_g_spec, props['sim']['config']['resolution_scale'])
     garment_box_mesh.load()
-    specs_path = garment_box_mesh.serialize(
-        paths, store_panels=False, uv_config=render_props['uv_texture'])
+    garment_box_mesh.serialize(
+        paths, store_panels=False, uv_config=props['render']['config']['uv_texture'])
 
     props.serialize(paths.element_sim_props)
 
@@ -134,8 +66,8 @@ if __name__ == "__main__":
         props, 
         paths,
         save_v_norms=False,
-        store_usd=False,  # NOTE: False for fast simulation!, 
-        optimize_storage=sim_props['optimize_storage'],
+        store_usd=False,  # NOTE: False for fast simulation!
+        optimize_storage=False,   # props['sim']['config']['optimize_storage'],
         verbose=False
     )
     

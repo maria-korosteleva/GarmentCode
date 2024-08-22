@@ -36,7 +36,7 @@ It will create sewing pattern for the current state of `assets/design_params/t-s
 ​
 * Update some of parameter values ('v:' field under parameter name) within a given range 
 * run `test_garmentcode.py` 
-* `system['output']/t-shirt_<timestamp>` will contain the sewing patterns corresponding to given values
+* `system['output']/t-shirt_<timestamp>/` will contain the sewing patterns corresponding to given values
 ​
 NOTE:
 * The values of parameters are in cm (distances), degrees (angles), or given as a fraction
@@ -59,26 +59,15 @@ Utilized examples for body shapes are given in `./assets/bodies` for reference.
 
 ## How to simulate patterns (command line)
 
-Run mesh generation, simulation and image rendering of a pattern:
---------------------------------------------------------------------
-1. Put your pattern .json file into: "meshgen > assets > Patterns" folder and please name the json file such that it ends with "_specification.json" (e.g. "dress_specification.json)
+One can use a python script to drape a sewing pattern in JSON representation, produced by GarmentCode:  
 
-2. Open garment_gen_sim.py:
-   - Adapt the garment_name (line 66) to your garment name (without "_specification": e.g. "dress")
-   - Set appropriate body_name: default is ['non_centered','f_average_A40']
-     -> use 'centered' for an old data sample, i.e. if the body is centered at the origin
-     -> models: "f_average_A40", "m_average_A40", "f_model_A40", "f_fluffy_A40", "f_smpl_template" 
-     -> for a custom model, place it into the "meshgen > assets > Bodies > centered or uncentered" folder
+```
+python test_garment_sim.py -p /path/to/pattern_specification.json -s /path/to/sim_props.json
+```
 
-3. Run garment_gen_sim.py:
-   - See the output in the "output" folder :)
-     -> panels: .obj file of each panel
-     -> simulation: 
-        - "body.obj" (body as .obj file)
-        - the .png renders
-        - "...-simulated.obj" (simulated cloth as .obj file) 
-        - "...-simulation.usd" (simulation file, can be viewed in Blender or Omniverse Create XR)
-           -> "meshgen > gui > blenderGUI.blend" displays simulation with segmentation 
-              (see instructions in Scripting window)
-   
+The result is saved to `'output'` folder, specified in `system.json` file.
+
+By default, it drapes the pattern over the neutral body model. The body model and verbose levels can be updated inside the `test_garment_sim.py` script.
+
+
 
