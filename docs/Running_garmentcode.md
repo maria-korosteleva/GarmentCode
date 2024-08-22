@@ -17,6 +17,7 @@ Design files should be compatible with `MetaGarment` object (all examples provid
 * It is recommended to use high-resolution displays when using our GUI 
 * Depending on your setup you might experience small lags in the interface responsiveness. This is due to the need for solving optimization problems when working with some of garment elements, e.g. sleeve curve inversion -- their implemetation is somewhat below realtime. 
     * If the lags are severe, we recommend to choose a different armhole shape for sleeves as a workaround solution. 
+* All the 3D drapes are currently fitted to a neutral body model with the current design parameters. 
 
 ## How to run GarmentCode (command line)
 
@@ -25,16 +26,16 @@ Alternatively, one can use command line script to create sewing patterns from de
 python test_garmentcode.py
 ```
 
-It will create sewing pattern for the current state of `assets/design_params/default.yaml` for neutral body, and put it to the logs folder. Modify the parameters inside the script as needed.
+It will create sewing pattern for the current state of `assets/design_params/t-shirt.yaml` for neutral body, and put it to the logs folder. Modify the parameters inside the script as needed.
 
 
 ### Modifying the parameters
 ​
-[assets/design_params/default.yaml](../assets/design_params/default.yaml) contains the full set of style parameters for creating samples of our garment configurator.
+[assets/design_params/t-shirt.yaml](../assets/design_params/t-shirt.yaml) contains the full set of style parameters for creating samples of our garment configurator.
 ​
 * Update some of parameter values ('v:' field under parameter name) within a given range 
 * run `test_garmentcode.py` 
-* `./Logs/default_<timestamp>` will contain the sewing patterns corresponding to given values
+* `system['output']/t-shirt_<timestamp>` will contain the sewing patterns corresponding to given values
 ​
 NOTE:
 * The values of parameters are in cm (distances), degrees (angles), or given as a fraction

@@ -1,7 +1,7 @@
 design:
   meta:
     upper:
-      v: null 
+      v: Shirt
       range:
       - FittedShirt
       - Shirt
@@ -212,7 +212,7 @@ design:
         default_prob: 0.6
   sleeve:
     sleeveless:
-      v: true
+      v: false
       range:
       - true
       - false

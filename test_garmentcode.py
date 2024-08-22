@@ -2,46 +2,38 @@ from datetime import datetime
 import shutil
 from pathlib import Path
 import yaml
-import sys
-import os
-sys.path.append(str((Path(os.getcwd()) / 'external').resolve()))
 
 from assets.garment_programs.meta_garment import MetaGarment
 from assets.bodies.body_params import BodyParameters
 from pygarment.data_config import Properties
 
-# TODO Release version
 
 if __name__ == '__main__':
 
-    # 
-    # body_file = './assets/bodies/f_smpl_avg.yaml'
-    body_file = './assets/bodies/mean_all.yaml'
-    # body_file = 
+    bodies_measurements = {
+        # Our model
+        'neutral': './assets/bodies/mean_all.yaml',
+        'mean_female': './assets/bodies/mean_female.yaml',
+        'mean_male': './assets/bodies/mean_male.yaml',
 
-    body = BodyParameters(body_file)
+        # SMPL
+        'f_smpl': './assets/bodies/f_smpl_average_A40.yaml',
+        'm_smpl': './assets/bodies/m_smpl_average_A40.yaml'
+    }
+    body_to_use = 'f_smpl'   # CHANGE HERE to use different set of body measurements
+
+    body = BodyParameters(bodies_measurements[body_to_use])
 
     design_files = {
-        'base': './assets/design_params/base.yaml',
+        't-shirt': './assets/design_params/t-shirt.yaml',
+        # Add paths HERE to load other parameters
     }
     designs = {}
     for df in design_files:
         with open(design_files[df], 'r') as f:
             designs[df] = yaml.safe_load(f)['design']
     
-    test_garments = [
-        # WB(),
-        # CuffBand('test', design['pants']),
-        # CuffSkirt('test', design['pants']),
-        # CuffBandSkirt('test', design['pants'])
-    ]
-    for df in designs:
-        test_garments.append(MetaGarment(df, body, designs[df]))
-        try:
-            test_garments[-1].assert_total_length()
-        except BaseException as e:
-            print(e)
-            pass
+    test_garments = [MetaGarment(df, body, designs[df]) for df in designs]
 
     for piece in test_garments:
         pattern = piece.assembly()
@@ -52,7 +44,6 @@ if __name__ == '__main__':
         # Save as json file
         sys_props = Properties('./system.json')
         folder = pattern.serialize(
-            # Path(r"G:\My Drive\GarmentCode\sewing_siggraph_garment\Fits"),  #   
             Path(sys_props['output']), 
             tag='_' + datetime.now().strftime("%y%m%d-%H-%M-%S"), 
             to_subfolder=False, 

@@ -1,5 +1,9 @@
 # Installation
 
+## Local paths setup   # TODO
+
+
+
 ## Inslatting simulator
 
 We use our own version of the [NVIDIA warp]() simulator. It should be installed manually to use our library correctly.
