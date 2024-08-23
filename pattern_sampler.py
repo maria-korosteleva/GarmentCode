@@ -321,7 +321,7 @@ if __name__ == '__main__':
         props.set_basic(
             design_file='./assets/design_params/default.yaml',
             body_default='mean_all',
-            body_samples='garment-first-samples',   # 'body_shapes_and_measures_2023-12-30',  # ,
+            body_samples='5000_body_shapes_and_measures', 
             size=args.size,
             name=f'{args.name}_{args.size}' if not args.batch_id else f'{args.name}_{args.size}_{args.batch_id}',
             to_subfolders=True)

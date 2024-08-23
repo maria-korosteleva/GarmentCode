@@ -1,14 +1,24 @@
 # Installation
 
-## Local paths setup   # TODO
+## Local paths setup 
 
+Create system.json file in the root of this directory with your machine's file paths using `system.template.json` as a template. 
+`system.json` should include the following: 
+* Path for creating logs for one-off scripts (`'output'`)
+* Path to the folder with (generated) datasets of sewing patterns (`'datasets_path'`)
+* Path to the folder with simulation results on the datasets of sewing patterns (`'datasets_sim'`)
 
+* Data generation & Simulation resources  
+    * path to folder with simulation\rendering configurations (`'sim_configs_path'`)
+    * path to folder containing body files for neutral body and other base body models (`'bodies_default_path'`)
+    * path to folder containing datasets of body shape samples (`'body_samples_path'`)
+    
 
 ## Inslatting simulator
 
-We use our own version of the [NVIDIA warp]() simulator. It should be installed manually to use our library correctly.
+We use our own version of the [NVIDIA warp]() simulator. It should be installed manually to use our library correctly. # TODO link
 
-See the instructions in the repo: ()
+See the instructions in the repo: () # TODO link
 
 ## Using pip
 

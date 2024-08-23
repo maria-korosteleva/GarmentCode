@@ -6,9 +6,9 @@ Official Implementation of [GarmentCode: Programming Parametric Sewing Patterns]
 
 ## News
 
-**[Aug XX, 2024]** Major release -- implementation of [GarmentCodeData](https://igl.ethz.ch/projects/GarmentCodeData/), new GUI, and other updates and improvements. Basic JSON representation classes are now part of PyGarment library! See CHANGELOG for more details
+**[Aug XX, 2024]** Major release -- implementation of [GarmentCodeData](https://igl.ethz.ch/projects/GarmentCodeData/), new GUI, and other updates and improvements. Basic JSON representation classes are now part of PyGarment library! See CHANGELOG for more details # TODO Date
 
-**[Aug XX, 2024]** New dataset version of the [GarmentCodeData]() is released!
+**[Aug XX, 2024]** New dataset version of the [GarmentCodeData]() is released! # TODO LInk
 
 **[July 1, 2024]** [GarmentCodeData](https://igl.ethz.ch/projects/GarmentCodeData/) is accepted to ECCV!
 
@@ -78,8 +78,3 @@ Please post your issues and questions to [GitHub Issues](https://github.com/mari
 For other requests you can find my info on https://korosteleva.com/.  
 
 
-## Attribution & Body use disclaimer  # TODO Update
-We are using samples from [SMPL](https://smpl.is.tue.mpg.de/) body model as base for [Body Model examples](https://github.com/maria-korosteleva/GarmentCode/tree/main/assets/Bodies). 
-
-### Disclaimer
-Due to the restrictions of the SMPL license, we cannot share all 3D models of the body shapes used in our paper, except for the base average bodies for male and female versions of SMPL. We nevertheless share the approximate body measurements of the thin and the full-bodied models to showcase the adaptation of the patterns to different body types. 

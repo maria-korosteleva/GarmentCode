@@ -1,7 +1,7 @@
 
 # GarmentCodeData: Running data generation and simulation
 
-GarmentCode now supports a synthetic data generation pipeline of [GarmentCodeData](https://igl.ethz.ch/projects/GarmentCodeData/) using [our fork of NVIDIA Warp simulator](). For the technical details of the generation process, please, check the paper. 
+GarmentCode now supports a synthetic data generation pipeline of [GarmentCodeData](https://igl.ethz.ch/projects/GarmentCodeData/) using [our fork of NVIDIA Warp simulator](). For the technical details of the generation process, please, check the paper. # TODO link
 
 The default setup creates sewing pattern samples based on the [garment programs](../assets/garment_programs/) provided in this repo with sampling probabilities specified in [assets/design_params/default.yaml](../assets/design_params/default.yaml). 
 
@@ -14,37 +14,84 @@ The generation pipline consists of two steps that need to be run sequentially:
 
 More on each step below.
 
+## Preparation
+Before generating garment data, make sure to 
 
-## Dataset generator
-`pattern_sampler.py` script
+* Obtain dataset of sample body shapes, either by downloading it from GarmentCodeData, or by creating your own sample using [our tool](https://github.com/mbotsch/GarmentMeasurements).
+* Setup the paths `system.json` as described in [Installation](https://github.com/maria-korosteleva/GarmentCode/blob/main/docs/Installation.md).
+* Customize the parameter ranges and probabilities as suits your application, following the example of [assets/design_params/default.yaml](../assets/design_params/default.yaml) 
+    > Example: to restrict the design space to upper garments only, set the default value for bottoms (`design['meta']['bottom']['v']`) to `null` and `defaul  t_prob` to 1.0 (`design['meta']['bottom']['defaul  t_prob']`).
+* Customize simulation config (see below for details).
 
-2D pattern dataset generation from given templates. Allows to configure the generation by supplying Properties object.
-Example usage of the generator is given in 
-``` if __name__ == "__main__": ```
-section of the file.
+## Sewing pattern sampling 
+`pattern_sampler.py` script generates 2D pattern samples from GarmentCode parametric garment programs and a body shape dataset. The tool will produce design samples each fitted to a neutral body shape and a random shape sample. By default, it looks for 
+* It looks for `5000_body_shapes_and_measures` folder in system['bodies_default_path'] for the body samples.
+* It uses [assets/design_params/default.yaml](../assets/design_params/default.yaml) as a source of design parameter set, ranges and associated probabilites.
+
+To use different body set or design parameter file, update the script as needed.
+
+To start generating, simply specify desired dataset name and size : 
+
+```
+python pattern_sampler.py --name garmentcodedata --size 100
+```
+
+One can also specify batch id, which is simply adds a modifier to the specifies dataset name, but was proved useful for parallel generation of data in batches: 
+
+```
+python pattern_sampler.py --name garmentcodedata --size 100 --batch_id 0
+```
+
+### Replicating existing data batch
+
+The tool supports replication of the existing datasets. It will find the dataset in system['datasets'] folder and re-sample it from the same random seed. For that simply specify the name of the dataset to replicate:
+```
+python pattern_sampler.py --replicate garments_5000_0 
+```
+
 
 ## Simulation
-`pattern_data_sim.py` script  # TODO type of the body!!!
+`pattern_data_sim.py` script simulates each pattern in the provided dataset of sewing patterns. 
 
-* Simulates each pattern in the dataset over a given human body object
-* Uses Qualoth for Maya cloth simulation
-* It is designed to run with Mayapy as standalone interpreter 
-* Command line arguments are the dirs\files basenames given that system.json is properly created.
+The basic parameters of the script include:
+* `data` -- the name of the sewing patterns dataset located in system['datasets_path']
+* `config` -- path to simulation config file (see below for details)
 
-Example usage from command line:
+To run the draping of all the design samples fitted to a neutral body, use the `--default_body` flag. 
 ```
-<Maya Installation path>/bin/mayapy.exe "./datasim.py" --data <dataset_name> --minibatch <size>  --config <simulation_props.json>
+python ./pattern_data_sim.py --data garmentcodedata --config /path/to/sim_config --default_body
 ```
 
-## Simulation config file
+When the flag is omitted, the pipeline will process the portion of the dataset where the designs are fitten to random body shapes:
+```
+python ./pattern_data_sim.py --data garmentcodedata --config /path/to/sim_config
+```
+
+### Running simulation of in batches
+
+
+Simulation process support resuming: it can be stopped and continued at any moment, picking up from where it left off. The required information is stored in `dataset_properties_<tag>.yaml` file in the output folder. 
+
+The command like has a `minibatch` parameter that specifies the number of samples to simulate before exiting the script (by default, the full dataset is processed):
+
+```
+python ./pattern_data_sim.py --data garmentcodedata --config /path/to/sim_config --minibatch 100
+```
+
+This becomes useful when running simulation of large datasets on remote server since the data can be produced and transferred over the network in small portions. 
+
+`pattern_data_sim_runner.sh`:
+
+By putting additional time contraints on batch processing, one can detect hangs or script crushes and automatically resume the processing on the rest of the datapoints, as implemented the `pattern_data_sim_runner.sh` shell script
+
+
+### Simulation config file
 
 Config file has a similar structure to the one used in our previous project [Garment-Pattern-Generator](https://github.com/maria-korosteleva/Garment-Pattern-Generator/). 
 
 > Any `dataset_properties_<tag>.yaml` file of existing datasets could be used in place of Simulaiton Config file. This is an easy way to reproduce simulation and rendering context of existing data. It also stores random seed for sewing pattern sampler making it reproducible as well. 
 
 [`data_generation/Sim_props`](../data_generation/Sim_props) contains configuration for dataset simulation process.
-
-> Simulation parameters differ significantly for Warp-based and Qualoth-based piplines, and they cannot be used interchengeably.
 
 On the high level, every config contains the following
 
@@ -58,10 +105,10 @@ On the high level, every config contains the following
     * Texturing parameters
     * Camera location for the front view
 
-Simulation process support resuming: it can be stopped and continued at any moment, picking up from where it left off. The required information is stored in `dataset_properties_<tag>.yaml` file in the output folder.
+> Simulation parameters differ significantly for Warp-based and Qualoth-based piplines, and they cannot be used interchengeably.
 
-#### **Running simulation of in batches**
 
-`pattern_data_sim_runner.sh` script is given for convence of processing large amounts of garment patterns over long period of time. The main feature is detection of dataset sim processing hangs \ crashes and automatic resume of dataset processing in case of such events. 
+
+
 
 
