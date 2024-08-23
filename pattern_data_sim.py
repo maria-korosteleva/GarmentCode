@@ -68,7 +68,7 @@ if __name__ == "__main__":
     body_type = 'default_body' if command_args.default_body else 'random_body'
     datapath = datapath / body_type / 'data' # Overwrite datapath to specific body type
 
-    output_path = Path(system_config['output']) / dataset / body_type
+    output_path = Path(system_config['datasets_sim']) / dataset / body_type
     output_path.mkdir(parents=True, exist_ok=True) 
     dataset_file_body = output_path / f'dataset_properties_{body_type}.yaml'
     if not dataset_file_body.exists():

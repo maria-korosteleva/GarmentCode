@@ -14,6 +14,7 @@ from mayaqltools import qualothwrapper as qw
 
 
 # ----------- High-level requests --------------
+# TODO Deprecated
 def single_file_sim(resources, props, caching=False):
     """
         Simulates the given template and puts the results in original template folder, 
@@ -81,7 +82,7 @@ def batch_sim(resources, data_path, dataset_props,
 
     qw.load_plugin()
     scene = mymaya.Scene(
-        os.path.join(resources['bodies_path'], dataset_props['body']),
+        os.path.join(resources['bodies_default_path'], dataset_props['body']),
         dataset_props['render'], 
         scenes_path=resources['scenes_path'])
     
