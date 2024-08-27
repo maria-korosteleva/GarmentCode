@@ -4,13 +4,15 @@
 
 Official Implementation of [GarmentCode: Programming Parametric Sewing Patterns](https://igl.ethz.ch/projects/garmentcode/) and [GarmentCodeData: A Dataset of 3D Made-to-Measure Garments With Sewing Patterns](https://igl.ethz.ch/projects/GarmentCodeData/).
 
+> You can find the body measurements part of the project here: https://github.com/mbotsch/GarmentMeasurements 
+
 ## News
 
 **[Aug XX, 2024]** Major release -- implementation of [GarmentCodeData](https://igl.ethz.ch/projects/GarmentCodeData/), new GUI, and other updates and improvements. Basic JSON representation classes are now part of PyGarment library! See CHANGELOG for more details # TODO Date
 
-**[Aug XX, 2024]** New dataset version of the [GarmentCodeData]() is released! # TODO LInk
-
 **[July 1, 2024]** [GarmentCodeData](https://igl.ethz.ch/projects/GarmentCodeData/) is accepted to ECCV!
+
+**[May 29, 2024]** First release of [GarmentCodeData](https://doi.org/10.3929/ethz-b-000673889) dataset!
 
 **[Oct 18, 2023]** First release of GarmentCode!
 
@@ -20,7 +22,7 @@ Official Implementation of [GarmentCode: Programming Parametric Sewing Patterns]
 2. [Running Configurator](https://github.com/maria-korosteleva/GarmentCode/blob/main/docs/Running_garmentcode.md) 
 3. [Running Data Generation (warp)](https://github.com/maria-korosteleva/GarmentCode/blob/main/docs/Running_data_generation.md) 
 3. [Body measurements](https://github.com/maria-korosteleva/GarmentCode/blob/main/docs/Body%20Measurements%20GarmentCode.pdf)
-4. [Dataset documentation]() # TODO add with new link
+4. [Dataset documentation](https://www.research-collection.ethz.ch/handle/20.500.11850/673889)
 3. [Running Old Maya+Qualoth tools](https://github.com/maria-korosteleva/GarmentCode/blob/main/docs/Running_Maya_Qualoth.md) 
 
 ## Navigation
