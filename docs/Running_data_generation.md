@@ -24,7 +24,7 @@ Before generating garment data, make sure to
 * Customize simulation config (see below for details).
 
 ## Sewing pattern sampling 
-`pattern_sampler.py` script generates 2D pattern samples from GarmentCode parametric garment programs and a body shape dataset. The tool will produce design samples each fitted to a neutral body shape and a random shape sample. By default, it looks for 
+`pattern_sampler.py` script generates 2D pattern samples from GarmentCode parametric garment programs and a body shape dataset. The tool will produce design samples each fitted to a neutral body shape and a random shape sample. By default,
 * It looks for `5000_body_shapes_and_measures` folder in system['bodies_default_path'] for the body samples.
 * It uses [assets/design_params/default.yaml](../assets/design_params/default.yaml) as a source of design parameter set, ranges and associated probabilites.
 
@@ -49,6 +49,19 @@ The tool supports replication of the existing datasets. It will find the dataset
 python pattern_sampler.py --replicate garments_5000_0 
 ```
 
+### Fitting one design to a selection of body shapes
+
+`pattern_fitter.py` script allows fixing the design (though fixing design parameters) and vary only the body shapes while creating sewing patterns. Fit to the neutral body shape is also created. The output follows the same folder structure as the regular sampling. 
+
+To start fitting, simply specify desired design parameter file to fit, dataset name and size: 
+
+```
+python pattern_fitter.py .\assets\design_params\t-shirt.yaml --name t-shirt-fit --size 100
+```
+
+The name of the body shape set can be specified inside the script (defaults to out sample `5000_body_shapes_and_measures`).
+
+> Important: the selection of body shapes is NOT RANDOMIZED. The script tranverses the bodies in the specified sample one by one in aphabetical order
 
 ## Simulation
 `pattern_data_sim.py` script simulates each pattern in the provided dataset of sewing patterns. 

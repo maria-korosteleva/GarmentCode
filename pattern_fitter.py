@@ -1,30 +1,35 @@
 """
-    Fitting of one design on a set of vairous body shapes
+    Fitting one sewing pattern design to a set of various body shapes
 """
 
 from datetime import datetime
 from pathlib import Path
 import yaml
-import sys
 import shutil 
 import time
-import random
 import traceback
-
-sys.path.insert(0, './')
+import argparse
 
 # Custom
 from pygarment.data_config import Properties
-from assets.garment_programs.skirt_paneled import *
-from assets.garment_programs.tee import *
-from assets.garment_programs.godet import *
-from assets.garment_programs.bodice import *
-from assets.garment_programs.pants import *
-from assets.garment_programs.meta_garment import *
-from assets.garment_programs.bands import *
+from assets.garment_programs.meta_garment import MetaGarment
 from assets.bodies.body_params import BodyParameters
 
-# TODO Command line interface
+def get_command_args():
+    """command line arguments to control the run"""
+    # https://stackoverflow.com/questions/40001892/reading-named-command-arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('design_file', help='Path to design parameters file to be used to fit to the bodies', type=str)
+    parser.add_argument('--batch_id', '-b', help='id of a sampling batch', type=int, default=None) 
+    parser.add_argument('--size', '-s', help='size of a sample', type=int, default=10)
+    parser.add_argument('--name', '-n', help='Name of the dataset', type=str, default='design_fit')
+    parser.add_argument('--replicate', '-re', help='Name of the dataset to re-generate. If set, other arguments are ignored', type=str, default=None)
+    
+
+    args = parser.parse_args()
+    print('Commandline arguments: ', args)
+
+    return args
 
 def _create_data_folder(properties, path=Path('')):
     """ Create a new directory to put dataset in 
@@ -94,7 +99,7 @@ def _save_sample(piece, body, new_design, folder, verbose=False):
         folder, 
         tag='',
         to_subfolder=True,
-        with_3d=True, with_text=False, view_ids=False)
+        with_3d=False, with_text=False, view_ids=False)
 
     body.save(folder)
     with open(Path(folder) / 'design_params.yaml', 'w') as f:
@@ -126,12 +131,6 @@ def generate(path, properties, sys_paths, verbose=False):
     data_folder, default_path, body_sample_path = _create_data_folder(properties, path)
     default_sample_data = default_path / 'data'
     body_sample_data = body_sample_path / 'data'
-
-    # init random seed
-    if 'random_seed' not in gen_config or gen_config['random_seed'] is None:
-        gen_config['random_seed'] = int(time.time())
-    print(f'Random seed is {gen_config["random_seed"]}')
-    random.seed(gen_config['random_seed'])
 
     # generate data
     start_time = time.time()
@@ -198,22 +197,23 @@ if __name__ == '__main__':
 
     system_props = Properties('./system.json')
 
-    new = True
-    if new:
+    args = get_command_args()
+
+    if args.replicate is not None:
+        props = Properties(
+            Path(system_props['datasets_path']) / args.replicate / 'dataset_properties.yaml',
+            True)
+    else:
         props = Properties()
         props.set_basic(
-            design_file='./assets/design_params/base.yaml',
+            design_file=args.design_file,
             body_default='mean_all',
-            body_samples='garment-first-samples',
+            body_samples='5000_body_shapes_and_measures',
             body_sample_start_id=0,
-            name='fit_3',
-            size=3,
+            name=f'{args.name}_{args.size}' if not args.batch_id else f'{args.name}_{args.size}_{args.batch_id}',
+            size=args.size,
             to_subfolders=True)
         props.set_section_config('generator')
-    else:
-        props = Properties(
-            Path(system_props['datasets_path']) / 'data_30_231116-17-26-02/dataset_properties.yaml',
-            True)
 
     # Generator
     default_path, body_sample_path = generate(

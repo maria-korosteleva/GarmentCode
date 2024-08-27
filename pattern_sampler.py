@@ -1,11 +1,11 @@
-"""A modified version of the data generation file from here: 
-https://github.com/maria-korosteleva/Garment-Pattern-Generator/blob/master/data_generation/datagenerator.py
+"""
+    Create a random sample of sewing pattern designs and fit each
+    to a neutral and a random body shape 
 """
 
 from datetime import datetime
 from pathlib import Path
 import yaml
-import sys
 import shutil 
 import time
 import random
@@ -13,17 +13,9 @@ import string
 import traceback
 import argparse
 
-sys.path.insert(0, './')
-
 # Custom
 from pygarment.data_config import Properties
-from assets.garment_programs.skirt_paneled import *
-from assets.garment_programs.tee import *
-from assets.garment_programs.godet import *
-from assets.garment_programs.bodice import *
-from assets.garment_programs.pants import *
 from assets.garment_programs.meta_garment import MetaGarment, IncorrectElementConfiguration
-from assets.garment_programs.bands import *
 from assets.bodies.body_params import BodyParameters
 import pygarment as pyg
 import assets.garment_programs.stats_utils as stats_utils
@@ -37,7 +29,6 @@ def get_command_args():
     parser.add_argument('--name', '-n', help='Name of the dataset', type=str, default='data')
     parser.add_argument('--replicate', '-re', help='Name of the dataset to re-generate. If set, other arguments are ignored', type=str, default=None)
     
-
     args = parser.parse_args()
     print('Commandline arguments: ', args)
 

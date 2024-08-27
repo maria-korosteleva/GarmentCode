@@ -10,17 +10,12 @@
 """
 import argparse
 import sys
-from importlib import reload
 import shutil
 from pathlib import Path
-
-
 
 # My modules
 import pygarment.data_config as data_config
 import pygarment.meshgen.datasim_utils as sim
-
-reload(data_config)
 
 
 def get_command_args():
