@@ -66,13 +66,4 @@ pip install numpy scipy pyaml svgwrite psutil matplotlib svgpathtools cairosvg n
 
 Add the root repository to `PYTHONPATH`.
 
-## (Optional) Installing Autodesk Maya+Qualoth garment viewer GUI
-
-Our library serializes sewing patterns in a JSON format that extends the file format introduced in our previous project [Garment-Pattern-Generator](https://github.com/maria-korosteleva/Garment-Pattern-Generator/). GarmentCode supports the `garment_viewer` -- GUI extention for Maya that loads and simulated sewing patterns from JSON. To use this tool with GarmentCode patterns, follow the general installation steps from [Garment-Pattern-Generator](https://github.com/maria-korosteleva/Garment-Pattern-Generator/blob/master/docs/Installation.md), but use GarmentCode implementation of the libraries instead: 
-
-> NOTE: Obtaning the code for Garment-Pattern-Generator is not needed.
-
-1. Obtain Maya and Qualoth
-1. Installing python libraries into python environment
-1. (NEW!) Setup environment variables pointing to the `./pygarment` subdirectory of the GarmentCode repo  # TODO Check
 

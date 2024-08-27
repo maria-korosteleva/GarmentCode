@@ -14,9 +14,6 @@ import numpy as np
 # for system info
 import platform
 import psutil
-# TODO -- make optional? Only is installed?
-import warp  # To get device info : Note: only because we are using warp already
-
 
 # --- Nice dumping of floats ---
 def float_representer(dumper, data):
@@ -300,13 +297,17 @@ class Properties():
         self.properties['system_info']['processor'] = platform.processor()
         self.properties['system_info']['ram'] = str(round(psutil.virtual_memory().total / (1024.0 ** 3))) + " GB"
 
-        if warp.context.runtime is None:
-            # runtime = warp.context.Runtime()
-            warp.init()
-        else:
-            print(f'{self.__class__.__name__}::INFO::Saving GPU info -- warp already initialized')
-        curr_device = warp.get_device()   
-        self.properties['system_info']['GPU'] = curr_device.name if curr_device.is_cuda else 'Not used'
+        try: 
+            import warp   # Optional section
+            if warp.context.runtime is None:
+                # runtime = warp.context.Runtime()
+                warp.init()
+            else:
+                print(f'{self.__class__.__name__}::INFO::Saving GPU info -- warp already initialized')
+            curr_device = warp.get_device()   
+            self.properties['system_info']['GPU'] = curr_device.name if curr_device.is_cuda else 'Not used'
+        except ImportError:
+            pass  # Don't do anything if warp not available
 
     def stats_summary(self):
         """

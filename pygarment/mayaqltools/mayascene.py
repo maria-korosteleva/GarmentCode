@@ -20,11 +20,11 @@ from mtoa.cmds.arnoldRender import arnoldRender
 import mtoa.core
 
 # My modules
-import pattern.core as core
-import pattern.wrappers as wrappers
-from pattern.utils import vector_angle, rel_to_abs_2d
-from mayaqltools import qualothwrapper as qw
-from mayaqltools import utils
+import pygarment.pattern.core as core
+import pygarment.pattern.wrappers as wrappers
+from pygarment.pattern.utils import vector_angle, rel_to_abs_2d
+from pygarment.mayaqltools import qualothwrapper as qw
+from pygarment.mayaqltools import utils
 reload(core)
 reload(wrappers)
 reload(qw)

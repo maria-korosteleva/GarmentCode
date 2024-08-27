@@ -8,9 +8,9 @@ import os
 from maya import cmds
 
 # My modules
-from pattern.core import BasicPattern
-import mayaqltools as mymaya
-from mayaqltools import qualothwrapper as qw
+from pygarment.pattern.core import BasicPattern
+import pygarment.mayaqltools as mymaya
+from pygarment.mayaqltools import qualothwrapper as qw
 
 
 # ----------- High-level requests --------------

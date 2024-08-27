@@ -510,7 +510,7 @@ class ParametrizedPattern(BasicPattern):
         Update pattern with new parameter values & randomize those parameters
     """
     def __init__(self, pattern_file=None):
-        super(ParametrizedPattern, self).__init__(pattern_file)
+        super().__init__(pattern_file)
         self.parameters = self.spec['parameters']
 
         self.parameter_defaults = {
@@ -554,7 +554,7 @@ class ParametrizedPattern(BasicPattern):
     def reloadJSON(self):
         """(Re)loads pattern info from spec file. 
         Useful when spec is updated from outside"""
-        super(ParametrizedPattern, self).reloadJSON()
+        super().reloadJSON()
 
         self.parameters = self.spec['parameters']
         self._normalize_param_scaling()
@@ -563,7 +563,7 @@ class ParametrizedPattern(BasicPattern):
         """Restores spec structure from given backup copy 
             Makes a full copy of backup to avoid accidential corruption of backup
         """
-        super(ParametrizedPattern, self)._restore(backup_copy)
+        super()._restore(backup_copy)
         self.parameters = self.spec['parameters']
     
     # ---------- Parameters operations --------
@@ -587,7 +587,7 @@ class ParametrizedPattern(BasicPattern):
 
     def _normalize_edge_loop(self, panel_name):
         """Update the edge loops and edge ids references in parameters & constraints after change"""
-        rotated_edge_ids, flipped = super(ParametrizedPattern, self)._normalize_edge_loop(panel_name)
+        rotated_edge_ids, flipped = super()._normalize_edge_loop(panel_name)
 
         # Parameters
         for parameter_name in self.spec['parameters']:
