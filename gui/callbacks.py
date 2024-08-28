@@ -116,8 +116,6 @@ class GUIState:
     def layout(self):
         """Overall page layout"""
 
-        # TODO License info? 
-
         # as % of viewport width/height
         self.h_header = 5
         self.h_params_content = 88
