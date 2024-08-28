@@ -31,7 +31,7 @@ class GUIPattern:
         self.id = _id_generator(20)
 
         # Paths setup
-        self.save_path_root = Path.cwd() / 'tmp_gui' / 'downloads'   # TODO suitable location for tmp files? 
+        self.save_path_root = Path.cwd() / 'tmp_gui' / 'downloads'  
         self.tmp_path_root = Path.cwd() / 'tmp_gui' / 'display'
         self.save_path = self.save_path_root / self.id
         self.svg_filename = None

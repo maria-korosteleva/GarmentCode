@@ -45,7 +45,7 @@ See [Installation instructions](https://github.com/maria-korosteleva/GarmentCode
 
 If you are using our system in your research, please cite our papers:
 
-```
+```bibtex
 @inproceedings{GarmentCodeData:2024,
   author = {Korosteleva, Maria and Kesdogan, Timur Levent and Kemper, Fabian and Wenninger, Stephan and Koller, Jasmin and Zhang, Yuhan and Botsch, Mario and Sorkine-Hornung, Olga},
   title = {{GarmentCodeData}: A Dataset of 3{D} Made-to-Measure Garments With Sewing Patterns},
@@ -55,7 +55,7 @@ If you are using our system in your research, please cite our papers:
 }
 ```
 
-```
+```bibtex
 @article{GarmentCode2023,
   author = {Korosteleva, Maria and Sorkine-Hornung, Olga},
   title = {{GarmentCode}: Programming Parametric Sewing Patterns},

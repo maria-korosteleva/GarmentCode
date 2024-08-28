@@ -1,9 +1,7 @@
 import igl
 import json
 import pickle
-import shutil
 import numpy as np
-from pathlib import Path
 import yaml
 
 import warp as wp
@@ -51,7 +49,7 @@ class Cloth:
         # -------- Final model settings ----------
         # NOTE: global_viscous_damping: (damping_factor, min_vel_damp, max_vel) 
         # apply damping when vel > min_vel_damp, and clamp vel below max_vel after damping
-        # TODO Not needed in the final version
+        # TODO Remove after refactoring Euler integrator
         self.model.global_viscous_damping = wp.vec3(
             (config.global_damping_factor, config.global_damping_effective_velocity, config.global_max_velocity))
         self.model.particle_max_velocity = config.global_max_velocity
