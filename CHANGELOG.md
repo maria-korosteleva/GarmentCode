@@ -27,4 +27,4 @@ Major update with release of [GarmentCodeData](https://igl.ethz.ch/projects/Garm
  
 ## [1.0.0] - 2023-10-18
  
-Initial release -- implemetation of [GarmentCode](https://igl.ethz.ch/projects/garmentcode/)
+Initial release -- implementation of [GarmentCode](https://igl.ethz.ch/projects/garmentcode/)
