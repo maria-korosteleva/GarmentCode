@@ -119,44 +119,7 @@ class VisPattern(core.ParametrizedPattern):
             np.array(panel['translation'][:2]))   # Only XY
 
         # draw edges
-        start = vertices[panel['edges'][0]['endpoints'][0]]
-        segs = []
-        for edge in panel['edges']:
-            start = vertices[edge['endpoints'][0]]
-            end = vertices[edge['endpoints'][1]]
-            if ('curvature' in edge):
-                # NOTE: supports old curves
-                if isinstance(edge['curvature'], list) or edge['curvature']['type'] == 'quadratic':  
-                    control_scale = self._flip_y(edge['curvature'] if isinstance(edge['curvature'], list) else edge['curvature']['params'][0])
-                    control_point = rel_to_abs_2d(start, end, control_scale)
-                    segs.append(svgpath.QuadraticBezier(*list_to_c([start, control_point, end])))
-                elif edge['curvature']['type'] == 'circle':  # Assuming circle
-                    # https://svgwrite.readthedocs.io/en/latest/classes/path.html#svgwrite.path.Path.push_arc
-
-                    radius, large_arc, right = edge['curvature']['params']
-
-                    segs.append(svgpath.Arc(
-                        list_to_c(start), radius + 1j*radius,
-                        rotation=0,
-                        large_arc=large_arc, 
-                        sweep=not right,
-                        end=list_to_c(end)
-                    ))
-
-                elif edge['curvature']['type'] == 'cubic':
-                    cps = []
-                    for p in edge['curvature']['params']:
-                        control_scale = self._flip_y(p)
-                        control_point = rel_to_abs_2d(start, end, control_scale)
-                        cps.append(control_point)
-
-                    segs.append(svgpath.CubicBezier(*list_to_c([start, *cps, end])))
-
-                else:
-                    raise NotImplementedError(f'{self.__class__.__name__}::Unknown curvature type {edge["curvature"]["type"]}')
-
-            else:
-                segs.append(svgpath.Line(*list_to_c([start, end])))
+        segs = [self._edge_as_curve(vertices, edge) for edge in panel['edges']]
         path = svgpath.Path(*segs)
         if apply_transform:
             # Placement and rotation according to the 3D location

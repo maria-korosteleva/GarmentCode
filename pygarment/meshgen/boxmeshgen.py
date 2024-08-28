@@ -583,8 +583,8 @@ class BoxMesh(wrappers.VisPattern):
         """
         Loads all relevant functions and prints their time consumptions
         """
-        # if self.is_self_intersecting():  # TODO Remove. VisPattern check for self-intersection is of low quality
-        #     print(f'{self.__class__.__name__}::WARNING::{self.name}::Provided pattern has self-intersecting panels. Simulation might crash')
+        if self.is_self_intersecting(): 
+            print(f'{self.__class__.__name__}::WARNING::{self.name}::Provided pattern has self-intersecting panels. Simulation might crash')
 
         self.load_panels()
         self.gen_panel_meshes()

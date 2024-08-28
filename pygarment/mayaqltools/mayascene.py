@@ -73,11 +73,8 @@ class MayaGarment(wrappers.VisPattern):
         """
         if self.is_self_intersecting():
             # supplied pattern with self-intersecting panels -- it's likely to crash Maya
-            # FIXME self-intersection detection fires falsely on circle skirts
-            # raise PatternLoadingError('{}::{}::Provided pattern has self-intersecting panels. Nothing is loaded'.format(
-            #    self.__class__.__name__, self.name))
-            print('{}::WARNING::{}::Provided pattern has self-intersecting panels. Simulation might crash'.format(
-                self.__class__.__name__, self.name))
+            raise PatternLoadingError('{}::{}::Provided pattern has self-intersecting panels. Nothing is loaded'.format(
+               self.__class__.__name__, self.name))
     
         if self.loaded_to_maya:
             # save the latest sim info

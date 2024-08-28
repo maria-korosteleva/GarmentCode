@@ -35,6 +35,10 @@ def c_to_list(num):
         return [c_to_list(n) for n in num]
     else:
         return [num.real, num.imag]
+    
+def close_enough(f1, f2=0, tol=1e-4):
+    """Compare two floats correctly """
+    return abs(f1 - f2) < tol
 
 # Vector local coodinates conversion
 def rel_to_abs_2d(start, end, rel_point):
