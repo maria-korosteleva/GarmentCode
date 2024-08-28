@@ -129,6 +129,12 @@ class SimConfig:
         self.enable_particle_particle_collisions = self.get_sim_props_value(
             sim_props_option,
             'enable_particle_particle_collisions', False)
+        self.enable_triangle_particle_collisions = self.get_sim_props_value(
+            sim_props_option,
+            'enable_triangle_particle_collisions', False)
+        self.enable_edge_edge_collisions = self.get_sim_props_value(
+            sim_props_option,
+            'enable_edge_edge_collisions', False)
         self.enable_body_collision_filters = self.get_sim_props_value(
             sim_props_option, 
             'enable_body_collision_filters', 

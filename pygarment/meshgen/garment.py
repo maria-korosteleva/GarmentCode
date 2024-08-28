@@ -62,7 +62,8 @@ class Cloth:
         self.model.cloth_reference_k = config.cloth_reference_k
         self.model.cloth_reference_watertight_whole_shape_index = 0
         self.model.enable_particle_particle_collisions = config.enable_particle_particle_collisions
-        self.model.enable_self_collision = True   # TODO More fine-grained controls from config
+        self.model.enable_triangle_particle_collisions = config.enable_triangle_particle_collisions
+        self.model.enable_edge_edge_collisions = config.enable_edge_edge_collisions
         self.model.attachment_constraint = config.enable_attachment_constraint
 
         self.model.soft_contact_margin = config.soft_contact_margin
