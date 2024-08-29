@@ -3,15 +3,16 @@
 """
 # Basic
 import copy
-from datetime import datetime
 import errno
 import json
 import numpy as np
 import os
 import random
+import svgpathtools as svgpath
 
 # My
 from . import rotation as rotation_tools
+from . import utils
 
 standard_filenames = [
     'specification',  # e.g. used by dataset generation
@@ -40,8 +41,6 @@ panel_spec_template = {
     'vertices': [],
     'edges': []
 }
-
-# FIXME too many abs_to_rel and rel_to_abs functions
 
 class EmptyPatternError(BaseException):
     def __init__(self, *args: object) -> None:
@@ -196,6 +195,43 @@ class BasicPattern(object):
 
         return np.concatenate([edge_vector, curvature])
 
+    def _edge_as_curve(self, vertices, edge):
+        start = vertices[edge['endpoints'][0]]
+        end = vertices[edge['endpoints'][1]]
+        if ('curvature' in edge):
+            # NOTE: supports old curves
+            if isinstance(edge['curvature'], list) or edge['curvature']['type'] == 'quadratic':  
+                control_scale = self._flip_y(edge['curvature'] if isinstance(edge['curvature'], list) else edge['curvature']['params'][0])
+                control_point = utils.rel_to_abs_2d(start, end, control_scale)
+                return svgpath.QuadraticBezier(*utils.list_to_c([start, control_point, end]))
+            elif edge['curvature']['type'] == 'circle':  # Assuming circle
+                # https://svgwrite.readthedocs.io/en/latest/classes/path.html#svgwrite.path.Path.push_arc
+
+                radius, large_arc, right = edge['curvature']['params']
+
+                return svgpath.Arc(
+                    utils.list_to_c(start), radius + 1j*radius,
+                    rotation=0,
+                    large_arc=large_arc, 
+                    sweep=not right,
+                    end=utils.list_to_c(end)
+                )
+
+            elif edge['curvature']['type'] == 'cubic':
+                cps = []
+                for p in edge['curvature']['params']:
+                    control_scale = self._flip_y(p)
+                    control_point = utils.rel_to_abs_2d(start, end, control_scale)
+                    cps.append(control_point)
+
+                return svgpath.CubicBezier(*utils.list_to_c([start, *cps, end]))
+
+            else:
+                raise NotImplementedError(f'{self.__class__.__name__}::Unknown curvature type {edge["curvature"]["type"]}')
+
+        else:
+            return svgpath.Line(*utils.list_to_c([start, end]))
+
     @staticmethod
     def _point_in_3D(local_coord, rotation, translation):
         """Apply 3D transformation to the point given in 2D local coordinated, e.g. on the panel
@@ -262,7 +298,7 @@ class BasicPattern(object):
                 edges = self.pattern['panels'][panel]['edges']
                 for edge in edges:
                     if 'curvature' in edge:
-                        edge['curvature'] = self._control_to_relative_coord(
+                        edge['curvature'] = utils.abs_to_rel_2d(
                             vertices[edge['endpoints'][0]], 
                             vertices[edge['endpoints'][1]], 
                             edge['curvature']
@@ -401,45 +437,6 @@ class BasicPattern(object):
         return rotated_edge_ids, flipped
 
     # -- sub-utils --
-    @staticmethod
-    def control_to_abs_coord(start, end, control_scale):
-        """
-        Derives absolute coordinates of Bezier control point given as an offset
-        """
-        edge = end - start
-        edge_perp = np.array([-edge[1], edge[0]])
-
-        control_start = start + control_scale[0] * edge
-        control_point = control_start + control_scale[1] * edge_perp
-
-        return control_point 
-    
-    def _control_to_relative_coord(self, start, end, control_point):
-        """
-        Derives relative (local) coordinates of Bezier control point given as 
-        a absolute (world) coordinates
-        """
-        start, end, control_point = np.array(start), np.array(end), \
-            np.array(control_point)
-
-        control_scale = [None, None]
-        edge_vec = end - start
-        edge_len = np.linalg.norm(edge_vec)
-        control_vec = control_point - start
-        
-        # X
-        # project control_vec on edge_vec by dot product properties
-        control_projected_len = edge_vec.dot(control_vec) / edge_len 
-        control_scale[0] = control_projected_len / edge_len
-        # Y
-        control_projected = edge_vec * control_scale[0]
-        vert_comp = control_vec - control_projected  
-        control_scale[1] = np.linalg.norm(vert_comp) / edge_len
-        # Distinguish left&right curvature
-        control_scale[1] *= np.sign(np.cross(control_point, edge_vec))
-
-        return control_scale 
-
     def _edge_length(self, panel, edge):
         panel = self.pattern['panels'][panel]
         v_id_start, v_id_end = tuple(panel['edges'][edge]['endpoints'])
@@ -494,63 +491,56 @@ class BasicPattern(object):
         """returns True if any of the pattern panels are self-intersecting"""
         return any(map(self._is_panel_self_intersecting, self.pattern['panels']))
 
-    def _is_panel_self_intersecting(self, panel_name):
+    def _is_panel_self_intersecting(self, panel_name, n_vert_approximation=10):
         """Checks whatever a given panel contains intersecting edges
         """
         panel = self.pattern['panels'][panel_name]
         vertices = np.array(panel['vertices'])
 
-        # construct edge list in coordinates
-        edge_list = []
-        for edge in panel['edges']:
-            edge_ids = edge['endpoints']
-            edge_coords = vertices[edge_ids]
-            if 'curvature' in edge and isinstance(edge['curvature'], list):
-                # FIXME Legacy curvature representation
-                curv_abs = self.control_to_abs_coord(edge_coords[0], edge_coords[1], edge['curvature'])
-                # view curvy edge as two segments
-                # NOTE this aproximation might lead to False positives in intersection tests
-                # FIXME Use linearization (same as in GarmentCode) for better approximation
-                # And fixing the "self-intersection" of circle skirts
-                edge_list.append([edge_coords[0], curv_abs])
-                edge_list.append([curv_abs, edge_coords[1]])
+        edge_curves = []  
+        for e in panel['edges']:
+            curve = self._edge_as_curve(vertices, e)
+
+            if isinstance(curve, svgpath.Arc):
+                # NOTE: Intersections for Arcs (Circle edge) fails in svgpathtools:
+                # They are not well implemented in svgpathtools, see
+                # https://github.com/mathandy/svgpathtools/issues/121
+                # https://github.com/mathandy/svgpathtools/blob/fcb648b9bb9591d925876d3b51649fa175b40524/svgpathtools/path.py#L1960
+                # Hence using linear approximation for robustness:
+                n = n_vert_approximation + 1
+                tvals = np.linspace(0, 1, n, endpoint=False)[1:]
+                edge_verts = [curve.point(t) for t in tvals]
+                edge_curves += [svgpath.Line(edge_verts[i], edge_verts[i + 1]) for i in range(n-1)]
             else:
-                edge_list.append(edge_coords.tolist())
+                edge_curves.append(curve)
 
-        # simple pairwise checks of edges
-        # Follows discussion in  https://math.stackexchange.com/questions/80798/detecting-polygon-self-intersection 
-        for i1 in range(0, len(edge_list)):
-            for i2 in range(i1 + 1, len(edge_list)):
-                if self._is_segm_intersecting(edge_list[i1], edge_list[i2]):
-                    return True
-        
-        return False          
-        
-    def _is_segm_intersecting(self, segment1, segment2):
-        """Checks wheter two segments intersect 
-            in the points interior to both segments"""
-        # https://algs4.cs.princeton.edu/91primitives/
-        def ccw(start, end, point):
-            """A test whether three points form counterclockwize angle (>0) 
-            Returns (<0) if they form clockwize angle
-            0 if collinear"""
-            return (end[0] - start[0]) * (point[1] - start[1]) - (point[0] - start[0]) * (end[1] - start[1])
+        # NOTE: simple pairwise checks of edges
+        for i1 in range(0, len(edge_curves)):
+           for i2 in range(i1 + 1, len(edge_curves)):
+                intersect_t = edge_curves[i1].intersect(edge_curves[i2])
+                
+                # Check exceptions -- intersection at the vertex
+                for i in range(len(intersect_t)): 
+                    t1, t2 = intersect_t[i]
+                    if t2 < t1:
+                        t1, t2 = t2, t1
+                    if utils.close_enough(t1, 0) and utils.close_enough(t2, 1):
+                        intersect_t[i] = None
+                intersect_t = [el for el in intersect_t if el is not None]
 
-        # FIXME allow some tolerance ? Godet skirts fail sometimes
-        # == 0 for edges sharing a vertex
-        if (ccw(segment1[0], segment1[1], segment2[0]) * ccw(segment1[0], segment1[1], segment2[1]) >= 0
-                or ccw(segment2[0], segment2[1], segment1[0]) * ccw(segment2[0], segment2[1], segment1[1]) >= 0):
-            return False
-        return True
+                if intersect_t:  # Any other case of intersections
+                    return True      
+        return False 
 
-
+# NOTE: Deprecated. Preserved for backward compatibility 
+# with the first dataset of 3D garments and sewing patterns
 class ParametrizedPattern(BasicPattern):
     """
         Extention to BasicPattern that can work with parametrized patterns
         Update pattern with new parameter values & randomize those parameters
     """
     def __init__(self, pattern_file=None):
-        super(ParametrizedPattern, self).__init__(pattern_file)
+        super().__init__(pattern_file)
         self.parameters = self.spec['parameters']
 
         self.parameter_defaults = {
@@ -594,7 +584,7 @@ class ParametrizedPattern(BasicPattern):
     def reloadJSON(self):
         """(Re)loads pattern info from spec file. 
         Useful when spec is updated from outside"""
-        super(ParametrizedPattern, self).reloadJSON()
+        super().reloadJSON()
 
         self.parameters = self.spec['parameters']
         self._normalize_param_scaling()
@@ -603,7 +593,7 @@ class ParametrizedPattern(BasicPattern):
         """Restores spec structure from given backup copy 
             Makes a full copy of backup to avoid accidential corruption of backup
         """
-        super(ParametrizedPattern, self)._restore(backup_copy)
+        super()._restore(backup_copy)
         self.parameters = self.spec['parameters']
     
     # ---------- Parameters operations --------
@@ -627,7 +617,7 @@ class ParametrizedPattern(BasicPattern):
 
     def _normalize_edge_loop(self, panel_name):
         """Update the edge loops and edge ids references in parameters & constraints after change"""
-        rotated_edge_ids, flipped = super(ParametrizedPattern, self)._normalize_edge_loop(panel_name)
+        rotated_edge_ids, flipped = super()._normalize_edge_loop(panel_name)
 
         # Parameters
         for parameter_name in self.spec['parameters']:
@@ -837,7 +827,7 @@ class ParametrizedPattern(BasicPattern):
                 target_len = []
                 for panel_influence in constraint['influence']:
                     for edge in panel_influence['edge_list']:
-                        # TODO constraints along a custom vector are not well tested
+                        # NOTE: constraints along a custom vector are not well tested
                         _, _, _, length = self._meta_edge(panel_influence['panel'], edge)
                         edge['length'] = length
                         target_len.append(length)

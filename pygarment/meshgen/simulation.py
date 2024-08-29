@@ -26,14 +26,10 @@ import warp as wp
 
 # Custom code
 from pygarment.meshgen.render.pythonrender import render_images
-import pygarment.meshgen.flat_simulation as sim_flat
 from pygarment.meshgen.garment import Cloth
 from pygarment.meshgen.sim_config import SimConfig, PathCofig
 
 wp.init()
-
-# TODO Move to a new mesh_query interface in custom kernels
-# TODO GUI Integration
 
 class SimulationError(BaseException):
     """To be rised when panel stitching cannot be executed correctly"""
@@ -95,7 +91,7 @@ def sim_frame_sequence(garment, config, store_usd=False, verbose=False):
         else:
             update_progress(frame, config.max_sim_steps)
 
-        garment.frame = frame  # TODO Inside garment class
+        garment.frame = frame 
 
         #Run frame and raise FrameTimeOutError if frame takes too long to simulate
 
@@ -159,60 +155,15 @@ def sim_frame_sequence(garment, config, store_usd=False, verbose=False):
             raise SimTimeOutError
         
 
-# TODO Config? And sim props?? Whyyyyyyyyyy
-def run_flat_sim(config, props, paths: PathCofig, garment, store_usd=False, verbose=False):
-
-    cloth_flat = sim_flat.ClothFlat(garment.name, config, paths, garment, caching=store_usd)
-    cloth_name = garment.name
-
-    start_time = time.time()
-    try:
-        sim_frame_sequence(cloth_flat, config, store_usd, verbose=verbose)
-    except BaseException as e:
-        print(f'FlatSim::ERROR::{cloth_name}::crashed')
-
-        if isinstance(e, KeyboardInterrupt):
-            # Allow to stop simulation loops by keyboard interrupt
-            # It's not a real crash, so don't write down the failure
-            sec = round(time.time() - start_time, 3)
-            min = int(sec / 60)
-            print(f"Simulation pipeline took: {min} m {sec - min * 60} s")
-            raise e
-
-        traceback.print_exc()
-        props.add_fail('sim', 'crashes', cloth_name)  
-    else: 
-        # TODO Static equilibrium and other quality checks
-        pass
-
-    # Postprocessing 
-    # TODO Sim speed stats 
-
-    cloth_flat.save_frame(final=True)
-
-    # Render images
-    s_time = time.time()
-    render_images(paths, garment.v_body, garment.f_body, props['render']['config'], flat=True)
-    render_image_time = time.time() - s_time
-    props['render']['stats']['render_time'][cloth_name] += render_image_time  # TODO: remove?
-    print(f"Rendering {cloth_name} FLAT took {render_image_time}s")
-
 def run_sim(
         cloth_name, props, paths: PathCofig, 
-        flat=False, save_v_norms=False, store_usd=False, 
+        save_v_norms=False, store_usd=False, 
         optimize_storage=False,
         verbose=False): 
     """Initialize and run the simulation
     !! Important !! 
         'store_usd' parameter slows down the simulation to CPU rates because of required CPU-GPU copies and file writes. Use only for debugging
     """
-    
-    # DEBUG Configurations
-    # wp.config.mode = "debug"
-    # wp.config.verify_cuda = True
-    # wp.config.print_launches = True
-    # wp.set_device('cpu')
-    
     sim_props = props['sim']
     render_props = props['render']
 
@@ -284,21 +235,14 @@ def run_sim(
     sim_props['stats']['spf'][cloth_name] = sim_time / frame if frame else sim_time
     sim_props['stats']['fin_frame'][cloth_name] = frame
 
-    garment.save_frame(final=True, save_v_norms=save_v_norms) #saving after stats
-
-    # TODO GUI integration
+    garment.save_frame(save_v_norms=save_v_norms) #saving after stats
 
     # Render images
     s_time = time.time()
-    render_images(paths, garment.v_body, garment.f_body, render_props['config'], flat=False)
+    render_images(paths, garment.v_body, garment.f_body, render_props['config'])
     render_image_time = time.time() - s_time
     render_props['stats']['render_time'][cloth_name] = render_image_time  
     print(f"Rendering {cloth_name} took {render_image_time}s")
-
-    # Perform flat simulation if needed
-    # TODO From outside? 
-    if flat:
-        run_flat_sim(config, props, paths, garment, store_usd=store_usd, verbose=verbose)
 
     if optimize_storage:
         optimize_garment_storage(paths)

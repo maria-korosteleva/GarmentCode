@@ -1,10 +1,12 @@
 """
     Simple Rotation Conversion routines (Maya-Python2.7-Compatible!!)
-    TODO: Can be substituted with scipy rotation transformation routines for Maya2022+
 """
 import numpy as np
 import math as m
 import sys
+
+# TODO: Maya python 2.7 is long gone.
+# Can be substituted with scipy rotation transformation routines for Maya2022+
 
 
 # Thanks to https://www.meccanismocomplesso.org/en/3d-rotations-and-euler-angles-in-python/ for the code

@@ -8,12 +8,13 @@ import os
 from maya import cmds
 
 # My modules
-from pattern.core import BasicPattern
-import mayaqltools as mymaya
-from mayaqltools import qualothwrapper as qw
+from pygarment.pattern.core import BasicPattern
+import pygarment.mayaqltools as mymaya
+from pygarment.mayaqltools import qualothwrapper as qw
 
 
 # ----------- High-level requests --------------
+# TODO Deprecated
 def single_file_sim(resources, props, caching=False):
     """
         Simulates the given template and puts the results in original template folder, 
@@ -58,7 +59,7 @@ def batch_sim(resources, data_path, dataset_props,
                 * body_path -- path to folder with body meshes
                 * data_path -- path to folder with the dataset
                 * scenes_path -- path to folder with rendering scenes
-            * dataset_props -- dataset properties. Properties has to be of custom customconfig.Properties() class and contain
+            * dataset_props -- dataset properties. Properties has to be of custom data_config.Properties() class and contain
                     * dataset folder (inside data_path) 
                     * name of pattern template
                     * name of body .obj file
@@ -81,7 +82,7 @@ def batch_sim(resources, data_path, dataset_props,
 
     qw.load_plugin()
     scene = mymaya.Scene(
-        os.path.join(resources['bodies_path'], dataset_props['body']),
+        os.path.join(resources['bodies_default_path'], dataset_props['body']),
         dataset_props['render'], 
         scenes_path=resources['scenes_path'])
     

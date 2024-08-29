@@ -1,30 +1,25 @@
-"""A Python library for building sewing patterns procedurally
-
-    # TODO Usage
-    # TODO Applications/limitaitons
-
+"""
+    A Python library for building parametric sewing pattern programs
 """
 
-# TODO allow direct access to mayaqltools? 
-# TODO Access to pattern lib?
-
 # Building blocks
-from pygarment.component import Component
-from pygarment.panel import Panel
-from pygarment.edge import *
-from pygarment.connector import Stitches
-from pygarment.interface import Interface
-from pygarment.edge_factory import EdgeSeqFactory
-from pygarment.edge_factory import CircleEdgeFactory
-from pygarment.edge_factory import EdgeFactory
+from pygarment.garmentcode.component import Component
+from pygarment.garmentcode.panel import Panel
+from pygarment.garmentcode.edge import Edge, CircleEdge, CurveEdge, EdgeSequence
+from pygarment.garmentcode.connector import Stitches
+from pygarment.garmentcode.interface import Interface
+from pygarment.garmentcode.edge_factory import EdgeSeqFactory
+from pygarment.garmentcode.edge_factory import CircleEdgeFactory
+from pygarment.garmentcode.edge_factory import EdgeFactory
+from pygarment.garmentcode.edge_factory import CurveEdgeFactory
 
 
 # Operations
-import pygarment.operators as ops
-import pygarment.generic_utils as utils
+import pygarment.garmentcode.operators as ops
+import pygarment.garmentcode.utils as utils
 
 # Parameter support
-from pygarment.params import *
+from pygarment.garmentcode.params import BodyParametrizationBase, DesignSampler
 
 # Errors
 from pygarment.pattern.core import EmptyPatternError

@@ -1,9 +1,7 @@
 import igl
 import json
 import pickle
-import shutil
 import numpy as np
-from pathlib import Path
 import yaml
 
 import warp as wp
@@ -31,10 +29,9 @@ class Cloth:
         self.sim_fps = config.sim_fps
         self.sim_substeps = config.sim_substeps
         self.zero_gravity_steps = config.zero_gravity_steps
-        self.self_collision_steps = config.self_collision_steps
         self.sim_dt = (1.0 / self.sim_fps) / self.sim_substeps
-        self.sim_time = 0.0 #TODO: change this?
-        self.sim_use_graph = False   # DEBUG wp.get_device().is_cuda
+        self.usd_frame_time = 0.0 
+        self.sim_use_graph = wp.get_device().is_cuda
         self.device = wp.get_device() if wp.get_device().is_cuda else 'cpu' 
         self.frame = -1
 
@@ -52,12 +49,12 @@ class Cloth:
         # -------- Final model settings ----------
         # NOTE: global_viscous_damping: (damping_factor, min_vel_damp, max_vel) 
         # apply damping when vel > min_vel_damp, and clamp vel below max_vel after damping
+        # TODO Remove after refactoring Euler integrator
         self.model.global_viscous_damping = wp.vec3(
             (config.global_damping_factor, config.global_damping_effective_velocity, config.global_max_velocity))
         self.model.particle_max_velocity = config.global_max_velocity
         
-        # TODO Inside the builder like with other parameters?
-        self.model.ground = config.ground   # TODO Inside the builder like with other parameters?
+        self.model.ground = config.ground  
 
         self.model.global_collision_filter = config.enable_global_collision_filter
         self.model.cloth_reference_drag = self.enable_cloth_reference_drag
@@ -65,6 +62,8 @@ class Cloth:
         self.model.cloth_reference_k = config.cloth_reference_k
         self.model.cloth_reference_watertight_whole_shape_index = 0
         self.model.enable_particle_particle_collisions = config.enable_particle_particle_collisions
+        self.model.enable_triangle_particle_collisions = config.enable_triangle_particle_collisions
+        self.model.enable_edge_edge_collisions = config.enable_edge_edge_collisions
         self.model.attachment_constraint = config.enable_attachment_constraint
 
         self.model.soft_contact_margin = config.soft_contact_margin
@@ -158,8 +157,8 @@ class Cloth:
         )
 
         # ------------ Add a body -----------      
-        # TODO Used? 
         if self.enable_body_smoothing:
+            # Starts sim from smoothed-out body and slowly restores original details
             smoothing_total_smoothing_factor = config.smoothing_total_smoothing_factor
             smoothing_num_steps = config.smoothing_num_steps
             smoothing_recover_start_frame = config.smoothing_recover_start_frame
@@ -236,8 +235,6 @@ class Cloth:
             self._add_attachment_labels(builder, config)
 
         # ----- Global collision resolution error ---- 
-        # TODO This should be a subfunction
-        
         for part in body_parts:
             part_v, part_inds = assign.extract_submesh(body_vertices, body_indices, body_parts[part])
             builder.add_cloth_reference_shape_mesh(
@@ -247,12 +244,10 @@ class Cloth:
                 rot = body_rot,
                 scale = (1.0,1.0,1.0) #performed body scaling above
             )
-        # TODO this should either be side-effect only, or no side-effects at all
         # NOTE: has a side-effect of filling up model.particle_reference_label array 
         self.body_parts_names2index = builder.add_cloth_reference_labels(
             cloth_reference_labels, 
             [   # NOTE: Not adding drag between legs and the body as it's useless and contradicts attachment
-                # TODO Check if stitches are needed to be added here as well
                 ['left_arm', 'body'], 
                 ['right_arm', 'body'], 
                 ['left_leg', 'right_leg'],
@@ -325,26 +320,6 @@ class Cloth:
                         stiffness = config.attachment_stiffness[i],
                         damping = config.attachment_damping[i]
                     )
-                    # DRAFT Wrist attachment
-                    # elif 'wrist' in attach_label:
-                    # TODO Apply to all sleeve panels? Not just the wrist? 
-                    # neck_level = body_dict['height'] - body_dict['head_l']
-                    # shoulder_x = - body_dict['shoulder_w']
-                    # arm_pose = np.deg2rad(body_dict['arm_pose_angle'])
-                    # wrist_x = shoulder_x - np.cos(arm_pose) * body_dict['arm_length']
-                    # wrist_y = neck_level - np.sin(arm_pose) * body_dict['arm_length']
-                    # Left/right distinction
-                    # wrist_x = wrist_x if attach_label == 'right_wrist' else -wrist_x
-                    # Norm
-                    # dir = wp.vec3(shoulder_x - wrist_x, neck_level - wrist_y, 0).normalize()
-                    # Create attachment
-                    # builder.add_attachment(
-                    #     constaint_verts, 
-                    #     wp.vec3(wrist_x, wrist_y, 0),  
-                    #     dir, 
-                    #     stiffness = config.attachment_stiffness[i],
-                    #     damping = config.attachment_damping[i]
-                    # )
                 else:
                     print(f'{self.name}::WARNING::Requested attachment label {attach_label} '
                           'is not supported. Skipped')
@@ -394,7 +369,6 @@ class Cloth:
         # do not capture kernel launches anymore
 
     def update(self, frame):
-        # TODO We already have self.frame setup though...
         with wp.ScopedTimer("simulate", print=False, active=True):
             if self.model.enable_particle_particle_collisions:
                 # FIXME: Produces cuda errors when activated together with "enable_cloth_reference_drag"
@@ -404,16 +378,12 @@ class Cloth:
                 self.model.gravity = np.array((0.0, -9.81, 0.0))
                 if self.sim_use_graph:
                     self.create_graph()
-            if frame == self.self_collision_steps:
-                self.model.enable_self_collision = True
-                if self.sim_use_graph:
-                    self.create_graph()
             if self.enable_body_smoothing and frame in self.body_smoothing_frames:
                 self.update_smooth_body_shape()
                 if self.sim_use_graph:
                     self.create_graph()
             if (self.model.attachment_constraint 
-                    and frame >= self.config.attachment_frames):  # TODO if self.is_static() if need to save on simulation time
+                    and frame >= self.config.attachment_frames):  
                 self.model.attachment_constraint = False
                 if self.sim_use_graph:
                     self.create_graph()
@@ -426,15 +396,8 @@ class Cloth:
 
             # Update vertices of last frame
             self.last_verts = self.current_verts
-            self.current_verts = wp.array.numpy(self.state_0.particle_q)  # NOTE Makes a copy if particle_q device is not CPU
-
-            # Turn off cloth drag once collisions are resolved
-            # And leave the rest to regular self-collision routines
-            # DRAFT -- enable throughout 
-            # num = wp.array.numpy(self.model.particle_global_self_intersection_count)[0]
-            # if num == 0: 
-            #     self.model.cloth_reference_drag = False
-            #     self.model.cloth_reference_drag_particles.zero_()
+            # NOTE Makes a copy if particle_q device is not CPU
+            self.current_verts = wp.array.numpy(self.state_0.particle_q)  
             
     def update_smooth_body_shape(self):
         body_vertices = self.body_smoothing_vertices_list.pop()
@@ -463,13 +426,13 @@ class Cloth:
 
     def render_usd_frame(self, is_live=False):
         with wp.ScopedTimer("render", print=False, active=True):
-            start_time = 0.0 if is_live else self.sim_time
+            start_time = 0.0 if is_live else self.usd_frame_time
 
             self.renderer.begin_frame(start_time)
             self.renderer.render(self.state_0)
             self.renderer.end_frame()
 
-        self.sim_time += 1.0 / self.sim_fps
+        self.usd_frame_time += 1.0 / self.sim_fps
         if not is_live:
             self.renderer.save()
 
@@ -528,47 +491,41 @@ class Cloth:
         vertex_normals = vertex_normals[:, :3] / (vertex_normals[:, 3][:, np.newaxis])
         return vertex_normals
 
-    def save_frame(self, final=False, save_v_norms=False): 
-        if not final: # FIXME Remove -- not used
-            # NOTE: stores only v and f (okay for cache)
-            v_Cloth_end = self.current_verts
-            f_Cloth = self.f_cloth
+    def save_frame(self, save_v_norms=False): 
+        """Save current garment state as an obj file, 
+        re-using all the information from boxmesh 
+        except for vertices and vertex normals (e.g. textures and faces)
+        """
+        
+        # NOTE: igl routine is not used here because it cannot write any extra info (e.g. texture coords) into obj
 
-            # Save v_Cloth_end as obj file
-            pathClothFinal = self.final_path + f"_{self.out_tag}_cached.obj"
+        # stores v, f, vf and vn
+        # Save cloth with texture and normals
+        if save_v_norms:
+            vertex_normals = self.calc_vertex_norms()
 
-            #Save final cloth obj file
-            igl.write_triangle_mesh(pathClothFinal, v_Cloth_end, f_Cloth)
-        else:
-            # NOTE: igl routine is not used here because it cannot write any extra info (e.g. texture coords) into obj
+        v_cloth_sim = self.current_verts
+        # Store simulated cloth mesh
+        # Read the boxmesh file
+        with open(self.paths.g_box_mesh, 'r') as obj_file:
+            lines = obj_file.readlines()
 
-            # stores v, f, vf and vn
-            # Save cloth with texture and normals
-            if save_v_norms:
-                vertex_normals = self.calc_vertex_norms()
-
-            v_cloth_sim = self.current_verts
-            # Store simulated cloth mesh
-            # Read the boxmesh file
-            with open(self.paths.g_box_mesh, 'r') as obj_file:
-                lines = obj_file.readlines()
-
-            # Modify the vertex positions and normals, if required
-            with open(self.paths.g_sim, 'w') as obj_file:
-                v_idx = 0
-                vn_idx = 0
-                for line in lines:
-                    if line.startswith('v '):
-                        new_vertex = v_cloth_sim[v_idx]
-                        obj_file.write(f'v {new_vertex[0]} {new_vertex[1]} {new_vertex[2]}\n')
-                        v_idx += 1
-                    elif line.startswith('vn '):
-                        if save_v_norms:
-                            new_vertex = vertex_normals[vn_idx]
-                            obj_file.write(f'vn {new_vertex[0]} {new_vertex[1]} {new_vertex[2]}\n')
-                            vn_idx += 1
-                    else:
-                        obj_file.write(line)
+        # Modify the vertex positions and normals, if required
+        with open(self.paths.g_sim, 'w') as obj_file:
+            v_idx = 0
+            vn_idx = 0
+            for line in lines:
+                if line.startswith('v '):
+                    new_vertex = v_cloth_sim[v_idx]
+                    obj_file.write(f'v {new_vertex[0]} {new_vertex[1]} {new_vertex[2]}\n')
+                    v_idx += 1
+                elif line.startswith('vn '):
+                    if save_v_norms:
+                        new_vertex = vertex_normals[vn_idx]
+                        obj_file.write(f'vn {new_vertex[0]} {new_vertex[1]} {new_vertex[2]}\n')
+                        vn_idx += 1
+                else:
+                    obj_file.write(line)
 
     def is_static(self):
         """

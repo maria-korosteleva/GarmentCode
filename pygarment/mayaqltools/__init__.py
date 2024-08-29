@@ -10,7 +10,7 @@
 """
 from importlib import reload
 
-import mayaqltools.mayascene as mayascene
+import pygarment.mayaqltools.mayascene as mayascene
 reload(mayascene)
 
 from .mayascene import PatternLoadingError
@@ -18,11 +18,11 @@ from .mayascene import MayaGarment
 from .mayascene import Scene
 from .mayascene import MayaGarmentWithUI
 
-import mayaqltools.simulation as simulation
-import mayaqltools.qualothwrapper as qualothwrapper
-import mayaqltools.garmentUI as garmentUI
-import mayaqltools.scan_imitation as scan_imitation
-import mayaqltools.utils as utils
+import pygarment.mayaqltools.simulation as simulation
+import pygarment.mayaqltools.qualothwrapper as qualothwrapper
+import pygarment.mayaqltools.garmentUI as garmentUI
+import pygarment.mayaqltools.scan_imitation as scan_imitation
+import pygarment.mayaqltools.utils as utils
 
 reload(simulation)
 reload(qualothwrapper)

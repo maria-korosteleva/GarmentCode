@@ -13,12 +13,11 @@ sim:
     max_self_collisions: 300 
 
     zero_gravity_steps: 10
-    self_collision_steps: 0
     resolution_scale: 1.0
     ground: false
     material:
       garment_tri_ka: 10000.0
-      garment_edge_ke: 1.0   # 100.  # 500.  # TODO Sepatate files after finalizing the settings
+      garment_edge_ke: 1.0   # Very soft fabric
       garment_tri_ke: 10000.0
       spring_ke: 50000.0
       garment_edge_kd: 10.0

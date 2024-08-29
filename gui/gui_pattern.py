@@ -14,7 +14,7 @@ from assets.bodies.body_params import BodyParameters
 import pygarment as pyg
 from pygarment.meshgen.boxmeshgen import BoxMesh
 from pygarment.meshgen.simulation import run_sim
-import pygarment.customconfig as customconfig
+import pygarment.data_config as data_config
 from pygarment.meshgen.sim_config import PathCofig
 
 verbose = False
@@ -31,7 +31,7 @@ class GUIPattern:
         self.id = _id_generator(20)
 
         # Paths setup
-        self.save_path_root = Path.cwd() / 'tmp_gui' / 'downloads'   # TODO suitable location for tmp files? 
+        self.save_path_root = Path.cwd() / 'tmp_gui' / 'downloads'  
         self.tmp_path_root = Path.cwd() / 'tmp_gui' / 'display'
         self.save_path = self.save_path_root / self.id
         self.svg_filename = None
@@ -46,7 +46,7 @@ class GUIPattern:
 
         self.body_params = None
         self.design_params = {}
-        self.design_sampler = pyg.params.DesignSampler()
+        self.design_sampler = pyg.DesignSampler()
         self.sew_pattern = None
 
         self.body_file = None
@@ -200,7 +200,7 @@ class GUIPattern:
         """Run the draping of the current frame"""
 
         # Config setup 
-        props = customconfig.Properties('./assets/Sim_props/mid_bending.yaml')   # TODOLOW Parameter?
+        props = data_config.Properties('./assets/Sim_props/mid_bending.yaml')   # TODOLOW Parameter?
         props.set_section_stats('sim', fails={}, sim_time={}, spf={}, fin_frame={}, body_collisions={}, self_collisions={})
         props.set_section_stats('render', render_time={})
 
@@ -235,7 +235,6 @@ class GUIPattern:
             garment_box_mesh.name, 
             props, 
             paths,
-            flat=False,  # TODO Debug flat sim paths integration + warp recent updates 
             save_v_norms=False,
             store_usd=False,  # NOTE: False for fast simulation!, 
             optimize_storage=False,

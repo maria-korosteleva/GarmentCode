@@ -1,12 +1,7 @@
 """Helper functions for the triangulation of the panels"""
 
-# Basic
-from __future__ import print_function
-import os
-import sys
 import numpy as np
 import matplotlib.pyplot as plt
-import time
 
 # CGAL 2D
 import CGAL.CGAL_Kernel
@@ -178,105 +173,6 @@ def cdt_insert_constraints(cdt, cdt_points, edge_verts_ids):
 
     return new_points
 
-def point_on_segment(point, segments): #TODO: remove this later
-    """
-    This function returns True if point is on any segment.
-    Input:
-        * point (list): Contains coordinates of point
-        * segments (list): Line segments building a planar straight line graph (PSLG)
-    Output:
-        * (bool): True if point lies on the panel boundary, i.e., any line segment of the PSLG; else False
-    """
-    # Convert the point and segments to NumPy arrays
-    point = np.array(point)
-    segments = np.array(segments)
-
-    # Extract the start and end points of the segments
-    start_points = segments[:, 0, :]
-    end_points = segments[:, 1, :]
-
-    # Compute the vectors representing the segments
-    segment_vectors = end_points - start_points
-
-    # Compute the vectors from the start points to the point of interest
-    point_vectors = point - start_points
-
-    # Compute cross products between the segment vectors and point vectors
-    cross_products = np.cross(segment_vectors, point_vectors)
-
-    #Get indices where cross product = 0, i.e. where segment and point vectors are parallel
-    indices = np.where(np.isclose(cross_products, 0))[0]
-
-    cross_products = cross_products[indices]
-    segment_vectors = segment_vectors[indices]
-    point_vectors = point_vectors[indices]
-
-    # Compute the dot products between the segment vectors and point vectors
-    dot_products = np.einsum('ij,ij->i', segment_vectors, point_vectors)
-
-    # Compute the squared magnitudes of the segment vectors
-    segment_magnitudes_sq = np.einsum('ij,ij->i', segment_vectors, segment_vectors)
-
-    # Compute the parameter values along the segments
-    parameters = dot_products / segment_magnitudes_sq
-
-    # Check if the point lies within the parameter range of any segment
-    on_segment = np.logical_and(parameters >= 0, parameters <= 1)
-
-    return np.any(on_segment)
-
-def retrieve_boundary_pts(pts, b_points,edge_verts_ids, plot = False, round = 1): #TODO: remove later
-    """
-    This function determines which points have been inserted into the panel boundary and filters them out.
-    Input:
-        * pts (list): Points to check if on mesh boundary
-        * b_points (list): Actual boundary points / edge vertices
-        * edge_verts_ids (list): Indices into b_points of edge vertices
-    Output:
-        * keep_pts (list): List of points as *Point_2* where newly inserted boundary points were filtered out
-        * keep_pts_d (list): All points as *list of two floats* where newly inserted boundary points were filtered out
-        * new_boundary_pts (list): Newly inserted boundary points that are now filtered out
-
-    """
-    len_b_points = len(b_points)
-    segments = np.array(b_points)[edge_verts_ids]
-    keep_pts = [] #stores mesh vertices
-    keep_pts_f = []
-    new_boundary_pts = []
-    colors = [1] * len_b_points
-    new_pts = False
-
-    for i,p in enumerate(pts):
-        p_d = [p.x(),p.y()]
-        if i < len_b_points:
-            keep_pts.append(p)
-            keep_pts_f.append(p_d)
-        elif point_on_segment([p.x(),p.y()],segments):
-            new_boundary_pts.append(p_d)
-            new_pts = True
-        else:
-            keep_pts.append(p)
-            keep_pts_f.append(p_d)
-            colors.append(0)
-
-    if new_pts and round == 2:
-        raise ValueError("New points in boundary")
-
-    if plot:
-        plot_pts = keep_pts_f
-
-        plt.title("Cleared boundary (red) plot ")
-        plot_pts = np.array(plot_pts)
-        x, y = plot_pts.T
-
-        # Plot the points with different colors
-        plt.scatter(x, y, c=colors)
-
-        # Show the plot
-        plt.show()
-
-    return keep_pts, keep_pts_f,new_boundary_pts
-
 def get_face_v_ids(cdt, points, new_points, check=False, plot = False):
     """
     This function returns the faces of cdt as a list of ints instead of vertex handles.
@@ -393,8 +289,6 @@ def get_keep_vertices(cdt, len_b):
     Output:
         * keep_vertices: vertices of cdt without newly inserted boundary points
     """
-    #TODO: find a way to include indices into vertex handles
-
     faces, points = get_faces_sorted(cdt)
     edges = np.concatenate([faces[:, :2], faces[:, 1:], faces[:, ::2]])
     unique_edges, counts = np.unique(np.array(edges), axis=0, return_counts=True)

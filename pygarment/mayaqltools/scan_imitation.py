@@ -10,7 +10,7 @@ import numpy as np
 from datetime import datetime
 
 # My modules 
-from mayaqltools import utils
+from pygarment.mayaqltools import utils
 
 
 def _sample_on_sphere(rad):

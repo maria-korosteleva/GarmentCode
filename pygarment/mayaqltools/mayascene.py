@@ -20,11 +20,11 @@ from mtoa.cmds.arnoldRender import arnoldRender
 import mtoa.core
 
 # My modules
-import pattern.core as core
-import pattern.wrappers as wrappers
-from pattern.utils import vector_angle
-from mayaqltools import qualothwrapper as qw
-from mayaqltools import utils
+import pygarment.pattern.core as core
+import pygarment.pattern.wrappers as wrappers
+from pygarment.pattern.utils import vector_angle, rel_to_abs_2d
+from pygarment.mayaqltools import qualothwrapper as qw
+from pygarment.mayaqltools import utils
 reload(core)
 reload(wrappers)
 reload(qw)
@@ -73,11 +73,8 @@ class MayaGarment(wrappers.VisPattern):
         """
         if self.is_self_intersecting():
             # supplied pattern with self-intersecting panels -- it's likely to crash Maya
-            # FIXME self-intersection detection fires falsely on circle skirts
-            # raise PatternLoadingError('{}::{}::Provided pattern has self-intersecting panels. Nothing is loaded'.format(
-            #    self.__class__.__name__, self.name))
-            print('{}::WARNING::{}::Provided pattern has self-intersecting panels. Simulation might crash'.format(
-                self.__class__.__name__, self.name))
+            raise PatternLoadingError('{}::{}::Provided pattern has self-intersecting panels. Nothing is loaded'.format(
+               self.__class__.__name__, self.name))
     
         if self.loaded_to_maya:
             # save the latest sim info
@@ -277,7 +274,7 @@ class MayaGarment(wrappers.VisPattern):
 
         cmds.setAttr((data_node + '.default'), color[0], color[1], color[2], type='double3')
 
-        print('Segmentation Color Set!')  # DEBUG
+        print('INFO::Segmentation Color Set!') 
         
         cmds.connectAttr((data_node + '.outColor'), (shader + '.color'))   # Assume Lambert shader
         cmds.setAttr((data_node + '.attribute'), color_set[0], type="string")
@@ -539,10 +536,10 @@ class MayaGarment(wrappers.VisPattern):
             if ('curvature' not in edge 
                     or isinstance(edge['curvature'], list) 
                     or edge['curvature']['type'] != 'circle'):
-                # FIXME Legacy curvature representation
+                # NOTE Legacy curvature representation
                 curve_points = self._edge_as_3d_tuple_list(edge, vertices)
                 curve = cmds.curve(p=curve_points, d=min(len(curve_points) - 1, 3))
-            else:  # TODO Condition on a circle
+            else: 
                 curve = self._draw_circle_arc(edge, vertices)
             curve_names.append(curve)
             self.MayaObjects['panels'][panel_name]['edges'].append(curve)
@@ -614,7 +611,7 @@ class MayaGarment(wrappers.VisPattern):
         self.vertex_labels = [None] * len(self.current_verts)
 
         # -- Stitches (provided in qualoth objects directly) ---
-        on_stitches = self._verts_on_stitches()  # TODO I can even distinguish stitches from each other!
+        on_stitches = self._verts_on_stitches()  # TODOLOW I can even distinguish stitches from each other!
         for idx in on_stitches:
             self.vertex_labels[idx] = 'stitch'
         
@@ -699,10 +696,10 @@ class MayaGarment(wrappers.VisPattern):
             suitable for drawing in Maya
         """
         points = vertices[edge['endpoints'], :]
-        # FIXME Legacy curvature representation
+        # NOTE: Legacy curvature representation
         if 'curvature' in edge:
             if isinstance(edge['curvature'], list):  
-                abs_points = self.control_to_abs_coord(
+                abs_points = rel_to_abs_2d(
                     points[0], points[1], edge['curvature']
                 )
                 abs_points = [abs_points]
@@ -713,13 +710,12 @@ class MayaGarment(wrappers.VisPattern):
             elif edge['curvature']['type'] == 'cubic' or edge['curvature']['type'] == 'quadratic':
                 abs_points = []
                 for p in edge['curvature']['params']:
-                    abs_points.append(self.control_to_abs_coord(
+                    abs_points.append(rel_to_abs_2d(
                         points[0], points[1], p))
                 points = np.r_[
                     [points[0]], abs_points, [points[1]]
                 ]
             else:
-                # FIXME nicer way to exclude this option
                 pass  # Ignore for circle arcs
             
         # to 3D
@@ -729,9 +725,6 @@ class MayaGarment(wrappers.VisPattern):
 
     def _draw_circle_arc(self, edge, vertices, resolution=20):
         """Draw a circle arc as specified by an edge"""
-
-        # DEBUG
-        print('Drawing a circle')
 
         radius, large_arc, right = edge['curvature']['params']
         edge_3d = np.array(self._edge_as_3d_tuple_list(edge, vertices))
@@ -1283,8 +1276,6 @@ class Scene(object):
             cmds.delete(self.cameras)
             # Shaders & other stuff
             for key in self.scene:  # garment color migh become invalid
-                # DEBUG 
-                print('Deleting... ', key)
                 cmds.delete(self.scene[key])
                 
     def _init_arnold(self):
@@ -1316,7 +1307,7 @@ class Scene(object):
         
         # image setup
         old_setup = self._set_image_size(im_size, im_size[0]/im_size[1], im_size[0]/im_size[1])
-        cmds.setAttr("defaultArnoldDriver.aiTranslator", "tif", type="string")   #REVIEW - for paper
+        cmds.setAttr("defaultArnoldDriver.aiTranslator", "tif", type="string")  
 
         # fixing dark rendering problem
         # https://forums.autodesk.com/t5/maya-shading-lighting-and/output-render-w-color-management-is-darker-than-render-view/td-p/7207081
@@ -1347,13 +1338,9 @@ class Scene(object):
     def reset_garment_color(self):
         """Force the current garment shader color"""
 
-        # TODO Also remove the vertex colors
-
         color_plug = self.scene['cloth_shader'] + '.color'
         if cmds.connectionInfo(color_plug, isDestination=True):
             connected_color_plug = cmds.connectionInfo(color_plug, sourceFromDestination=True)
-
-            print('Connected to ', connected_color_plug)  # DEBUG
 
             cmds.disconnectAttr(connected_color_plug, color_plug)
 
@@ -1374,7 +1361,6 @@ class Scene(object):
         """Return current color of a given shader node"""
         color_plug = shader + '.color'
         if cmds.connectionInfo(shader + '.color', isDestination=True):
-            print('Connected to smth!!')  #DEBUG
             color_plug = cmds.connectionInfo(color_plug, sourceFromDestination=True)
 
         return cmds.getAttr(color_plug)[0]

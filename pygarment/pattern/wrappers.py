@@ -21,7 +21,7 @@ import svgwrite as sw
 import matplotlib.pyplot as plt
 
 # my
-from pygarment import customconfig
+from pygarment import data_config
 from . import core
 from .utils import *
 
@@ -119,46 +119,7 @@ class VisPattern(core.ParametrizedPattern):
             np.array(panel['translation'][:2]))   # Only XY
 
         # draw edges
-        start = vertices[panel['edges'][0]['endpoints'][0]]
-        segs = []
-        for edge in panel['edges']:
-            start = vertices[edge['endpoints'][0]]
-            end = vertices[edge['endpoints'][1]]
-            if ('curvature' in edge):
-                if isinstance(edge['curvature'], list) or edge['curvature']['type'] == 'quadratic':  # FIXME placeholder for old curves
-                    control_scale = self._flip_y(edge['curvature'] if isinstance(edge['curvature'], list) else edge['curvature']['params'][0])
-                    control_point = self.control_to_abs_coord(
-                        start, end, control_scale)
-                    segs.append(svgpath.QuadraticBezier(*list_to_c([start, control_point, end])))
-                elif edge['curvature']['type'] == 'circle':  # Assuming circle
-                    # https://svgwrite.readthedocs.io/en/latest/classes/path.html#svgwrite.path.Path.push_arc
-
-                    radius, large_arc, right = edge['curvature']['params']
-
-                    segs.append(svgpath.Arc(
-                        list_to_c(start), radius + 1j*radius,
-                        rotation=0,
-                        large_arc=large_arc, 
-                        sweep=not right,
-                        end=list_to_c(end)
-                    ))
-
-                    # TODO Support full circle separately (?)
-                elif edge['curvature']['type'] == 'cubic':
-                    cps = []
-                    for p in edge['curvature']['params']:
-                        control_scale = self._flip_y(p)
-                        control_point = self.control_to_abs_coord(
-                            start, end, control_scale)
-                        cps.append(control_point)
-
-                    segs.append(svgpath.CubicBezier(*list_to_c([start, *cps, end])))
-
-                else:
-                    raise NotImplementedError(f'{self.__class__.__name__}::Unknown curvature type {edge["curvature"]["type"]}')
-
-            else:
-                segs.append(svgpath.Line(*list_to_c([start, end])))
+        segs = [self._edge_as_curve(vertices, edge) for edge in panel['edges']]
         path = svgpath.Path(*segs)
         if apply_transform:
             # Placement and rotation according to the 3D location
@@ -177,9 +138,6 @@ class VisPattern(core.ParametrizedPattern):
                 origin=list_to_c(vertices[0])
             )
             path = path.translated(list_to_c(translation))  # NOTE: rot/transl order is important!
-
-        # TODO Collisions of non-2D panels when drawn together? 
-        # Just overlap correctly, I guess
 
         return path, attributes, panel['translation'][-1] >= 0
 
@@ -355,6 +313,8 @@ class VisPattern(core.ParametrizedPattern):
     def _save_as_image_3D(self, png_filename):
         """Save the patterns with 3D positioning using matplotlib visualization"""
 
+        # NOTE: this routine is mostly needed for debugging
+
         fig = plt.figure(figsize=(30 / 2.54, 30 / 2.54))
         ax = fig.add_subplot(projection='3d')
 
@@ -379,8 +339,6 @@ class VisPattern(core.ParametrizedPattern):
         ax.view_init(elev=115, azim=-59, roll=30)
         ax.set_aspect('equal')
         fig.savefig(png_filename, dpi=300, transparent=False)
-        # DEBUG 
-        # plt.show()
 
         plt.close(fig)  # Cleanup
 

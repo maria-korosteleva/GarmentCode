@@ -35,3 +35,51 @@ def c_to_list(num):
         return [c_to_list(n) for n in num]
     else:
         return [num.real, num.imag]
+    
+def close_enough(f1, f2=0, tol=1e-4):
+    """Compare two floats correctly """
+    return abs(f1 - f2) < tol
+
+# Vector local coodinates conversion
+def rel_to_abs_2d(start, end, rel_point):
+    """
+        Converts coordinates expressed in a coordinate frame local
+        to the edge [start, end] into edge vertices (global) coordinate frame
+    """
+
+    start, end = np.array(start), np.array(end)  # in case inputs are lists/tuples
+    edge = end - start
+    edge_perp = np.array([-edge[1], edge[0]])
+
+    abs_start = start + rel_point[0] * edge
+    abs_point = abs_start + rel_point[1] * edge_perp
+
+    return abs_point
+
+def abs_to_rel_2d(start, end, abs_point, as_vector=False):
+    """
+        Converts coordinates expressed in a global coordinate frame into 
+        a frame local to the edge [start, end] 
+    """
+
+    start, end, abs_point = np.array(start), np.array(end), \
+        np.array(abs_point)
+
+    rel_point = [None, None]
+    edge_vec = end - start
+    edge_len = np.linalg.norm(edge_vec)
+    point_vec = abs_point if as_vector else abs_point - start  # vector or point
+    
+    # X
+    # project control_vec on edge_vec by dot product properties
+    projected_len = edge_vec.dot(point_vec) / edge_len 
+    rel_point[0] = projected_len / edge_len
+    # Y
+    projected = edge_vec * rel_point[0]
+    vert_comp = point_vec - projected  
+    rel_point[1] = np.linalg.norm(vert_comp) / edge_len
+
+    # Distinguish left&right curvature
+    rel_point[1] *= np.sign(np.cross(edge_vec, point_vec))
+
+    return np.asarray(rel_point)

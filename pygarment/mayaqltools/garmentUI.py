@@ -16,7 +16,7 @@ import maya.mel as mel
 
 # My modules
 from pygarment import mayaqltools as mymaya
-from pygarment import customconfig
+from pygarment import data_config
 
 
 # -------- Main call - Draw the UI -------------
@@ -106,7 +106,7 @@ class State(object):
         self.save_to = None
         self.saving_prefix = None
         self.body_file = None
-        self.config = customconfig.Properties()
+        self.config = data_config.Properties()
         self.scenes_path = ''
         self.segmented = False
         mymaya.simulation.init_sim_props(self.config)  # use default setup for simulation -- for now
@@ -124,7 +124,6 @@ class State(object):
                 config=self.config['sim']['config']
             )
             self.scene.reset_garment_color()   # in case there was a segmentation display
-                                               # TODO save segmentations with the original renders?
         else:
             self.garment.load(config=self.config['sim']['config'])
 
@@ -234,8 +233,8 @@ def template_field_callback(view_field, state, *args):
 
     # create new grament
     if state.garment is not None:
-        state.garment.clean(delete=True)  # sometimes cleaning by garbage collector (gc) is late => call for clearning manually
-        # TODO check what objects cause the late cleaning by checking references in gc
+        # Cleanup
+        state.garment.clean(delete=True)  
 
     state.garment = mymaya.MayaGarmentWithUI(template_file, True) 
     state.reload_garment()
@@ -282,7 +281,7 @@ def load_props_callback(view_field, state, *args):
     cmds.textField(view_field, edit=True, text=file)
     
     # Edit the incoming config to reflect explicit choiced made in other UI elements
-    in_config = customconfig.Properties(file)
+    in_config = data_config.Properties(file)
 
     # Use current body info instead of one from config
     if state.body_file is not None:

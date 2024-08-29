@@ -2,8 +2,9 @@
 import igl
 import numpy as np
 from pathlib import Path
+import trimesh
 
-from meshgen.external.customconfig import Properties
+from pygarment.data_config import Properties
 
 def load_mesh(path):
     v, f = igl.read_triangle_mesh(str(path))
@@ -35,21 +36,19 @@ if __name__ == "__main__":
 
     system_paths = Properties('./system.json')
     
-    body_folder_path = Path(system_paths['body_samples_path']) / 'body_shapes_and_measures_2023-12-30'
-    body_objs_path = body_folder_path / 'meshes'
-    out_path = body_folder_path / 'meshes_aligned'
+    # body_folder_path = Path(system_paths['body_samples_path']) / 'body_shapes_and_measures_2023-12-30'
+    # body_objs_path = body_folder_path / 'meshes'
+    body_objs_path = Path('./assets/bodies')
+    # out_path = body_folder_path / 'meshes_aligned'
+    out_path = Path('./assets/bodies_aligned')
     out_path.mkdir(parents=True, exist_ok=True)
-
-    # body_path = r"C:\Users\mariako\Documents\Code\garmentsimwarp\assets\default_bodies\mean_all_apart.obj"
-    # out_body_path = r"C:\Users\mariako\Documents\Code\garmentsimwarp\assets\default_bodies\mean_all_apart_y_aligned.obj"
-    # process_body(body_path, out_body_path)
 
     # loop over all meshes
     for file in body_objs_path.iterdir():
-        process_body(file, out_path / file.name)
+        if '.obj' in file.name:
+            process_body(file, out_path / file.name)
 
-        # DEBUG
-        print(file.name)
+            print(file.name)
 
     
 

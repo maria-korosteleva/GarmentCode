@@ -114,8 +114,6 @@ class SleevePanel(pyg.Panel):
         super().__init__(name)
         MIN_LENGTH = 5    # Minimum sleeve length
 
-        # TODO end_width to be not less then the width of the arm??
-
         shoulder_angle = np.deg2rad(body['_shoulder_incl'])
         rest_angle = max(np.deg2rad(design['sleeve_angle']['v']),
                          shoulder_angle)

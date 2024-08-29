@@ -105,7 +105,7 @@ class BodiceBackHalf(BaseBodicePanel):
         length = body['waist_line'] - back_adjustment
 
         # Base edge loop
-        edge_0 = pyg.EdgeSeqFactory.curve_from_tangents(
+        edge_0 = pyg.CurveEdgeFactory.curve_from_tangents(
             start=[0, shoulder_incl / 4],  # back a little shorter 
             end=[-waist_width, 0],
             target_tan0=[-1, 0]
@@ -358,7 +358,7 @@ class BodiceHalf(pyg.Component):
         b_in_depth = design['collar']['b_strapless_depth']['v']
 
         # Shoulder adjustment for the back
-        # TODO Shoulder adj evaluation should be a function
+        # TODOLOW Shoulder adj evaluation should be a function
         shoulder_angle = np.deg2rad(body['_shoulder_incl'])
         sleeve_balance = body['_base_sleeve_balance'] / 2
         back_w = self.btorso.get_width(0)

@@ -1,7 +1,7 @@
 design:
   meta:
     upper:
-      v: null # Shirt
+      v: null 
       range:
       - FittedShirt
       - Shirt

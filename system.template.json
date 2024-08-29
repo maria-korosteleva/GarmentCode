@@ -1,10 +1,8 @@
-# TODO Adjust paths
 {
-  "output": "",
+  "output": "./Logs/",
   "datasets_path": "",
-  "templates_path": "./assets/Patterns",
-  "scenes_path": "./assets/Scenes",
+  "datasets_sim": "",
   "sim_configs_path": "./assets/Sim_props",
-  "body_samples_path": "",
-  "bodies_default_path": "",
+  "bodies_default_path": "./assets/bodies",
+  "body_samples_path": ""
 }

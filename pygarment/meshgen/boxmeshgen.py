@@ -24,7 +24,7 @@ import pygarment.meshgen.triangulation_utils as tri_utils
 from pygarment.meshgen.sim_config import PathCofig
 from pygarment.meshgen.render.texture_utils import texture_mesh_islands, save_obj
 
-# TODOLOW Some stitching errors are not getting detected (e.g. KCGVF.. from selected_stitching_data_100_240123-18-33-19)
+# TODOLOW Some stitching errors are not getting detected
 
 # SECTION -- Errors
 class PatternLoadingError(BaseException):
@@ -416,7 +416,7 @@ class Edge:
         if 'curvature' in edge:
             if isinstance(edge['curvature'], list) or edge['curvature']['type'] == 'quadratic':  # NOTE: placeholder for old curves for backward compatibility
                 control_scale = edge['curvature'] if isinstance(edge['curvature'], list) else edge['curvature']['params'][0] #maya _flip_y
-                control_point = core.BasicPattern.control_to_abs_coord(start, end, control_scale)
+                control_point = pat_utils.rel_to_abs_2d(start, end, control_scale)
                 self.curve = svgpath.QuadraticBezier(*pat_utils.list_to_c([start, control_point, end]))
 
             elif edge['curvature']['type'] == 'circle':  # Assuming circle
@@ -436,8 +436,7 @@ class Edge:
                 cps = []
                 for p in edge['curvature']['params']:
                     control_scale = p #maya: self.flip_y(p)
-                    control_point = core.BasicPattern.control_to_abs_coord(
-                        start, end, control_scale)
+                    control_point = pat_utils.rel_to_abs_2d(start, end, control_scale)
                     cps.append(control_point)
 
                 self.curve = svgpath.CubicBezier(*pat_utils.list_to_c([start, *cps, end]))
@@ -529,7 +528,15 @@ class Seam:
                  swap=True
                  ):
         """
-            # TODO Write decription of parameters
+            Representation of a seam in a box mesh
+            Input: 
+                * panel_1_name, edge_1, panel_2_name, edge_2 -- panel edge objects and corresponding
+                    panel names for two edges connected by the stitch
+                * label -- label to assing to the seam on serialisaton (default: None)
+                * n_verts -- number of mesh vertices sampled for the seam (default: None, not samples)
+                * swap -- define the edge swap for the edge pair. Default: True --
+                    swapped -- the end of one panel edge connects to the start vertex
+                    of the other panel edge
         """
         self.panel_1, self.panel_2 = panel_1_name, panel_2_name
         self.edge_1, self.edge_2 = edge_1, edge_2
@@ -576,8 +583,8 @@ class BoxMesh(wrappers.VisPattern):
         """
         Loads all relevant functions and prints their time consumptions
         """
-        # if self.is_self_intersecting():  # TODO Remove. VisPattern check for self-intersection is of low quality
-        #     print(f'{self.__class__.__name__}::WARNING::{self.name}::Provided pattern has self-intersecting panels. Simulation might crash')
+        if self.is_self_intersecting(): 
+            print(f'{self.__class__.__name__}::WARNING::{self.name}::Provided pattern has self-intersecting panels. Simulation might crash')
 
         self.load_panels()
         self.gen_panel_meshes()
@@ -984,36 +991,44 @@ class BoxMesh(wrappers.VisPattern):
             * self (BoxMesh object): Instance of BoxMesh class from which the function is called.
             * dic (dict): same_panel_stitching_dict, dictionary storing the local vertex indices to which a
             local vertex of the same panel is stitched together
-            * loc_ids (list): List of vertex ids representing vertices that are stitched together in the same panel
-            and needs to be checked for validity.
+            * loc_ids (list): List of vertex ids representing vertices that are stitched into one global vertex
+                in the same panel and are needed to be checked for validity.
             * panel_name (str): Panel name used to identify the panel.
 
 
         Output:
             * True if any local vertex (defined by loc_ids) is stitched together with at least one other
-            local vertex; otherwise, False.
+            local vertex but it happens outside of the valid panel stitch; otherwise, False.
         """
+        # Checking all the pairs: 
+        # same id -> same id is a connection in the dart stitch (at the tip)
         for i in loc_ids:
             invalid = True
+            # NOTE: there could be some invalid pairings, but as long as we find
+            # a valid one for each loc_ids vertex, we are good.
             for j in loc_ids:
                 min_id = min(i, j)
                 max_id = max(i, j)
 
                 if ((panel_name, min_id) in dic.keys()) and (max_id in dic[(panel_name, min_id)]):
-                    invalid = False
-                    break # TODO Whyy????
+                    # i is stitched to j in a valid same-panel stitch
+                    # => i is supposed to be part of current global vertex in question
+                    invalid = False  
+                    break 
             if invalid:
+                # Cannot find a intra-panel stitch that connects i 
+                # into this global vertex -> incorrect
                 return True
         return False
 
-    def _group_same_panel_stiches(self,inner_list):
+    def _group_same_panel_stiches(self, inner_list):
         """
          This function groups together stitched vertices that belong to the same panel.
 
         Input:
             * self (BoxMesh object): Instance of BoxMesh class from which the function is called.
-            * inner_list (list): List of tuples representing same panel stitching information, where each tuple contains the
-            panel name and a vertex id.
+            * inner_list (list): List of tuples representing same panel stitching information, 
+            where each tuple contains the panel name and a vertex id.
 
         Output:
             * final_result (list): List of tuples where the first element is the panel name, and the second
@@ -1028,6 +1043,7 @@ class BoxMesh(wrappers.VisPattern):
             else:
                 result_dict[name] = [value]
 
+        # Filter only the panels with more than one value
         final_result = [(name, values) for name, values in result_dict.items() if len(values) > 1]
 
         return final_result
@@ -1049,12 +1065,10 @@ class BoxMesh(wrappers.VisPattern):
                 * Returns True if stitching is incorrect: there are local vertices associated with 
                 the provided global IDs that are stitched together within the same panel; 
                 otherwise, returns False.
-
-                # FIXME -- swap True and False
-
         """
         for g_id in global_ids:
-            l_old = self.verts_glob_loc[g_id]
+            l_old = self.verts_glob_loc[g_id]  # All local verts corresponding to g_id
+            # Groups by panels, if there are multiple vertices from the same panel
             l = self._group_same_panel_stiches(l_old)
             if not dic and l:
                 return True
@@ -1316,7 +1330,6 @@ class BoxMesh(wrappers.VisPattern):
         glob_id1, glob_id2, glob_id3 = np.array(f_glob_ids)[sorted_indices]
         f_loc_id_1, f_loc_id_2, f_loc_id_3 = face[sorted_indices]
 
-        # TODOLOW Occasinally gets erroneous vertex ids in the face (+1 to max panel vertices)
         v1 = panel.panel_vertices[f_loc_id_1]
         v2 = panel.panel_vertices[f_loc_id_2]
         v3 = panel.panel_vertices[f_loc_id_3]
@@ -1384,8 +1397,6 @@ class BoxMesh(wrappers.VisPattern):
         Input:
             * self (BoxMesh object): Instance of BoxMesh class from which the function is called
         """
-        orig_lengths_time = 0
-
         stitch_edges_gt = {}
         #Store orignal length between stitch vertices and their neighbors
         for panelname in self.panelNames:
