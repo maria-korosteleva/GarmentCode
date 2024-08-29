@@ -79,4 +79,17 @@ Please post your issues and questions to [GitHub Issues](https://github.com/mari
 
 For other requests you can find my info on https://korosteleva.com/.  
 
+## Contributors
 
+This project is brought to life by these people:
+
+* [Maria Korosteleva](https://github.com/maria-korosteleva)
+* [Jasmin Koller](https://github.com/JasminKoller)
+* [Yuhan Zhang](https://github.com/yuhan-zh)
+* [Ami Beuret](https://github.com/amibeuret)
+* [Olga Sorkine-Hornung](https://igl.ethz.ch/people/sorkine/index.php)
+
+The body measurements team developed [GarmentMeasurements](https://github.com/mbotsch/GarmentMeasurements): 
+* [Fabian Kemper](https://github.com/fabiankemper)
+* [Stephan Wenninger](https://github.com/stephan-wenninger)
+* [Mario Botsch](https://github.com/mbotsch)
