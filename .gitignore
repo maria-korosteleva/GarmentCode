@@ -11,6 +11,8 @@ __pycache__
 
 # Compiled files
 *.pyc
+dist
+*egg-info*
 
 # Maya
 .mayaSwatches

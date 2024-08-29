@@ -52,18 +52,14 @@ All python dependencies can be installed with `pip install` / `conda install`:
 ```
 conda create -n garmentcode python=3.9
 conda activate garmentcode
-<build and install warp for GarmentCode>
 pip install numpy scipy pyaml svgwrite psutil matplotlib svgpathtools cairosvg nicegui wmi
+<build and install warp for GarmentCode>
 ```
+
+Add the root repository to `PYTHONPATH`.
 
 => The code is ready to run
 
-> NOTE: 
-> * The dependency on [Pattern Generator](https://github.com/maria-korosteleva/Garment-Pattern-Generator) is included in the repo (`./external`), and will be loaded automatically by test script
-> * The environemtal variables needed for correct lib loading are set up in the test script
 
-### Using as a library in other projects
-
-Add the root repository to `PYTHONPATH`.
 
 
