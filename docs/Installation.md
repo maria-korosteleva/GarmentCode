@@ -35,7 +35,7 @@ If required, you could install the library and dependecies manually
 ### Install python with dependencies:
 
 * Python 3.9
-* numpy
+* numpy<2
 * scipy
 * pyyaml >= 6.0
 * [svgwrite](https://pypi.org/project/svgwrite/)
@@ -46,20 +46,20 @@ If required, you could install the library and dependecies manually
     NOTE: this lib has some quirks on Windows, which we resolve with including needed dlls in `./pygarment/pattern/cairo_dlls` and adding the ditrectory to PATH in runtime
 * [NiceGUI](https://nicegui.io/#installation)
 * wmi (on Windows)
+* [trimesh](https://trimesh.org/)
+* [libigl](https://libigl.github.io/libigl-python-bindings/)
+* [pyrender](https://pyrender.readthedocs.io/en/latest/index.html)
+* [CGAL](https://pypi.org/project/cgal/)
 
 All python dependencies can be installed with `pip install` / `conda install`:
 
 ```
 conda create -n garmentcode python=3.9
 conda activate garmentcode
-pip install numpy scipy pyaml svgwrite psutil matplotlib svgpathtools cairosvg nicegui wmi
+pip install numpy<2 scipy pyaml>=6.0 svgwrite psutil matplotlib svgpathtools cairosvg nicegui wmi trimesh libigl pyrender cgal
 <build and install warp for GarmentCode>
 ```
 
 Add the root repository to `PYTHONPATH`.
 
 => The code is ready to run
-
-
-
-
