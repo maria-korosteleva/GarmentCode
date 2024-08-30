@@ -14,11 +14,11 @@ Create system.json file in the root of this directory with your machine's file p
     * path to folder containing datasets of body shape samples (`'body_samples_path'`)
     
 
-## Inslatting simulator
+## Installing simulator
 
-We use our own version of the [NVIDIA warp]() simulator. It should be installed manually to use our library correctly. # TODO link
+We use our own version of the [NVIDIA warp](https://github.com/maria-korosteleva/NvidiaWarp-GarmentCode) simulator. It should be installed manually to use our library correctly.
 
-See the instructions in the repo: () # TODO link
+See the instructions in the [NvidiaWarp-GarmentCode](https://github.com/maria-korosteleva/NvidiaWarp-GarmentCode) repo. 
 
 ## Using pip
 
@@ -45,7 +45,6 @@ If required, you could install the library and dependecies manually
 * [cairoSVG](https://cairosvg.org/)
     NOTE: this lib has some quirks on Windows, which we resolve with including needed dlls in `./pygarment/pattern/cairo_dlls` and adding the ditrectory to PATH in runtime
 * [NiceGUI](https://nicegui.io/#installation)
-* wmi (on Windows)
 * [trimesh](https://trimesh.org/)
 * [libigl](https://libigl.github.io/libigl-python-bindings/)
 * [pyrender](https://pyrender.readthedocs.io/en/latest/index.html)
@@ -56,7 +55,7 @@ All python dependencies can be installed with `pip install` / `conda install`:
 ```
 conda create -n garmentcode python=3.9
 conda activate garmentcode
-pip install numpy<2 scipy pyaml>=6.0 svgwrite psutil matplotlib svgpathtools cairosvg nicegui wmi trimesh libigl pyrender cgal
+pip install numpy<2 scipy pyaml>=6.0 svgwrite psutil matplotlib svgpathtools cairosvg nicegui trimesh libigl pyrender cgal
 <build and install warp for GarmentCode>
 ```
 

@@ -1,7 +1,7 @@
 
 # GarmentCodeData: Running data generation and simulation
 
-GarmentCode now supports a synthetic data generation pipeline of [GarmentCodeData](https://igl.ethz.ch/projects/GarmentCodeData/) using [our fork of NVIDIA Warp simulator](). For the technical details of the generation process, please, check the paper. # TODO link
+GarmentCode now supports a synthetic data generation pipeline of [GarmentCodeData](https://igl.ethz.ch/projects/GarmentCodeData/) using [our fork of NVIDIA Warp simulator](https://github.com/maria-korosteleva/NvidiaWarp-GarmentCode). For the technical details of the generation process, please, check the paper.
 
 The default setup creates sewing pattern samples based on the [garment programs](../assets/garment_programs/) provided in this repo with sampling probabilities specified in [assets/design_params/default.yaml](../assets/design_params/default.yaml). 
 

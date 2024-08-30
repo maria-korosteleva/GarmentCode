@@ -8,7 +8,7 @@ Official Implementation of [GarmentCode: Programming Parametric Sewing Patterns]
 
 ## News
 
-**[Aug XX, 2024]** Major release -- implementation of [GarmentCodeData](https://igl.ethz.ch/projects/GarmentCodeData/), new GUI, and other updates and improvements. Basic JSON representation classes are now part of PyGarment library! See CHANGELOG for more details # TODO Date
+**[Aug 30, 2024]** Major release -- implementation of [GarmentCodeData](https://igl.ethz.ch/projects/GarmentCodeData/) in `pygarment v2.0.0`, new GUI, and other updates and improvements. Basic JSON representation classes are now part of PyGarment library! See CHANGELOG for more details
 
 **[July 1, 2024]** [GarmentCodeData](https://igl.ethz.ch/projects/GarmentCodeData/) is accepted to ECCV!
 
