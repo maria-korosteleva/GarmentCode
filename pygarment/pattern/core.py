@@ -510,7 +510,7 @@ class BasicPattern(object):
                 n = n_vert_approximation + 1
                 tvals = np.linspace(0, 1, n, endpoint=False)[1:]
                 edge_verts = [curve.point(t) for t in tvals]
-                edge_curves += [svgpath.Line(edge_verts[i], edge_verts[i + 1]) for i in range(n-1)]
+                edge_curves += [svgpath.Line(edge_verts[i], edge_verts[i + 1]) for i in range(n-2)]
             else:
                 edge_curves.append(curve)
 
