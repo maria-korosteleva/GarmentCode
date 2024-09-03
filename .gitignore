@@ -28,3 +28,6 @@ tmp*
 *tmp*.mb
 Logs*
 output*
+
+# Nicegui
+.nicegui
