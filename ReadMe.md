@@ -86,6 +86,7 @@ This project is brought to life by these people:
 * [Maria Korosteleva](https://github.com/maria-korosteleva)
 * [Jasmin Koller](https://github.com/JasminKoller)
 * [Yuhan Zhang](https://github.com/yuhan-zh)
+* [Yuhan Liu](https://github.com/yuhanliu-tech)
 * [Ami Beuret](https://github.com/amibeuret)
 * [Olga Sorkine-Hornung](https://igl.ethz.ch/people/sorkine/index.php)
 
