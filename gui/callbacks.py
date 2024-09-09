@@ -410,8 +410,8 @@ class GUIState:
         return camera
 
     def def_3d_scene(self):
-        y_fov = np.pi / 6. 
-        camera_location = [0, -200., 1.25]  
+        y_fov = 30   # Degrees == np.pi / 6. rad FOV
+        camera_location = [0, -4.15, 1.25] 
         bg_color='#ffffff'
 
         def body_visibility(value):
@@ -443,7 +443,6 @@ class GUIState:
             self.create_lights(self.ui_3d_scene, intensity=60.)
             # NOTE: texture is there, just needs a better setup
             self.ui_garment_3d = None
-            # FIXME body is mixing with the garment: https://github.com/zauberzeug/nicegui/discussions/3514
             # TODOLOW Update body model to a correct shape
             self.ui_body_3d = self.ui_3d_scene.stl(
                     '/body/mean_all.stl' 
@@ -692,8 +691,7 @@ class GUIState:
             # NOTE Splashscreen solution to block users from modifying params while updating
             # https://github.com/zauberzeug/nicegui/discussions/1988
 
-            self.spin_dialog.open()   
-            self.ui_3d_scene.set_visibility(False)
+            self.spin_dialog.open()
             # NOTE: Using threads for async call 
             # https://stackoverflow.com/questions/49822552/python-asyncio-typeerror-object-dict-cant-be-used-in-await-expression
             self.loop = asyncio.get_event_loop()
@@ -707,12 +705,7 @@ class GUIState:
                             f'geo/{self.garm_3d_filename}', 
                         ).scale(0.01).rotate(np.pi / 2, 0., 0.)
             
-            # Body invisible by default due to occlusion artifacts
-            self.ui_body_3d.visible(False)
-            self.ui_body_3d_switch.set_value(False)
-
             # Show the result! =)
-            self.ui_3d_scene.set_visibility(True)
             self.spin_dialog.close()
 
         except KeyboardInterrupt as e:
