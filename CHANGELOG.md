@@ -1,6 +1,12 @@
 
 # Change Log
 
+## [2.0.1] - 2024-09-12
+
+### Fixed
+- Allow disabling frame timeout in simulation through setting `None` (`null` in `.yaml`) as `max_frame_time` config value. This fixes #15. 
+- Fix erroneous duplication of frame timeout value for all frames. Timeout is only prolonged for the first frame -- initialization requires more time compared to the following frames. Sim property files are updated to reproduce earlier behavior with erroneous timeout duplication 
+
 ## [2.0.0] - 2024-08-30
  
 Major update with release of [GarmentCodeData](https://igl.ethz.ch/projects/GarmentCodeData/), new GUI, and a number of other improvements and library changes. For technical details, see our papers.
@@ -8,7 +14,7 @@ Major update with release of [GarmentCodeData](https://igl.ethz.ch/projects/Garm
 
 ### Added
 - **[Mesh generation]** GarmentCode library can now generate box meshes for the sewing patterns.
-- **[Simulation]** We integrated our version of [NVIDIA warp]() # TODO UPD to support simulation of GarmentCode sewing patterns. It can be run from command line and from GUI.
+- **[Simulation]** We integrated our version of [NVIDIA warp](https://github.com/maria-korosteleva/NvidiaWarp-GarmentCode) to support simulation of GarmentCode sewing patterns. It can be run from command line and from GUI.
 - **[Desing Sampling]** We support random sampling of sewing pattern designs from the designs spaces. Sampling can be controlled though setting probabilities of sampling default values.
 - **[Generating synthetic 3D data]** Combining the new capabilities allows for creating diverse synthetic datasets of 3D garments. We provide high-level scripts to create such datasets from the GarmentCode-provided garment programs.
 - **[Labeling]** We added support for assigning labels to pattern elements (edges and panels) in both GarmentCode objects and JSON serialized pattern representation. These are currently utilized to guide the cloth simulation process, but can be assigned to enrich the data labeling.
