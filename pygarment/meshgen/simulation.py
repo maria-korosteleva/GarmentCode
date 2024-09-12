@@ -75,10 +75,48 @@ def update_progress(progress, total):
     sys.stdout.write('\rProgress: [{0:50s}] {1:.1f}%'.format('#' * num_dash + '-' * (50 - num_dash), amtDone * 100))
     sys.stdout.flush()
 
+def _run_frame_with_timeout(garment, frame_timeout, frame_num):
+    """Run frame while keeping a cap on time to run it"""
+    try:
+        if platform.system() == "Windows":
+            """https://stackoverflow.com/a/14920854"""
+
+            if frame_num == 0: #only do it on first frame due to slowdown
+                p_frame = multiprocessing.Process(target=garment.run_frame(), name="FrameSimulation")
+                p_frame.start()
+
+                # Wait timeout_after seconds for garment.run_frame()
+                p_frame.join(frame_timeout)
+
+                # If thread is active
+                if p_frame.is_alive():
+                    # Terminate the process
+                    p_frame.terminate()
+                    p_frame.join()
+                    raise TimeoutError
+            else:
+                garment.run_frame()
+
+        elif platform.system() in ["Linux", "OSX"]:
+            """https://code-maven.com/python-timeout"""
+
+            def alarm_handler(signum, frame):
+                raise TimeoutError
+
+            signal.signal(signal.SIGALRM, alarm_handler)
+            signal.alarm(frame_timeout)
+            try:
+                garment.run_frame()
+            except TimeoutError as ex:
+                raise TimeoutError
+            else:
+                signal.alarm(0)
+
+    except TimeoutError as e:
+        raise FrameTimeOutError
 
 def sim_frame_sequence(garment, config, store_usd=False, verbose=False):
 
-    frame_timeout_after = config.max_frame_time
     # Save initial state
     if store_usd:
         garment.render_usd_frame()
@@ -96,50 +134,17 @@ def sim_frame_sequence(garment, config, store_usd=False, verbose=False):
         #Run frame and raise FrameTimeOutError if frame takes too long to simulate
 
         static = False
-        if frame == 0:
-            frame_timeout_after *= 2
-        try:
-            if platform.system() == "Windows":
-                """https://stackoverflow.com/a/14920854"""
-
-                if frame == 0: #only do it on first frame due to slowdown
-                    p_frame = multiprocessing.Process(target=garment.run_frame(), name="FrameSimulation")
-                    p_frame.start()
-
-                    # Wait timeout_after seconds for garment.run_frame()
-                    p_frame.join(frame_timeout_after)
-
-                    # If thread is active
-                    if p_frame.is_alive():
-                        # Terminate the process
-                        p_frame.terminate()
-                        p_frame.join()
-                        raise TimeoutError
-                else:
-                    garment.run_frame()
-
-            elif platform.system() in ["Linux", "OSX"]:
-                """https://code-maven.com/python-timeout"""
-
-                def alarm_handler(signum, frame):
-                    raise TimeoutError
-
-                signal.signal(signal.SIGALRM, alarm_handler)
-                signal.alarm(frame_timeout_after)
-                s_time = time.time()
-                try:
-                    garment.run_frame()
-                except TimeoutError as ex:
-                    raise TimeoutError
-
-                else:
-                    e_time = time.time() - s_time
-                    # print("No timeout error with time: ", e_time)
-                    signal.alarm(0)
-
-                pass
-        except TimeoutError as e:
-            raise FrameTimeOutError
+        if config.max_frame_time is None:
+            # No frame time limits
+            garment.run_frame()
+        else:
+            # NOTE: frame timeouts only work in the main thread of the program. 
+            # disable frame timeout by passing 'null' as a max_frame_time parameter in config
+            _run_frame_with_timeout(
+                garment, 
+                frame_timeout=config.max_frame_time if frame > 0 else config.max_frame_time * 2,
+                frame_num=frame
+            )
 
         if verbose:
             num_cloth_cloth_contacts = garment.count_self_intersections()
