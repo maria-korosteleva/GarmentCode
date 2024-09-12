@@ -3,7 +3,7 @@ sim:
     optimize_storage: true
 
     max_sim_steps: 2400
-    max_frame_time: 30
+    max_frame_time: 60
     max_meshgen_time: 60
     max_sim_time: 600
     static_threshold: 0.03

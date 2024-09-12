@@ -117,7 +117,9 @@ class SimConfig:
         # Stopping criteria 
         self.static_threshold = self.get_sim_props_value(sim_props, 'static_threshold', 0.01)
         self.max_sim_steps = self.get_sim_props_value(sim_props, 'max_sim_steps', 1000)
-        self.max_frame_time = int(self.get_sim_props_value(sim_props, 'max_frame_time', 15))
+        self.max_frame_time = self.get_sim_props_value(sim_props, 'max_frame_time', None)
+        if self.max_frame_time is not None:
+            self.max_frame_time = int(self.max_frame_time)
         self.max_sim_time = int(self.get_sim_props_value(sim_props, 'max_sim_time', 25 * 60))
         self.non_static_percent = self.get_sim_props_value(sim_props, 'non_static_percent', 5)
         # Quality filter

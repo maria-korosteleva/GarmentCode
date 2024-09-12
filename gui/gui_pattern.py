@@ -200,7 +200,7 @@ class GUIPattern:
         """Run the draping of the current frame"""
 
         # Config setup 
-        props = data_config.Properties('./assets/Sim_props/mid_bending.yaml')   # TODOLOW Parameter?
+        props = data_config.Properties('./assets/Sim_props/gui_sim_props.yaml')   # TODOLOW Parameter?
         props.set_section_stats('sim', fails={}, sim_time={}, spf={}, fin_frame={}, body_collisions={}, self_collisions={})
         props.set_section_stats('render', render_time={})
 

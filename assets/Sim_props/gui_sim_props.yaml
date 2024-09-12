@@ -1,9 +1,10 @@
 sim:
   config:
     optimize_storage: true
-    
+
     max_sim_steps: 2400
-    max_frame_time: 60
+    max_frame_time: null  # NOTE: Important for GUI!! 
+                          # GUI runs the sim in a thread, which is not supported by timeouts on Linux/MacOS
     max_meshgen_time: 60
     max_sim_time: 600
     static_threshold: 0.03
@@ -17,7 +18,7 @@ sim:
     ground: false
     material:
       garment_tri_ka: 10000.0
-      garment_edge_ke: 500.0  
+      garment_edge_ke: 100.0   # Mid-softness fabric
       garment_tri_ke: 10000.0
       spring_ke: 50000.0
       garment_edge_kd: 10.0
