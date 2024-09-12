@@ -282,28 +282,10 @@ class GUIState:
                     ).classes('w-full')
                 
     def def_design_tab(self):
-        async def random():
-            self.toggle_param_update_events(self.ui_design_refs)  # Don't react to value updates
-
-            self.pattern_state.sample_design()
-            self.update_design_params_ui_state(self.ui_design_refs, self.pattern_state.design_params)
-            await self.update_pattern_ui_state()
-
-            self.toggle_param_update_events(self.ui_design_refs)  # Re-do reaction to value updates
-    
-        async def default():
-            self.toggle_param_update_events(self.ui_design_refs)
-
-            self.pattern_state.restore_design(False)
-            self.update_design_params_ui_state(self.ui_design_refs, self.pattern_state.design_params)
-            await self.update_pattern_ui_state()
-
-            self.toggle_param_update_events(self.ui_design_refs)
-
         # Set of buttons
         with ui.row():
-            ui.button('Random', on_click=random)
-            ui.button('Default', on_click=default)
+            ui.button('Random', on_click=self.random)
+            ui.button('Default', on_click=self.default)
             ui.button('Upload', on_click=self.ui_design_dialog.open)  
     
         # Design parameters
@@ -731,6 +713,35 @@ class GUIState:
         # NOTE: The files will be available publically at the static point
         # However, we cannot do much about it, since it won't be available for the interface otherwise
         shutil.copy2(path / filename, self.local_path_3d / self.garm_3d_filename)
+
+    # Design buttons updates
+    async def design_sample(self):
+        """Run design sampling"""
+        self.loop = asyncio.get_event_loop()
+        await self.loop.run_in_executor(self._async_executor, self.pattern_state.sample_design)
+
+    async def random(self):
+        # Sampling could be slow, so add spin always
+        self.spin_dialog.open() 
+
+        self.toggle_param_update_events(self.ui_design_refs)  # Don't react to value updates
+
+        await self.design_sample()
+        self.update_design_params_ui_state(self.ui_design_refs, self.pattern_state.design_params)
+        await self.update_pattern_ui_state()
+
+        self.toggle_param_update_events(self.ui_design_refs)  # Re-do reaction to value updates
+
+        self.spin_dialog.close() 
+
+    async def default(self):
+        self.toggle_param_update_events(self.ui_design_refs)
+
+        self.pattern_state.restore_design(False)
+        self.update_design_params_ui_state(self.ui_design_refs, self.pattern_state.design_params)
+        await self.update_pattern_ui_state()
+
+        self.toggle_param_update_events(self.ui_design_refs)
 
     # !SECTION
 
