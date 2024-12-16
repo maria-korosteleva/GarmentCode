@@ -765,6 +765,7 @@ design:
       range: 
       - Sun
       - SIGGRAPH_logo
+      - null
       type: select_null
       default_prob: 1.
   levels-skirt:  
