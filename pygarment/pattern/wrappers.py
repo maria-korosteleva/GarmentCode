@@ -54,7 +54,9 @@ class VisPattern(core.ParametrizedPattern):
             self, path, to_subfolder=True, tag='', 
             with_3d=True, with_text=True, view_ids=True, 
             with_printable=False,
-            empty_ok=False):
+            empty_ok=False, 
+            print_panel_dist=10,
+        ):
 
         log_dir = super().serialize(path, to_subfolder, tag=tag, empty_ok=empty_ok)
         if len(self.panel_order()) == 0:  # If we are still here, but pattern is empty, don't generate an image
@@ -73,7 +75,11 @@ class VisPattern(core.ParametrizedPattern):
         if with_3d:
             self._save_as_image_3D(png_3d_file)
         if with_printable:
-            self._save_as_pdf(svg_printable_file, pdf_file, with_text, view_ids)
+            self._save_as_pdf(
+                svg_printable_file, pdf_file, 
+                with_text, view_ids,
+                margin=print_panel_dist
+            )
 
         return log_dir
 
@@ -213,7 +219,7 @@ class VisPattern(core.ParametrizedPattern):
                     path = path.translated(list_to_c([
                         shift_x_front if front else shift_x_back, 
                         0]))
-                    bbox = path.bbox()
+                    bbox = path.bbox()   # FIXME bbox seems to be inaccuate, but the initial attempt to fix didn't work
                     diff = (bbox[1] - bbox[0]) + margin
                     if front:
                         shift_x_front += diff
