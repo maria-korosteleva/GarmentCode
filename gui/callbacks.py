@@ -9,6 +9,7 @@ from argparse import Namespace
 import numpy as np
 import shutil
 from pathlib import Path
+import time
 
 from nicegui import ui, app, events
 
@@ -712,6 +713,11 @@ class GUIState:
 
         # NOTE: The files will be available publically at the static point
         # However, we cannot do much about it, since it won't be available for the interface otherwise
+        
+        # Delete previous file
+        (self.local_path_3d / self.garm_3d_filename).unlink(missing_ok=True)
+        # Put the new one for display
+        self.garm_3d_filename = f'garm_3d_{self.pattern_state.id}_{time.time()}.glb'
         shutil.copy2(path / filename, self.local_path_3d / self.garm_3d_filename)
 
     # Design buttons updates

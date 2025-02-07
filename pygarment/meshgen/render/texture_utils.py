@@ -56,11 +56,15 @@ def texture_mesh_islands(
     return uv_list
 
 def _uv_connected_components(face_texture_coords):
-
-    # Find connected components of face and vertex texture coords
+    # Find connected components of face
     face_components = igl.facet_components(face_texture_coords)
-    vert_components = igl.vertex_components(face_texture_coords)
     num_ccs = max(face_components) + 1
+
+    # Derive vertex component indices from faces
+    vert_components = np.zeros(face_texture_coords.max() + 1, dtype=int)
+    for i in range(num_ccs):
+        verts_in_cc = np.unique(face_texture_coords[face_components == i])
+        vert_components[verts_in_cc] = i
 
     return vert_components, face_components, num_ccs
 

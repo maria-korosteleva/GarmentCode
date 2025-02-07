@@ -218,7 +218,7 @@ class GUIPattern:
             in_element_path=pattern_folder, 
             out_path=self.save_path,
             in_name=def_sew_pattern.name,
-            out_name=self.sew_pattern.name + '_3D',
+            out_name=f'{self.sew_pattern.name}_3D',
             body_name='mean_all',  
             smpl_body=False,   # NOTE: depends on chosen body model
             add_timestamp=False

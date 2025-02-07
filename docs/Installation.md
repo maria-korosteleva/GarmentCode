@@ -62,3 +62,5 @@ pip install numpy<2 scipy pyaml>=6.0 svgwrite psutil matplotlib svgpathtools cai
 Add the root repository to `PYTHONPATH`.
 
 => The code is ready to run
+
+> NOTE: check out a full environment setup and running process from our early adopter: https://github.com/maria-korosteleva/GarmentCode/issues/17
