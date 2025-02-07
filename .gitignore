@@ -31,3 +31,5 @@ output*
 
 # Nicegui
 .nicegui
+.venv/
+assets/bodies/drippy/
