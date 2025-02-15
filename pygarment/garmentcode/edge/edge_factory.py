@@ -1,16 +1,15 @@
 import numpy as np
-from numpy.linalg import norm
 import svgpathtools as svgpath
+from numpy.linalg import norm
 from scipy.optimize import minimize
 
-from pygarment.garmentcode.edge import EdgeSequence, Edge, CurveEdge
-from pygarment.garmentcode.edge import CircleEdge
-from pygarment.garmentcode.utils import vector_angle
-from pygarment.garmentcode.utils import bbox_paths
-from pygarment.garmentcode.utils import close_enough
-from pygarment.garmentcode.utils import c_to_list
-from pygarment.garmentcode.utils import list_to_c
-from pygarment.pattern.utils import rel_to_abs_2d, abs_to_rel_2d
+from pygarment.garmentcode.edge.edge import (CircleEdge, CurveEdge, Edge,
+                                             EdgeSequence)
+from pygarment.garmentcode.utils import (bbox_paths, c_to_list, close_enough,
+                                         list_to_c, vector_angle)
+from pygarment.pattern.utils import abs_to_rel_2d, rel_to_abs_2d
+
+from pygarment.garmentcode.edge import factory 
 
 
 class EdgeFactory:
@@ -39,6 +38,12 @@ class EdgeFactory:
             raise NotImplementedError(f'CurveEdge::ERROR::Incorrect curve type supplied {seg.type}')
         
         return CurveEdge(start, end, cp, relative=False)
+
+
+@factory.register_builder("edge")
+def build_edge(seg, type: str = "from_svg_curve"):
+    return EdgeFactory.from_svg_curve(seg)
+
 
 class CircleEdgeFactory:
     @staticmethod
@@ -72,7 +77,7 @@ class CircleEdgeFactory:
         # Find circle center
         str_dist = norm(np.asarray(end) - np.asarray(start))
 
-        # NOTE: close enough values may give negative 
+        # NOTE: close enough values may give negative
         # value under sqrt due to numerical errors
         if close_enough(radius ** 2, str_dist ** 2 / 4, 1e-3):
             center_r = 0.
@@ -152,6 +157,16 @@ class CircleEdgeFactory:
             start, end, radius=rad,
             large_arc=mid_dist > rad, right=angle > 0)
 
+
+@factory.register_builder("circle arc")
+def build_circle_arc(method: str, **kwargs):
+    _build = getattr(CircleEdgeFactory, method)
+    if callable(_build):
+        return _build(**kwargs)
+    else:
+        raise ValueError(f"Method {method} does not exist in the CircleEdgeFactory")
+
+
 class CurveEdgeFactory:
     @staticmethod
     def curve_3_points(start, end, target, verbose=False):
@@ -195,11 +210,11 @@ class CurveEdgeFactory:
         if target_tan0 is not None:
             target_tan0 = abs_to_rel_2d(start, end, target_tan0, as_vector=True)
             target_tan0 /= norm(target_tan0)
-        
+
         if target_tan1 is not None:
             target_tan1 = abs_to_rel_2d(start, end, target_tan1, as_vector=True)
             target_tan1 /= norm(target_tan1)
-        
+
         # Initialization with a target point as control point
         # Ensures very smooth, minimal solution
         out = minimize(
@@ -216,6 +231,16 @@ class CurveEdgeFactory:
         cp = out.x.tolist()
 
         return CurveEdge(start, end, control_points=[cp], relative=True)
+
+
+@factory.register_builder("curve edge")
+def build_curve_edge(method: str, **kwargs):
+    _build = getattr(CurveEdgeFactory, method)
+    if callable(_build):
+        return _build(**kwargs)
+    else:
+        raise ValueError(f"Method {method} does not exist in the CurveEdgeFactory")
+
 
 class EdgeSeqFactory:
     """Create EdgeSequence objects for some common edge sequence patterns
@@ -261,7 +286,7 @@ class EdgeSeqFactory:
 
         if loop:
             seq.append(Edge(seq[-1].end, seq[0].start))
-        
+
         seq.isChained()  # print warning if smth is wrong
         return seq
 
@@ -285,7 +310,7 @@ class EdgeSeqFactory:
                 verts[-1][1] + frac[i]*vec[1]]
             )
         verts.append(end)
-        
+
         return EdgeSeqFactory.from_verts(*verts)
 
     @staticmethod
@@ -380,6 +405,16 @@ class EdgeSeqFactory:
                 p.reverse()
 
         return left_seqs, right_seqs
+
+
+@factory.register_builder("edge sequence")
+def build_edge_seq(method: str, **kwargs):
+    _build = getattr(EdgeSeqFactory, method)
+    if callable(_build):
+        return _build(**kwargs)
+    else:
+        raise ValueError(f"Method {method} does not exist in the EdgeSeqFactory")
+
 
 # --- For Curves ---
 def _fit_pass_point(cp, target_location):

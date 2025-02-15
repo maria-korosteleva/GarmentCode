@@ -5,10 +5,11 @@ from scipy.spatial.transform import Rotation as R
 
 from pygarment.pattern.core import BasicPattern
 from pygarment.garmentcode.base import BaseComponent
-from pygarment.garmentcode.edge import Edge, EdgeSequence, CircleEdge
+from pygarment.garmentcode.edge.edge import Edge, EdgeSequence, CircleEdge
 from pygarment.garmentcode.utils import close_enough, vector_align_3D
-from pygarment.garmentcode.operators import cut_into_edge
+from pygarment.garmentcode.operators.operators import cut_into_edge
 from pygarment.garmentcode.interface import Interface
+from pygarment.garmentcode.panel import factory
 
 
 class Panel(BaseComponent):
@@ -22,7 +23,7 @@ class Panel(BaseComponent):
         applications
 
     """
-    def __init__(self, name, label='') -> None:
+    def __init__(self, name: str, label: str = "") -> None:
         """Base class for panel creations
             * Name: panel name. Expected to be a unique identifier of a panel object
             * label: additional panel label (non-unique)
@@ -406,3 +407,8 @@ class Panel(BaseComponent):
         verts_3d = np.asarray([self.point_to_3D(v) for v in verts_2d])
 
         return verts_3d.min(axis=0), verts_3d.max(axis=0)
+
+
+@factory.register_builder("panel")
+def create_panel(name: str, label: str=""):
+    return Panel(name=name, label=label)

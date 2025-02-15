@@ -3,6 +3,7 @@ from scipy.spatial.transform import Rotation as R
 
 from pygarment.garmentcode.base import BaseComponent
 from pygarment.pattern.wrappers import VisPattern
+from pygarment.garmentcode.component import factory
 
 
 class Component(BaseComponent):
@@ -11,12 +12,12 @@ class Component(BaseComponent):
 
     # TODOLOW Overload copy -- respecting edge sequences -- never had any problems though
 
-    def __init__(self, name) -> None:
+    def __init__(self, name: str) -> None:
         super().__init__(name)
 
         self.subs = []  # list of generative subcomponents
 
-    def set_panel_label(self, label: str, overwrite=True):
+    def set_panel_label(self, label: str, overwrite: bool = True):
         """Propagate given label to all sub-panels (in subcomponents)"""
         subs = self._get_subcomponents()
         for sub in subs: 
@@ -46,7 +47,7 @@ class Component(BaseComponent):
         for subs in self._get_subcomponents():
             subs.translate_by(delta_vector)
         return self
-    
+
     def translate_to(self, new_translation):
         """Set panel translation to be exactly that vector"""
         pivot = self.pivot_3D()
@@ -65,7 +66,7 @@ class Component(BaseComponent):
             subs.rotate_by(delta_rotation)
             subs.translate_by(rel_rotated - rel)
         return self
-    
+
     def rotate_to(self, new_rot):
         # TODOLOW Implement with correct preservation of relative placement
         # of subcomponents
@@ -112,7 +113,7 @@ class Component(BaseComponent):
 
     def bbox3D(self):
         """Evaluate 3D bounding box of the current component"""
-        
+
         subs = self._get_subcomponents()
         bboxes = [s.bbox3D() for s in subs]
 
@@ -145,3 +146,7 @@ class Component(BaseComponent):
                          for att in all_attrs
                          if isinstance(att, BaseComponent)] + self.subs))
 
+
+@factory.register_builder("component")
+def build_component(name: str):
+    return Component(name=name)
