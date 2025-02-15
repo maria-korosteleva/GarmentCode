@@ -1,12 +1,12 @@
-from assets.garment_programs.tee import *
-from assets.garment_programs.godet import *
-from assets.garment_programs.bodice import *
-from assets.garment_programs.pants import *
-from assets.garment_programs.bands import *
-from assets.garment_programs.skirt_paneled import *
-from assets.garment_programs.skirt_levels import *
-from assets.garment_programs.circle_skirt import *
-from assets.garment_programs.sleeves import *
+from assets.garment_programs.bodice.bodice_halves.tee import *
+from assets.garment_programs.bottoms.godet import *
+from assets.garment_programs.bodice.bodice_halves.bodice_halves import *
+from assets.garment_programs.bottoms.pants import *
+from assets.garment_programs.bands.base import *
+from assets.garment_programs.bottoms.skirt_paneled import *
+from assets.garment_programs.bottoms.skirt_levels import *
+from assets.garment_programs.bottoms.circle_skirt import *
+from assets.garment_programs.sleeves.sleeves import *
 
 class TotalLengthError(BaseException):
     """Error indicating that the total length of a garment goes beyond 

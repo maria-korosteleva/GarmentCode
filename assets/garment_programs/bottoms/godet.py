@@ -1,14 +1,15 @@
 import math
+
 import numpy as np
 
 import pygarment as pyg
-
 from assets.garment_programs.base_classes import BaseBottoms
-from assets.garment_programs import skirt_paneled as skirts
+from assets.garment_programs.bottoms import factory
+from assets.garment_programs.bottoms import skirt_paneled as skirts
 
 
 class Insert(pyg.Panel):
-    def __init__(self, id, width=30, depth=30) -> None:
+    def __init__(self, id: int, width: float = 30, depth: float = 30) -> None:
         super().__init__(f'Insert_{id}')
 
         self.edges = pyg.EdgeSeqFactory.from_verts(
@@ -23,9 +24,10 @@ class Insert(pyg.Panel):
         self.center_x()
 
 
+@factory.register_builder("GodetSkirt")
 class GodetSkirt(BaseBottoms):
 
-    def __init__(self, body, design, rise=None) -> None:
+    def __init__(self, body: dict, design: dict, rise: float | None = None) -> None:
         super().__init__(body, design, rise=rise)
 
         gdesign = design['godet-skirt']
