@@ -83,7 +83,7 @@ class CircleEdge(Edge):
         # So parent implementation is ok
         # TODOLOW Implementation is very similar to CurveEdge param-based subdivision
 
-        from pygarment.garmentcode.edge.edge_factory import \
+        from pygarment.garmentcode.edge_factory import \
             EdgeFactory  # TODOLOW: ami - better solution?
 
         frac = [abs(f) for f in fractions]

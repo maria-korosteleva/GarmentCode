@@ -3,7 +3,6 @@ from scipy.spatial.transform import Rotation as R
 
 from pygarment.garmentcode.base import BaseComponent
 from pygarment.pattern.wrappers import VisPattern
-from pygarment.garmentcode.component import factory
 
 
 class Component(BaseComponent):
@@ -145,8 +144,3 @@ class Component(BaseComponent):
         return list(set([att
                          for att in all_attrs
                          if isinstance(att, BaseComponent)] + self.subs))
-
-
-@factory.register_builder("component")
-def build_component(name: str):
-    return Component(name=name)

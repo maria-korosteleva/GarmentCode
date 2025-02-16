@@ -3,13 +3,11 @@ import svgpathtools as svgpath
 from numpy.linalg import norm
 from scipy.optimize import minimize
 
-from pygarment.garmentcode.edge.edge import (CircleEdge, CurveEdge, Edge,
+from pygarment.garmentcode.edge import (CircleEdge, CurveEdge, Edge,
                                              EdgeSequence)
 from pygarment.garmentcode.utils import (bbox_paths, c_to_list, close_enough,
                                          list_to_c, vector_angle)
 from pygarment.pattern.utils import abs_to_rel_2d, rel_to_abs_2d
-
-from pygarment.garmentcode.edge import factory 
 
 
 class EdgeFactory:
@@ -40,7 +38,6 @@ class EdgeFactory:
         return CurveEdge(start, end, cp, relative=False)
 
 
-@factory.register_builder("edge")
 def build_edge(seg, type: str = "from_svg_curve"):
     return EdgeFactory.from_svg_curve(seg)
 
@@ -158,7 +155,6 @@ class CircleEdgeFactory:
             large_arc=mid_dist > rad, right=angle > 0)
 
 
-@factory.register_builder("circle arc")
 def build_circle_arc(method: str, **kwargs):
     _build = getattr(CircleEdgeFactory, method)
     if callable(_build):
@@ -233,7 +229,6 @@ class CurveEdgeFactory:
         return CurveEdge(start, end, control_points=[cp], relative=True)
 
 
-@factory.register_builder("curve edge")
 def build_curve_edge(method: str, **kwargs):
     _build = getattr(CurveEdgeFactory, method)
     if callable(_build):
@@ -407,7 +402,6 @@ class EdgeSeqFactory:
         return left_seqs, right_seqs
 
 
-@factory.register_builder("edge sequence")
 def build_edge_seq(method: str, **kwargs):
     _build = getattr(EdgeSeqFactory, method)
     if callable(_build):

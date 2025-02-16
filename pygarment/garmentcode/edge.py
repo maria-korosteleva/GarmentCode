@@ -6,7 +6,6 @@ import svgpathtools as svgpath  # https://github.com/mathandy/svgpathtools
 
 from pygarment.garmentcode.utils import R2D, close_enough, c_to_list
 from pygarment.pattern.utils import rel_to_abs_2d, abs_to_rel_2d
-# from .edge_sequence import EdgeSequence  # TODO: Circular import error
 
 
 ILENGTH_S_TOL = 1e-10   # NOTE: tolerance value for evaluating curve parameter (t) from acr length
@@ -322,7 +321,7 @@ class CurveEdge(Edge):
             splitting its curve parametrization or overall length according to 
             fractions while preserving the overall shape
         """
-        from pygarment.garmentcode.edge.edge_factory import EdgeFactory  # TODOLOW: ami - better solution?
+        from pygarment.garmentcode.edge_factory import EdgeFactory  # TODOLOW: ami - better solution?
         curve = self.as_curve()
 
         # Sub-curves
