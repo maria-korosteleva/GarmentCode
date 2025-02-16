@@ -9,7 +9,7 @@ from assets.garment_programs.bottoms.skirt_paneled import *
 class SkirtLevels(BaseBottoms):
     """Skirt constiting of multuple stitched skirts"""
 
-    def __init__(self, body: dict, design: dict, rise: float | None = None) -> None:
+    def __init__(self, body: dict, design: dict, rise: float  = None) -> None:
         super().__init__(body, design, rise=rise)
 
         ldesign = design['levels-skirt']

@@ -18,7 +18,7 @@ def register_builder(key: str):
     return registry.register(_REGISTERED_SLEEVE_CLS, key)
 
 
-def build(config: dict | None = None, name: str | None = None, **kwargs):
+def build(config: dict  = None, name: str  = None, **kwargs):
     builder = registry.lookup(_REGISTERED_SLEEVE_CLS, name)
     return builder(config=config, **kwargs)
 

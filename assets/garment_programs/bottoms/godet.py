@@ -27,7 +27,7 @@ class Insert(pyg.Panel):
 @factory.register_builder("GodetSkirt")
 class GodetSkirt(BaseBottoms):
 
-    def __init__(self, body: dict, design: dict, rise: float | None = None) -> None:
+    def __init__(self, body: dict, design: dict, rise: float  = None) -> None:
         super().__init__(body, design, rise=rise)
 
         gdesign = design['godet-skirt']

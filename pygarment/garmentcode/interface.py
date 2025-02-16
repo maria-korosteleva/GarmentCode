@@ -3,7 +3,7 @@ from copy import copy
 from numpy.linalg import norm
 import numpy as np
 
-from pygarment.garmentcode.edge.edge import EdgeSequence, Edge
+from pygarment.garmentcode.edge import EdgeSequence, Edge
 from pygarment.garmentcode.utils import close_enough
 
 

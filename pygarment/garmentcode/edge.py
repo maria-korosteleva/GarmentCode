@@ -4,11 +4,16 @@ import numpy as np
 from numpy.linalg import norm
 import svgpathtools as svgpath  # https://github.com/mathandy/svgpathtools
 
-from pygarment.garmentcode.utils import R2D, close_enough, c_to_list
+from pygarment.garmentcode.utils import R2D
+from pygarment.garmentcode.utils import close_enough
+from pygarment.garmentcode.utils import c_to_list
+from pygarment.garmentcode.utils import list_to_c
 from pygarment.pattern.utils import rel_to_abs_2d, abs_to_rel_2d
 
+ILENGTH_S_TOL = (
+    1e-10  # NOTE: tolerance value for evaluating curve parameter (t) from acr length
+)
 
-ILENGTH_S_TOL = 1e-10   # NOTE: tolerance value for evaluating curve parameter (t) from acr length
 
 class Edge:
     """Edge an individual segment of a panel border connecting two panel
@@ -18,9 +23,9 @@ class Edge:
         and (End-Start) as Ox axis
     """
 
-    def __init__(self, start=None, end=None, label='') -> None:
-        """ Simple edge initialization.
-        Parameters: 
+    def __init__(self, start=None, end=None, label="") -> None:
+        """Simple edge initialization.
+        Parameters:
             * start, end: from/to vertices that the edge connects,
                 describing the _interface_ of an edge
             * label: semantic label of the edge to be writted down as a property on assembly
@@ -32,7 +37,9 @@ class Edge:
             start = [0, 0]
         if end is None:
             end = [0, 0]
-        assert not all(close_enough(s, e) for s, e in zip(start, end)), 'Start and end of an edge should differ'
+        assert not all(
+            close_enough(s, e) for s, e in zip(start, end)
+        ), "Start and end of an edge should differ"
 
         self.start = start  # NOTE: careful with references to vertex objects
         self.end = end
@@ -46,8 +53,8 @@ class Edge:
 
     def length(self):
         """Return current length of an edge.
-            Since vertices may change their locations externally, the length
-            is dynamically evaluated
+        Since vertices may change their locations externally, the length
+        is dynamically evaluated
         """
         return self._straight_len()
 
@@ -76,11 +83,11 @@ class Edge:
         return True
 
     def __str__(self) -> str:
-        return f'Straight:[{self.start[0]:.2f}, {self.start[1]:.2f}]->[{self.end[0]:.2f}, {self.end[1]:.2f}]'
+        return f"Straight:[{self.start[0]:.2f}, {self.start[1]:.2f}]->[{self.end[0]:.2f}, {self.end[1]:.2f}]"
 
     def __repr__(self) -> str:
-        """ 'Official string representation' -- for nice printing of lists of edges
-        
+        """'Official string representation' -- for nice printing of lists of edges
+
         https://stackoverflow.com/questions/3558474/how-to-apply-str-function-when-printing-a-list-of-objects-in-python
         """
         return self.__str__()
@@ -90,10 +97,10 @@ class Edge:
         return (np.array(self.start) + np.array(self.end)) / 2
 
     def shortcut(self):
-        """Return straight shortcut for an edge, 
-            as `np.array`
-        
-            For straight edges it's the same as the edge itself
+        """Return straight shortcut for an edge,
+        as `np.array`
+
+        For straight edges it's the same as the edge itself
         """
 
         return np.array([self.start, self.end])
@@ -104,16 +111,16 @@ class Edge:
         # Get the nodes correcly
         nodes = np.vstack((self.start, self.end))
 
-        params = nodes[:, 0] + 1j*nodes[:, 1]
+        params = nodes[:, 0] + 1j * nodes[:, 1]
 
         return svgpath.Line(*params)
 
-    def linearize(self, n_verts_inside = 0):
+    def linearize(self, n_verts_inside=0):
         """Return a linear approximation of an edge using the same vertex objects
-        
-            # NOTE: for the linear edge it is an egde if n_verts_inside = 0,
-            # else n_verts_inside = number of vertices (excluding the start
-            and end vertices) used to create a linearization of the edge
+
+        # NOTE: for the linear edge it is an egde if n_verts_inside = 0,
+        # else n_verts_inside = number of vertices (excluding the start
+        and end vertices) used to create a linearization of the edge
         """
 
         if not n_verts_inside:
@@ -146,15 +153,14 @@ class Edge:
         self.start, self.end = self.end, self.start
 
         return self
-    
+
     def reflect_features(self):
         """Reflect edge fetures from one side of the edge to the other"""
         # Nothing to do for straight edge
         return self
 
     def snap_to(self, new_start=None):
-        """Translate the edge vertices s.t. the start is at new_start
-        """
+        """Translate the edge vertices s.t. the start is at new_start"""
         if new_start is None:
             new_start = [0, 0]
 
@@ -166,113 +172,319 @@ class Edge:
     def rotate(self, angle):
         """Rotate edge by angle in place, using first point as a reference
 
-        Parameters: 
+        Parameters:
             angle -- desired rotation angle in radians (!)
         """
         curr_start = copy(self.start)
-        
+
         # set the start point to zero
         self.snap_to([0, 0])
         self.end[:] = np.matmul(R2D(angle), self.end)
-        
+
         # recover the original location
         self.snap_to(curr_start)
 
         return self
 
     def subdivide_len(self, fractions: list, connect_internal_verts=True):
-        """Add intermediate vertices to an edge, 
-            splitting its length according to fractions
-            while preserving the overall shape
+        """Add intermediate vertices to an edge,
+        splitting its length according to fractions
+        while preserving the overall shape
 
-            * merge_internal -- if False, the newly inserted vertices would be
-                defined
-                as independent objects for each edge. If True, vertex objects
-                    will be shared
+        * merge_internal -- if False, the newly inserted vertices would be
+            defined
+            as independent objects for each edge. If True, vertex objects
+                will be shared
         """
         # Parametrized by length
         new_edges = self._subdivide(fractions, by_length=True)
 
         if connect_internal_verts:
             self._merge_subdiv_vertices(new_edges)
-        
-        return new_edges
-    
-    def subdivide_param(self, fractions: list, connect_internal_verts=True):
-        """Add intermediate vertices to an edge, 
-            splitting its curve parametrization according to fractions
-            while preserving the overall shape
 
-            NOTE: for line, it's the same as subdivision by length
+        return new_edges
+
+    def subdivide_param(self, fractions: list, connect_internal_verts=True):
+        """Add intermediate vertices to an edge,
+        splitting its curve parametrization according to fractions
+        while preserving the overall shape
+
+        NOTE: for line, it's the same as subdivision by length
         """
-        
+
         new_edges = self._subdivide(fractions, by_length=False)
 
         if connect_internal_verts:
             self._merge_subdiv_vertices(new_edges)
-        
+
         return new_edges
 
     def _subdivide(self, fractions: list, by_length=True):
         """Subdivide edge by length or curve parametrization
 
-            NOTE: equivalent for straight lines
+        NOTE: equivalent for straight lines
         """
 
         frac = [abs(f) for f in fractions]
         if not close_enough(fsum := sum(frac), 1, 1e-4):
-            raise RuntimeError(f'Edge Subdivision::ERROR::fraction is incorrect. The sum {fsum} is not 1')
+            raise RuntimeError(
+                f"Edge Subdivision::ERROR::fraction is incorrect. The sum {fsum} is not 1"
+            )
 
         vec = np.asarray(self.end) - np.asarray(self.start)
         verts = [self.start]
         seq = EdgeSequence()
         for i in range(len(frac) - 1):
             verts.append(
-                [verts[-1][0] + frac[i]*vec[0],
-                verts[-1][1] + frac[i]*vec[1]]
+                [verts[-1][0] + frac[i] * vec[0], verts[-1][1] + frac[i] * vec[1]]
             )
             seq.append(Edge(verts[-2], verts[-1]))
         verts.append(self.end)
         seq.append(Edge(verts[-2], verts[-1]))
-        
+
         return seq
 
     def _merge_subdiv_vertices(self, subdivision):
         """Merge the vertices from cosecutive edges in the given edge subdivision"""
 
         for i in range(1, len(subdivision)):
-            subdivision[i].start = subdivision[i-1].end
+            subdivision[i].start = subdivision[i - 1].end
         return subdivision
 
     # Assembly into serializable object
     def assembly(self):
-        """Returns the dict-based representation of edges, 
-            compatible with core -> BasePattern JSON (dict) 
+        """Returns the dict-based representation of edges,
+        compatible with core -> BasePattern JSON (dict)
         """
         properties = {"endpoints": [0, 1]}
         if self.label:
-            properties['label'] = self.label
+            properties["label"] = self.label
 
         return [self.start, self.end], properties
+
+
+class CircleEdge(Edge):
+    """Curvy edge as circular arc"""
+
+    def __init__(self, start=None, end=None, cy=None, label="") -> None:
+        """
+        Define a circular arc edge
+        * start, end: from/to vertices that the edge connects
+        * cy: third point on a circle arc (= control point).
+            Expressed relatively w.r.t. distance between start and end.
+            X value for control point is fixed at x=0.5 (edge center) to
+            avoid ambiguity
+        * label: semantic label of the edge to be writted down as a property on assembly
+
+        NOTE: representing control point in relative coordinates
+        allows preservation of curvature (arc angle, relative radius
+        w.r.t. straight edge length)
+        When distance between vertices shrinks / extends
+
+        NOTE: full circle not supported: start & end should differ
+        """
+        if start is None:
+            start = [0, 0]
+        if end is None:
+            end = [1, 0]
+        super().__init__(start, end, label=label)
+        self.control_y = cy
+
+    def length(self):
+        """Return current length of an edge.
+        Since vertices may change their locations externally, the length
+        is dynamically evaluated
+        """
+        return self._rel_radius() * self._straight_len() * self._arc_angle()
+
+    def __str__(self) -> str:
+
+        points = [self.start, [0.5, self.control_y]]
+
+        str = [f"[{p[0]:.2f}, {p[1]:.2f}]->" for p in points]
+        str += [f"[{self.end[0]:.2f}, {self.end[1]:.2f}]"]
+
+        return "Arc:" + "".join(str)
+
+    def midpoint(self):
+        """Center of the edge"""
+        return rel_to_abs_2d(self.start, self.end, [0.5, self.control_y])
+
+    # Actions
+    def reverse(self):
+        """Flip the direction of the edge, accounting for curvatures"""
+
+        self.start, self.end = self.end, self.start
+        self.control_y *= -1
+
+        return self
+
+    def reflect_features(self):
+        """Reflect edge features from one side of the edge to the other"""
+
+        self.control_y *= -1
+
+        return self
+
+    def _subdivide(self, fractions: list, by_length=False):
+        """Add intermediate vertices to an edge,
+        splitting its parametrization according to fractions
+        while preserving the overall shape
+
+        NOTE: param subdiv == length subdiv for circle arcs
+        """
+        # NOTE: subdivide_param() is the same as subdivide_len()
+        # So parent implementation is ok
+        # TODOLOW Implementation is very similar to CurveEdge param-based subdivision
+
+        from pygarment.garmentcode.edge_factory import (
+            EdgeFactory,
+        )  # TODOLOW: ami - better solution?
+
+        frac = [abs(f) for f in fractions]
+        if not close_enough(fsum := sum(frac), 1, 1e-4):
+            raise RuntimeError(
+                f"Edge Subdivision::ERROR::fraction is incorrect. The sum {fsum} is not 1"
+            )
+
+        curve = self.as_curve()
+        # Sub-curves
+        covered_fr = 0
+        subcurves = []
+        for fr in fractions:
+            subcurves.append(curve.cropped(covered_fr, covered_fr + fr))
+            covered_fr += fr
+
+        # Convert to CircleEdge objects
+        subedges = EdgeSequence()
+        for curve in subcurves:
+            subedges.append(EdgeFactory.from_svg_curve(curve))
+        # Reference the first/last vertices correctly
+        subedges[0].start = self.start
+        subedges[-1].end = self.end
+
+        return subedges
+
+    # Special tools for circle representation
+    def as_curve(self):
+        """Represent as svgpath Arc"""
+
+        radius, la, sweep = self.as_radius_flag()
+
+        return svgpath.Arc(
+            list_to_c(self.start),
+            list_to_c([radius, radius]),
+            0,
+            la,
+            sweep,
+            list_to_c(self.end),
+        )
+
+    def as_radius_flag(self):
+        """Return circle representation as radius and arc flags"""
+
+        return (
+            self._rel_radius() * self._straight_len(),
+            self._is_large_arc(),
+            self.control_y < 0,
+        )  # left/right orientation
+
+    def as_radius_angle(self):
+        """Return circle representation as radius and an angle"""
+
+        return (
+            self._rel_radius() * self._straight_len(),
+            self._arc_angle(),
+            self.control_y < 0,
+        )
+
+    def linearize(self, n_verts_inside=9):
+        """Return a linear approximation of an edge using the same vertex objects
+        NOTE: n_verts_inside = number of vertices (excluding the start
+         and end vertices) used to create a linearization of the edge
+        """
+        n = n_verts_inside + 1
+        tvals = np.linspace(0, 1, n, endpoint=False)[1:]
+
+        curve = self.as_curve()
+        edge_verts = [c_to_list(curve.point(t)) for t in tvals]
+        seq = self.to_edge_sequence(edge_verts)
+
+        return seq
+
+    # NOTE: The following values are calculated at runtime to allow
+    # changes to control point after the edge definition
+    def _rel_radius(self, abs_radius=None):
+        """Eval relative radius (w.r.t. straight distance) from 3-point
+        representation"""
+
+        if abs_radius:
+            return abs_radius / self._straight_len()
+
+        # Using the formula for radius of circumscribed circle
+        # https://en.wikipedia.org/wiki/Circumscribed_circle#Other_properties
+
+        # triangle sides, assuming the begginning and end of an edge are at
+        # (0, 0) and (1, 0)
+        # accordingly
+        a = 1
+        b = norm([0.5, self.control_y])
+        c = norm([0.5 - 1, self.control_y])
+        p = (a + b + c) / 2  # semiperimeter
+
+        rad = a * b * c / np.sqrt(p * (p - a) * (p - b) * (p - c)) / 4
+
+        return rad
+
+    def _arc_angle(self):
+        """Eval arc angle from control point"""
+        rel_rad = self._rel_radius()
+
+        # NOTE: Bound the sin to avoid out of bounds errors
+        # due to floating point error accumulation
+        arc = 2 * np.arcsin(min(max(1 / rel_rad / 2, -1.0), 1.0))
+
+        if self._is_large_arc():
+            arc = 2 * np.pi - arc
+
+        return arc
+
+    def _is_large_arc(self):
+        """Indicate if the arc sweeps the large or small angle"""
+        return abs(self.control_y) > self._rel_radius()
+
+    def assembly(self):
+        """Returns the dict-based representation of edges,
+        compatible with core -> BasePattern JSON (dict)
+        """
+        ends, props = super().assembly()
+
+        # NOTE: arc representation is the same as in SVG
+        rad, large_arc, right = self.as_radius_flag()
+        props["curvature"] = {
+            "type": "circle",
+            "params": [rad, int(large_arc), int(right)],
+        }
+        return ends, props
 
 
 class CurveEdge(Edge):
     """Curvy edge as Besier curve / B-spline"""
 
-    def __init__(self, start=None, end=None, control_points=None,
-                 relative=True, 
-                 label='') -> None:
+    def __init__(
+        self, start=None, end=None, control_points=None, relative=True, label=""
+    ) -> None:
         """Define a Bezier curve edge
-            * start, end: from/to vertices that the edge connects
-            * control_points: coordinated of Bezier control points.
-                Specification of One control point creates the Quadratic Bezier, 
-                Specification of 2 control points creates Cubic Bezier. 
-                Other degrees are not supported.
-            * label: semantic label of the edge to be writted down as a property on assembly
+        * start, end: from/to vertices that the edge connects
+        * control_points: coordinated of Bezier control points.
+            Specification of One control point creates the Quadratic Bezier,
+            Specification of 2 control points creates Cubic Bezier.
+            Other degrees are not supported.
+        * label: semantic label of the edge to be writted down as a property on assembly
 
-            * relative: specify whether the control point coordinated are given 
-            relative to the edge length (True) or in 2D coordinate system of a
-                panel (False)
+        * relative: specify whether the control point coordinated are given
+        relative to the edge length (True) or in 2D coordinate system of a
+            panel (False)
 
         """
         if control_points is None:
@@ -286,13 +498,17 @@ class CurveEdge(Edge):
         self.control_points = control_points
 
         if len(self.control_points) > 2:
-            raise NotImplementedError(f'{self.__class__.__name__}::ERROR::Up to 2 control points (cubic Bezier) are supported')
+            raise NotImplementedError(
+                f"{self.__class__.__name__}::ERROR::Up to 2 control points (cubic Bezier) are supported"
+            )
 
         # Storing control points as relative since it preserves overall curve
         # shape during edge extension/contraction
         if not relative:
-            self.control_points = [abs_to_rel_2d(self.start, self.end, c).tolist()
-                                   for c in self.control_points]
+            self.control_points = [
+                abs_to_rel_2d(self.start, self.end, c).tolist()
+                for c in self.control_points
+            ]
 
     def length(self):
         """Length of Bezier curve edge"""
@@ -304,24 +520,27 @@ class CurveEdge(Edge):
 
         points = [self.start] + self.control_points
 
-        str = [f'[{p[0]:.2f}, {p[1]:.2f}]->' for p in points]
-        str += [f'[{self.end[0]:.2f}, {self.end[1]:.2f}]']
+        str = [f"[{p[0]:.2f}, {p[1]:.2f}]->" for p in points]
+        str += [f"[{self.end[0]:.2f}, {self.end[1]:.2f}]"]
 
-        return 'Curve:' + ''.join(str)
+        return "Curve:" + "".join(str)
 
     def midpoint(self):
         """Center of the edge"""
         curve = self.as_curve()
 
-        t_mid = curve.ilength(curve.length()/2, s_tol=ILENGTH_S_TOL)
+        t_mid = curve.ilength(curve.length() / 2, s_tol=ILENGTH_S_TOL)
         return c_to_list(curve.point(t_mid))
 
     def _subdivide(self, fractions: list, by_length=False):
-        """Add intermediate vertices to an edge, 
-            splitting its curve parametrization or overall length according to 
-            fractions while preserving the overall shape
+        """Add intermediate vertices to an edge,
+        splitting its curve parametrization or overall length according to
+        fractions while preserving the overall shape
         """
-        from pygarment.garmentcode.edge_factory import EdgeFactory  # TODOLOW: ami - better solution?
+        from pygarment.garmentcode.edge_factory import (
+            EdgeFactory,
+        )  # TODOLOW: ami - better solution?
+
         curve = self.as_curve()
 
         # Sub-curves
@@ -355,7 +574,10 @@ class CurveEdge(Edge):
 
         # change order of control points
         if len(self.control_points) == 2:
-            self.control_points[0], self.control_points[1] = self.control_points[1], self.control_points[0]
+            self.control_points[0], self.control_points[1] = (
+                self.control_points[1],
+                self.control_points[0],
+            )
 
         # Update coordinates
         for p in self.control_points:
@@ -374,8 +596,8 @@ class CurveEdge(Edge):
     def as_curve(self, absolute=True):
         """As svgpath curve object
 
-            Converting on the fly as exact vertex location might have been updated since
-            the creation of the edge
+        Converting on the fly as exact vertex location might have been updated since
+        the creation of the edge
         """
         # Get the nodes correcly
         if absolute:
@@ -385,16 +607,20 @@ class CurveEdge(Edge):
             cp = self.control_points
             nodes = np.vstack(([0, 0], cp, [1, 0]))
 
-        params = nodes[:, 0] + 1j*nodes[:, 1]
+        params = nodes[:, 0] + 1j * nodes[:, 1]
 
-        return svgpath.QuadraticBezier(*params) if len(cp) < 2 else svgpath.CubicBezier(*params)
+        return (
+            svgpath.QuadraticBezier(*params)
+            if len(cp) < 2
+            else svgpath.CubicBezier(*params)
+        )
 
     def linearize(self, n_verts_inside=9):
         """Return a linear approximation of an edge using the same vertex objects
-           NOTE: n_verts_inside = number of vertices (excluding the start
-           and end vertices) used to create a linearization of the edge
+        NOTE: n_verts_inside = number of vertices (excluding the start
+        and end vertices) used to create a linearization of the edge
 
-        """        
+        """
         n = n_verts_inside + 1
         tvals_init = np.linspace(0, 1, n, endpoint=False)[1:]
 
@@ -402,43 +628,51 @@ class CurveEdge(Edge):
         curve_lengths = tvals_init * curve.length()
         tvals = [curve.ilength(c_len, s_tol=ILENGTH_S_TOL) for c_len in curve_lengths]
 
-        edge_verts = [rel_to_abs_2d(self.start, self.end, c_to_list(curve.point(t))) for t in tvals]
+        edge_verts = [
+            rel_to_abs_2d(self.start, self.end, c_to_list(curve.point(t)))
+            for t in tvals
+        ]
         seq = self.to_edge_sequence(edge_verts)
 
         return seq
 
     def _extreme_points(self):
         """Return extreme points (on Y) of the current edge
-            NOTE: this does NOT include the border vertices of an edge
+        NOTE: this does NOT include the border vertices of an edge
         """
 
         # Variation of https://github.com/mathandy/svgpathtools/blob/5c73056420386753890712170da602493aad1860/svgpathtools/bezier.py#L197
-        curve = self.as_curve(absolute=False)   # relative coords to find real extremizers
+        curve = self.as_curve(
+            absolute=False
+        )  # relative coords to find real extremizers
         poly = svgpath.bezier2polynomial(curve, return_poly1d=True)
         y = svgpath.imag(poly)
         dy = y.deriv()
         y_extremizers = svgpath.polyroots(
-            dy, realroots=True, condition=lambda r: 0 < r < 1)
+            dy, realroots=True, condition=lambda r: 0 < r < 1
+        )
 
         extreme_points = np.array(
-            [rel_to_abs_2d(self.start, self.end, c_to_list(curve.point(t)))
-             for t in y_extremizers]
+            [
+                rel_to_abs_2d(self.start, self.end, c_to_list(curve.point(t)))
+                for t in y_extremizers
+            ]
         )
 
         return extreme_points
 
     # Assembly into serializable object
     def assembly(self):
-        """Returns the dict-based representation of edges, 
-            compatible with core -> BasePattern JSON (dict) 
+        """Returns the dict-based representation of edges,
+        compatible with core -> BasePattern JSON (dict)
         """
 
         ends, props = super().assembly()
 
-        props['curvature'] = {
-                    "type": 'quadratic' if len(self.control_points) == 1 else 'cubic',
-                    "params": self.control_points
-                }
+        props["curvature"] = {
+            "type": "quadratic" if len(self.control_points) == 1 else "cubic",
+            "params": self.control_points,
+        }
         return ends, props
 
 
