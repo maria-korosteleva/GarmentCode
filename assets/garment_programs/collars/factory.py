@@ -18,9 +18,9 @@ def register_builder(key: str):
     return registry.register(_REGISTERED_COLLAR_CLS, key)
 
 
-def build(config: dict  = None, name: str  = None, **kwargs):
+def build(name: str  = None, **kwargs):
     builder = registry.lookup(_REGISTERED_COLLAR_CLS, name)
-    return builder(config=config, **kwargs)
+    return builder(**kwargs)
 
 
 def get_config(name: str):

@@ -3,10 +3,11 @@ from copy import deepcopy
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from assets.garment_programs.bands import base as bands
-from assets.garment_programs.sleeves.armhole_shapes import factory as armhole_factory
-from assets.garment_programs.sleeves import factory
 import pygarment as pyg
+from assets.garment_programs.bands import base as bands
+from assets.garment_programs.sleeves import factory
+from assets.garment_programs.sleeves.armhole_shapes import \
+    factory as armhole_factory
 
 
 class SleevePanel(pyg.Panel):
@@ -144,7 +145,11 @@ class Sleeve(pyg.Component):
         #     bottom_angle_mix=design['opening_dir_mix']['v'],
         #     verbose=self.verbose
         # )
-        armhole_str_name = "ArmholeCurve" if design['sleeveless']['v'] is None else design['sleeveless']['v']
+        armhole_str_name = (
+            "ArmholeCurve"
+            if design["armhole_shape"]["v"] is None
+            else design["armhole_shape"]["v"]
+        )
         front_project, front_opening = armhole_factory.build(
             name=armhole_str_name,
             incl=front_w - sleeve_balance,
@@ -158,9 +163,9 @@ class Sleeve(pyg.Component):
         )
         # back_project, back_opening = armhole(
         #     back_w - sleeve_balance,
-        #     connecting_width, 
-        #     angle=rest_angle, 
-        #     incl_coeff=smoothing_coeff, 
+        #     connecting_width,
+        #     angle=rest_angle,
+        #     incl_coeff=smoothing_coeff,
         #     w_coeff=smoothing_coeff,
         #     invert=not design['sleeveless']['v'],
         #     bottom_angle_mix=design['opening_dir_mix']['v']

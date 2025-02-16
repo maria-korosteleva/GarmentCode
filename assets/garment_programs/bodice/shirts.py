@@ -83,11 +83,11 @@ class FittedShirt(Shirt):
         super().__init__(body, design, fitted=True)
 
 
-@factory.register_builder("shirt")
-def build_shirt(body_config: dict, design_config: dict):
-    return Shirt(body=body_config, design=design_config, fitted=False)
+@factory.register_builder("Shirt")
+def build_shirt(body: dict, design: dict):
+    return Shirt(body=body, design=design, fitted=False)
 
 
-@factory.register_builder("fitted shirt")
-def build_shirt(body_config: dict, design_config: dict):
-    return Shirt(body=body_config, design=design_config, fitted=True)
+@factory.register_builder("FittedShirt")
+def build_shirt(body: dict, design: dict):
+    return Shirt(body=body, design=design, fitted=True)
