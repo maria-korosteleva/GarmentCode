@@ -23,11 +23,11 @@ def texture_mesh_islands(
     """
     all_uvs, boundary_uv_to_draw = unwarp_UV(texture_coords, face_texture_coords, padding=uv_padding)
         
-    uv_list, width, height = normalize_UVs(all_uvs, axis_padding=uv_padding)   # NOTE !! Axis padding should match the uv padding
+    uv_list, width = normalize_UVs(all_uvs, axis_padding=uv_padding)   # NOTE !! Axis padding should match the uv padding
 
     # Create image
     create_UV_island_texture(
-        boundary_uv_to_draw, width, height,
+        boundary_uv_to_draw, width, width,
         texture_image_path=out_texture_image_path,
         boundary_width=boundary_width,
         dpi=dpi,
@@ -35,9 +35,9 @@ def texture_mesh_islands(
     )
 
     # Create image with fabric background
-    if out_fabric_tex_image_path is not None:
+    if out_fabric_tex_image_path is not None and background_img_path is not None:
         create_UV_island_texture(
-            boundary_uv_to_draw, width, height,
+            boundary_uv_to_draw, width, width,
             texture_image_path=out_fabric_tex_image_path,
             boundary_width=boundary_width,
             dpi=dpi,
@@ -45,6 +45,8 @@ def texture_mesh_islands(
             background_resolution=background_resolution,
             preserve_alpha=False  
         )
+    else:
+        out_fabric_tex_image_path = None
 
     # Save mtl is requested
     if out_mtl_file_path:
@@ -130,11 +132,12 @@ def normalize_UVs(all_uvs, axis_padding=3):
     uv_list = uv_list_raw
 
     norm_x = max(uv_list_raw[:,0]) + axis_padding
-    uv_list[:,0] = uv_list_raw[:,0] / norm_x
     norm_y = max(uv_list_raw[:,1]) + axis_padding
-    uv_list[:,1] = uv_list_raw[:,1] / norm_y
+    norm_max = max(norm_x, norm_y)
+    uv_list[:,0] = uv_list_raw[:,0] / norm_max
+    uv_list[:,1] = uv_list_raw[:,1] / norm_max
 
-    return uv_list, norm_x, norm_y
+    return uv_list, norm_max
 
 def create_UV_island_texture(
         boundary_uv_to_draw, 
