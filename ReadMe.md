@@ -8,6 +8,8 @@ Official Implementation of [GarmentCode: Programming Parametric Sewing Patterns]
 
 ## News
 
+**[April, 2025]** GarmentCode online configurator demo is temporarily unavailable. We are working on bringing it back onlin!
+
 **[Nov 20, 2024]** GarmentCode configurator demo is now ONLINE 🥳 Check it out: https://garmentcode.ethz.ch/ (not for mobile) 
 
 **[Sept 4, 2024]** We release a new version of the dataset with a few fixes and updates: [GarmentCodeData (v2)](https://doi.org/10.3929/ethz-b-000690432). See documentation for new data version for more details.
