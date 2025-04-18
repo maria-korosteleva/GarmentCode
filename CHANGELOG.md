@@ -1,6 +1,13 @@
 
 # Change Log
 
+## [2.0.2] - 2025-04-18
+
+### Fixed
+- UVs are now preserving the aspect ratio of the garment panels
+- When `fabric_grain_texture_path` is `null` or unspecified, the second texture is not generated
+- @phucph11's fix of UV connected components evaluation: deriving component indices of vertices from face ids
+
 ## [2.0.1] - 2024-09-12
 
 ### Fixed
