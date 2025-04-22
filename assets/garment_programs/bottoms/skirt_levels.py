@@ -1,12 +1,15 @@
-from assets.garment_programs.circle_skirt import *
-from assets.garment_programs.skirt_paneled import *
 from copy import deepcopy
 
+from assets.garment_programs.bottoms import factory
+from assets.garment_programs.bottoms.circle_skirt import *
+from assets.garment_programs.bottoms.skirt_paneled import *
 
+
+@factory.register_builder("SkirtLevels")
 class SkirtLevels(BaseBottoms):
     """Skirt constiting of multuple stitched skirts"""
 
-    def __init__(self, body, design, rise=None) -> None:
+    def __init__(self, body: dict, design: dict, rise: float  = None) -> None:
         super().__init__(body, design, rise=rise)
 
         ldesign = design['levels-skirt']
@@ -77,4 +80,3 @@ class SkirtLevels(BaseBottoms):
 
         # Add hip_line (== zero length)
         self.base_len = body['hips_line'] * ldesign['rise']['v'] + self.base_len
-

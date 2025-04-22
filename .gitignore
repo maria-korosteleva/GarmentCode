@@ -31,3 +31,4 @@ output*
 
 # Nicegui
 .nicegui
+.venv/
