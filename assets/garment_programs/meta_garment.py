@@ -1,12 +1,13 @@
-from assets.garment_programs.tee import *
-from assets.garment_programs.godet import *
-from assets.garment_programs.bodice import *
-from assets.garment_programs.pants import *
+import pygarment as pyg
 from assets.garment_programs.bands import *
-from assets.garment_programs.skirt_paneled import *
-from assets.garment_programs.skirt_levels import *
-from assets.garment_programs.circle_skirt import *
+from assets.garment_programs.bands import factory as band_factory
+from assets.garment_programs.bodice import *
+from assets.garment_programs.bodice import factory as bodice_factory
+from assets.garment_programs.bottoms import *
+from assets.garment_programs.bottoms import factory as bottom_factory
+from assets.garment_programs.collars import *
 from assets.garment_programs.sleeves import *
+
 
 class TotalLengthError(BaseException):
     """Error indicating that the total length of a garment goes beyond 
@@ -23,7 +24,7 @@ class MetaGarment(pyg.Component):
     for various dresses and jumpsuit styles and fit them to the body
     measurements
     """
-    def __init__(self, name, body, design) -> None:
+    def __init__(self, name: str, body: dict, design: dict) -> None:
         super().__init__(name)
         self.body = body
         self.design = design
@@ -35,31 +36,37 @@ class MetaGarment(pyg.Component):
 
         # Upper garment
         if self.upper_name: 
-            upper = globals()[self.upper_name]
-            self.subs = [upper(body, design)]
+            self.subs = [bodice_factory.build(name=self.upper_name, body=body, design=design)]
 
             # Set a label
             self.subs[-1].set_panel_label('body', overwrite=False)
 
         # Define Lower garment
         if self.lower_name:
-            Lower_class = globals()[self.lower_name]
             # NOTE: full rise for fitted tops
-            Lower = Lower_class(body, design, rise=1. if self.upper_name and 'Fitted' in self.upper_name else None)
+            Lower = bottom_factory.build(
+                name=self.lower_name,
+                body=body,
+                design=design,
+                rise=1.0 if self.upper_name and "Fitted" in self.upper_name else None,
+            )
         else: 
             Lower = None
 
         # Belt (or not)
         # TODO Adapt the rise of the lower garment to the width of the belt for correct matching
         if self.belt_name:
-            Belt_class = globals()[self.belt_name]
-            
             # Adjust rise to match the Lower garment if needed
-            Belt = Belt_class(body, design, Lower.get_rise() if Lower else 1.)
+            Belt = band_factory.build(
+                name=self.belt_name,
+                body=body,
+                design=design,
+                rise=Lower.get_rise() if Lower else 1.0,
+            )
 
             self.subs.append(Belt)
 
-            # Place below the upper garment 
+            # Place below the upper garment
             if len(self.subs) > 1:
                 self.subs[-1].place_by_interface(
                     self.subs[-1].interfaces['top'],
@@ -70,7 +77,7 @@ class MetaGarment(pyg.Component):
                 self.stitching_rules.append(
                     (self.subs[-2].interfaces['bottom'],
                      self.subs[-1].interfaces['top']))
-            
+
             # Add waist label
             self.subs[-1].interfaces['top'].edges.propagate_label('lower_interface')
             # Set panel segmentation labels
@@ -89,13 +96,12 @@ class MetaGarment(pyg.Component):
                 self.stitching_rules.append(
                     (self.subs[-2].interfaces['bottom'],
                      self.subs[-1].interfaces['top']))
-            
+
             # Add waist label
             if not self.belt_name:
                 self.subs[-1].interfaces['top'].edges.propagate_label('lower_interface')
             # Set panel segmentation labels
             self.subs[-1].set_panel_label('leg', overwrite=False)
-
 
     def assert_total_length(self, tol=1):
         """Check the total length of components"""
@@ -105,7 +111,7 @@ class MetaGarment(pyg.Component):
         if length > floor + tol:
             raise TotalLengthError(f'{self.__class__.__name__}::{self.name}::ERROR:'
                                     f':Total length {length} exceeds the floor length {floor}')
-        
+
     # TODO these checks don't require initialization of the pattern!
     def assert_non_empty(self, filter_belts=True):
         """Check that the garment is non-empty
@@ -114,7 +120,7 @@ class MetaGarment(pyg.Component):
         if not self.upper_name and not self.lower_name:
             if filter_belts or not self.belt_name:
                 raise IncorrectElementConfiguration()
-            
+
     def assert_skirt_waistband(self):
         """Check if a generated heavy skirt is created with a waistband"""
 

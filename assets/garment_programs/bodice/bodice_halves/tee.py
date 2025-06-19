@@ -12,7 +12,7 @@ class TorsoFrontHalfPanel(BaseBodicePanel):
     
         Fits to the bust size
     """
-    def __init__(self, name, body, design) -> None:
+    def __init__(self, name: str, body: dict, design: dict) -> None:
         """ Front = True, provides the adjustments necessary for the front panel
         """
         super().__init__(name, body, design)
@@ -70,7 +70,7 @@ class TorsoBackHalfPanel(BaseBodicePanel):
     
         Fits to the bust size
     """
-    def __init__(self, name, body, design) -> None:
+    def __init__(self, name: str, body: dict, design: dict) -> None:
         """ Front = True, provides the adjustments necessary for the front panel
         """
         super().__init__(name, body, design)
@@ -80,7 +80,7 @@ class TorsoBackHalfPanel(BaseBodicePanel):
         m_width = design['width']['v'] * body['bust']
         b_width = design['flare']['v'] * m_width
 
-        # sizes 
+        # sizes
         body_width = body['back_width'] / 2
         frac = body_width / body['bust'] 
         self.width = frac * m_width

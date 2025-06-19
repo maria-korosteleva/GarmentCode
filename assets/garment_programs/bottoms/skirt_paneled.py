@@ -5,6 +5,7 @@ import pygarment as pyg
 from assets.garment_programs.base_classes import StackableSkirtComponent
 from assets.garment_programs.base_classes import BaseBottoms
 from assets.garment_programs import shapes
+from assets.garment_programs.bottoms import factory
 
 
 class SkirtPanel(pyg.Panel):
@@ -118,7 +119,7 @@ class FittedSkirtPanel(pyg.Panel):
         hip_side_incl = np.deg2rad(body['_hip_inclination'])
         flare = design['flare']['v']
         low_width = body['hips'] * (flare - 1) / 4 + hips  # Distribute the difference equally 
-                                                                           # between front and back
+        # between front and back
         # adjust for a rise
         adj_hips_depth = hips_depth * hipline_ext
         dart_depth = hips_depth * dart_frac
@@ -126,7 +127,7 @@ class FittedSkirtPanel(pyg.Panel):
 
         # amount of extra fabric
         w_diff = hips - waist   # Assume its positive since waist is smaller then hips
-        # We distribute w_diff among the side angle and a dart 
+        # We distribute w_diff among the side angle and a dart
         hw_shift = np.tan(hip_side_incl) * adj_hips_depth
         # Small difference
         if hw_shift > w_diff:
@@ -197,14 +198,14 @@ class FittedSkirtPanel(pyg.Panel):
 
             self.edges.substitute(bottom, new_edges)
             bottom = int_edges
-        
+
         if left_slit:
             frac = left_slit
             new_left_bottom = left_bottom.subdivide_len([1 - frac, frac])
             left.substitute(left_bottom, new_left_bottom[0])
             self.edges.substitute(left_bottom, new_left_bottom)
             left_bottom = new_left_bottom[0]
-        
+
         if right_slit:
             frac = right_slit
             new_rbottom = right_bottom.subdivide_len([frac, 1 - frac])
@@ -304,6 +305,7 @@ class FittedSkirtPanel(pyg.Panel):
 
 
 # Full garments - Components
+@factory.register_builder("PencilSkirt")
 class PencilSkirt(StackableSkirtComponent):
     def __init__(self, body, design, tag='', length=None, rise=None, slit=True, **kwargs) -> None:
         super().__init__(body, design, tag)
@@ -391,6 +393,8 @@ class PencilSkirt(StackableSkirtComponent):
     def length(self):
         return self.front.length()
 
+
+@factory.register_builder("Skirt2")
 class Skirt2(StackableSkirtComponent):
     """Simple 2 panel skirt"""
     def __init__(self, body, design, tag='', length=None, rise=None, slit=True, top_ruffles=True, min_len=5) -> None:
@@ -451,6 +455,7 @@ class Skirt2(StackableSkirtComponent):
         return self.front.length()
 
 
+@factory.register_builder("SkirtManyPanels")
 class SkirtManyPanels(BaseBottoms):
     """Round Skirt with many panels"""
 
@@ -509,4 +514,3 @@ class SkirtManyPanels(BaseBottoms):
     
     def length(self):
         return self.front.length()
-
