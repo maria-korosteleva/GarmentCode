@@ -32,7 +32,9 @@ pip install pygarment
 
 If required, you could install the library and dependecies manually
 
-### Install python with dependencies:
+### pygarment uses the following dependencies:
+
+These dependencies are installed through [setup.cfg](https://github.com/maria-korosteleva/GarmentCode/blob/main/setup.cfg#L23).
 
 * Python 3.9
 * numpy<2
@@ -55,7 +57,7 @@ All python dependencies can be installed with `pip install` / `conda install`:
 ```
 conda create -n garmentcode python=3.9
 conda activate garmentcode
-pip install numpy<2 scipy pyaml>=6.0 svgwrite psutil matplotlib svgpathtools cairosvg nicegui trimesh libigl pyrender cgal
+pip install -e . # installs in editable mode, installs requirements from setup.cfg
 <build and install warp for GarmentCode>
 ```
 
