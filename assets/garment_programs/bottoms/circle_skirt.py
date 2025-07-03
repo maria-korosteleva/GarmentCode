@@ -2,18 +2,19 @@ import numpy as np
 import pygarment as pyg
 
 from assets.garment_programs.base_classes import StackableSkirtComponent
+from assets.garment_programs.bottoms import factory
 
 
 class CircleArcPanel(pyg.Panel):
     """One panel circle skirt"""
 
     def __init__(self, 
-                 name, 
+                 string_name, 
                  top_rad, length, angle, 
                  match_top_int_proportion=None, 
                  match_bottom_int_proportion=None
             ) -> None:
-        super().__init__(name)
+        super().__init__(string_name)
 
         halfarc = angle / 2
 
@@ -76,6 +77,7 @@ class CircleArcPanel(pyg.Panel):
 
         return CircleArcPanel(name, rad, length, arc, **kwargs)
 
+
 class AsymHalfCirclePanel(pyg.Panel):
     """Panel for a asymmetrci circle skirt"""
 
@@ -99,7 +101,7 @@ class AsymHalfCirclePanel(pyg.Panel):
 
         self.edges.append(pyg.Edge(
             self.edges[-1].end, [dist_out / 2, 0]))
-        
+
         # Bottom
         self.edges.append(
             pyg.CircleEdgeFactory.from_three_points(
@@ -121,10 +123,12 @@ class AsymHalfCirclePanel(pyg.Panel):
             'left': pyg.Interface(self, self.edges[1]),
             'right': pyg.Interface(self, self.edges[3])
         }
-    
+
     def length(self, *args):
         return self.interfaces['right'].edges.length()
 
+
+@factory.register_builder("SkirtCircle")
 class SkirtCircle(StackableSkirtComponent):
     """Simple circle skirt"""
     def __init__(self, body, design, tag='', length=None, rise=None, slit=True, asymm=False, min_len=5, **kwargs) -> None:
@@ -194,7 +198,7 @@ class SkirtCircle(StackableSkirtComponent):
             'bottom_b': self.back.interfaces['bottom'],
             'bottom': pyg.Interface.from_multiple(self.front.interfaces['bottom'], self.back.interfaces['bottom'])
         }
-        
+
     def add_cut(self, panel, design, sk_length):
         """Add a cut to the skirt"""
         width, depth = design['cut']['width']['v'] * sk_length, design['cut']['depth']['v'] * sk_length
@@ -223,11 +227,12 @@ class SkirtCircle(StackableSkirtComponent):
         panel.interfaces['bottom'].substitute(
             target_edge, interf_edges,
             [panel for _ in range(len(interf_edges))])
-        
+
     def length(self, *args):
         return self.front.length()
 
 
+@factory.register_builder("AsymmSkirtCircle")
 class AsymmSkirtCircle(SkirtCircle):
     """Front/back asymmetric skirt"""
     def __init__(self, body, design, tag='', length=None, rise=None, slit=True, **kwargs):

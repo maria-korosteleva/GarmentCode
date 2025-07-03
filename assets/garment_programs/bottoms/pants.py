@@ -1,9 +1,11 @@
 from copy import deepcopy
+
 import numpy as np
 
 import pygarment as pyg
+from assets.garment_programs.bands import factory as band_factory
 from assets.garment_programs.base_classes import BaseBottoms
-from assets.garment_programs import bands
+from assets.garment_programs.bottoms import factory
 
 
 class PantPanel(pyg.Panel):
@@ -174,10 +176,10 @@ class PantPanel(pyg.Panel):
             )
 
         return top_edges, int_edges
-        
+
 
 class PantsHalf(BaseBottoms):
-    def __init__(self, tag, body, design, rise=None) -> None:
+    def __init__(self, tag: str, body: dict, design: dict, rise: float = None) -> None:
         super().__init__(body, design, tag, rise=rise)
         design = design['pants']
         self.rise = design['rise']['v'] if rise is None else rise
@@ -198,8 +200,8 @@ class PantsHalf(BaseBottoms):
             if length - cuff_len < design['length']['range'][0]:   # Min length from paramss
                 # Cannot be longer then a pant
                 cuff_len = length - design['length']['range'][0]
-            # Include the cuff into the overall length, 
-            # unless the requested length is too short to fit the cuff 
+            # Include the cuff into the overall length,
+            # unless the requested length is too short to fit the cuff
             # (to avoid negative length)
             length -= cuff_len
         length *= body['_leg_length']
@@ -236,7 +238,7 @@ class PantsHalf(BaseBottoms):
         # add a cuff
         # TODOLOW This process is the same for sleeves -- make a function?
         if design['cuff']['type']['v']:
-            
+
             pant_bottom = pyg.Interface.from_multiple(
                 self.front.interfaces['bottom'],
                 self.back.interfaces['bottom'])
@@ -248,8 +250,11 @@ class PantsHalf(BaseBottoms):
             cdesign['cuff']['cuff_len']['v'] = cuff_len
 
             # Init
-            cuff_class = getattr(bands, cdesign['cuff']['type']['v'])
-            self.cuff = cuff_class(f'pant_{tag}', cdesign)
+            # cuff_class = getattr(bands, cdesign['cuff']['type']['v'])
+            # self.cuff = cuff_class(f'pant_{tag}', cdesign)
+            self.cuff = band_factory.build(
+                name=cdesign["cuff"]["type"]["v"], tag=f"pant_{tag}"
+            )
 
             # Position
             self.cuff.place_by_interface(
@@ -275,11 +280,13 @@ class PantsHalf(BaseBottoms):
     def length(self):
         if self.design['pants']['cuff']['type']['v']:
             return self.front.length() + self.cuff.length()
-        
+
         return self.front.length()
 
+
+@factory.register_builder("Pants")
 class Pants(BaseBottoms):
-    def __init__(self, body, design, rise=None) -> None:
+    def __init__(self, body: dict, design: dict, rise: float = None) -> None:
         super().__init__(body, design)
 
         self.right = PantsHalf('r', body, design, rise)
@@ -309,4 +316,3 @@ class Pants(BaseBottoms):
     
     def length(self):
         return self.right.length()
-

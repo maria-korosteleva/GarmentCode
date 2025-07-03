@@ -22,7 +22,7 @@ class Panel(BaseComponent):
         applications
 
     """
-    def __init__(self, name, label='') -> None:
+    def __init__(self, name: str, label: str = "") -> None:
         """Base class for panel creations
             * Name: panel name. Expected to be a unique identifier of a panel object
             * label: additional panel label (non-unique)
