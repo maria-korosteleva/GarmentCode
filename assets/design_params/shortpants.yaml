@@ -1,0 +1,419 @@
+design:
+  meta:
+    upper:
+      v: null
+      type: select_null
+    wb:
+      v: null
+      type: select_null
+    bottom:
+      v: Pants
+      type: select_null
+  waistband:
+    waist:
+      v: 1.0
+      type: float
+    width:
+      v: 0.2
+      type: float
+  shirt:
+    strapless:
+      v: false
+      type: bool
+    length:
+      v: 1.2
+      type: float
+    width:
+      v: 1.05
+      type: float
+    flare:
+      v: 1.0
+      type: float
+  collar:
+    f_collar:
+      v: CircleNeckHalf
+      type: select
+    b_collar:
+      v: CircleNeckHalf
+      type: select
+    width:
+      v: 0.2
+      type: float
+    fc_depth:
+      v: 0.4
+      type: float
+    bc_depth:
+      v: 0
+      type: float
+    fc_angle:
+      v: 95
+      type: int
+    bc_angle:
+      v: 95
+      type: int
+    f_bezier_x:
+      v: 0.3
+      type: float
+    f_bezier_y:
+      v: 0.55
+      type: float
+    b_bezier_x:
+      v: 0.15
+      type: float
+    b_bezier_y:
+      v: 0.1
+      type: float
+    f_flip_curve:
+      v: false
+      type: bool
+    b_flip_curve:
+      v: false
+      type: bool
+    component:
+      style:
+        v: null
+        type: select_null
+      depth:
+        v: 7
+        type: int
+      lapel_standing:
+        v: false
+        type: bool
+      hood_depth:
+        v: 1
+        type: float
+      hood_length:
+        v: 1
+        type: float
+  sleeve:
+    sleeveless:
+      v: false
+      type: bool
+    armhole_shape:
+      v: ArmholeCurve
+      type: select
+    length:
+      v: 0.3
+      type: float
+    connecting_width:
+      v: 0.2
+      type: float
+    end_width:
+      v: 1.0
+      type: float
+    sleeve_angle:
+      v: 10
+      type: int
+    opening_dir_mix:
+      v: 0.1
+      type: float
+    standing_shoulder:
+      v: false
+      type: bool
+    standing_shoulder_len:
+      v: 5.0
+      type: float
+    connect_ruffle:
+      v: 1
+      type: float
+    smoothing_coeff:
+      v: 0.25
+      type: float
+    cuff:
+      type:
+        v: null
+        type: select_null
+      top_ruffle:
+        v: 1
+        type: float
+      cuff_len:
+        v: 0.1
+        type: float
+      skirt_fraction:
+        v: 0.5
+        type: float
+      skirt_flare:
+        v: 1.2
+        type: float
+      skirt_ruffle:
+        v: 1.0
+        type: float
+  left:
+    enable_asym:
+      v: false
+      type: bool
+    shirt:
+      strapless:
+        v: false
+        type: bool
+      width:
+        v: 1.0
+        type: float
+      flare:
+        v: 1.0
+        type: float
+    collar:
+      f_collar:
+        v: CircleNeckHalf
+        type: select
+      b_collar:
+        v: CircleNeckHalf
+        type: select
+      width:
+        v: 0.5
+        type: float
+      fc_angle:
+        v: 95
+        type: int
+      bc_angle:
+        v: 95
+        type: int
+      f_bezier_x:
+        v: 0.5
+        type: float
+      f_bezier_y:
+        v: 0.3
+        type: float
+      b_bezier_x:
+        v: 0.5
+        type: float
+      b_bezier_y:
+        v: 0.3
+        type: float
+      f_flip_curve:
+        v: false
+        type: bool
+      b_flip_curve:
+        v: false
+        type: bool
+    sleeve:
+      sleeveless:
+        v: true
+        type: bool
+      armhole_shape:
+        v: ArmholeCurve
+        type: select
+      length:
+        v: 0.3
+        type: float
+      connecting_width:
+        v: 0.2
+        type: float
+      end_width:
+        v: 1.0
+        type: float
+      sleeve_angle:
+        v: 10
+        type: int
+      opening_dir_mix:
+        v: 0.2
+        type: float
+      standing_shoulder:
+        v: false
+        type: bool
+      standing_shoulder_len:
+        v: 5.0
+        type: float
+      connect_ruffle:
+        v: 1
+        type: float
+      smoothing_coeff:
+        v: 0.25
+        type: float
+      cuff:
+        type:
+          v: null
+          type: select_null
+        top_ruffle:
+          v: 1
+          type: float
+        cuff_len:
+          v: 0.1
+          type: float
+        skirt_fraction:
+          v: 0.5
+          type: float
+        skirt_flare:
+          v: 1.2
+          type: float
+        skirt_ruffle:
+          v: 1.0
+          type: float
+  skirt:
+    length:
+      v: 0.2
+      type: float
+    rise:
+      v: 1
+      type: float
+    ruffle:
+      v: 1.3
+      type: float
+    bottom_cut:
+      v: 0
+      type: float
+    flare:
+      v: 0
+      type: int
+  flare-skirt:
+    length:
+      v: 0.2
+      type: float
+    rise:
+      v: 1
+      type: float
+    suns:
+      v: 0.75
+      type: float
+    skirt-many-panels:
+      n_panels:
+        v: 4
+        type: int
+      panel_curve:
+        v: 0
+        type: select
+    asymm:
+      front_length:
+        v: 0.5
+        type: float
+    cut:
+      add:
+        v: false
+        type: bool
+      depth:
+        v: 0.5
+        type: float
+      width:
+        v: 0.1
+        type: float
+      place:
+        v: -0.5
+        type: float
+  godet-skirt:
+    base:
+      v: PencilSkirt
+      type: select
+    insert_w:
+      v: 15
+      type: int
+    insert_depth:
+      v: 20
+      type: int
+    num_inserts:
+      v: 4
+      type: select
+    cuts_distance:
+      v: 5
+      type: int
+  pencil-skirt:
+    length:
+      v: 0.4
+      type: float
+    rise:
+      v: 1
+      type: float
+    flare:
+      v: 1.0
+      type: float
+    low_angle:
+      v: 0
+      type: int
+    front_slit:
+      v: 0
+      type: float
+    back_slit:
+      v: 0
+      type: float
+    left_slit:
+      v: 0
+      type: float
+    right_slit:
+      v: 0
+      type: float
+    style_side_cut:
+      v: null
+      type: select_null
+  levels-skirt:
+    base:
+      v: PencilSkirt
+      type: select
+    level:
+      v: Skirt2
+      type: select
+    num_levels:
+      v: 1
+      type: int
+    level_ruffle:
+      v: 1.0
+      type: float
+    length:
+      v: 0.5
+      type: float
+    rise:
+      v: 1
+      type: float
+    base_length_frac:
+      v: 0.5
+      type: float
+  pants:
+    front_rise:
+      v: 25
+      type: float
+    back_rise:
+      v: 30
+      type: float
+    length_waist_to_hip:
+      v: 20
+      type: float
+    length_1:
+      v: 20
+      type: float
+    length_2:
+      v: 7
+      type: float
+    length_3:
+      v: 7
+      type: float
+    waist:
+      v: 38
+      type: float
+    width_1:
+      v: 30
+      type: float
+    width_2:
+      v: 30
+      type: float
+    width_3:
+      v: 32
+      type: float
+    width_4:
+      v: 32
+      type: float
+    width_hips:
+      v: 49
+      type: float
+    width_gusset_crotch:
+      v: 7
+      type: float
+    crotch_shift_ratio:
+      v: 0.5
+      type: float
+    cuff:
+      type:
+        v: null
+        type: select_null
+      top_ruffle:
+        v: 1.0
+        type: float
+      cuff_len:
+        v: 0.1
+        type: float
+      skirt_fraction:
+        v: 0.5
+        type: float
+      skirt_flare:
+        v: 1.2
+        type: float
+      skirt_ruffle:
+        v: 1.0
+        type: float

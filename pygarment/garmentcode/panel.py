@@ -25,6 +25,12 @@ class Panel(BaseComponent):
         applications
 
     """
+
+    label: str  # Additional panel label (non-unique)
+    translation: np.ndarray  # 3D translation vector
+    rotation: R  # 3D rotation as scipy Rotation object
+    edges: EdgeSequence  # Edge sequence defining the panel shape
+    
     def __init__(self, name, label='') -> None:
         """Base class for panel creations
             * Name: panel name. Expected to be a unique identifier of a panel object

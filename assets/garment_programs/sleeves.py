@@ -3,7 +3,7 @@ from copy import deepcopy
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from assets.garment_programs import bands
+from garment_programs import weon_bands
 import pygarment as pyg
 
 
@@ -307,7 +307,7 @@ class Sleeve(pyg.Component):
             cdesign['cuff']['b_width'] = dict(v=cuff_circ)
             cdesign['cuff']['cuff_len']['v'] = cuff_len_adj
 
-            cuff_class = getattr(bands, cdesign['cuff']['type']['v'])
+            cuff_class = getattr(weon_bands, cdesign['cuff']['type']['v'])
             self.cuff = cuff_class(f'sl_{tag}', cdesign)
 
             # Position

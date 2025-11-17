@@ -1,20 +1,46 @@
 from copy import deepcopy
+from typing import Callable, Optional
 
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from assets.garment_programs import bands
+from garment_programs import weon_bands
 import pygarment as pyg
+from pattern_definitions.body_definition import BodyDefinition
+from pattern_definitions.sleeve_design import SleeveDesign
+from pattern_definitions.torso_design import TorsoDesign
 
 
 # ------  Armhole shapes ------
-def ArmholeSquare(incl, width, angle,  invert=True, **kwargs):
-    """Simple square armhole cut-out
-        Not recommended to use for sleeves, stitching in 3D might be hard
-
-        if angle is provided, it also calculated the shape of the sleeve interface to attach
-
-        returns edge sequence and part to be preserved  inverted 
+def ArmholeSquare(
+    incl: float,
+    width: float,
+    angle: float,
+    invert: bool = True,
+    **kwargs
+) -> tuple:
+    """Simple square armhole cut-out.
+    
+    Not recommended to use for sleeves, stitching in 3D might be hard.
+    If angle is provided, it also calculates the shape of the sleeve interface to attach.
+    
+    Parameters
+    ----------
+    incl : float
+        Inclination value.
+    width : float
+        Width of the armhole.
+    angle : float
+        Angle for the sleeve interface.
+    invert : bool, optional
+        Whether to invert the shape. Default is True.
+    **kwargs
+        Additional keyword arguments.
+    
+    Returns
+    -------
+    tuple
+        Edge sequence and part to be preserved (inverted if requested).
     """
 
     edges = pyg.EdgeSeqFactory.from_verts([0, 0], [incl, 0],  [incl, width])
@@ -33,9 +59,39 @@ def ArmholeSquare(incl, width, angle,  invert=True, **kwargs):
     return edges, sleeve_edges
 
 
-def ArmholeAngle(incl, width, angle, incl_coeff=0.2, w_coeff=0.2,
-                 invert=True, **kwargs):
-    """Piece-wise smooth armhole shape"""
+def ArmholeAngle(
+    incl: float,
+    width: float,
+    angle: float,
+    incl_coeff: float = 0.2,
+    w_coeff: float = 0.2,
+    invert: bool = True,
+    **kwargs
+) -> tuple:
+    """Piece-wise smooth armhole shape.
+    
+    Parameters
+    ----------
+    incl : float
+        Inclination value.
+    width : float
+        Width of the armhole.
+    angle : float
+        Angle for the sleeve interface.
+    incl_coeff : float, optional
+        Inclination coefficient. Default is 0.2.
+    w_coeff : float, optional
+        Width coefficient. Default is 0.2.
+    invert : bool, optional
+        Whether to invert the shape. Default is True.
+    **kwargs
+        Additional keyword arguments.
+    
+    Returns
+    -------
+    tuple
+        Edge sequence and part to be preserved (inverted if requested).
+    """
     diff_incl = incl * (1 - incl_coeff)
     edges = pyg.EdgeSeqFactory.from_verts(
         [0, 0], [diff_incl, w_coeff * width], [incl, width])
@@ -53,8 +109,38 @@ def ArmholeAngle(incl, width, angle, incl_coeff=0.2, w_coeff=0.2,
     return edges, sleeve_edges
 
 
-def ArmholeCurve(incl, width, angle, bottom_angle_mix=0, invert=True, verbose=False, **kwargs):
-    """ Classic sleeve opening on Cubic Bezier curves
+def ArmholeCurve(
+    incl: float,
+    width: float,
+    angle: float,
+    bottom_angle_mix: float = 0,
+    invert: bool = True,
+    verbose: bool = False,
+    **kwargs
+) -> tuple:
+    """Classic sleeve opening on Cubic Bezier curves.
+    
+    Parameters
+    ----------
+    incl : float
+        Inclination value.
+    width : float
+        Width of the armhole.
+    angle : float
+        Angle for the sleeve interface.
+    bottom_angle_mix : float, optional
+        Bottom angle mix factor. Default is 0.
+    invert : bool, optional
+        Whether to invert the shape. Default is True.
+    verbose : bool, optional
+        Whether to print verbose output. Default is False.
+    **kwargs
+        Additional keyword arguments.
+    
+    Returns
+    -------
+    tuple
+        Edge sequence and part to be preserved (inverted if requested).
     """
     # Curvature as parameters?
     cps = [[0.5, 0.2], [0.8, 0.35]]
@@ -105,30 +191,58 @@ def ArmholeCurve(incl, width, angle, bottom_angle_mix=0, invert=True, verbose=Fa
 
 class SleevePanel(pyg.Panel):
     """Trying proper sleeve panel"""
+    
+    MIN_LENGTH = 5    # Minimum sleeve length
 
-    def __init__(self, name, body, design, open_shape, armhole_width,
-                 length_shift=0, x_translation=0, _standing_margin=5):
-        """Define a standard sleeve panel (half a sleeve)
-            * length_shift -- force upd sleeve length by this amount. 
-                Can be used to adjust length evaluation to fit the cuff
+    def __init__(
+        self,
+        name: str,
+        body: BodyDefinition | dict,
+        design: dict,
+        open_shape: pyg.EdgeSequence,
+        armhole_width: float,
+        length_shift: float = 0,
+        x_translation: float = 0,
+        _standing_margin: int = 5
+    ) -> None:
+        """Define a standard sleeve panel (half a sleeve).
+        
+        Parameters
+        ----------
+        name : str
+            Name of the panel.
+        body : BodyDefinition | dict
+            Body measurements object or dictionary.
+        design : dict
+            Design parameters dictionary.
+        open_shape : pyg.EdgeSequence
+            Edge sequence defining the sleeve opening shape.
+        armhole_width : float
+            Width of the armhole.
+        length_shift : float, optional
+            Force update sleeve length by this amount. Can be used to adjust
+            length evaluation to fit the cuff. Default is 0.
+        x_translation : float, optional
+            Translation along the x-axis. Default is 0.
+        _standing_margin : int, optional
+            Margin for standing shoulder. Default is 5.
         """
         super().__init__(name)
-        MIN_LENGTH = 5    # Minimum sleeve length
 
-        standing = design['standing_shoulder']['v']
+        # Create SleeveDesign from the design dict and store it
+        self.sleeve_design = SleeveDesign(design)
 
-        # Calculating extension size & end size before applying ruffles
-        # Since ruffles add to pattern length & width, but not to de-facto 
-        # sleeve length in 3D
-        end_width = design['end_width']['v']
+        standing = self.sleeve_design.standing_shoulder
+
+        end_width = self.sleeve_design.end_width
 
         # -- Main body of a sleeve --
         opening_length = abs(open_shape[0].start[0] - open_shape[-1].end[0])
-        elbow_width = design['elbow_width']['v']
+        elbow_width = self.sleeve_design.elbow_width
         # Length from the border of the opening to the end of the sleeve
-        length = design['length']['v'] - opening_length
+        length = self.sleeve_design.length - opening_length
         # NOTE: Asked to reduce by too much: reduce as much as possible
-        length = max(length + length_shift, MIN_LENGTH)
+        length = max(length + length_shift, self.MIN_LENGTH)
 
         self.edges = pyg.EdgeSeqFactory.from_verts(
             [0, 0], [0, -end_width], [length / 2, -elbow_width], [length, -armhole_width]
@@ -144,12 +258,12 @@ class SleevePanel(pyg.Panel):
         if standing:
             raise NotImplementedError('Standing shoulder is not implemented yet')
             shoulder_angle = np.deg2rad(body['_shoulder_incl'])
-            rest_angle = max(np.deg2rad(design['sleeve_angle']['v']),
+            rest_angle = max(np.deg2rad(self.sleeve_design.sleeve_angle),
                             shoulder_angle)
             if rest_angle > (shoulder_angle + np.deg2rad(_standing_margin)):  # Add a "shelve" to create square shoulder appearance
                 top_edge = self.edges[-1]
                 start = top_edge.start
-                len = design['standing_shoulder_len']['v']
+                len = self.sleeve_design.standing_shoulder_len
 
                 x_shift = len * np.cos(rest_angle - shoulder_angle)
                 y_shift = len * np.sin(rest_angle - shoulder_angle)
@@ -173,8 +287,8 @@ class SleevePanel(pyg.Panel):
         # Interfaces
         self.interfaces = {
             # NOTE: interface needs reversing because the open_shape was reversed for construction
-            'in': pyg.Interface(self, open_shape, ruffle=design['connect_ruffle']['v']),
-            'out': pyg.Interface(self, self.edges[0], ruffle=design['cuff']['top_ruffle']['v']),
+            'in': pyg.Interface(self, open_shape, ruffle=self.sleeve_design.connect_ruffle),
+            'out': pyg.Interface(self, self.edges[0], ruffle=self.sleeve_design.cuff.top_ruffle),
             'top': pyg.Interface(self, self.edges[-2:] if standing else self.edges[-1]),  
             'bottom': pyg.Interface(self, pyg.EdgeSequence(self.edges[1], self.edges[2]))
         }
@@ -187,37 +301,75 @@ class SleevePanel(pyg.Panel):
             0, 
         ])
         
-    def length(self, longest_dim=False):
+    def length(self, longest_dim: bool = False) -> float:
+        """Return the length of the sleeve panel.
+        
+        Parameters
+        ----------
+        longest_dim : bool, optional
+            Whether to return the longest dimension (not used, for compatibility).
+            Default is False.
+        
+        Returns
+        -------
+        float
+            Length of the sleeve panel.
+        """
         return self.interfaces['bottom'].edges.length()
 
 
 class Sleeve(pyg.Component):
     """Trying to do a proper sleeve"""
 
-    def __init__(self, tag, body, design, front_w, back_w, front_hole_edge, back_hole_edge): 
-        """Defintion of a sleeve: 
-            * front_w, back_w: the width front and the back of the top 
-            the sleeve will attach to -- needed for correct share calculations
-                They may be
-                * Specified as scalar numbers
-                * Specified as functions w.r.t. the requested vertical level (=> 
-                    calculated width of a horizontal slice)
+    def __init__(
+        self,
+        tag: str,
+        body: BodyDefinition | dict,
+        design: dict,
+        front_w: float | Callable[[float], float],
+        back_w: float | Callable[[float], float],
+        front_hole_edge: pyg.Edge,
+        back_hole_edge: pyg.Edge
+    ) -> None:
+        """Definition of a sleeve.
+        
+        Parameters
+        ----------
+        tag : str
+            Tag for the sleeve component.
+        body : BodyDefinition | dict
+            Body measurements object or dictionary.
+        design : dict
+            Design parameters dictionary.
+        front_w : float | Callable[[float], float]
+            Width of the front sleeve opening or a function to calculate it.
+            Functions receive the requested vertical level and return the calculated width.
+        back_w : float | Callable[[float], float]
+            Width of the back sleeve opening or a function to calculate it.
+            Functions receive the requested vertical level and return the calculated width.
+        front_hole_edge : pyg.Edge
+            Edge defining the front sleeve hole.
+        back_hole_edge : pyg.Edge
+            Edge defining the back sleeve hole.
         """
         super().__init__(f'{self.__class__.__name__}_{tag}')
 
-        x_sleeve_translation = - (design['shirt']['neck_to_shoulder_distance']['v']**2 - design['shirt']['shoulder_slant']['v']**2)**0.5
-        x_sleeve_translation -= design['shirt']['neck_width']['v'] / 2
-        armhole_width = design['shirt']['scye_depth']['v'] - design['shirt']['shoulder_slant']['v']
-        design = design['sleeve']
-        self.design = design
+        # Get shirt design for translation calculation
+        shirt_design = TorsoDesign(design)
+        x_sleeve_translation = - (shirt_design.neck_to_shoulder_distance**2 - shirt_design.shoulder_slant**2)**0.5
+        x_sleeve_translation -= shirt_design.neck_width / 2
+        armhole_width = shirt_design.scye_depth - shirt_design.shoulder_slant
+        
+        # Create SleeveDesign from the design dict and store it
+        self.sleeve_design = SleeveDesign(design)
         self.body = body
 
         dist = ((front_hole_edge.start[0] - back_hole_edge.end[0])**2 + (front_hole_edge.start[1] - back_hole_edge.end[1])**2)**0.5
         dist_y = abs(front_hole_edge.start[1] - back_hole_edge.end[1])
-        rest_angle = np.pi / 2 - np.arcsin(design['bicep_width']['v'] / dist) - np.arccos(dist_y / dist)
+        rest_angle = np.pi / 2 - np.arcsin(self.sleeve_design.bicep_width / dist) - np.arccos(dist_y / dist)
 
-        connecting_width = design['connecting_width']['v']
-        smoothing_coeff = design['smoothing_coeff']['v']
+        connecting_width = self.sleeve_design.connecting_width
+        smoothing_coeff = self.sleeve_design.smoothing_coeff
 
         front_w = front_w(connecting_width) if callable(front_w) else front_w
         back_w = back_w(connecting_width) if callable(back_w) else back_w
@@ -225,15 +377,15 @@ class Sleeve(pyg.Component):
         # --- Define sleeve opening shapes ----
         # NOTE: Non-trad armholes only for sleeveless styles due to 
         # unclear inversion and stitching errors (see below)
-        armhole = globals()[design['armhole_shape']['v']] if design['sleeveless']['v'] else ArmholeCurve
+        armhole = globals()[self.sleeve_design.armhole_shape] if self.sleeve_design.sleeveless else ArmholeCurve
         front_project, front_opening = armhole(
             front_w,
             armhole_width, 
             angle=rest_angle, 
             incl_coeff=smoothing_coeff, 
             w_coeff=smoothing_coeff, 
-            invert=not design['sleeveless']['v'],
-            bottom_angle_mix=design['opening_dir_mix']['v'],
+            invert=not self.sleeve_design.sleeveless,
+            bottom_angle_mix=self.sleeve_design.opening_dir_mix,
             verbose=self.verbose
         )
         back_project, back_opening = armhole(
@@ -242,8 +394,8 @@ class Sleeve(pyg.Component):
             angle=rest_angle, 
             incl_coeff=smoothing_coeff, 
             w_coeff=smoothing_coeff,
-            invert=not design['sleeveless']['v'],
-            bottom_angle_mix=design['opening_dir_mix']['v']
+            invert=not self.sleeve_design.sleeveless,
+            bottom_angle_mix=self.sleeve_design.opening_dir_mix
         )
         
         self.interfaces = {
@@ -251,7 +403,7 @@ class Sleeve(pyg.Component):
             'in_back_shape': pyg.Interface(self, back_project)
         }
 
-        if design['sleeveless']['v']:
+        if self.sleeve_design.sleeveless:
             # The rest is not needed!
             return
         
@@ -300,17 +452,17 @@ class Sleeve(pyg.Component):
         })
 
         # Cuff
-        if design['cuff']['type']['v']:
+        if self.sleeve_design.cuff.type:
             # Class
             # Copy to avoid editing original design dict
             cdesign = deepcopy(design)
-            cuff_circ = self.interfaces['out'].edges.length() / design['cuff']['top_ruffle']['v']
+            cuff_circ = self.interfaces['out'].edges.length() / self.sleeve_design.cuff.top_ruffle
             # Ensure it fits regardless of parameters
             cuff_circ = max(cuff_circ, body['wrist'])
-            cdesign['cuff']['b_width'] = dict(v=cuff_circ)
-            cdesign['cuff']['cuff_len']['v'] = cuff_len_adj
+            cdesign['sleeve']['cuff']['b_width'] = dict(v=cuff_circ)
+            cdesign['sleeve']['cuff']['cuff_len']['v'] = cuff_len_adj
 
-            cuff_class = getattr(bands, cdesign['cuff']['type']['v'])
+            cuff_class = getattr(weon_bands, self.sleeve_design.cuff.type)
             self.cuff = cuff_class(f'sl_{tag}', cdesign)
 
             # Position
@@ -345,23 +497,36 @@ class Sleeve(pyg.Component):
         # Set label 
         self.set_panel_label('arm')
 
-    def _cuff_len_adj(self):
-        """Eval sleeve length adjustment due to cuffs (if any)"""
-        if not self.design['cuff']['type']['v']:
+    def _cuff_len_adj(self) -> float:
+        """Evaluate sleeve length adjustment due to cuffs (if any).
+        
+        Returns
+        -------
+        float
+            Length adjustment for the cuff, or 0 if no cuff.
+        """
+        if not self.sleeve_design.cuff.type:
             return 0
         
-        cuff_len_adj = self.design['cuff']['cuff_len']['v'] * self.body['arm_length']
-        max_len = self.design['length']['v'] * self.body['arm_length']
+        cuff_len_adj = self.sleeve_design.cuff.cuff_len * self.body['arm_length']
+        max_len = self.sleeve_design.length * self.body['arm_length']
         if cuff_len_adj > max_len * 0.7:
             cuff_len_adj = max_len * 0.7
         
         return cuff_len_adj
 
-    def length(self):
-        if self.design['sleeveless']['v']:
+    def length(self) -> float:
+        """Return the length of the sleeve including cuff (if any).
+        
+        Returns
+        -------
+        float
+            Total length of the sleeve, including cuff if present.
+        """
+        if self.sleeve_design.sleeveless:
             return 0
         
-        if self.design['cuff']['type']['v']:
+        if self.sleeve_design.cuff.type:
             return self.f_sleeve.length() + self.cuff.length()
         
         return self.f_sleeve.length()

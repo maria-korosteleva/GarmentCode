@@ -2,8 +2,8 @@ from copy import deepcopy
 import numpy as np
 
 import pygarment as pyg
-from assets.garment_programs.base_classes import BaseBottoms
-from assets.garment_programs import bands
+from garment_programs.base_classes import BaseBottoms
+from garment_programs import weon_bands
 
 
 class PantPanel(pyg.Panel):
@@ -248,7 +248,7 @@ class PantsHalf(BaseBottoms):
             cdesign['cuff']['cuff_len']['v'] = cuff_len
 
             # Init
-            cuff_class = getattr(bands, cdesign['cuff']['type']['v'])
+            cuff_class = getattr(weon_bands, cdesign['cuff']['type']['v'])
             self.cuff = cuff_class(f'pant_{tag}', cdesign)
 
             # Position

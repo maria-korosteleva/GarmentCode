@@ -3,7 +3,7 @@ from scipy.spatial.transform import Rotation as R
 
 import pygarment as pyg
 
-from assets.garment_programs.bands import StraightBandPanel
+from garment_programs.weon_bands import StraightBandPanel
 from assets.garment_programs.circle_skirt import CircleArcPanel
 
 

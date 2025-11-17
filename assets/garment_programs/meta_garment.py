@@ -1,11 +1,11 @@
 from assets.garment_programs.tee import *
 from assets.garment_programs.godet import *
-from assets.garment_programs.weon_pants import *
-from assets.garment_programs.weon_shirt import *
-from assets.garment_programs.bands import *
+from garment_programs.weon_pants import *
+from garment_programs.weon_shirt import *
+from garment_programs.weon_bands import *
 from assets.garment_programs.skirt_paneled import *
 from assets.garment_programs.skirt_levels import *
-from assets.garment_programs.weon_circle_skirt import *
+from garment_programs.weon_circle_skirt import *
 from assets.garment_programs.sleeves import *
 
 class TotalLengthError(BaseException):
@@ -45,17 +45,21 @@ class MetaGarment(pyg.Component):
         if self.lower_name:
             Lower_class = globals()[self.lower_name]
             # NOTE: full rise for fitted tops
-            Lower = Lower_class(body, design, rise=1. if self.upper_name and 'Fitted' in self.upper_name else None)
+            Lower = Lower_class(body, design)
         else: 
             Lower = None
 
         # Belt (or not)
         # TODO Adapt the rise of the lower garment to the width of the belt for correct matching
-        if self.belt_name:
+        if self.belt_name and Lower:
             Belt_class = globals()[self.belt_name]
             
             # Adjust rise to match the Lower garment if needed
-            Belt = Belt_class(body, design, Lower.get_rise() if Lower else 1.)
+            #Belt = Belt_class(body, design, Lower.get_rise() if Lower else 1.)
+            Belt = Belt_class(body, design,
+                              waist=Lower.get_waist_width(),
+                              waist_back=Lower.get_waist_width(),
+                              rise=1.)
 
             self.subs.append(Belt)
 

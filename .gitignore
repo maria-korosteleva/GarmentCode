@@ -31,3 +31,7 @@ output*
 
 # Nicegui
 .nicegui
+
+# macOS DS_Store files in all folders and subfolders
+.DS_Store
+**/.DS_Store

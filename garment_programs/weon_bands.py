@@ -1,12 +1,22 @@
+from typing import Optional
+
 import pygarment as pyg
 from assets.garment_programs.circle_skirt import CircleArcPanel
 from assets.garment_programs import skirt_paneled
-from assets.garment_programs.base_classes import BaseBand
+from garment_programs.base_classes import BaseBand
+from pattern_definitions.body_definition import BodyDefinition
+from pattern_definitions.waistband_design import WaistbandDesign
 
 class StraightBandPanel(pyg.Panel):
-    """One panel for a panel skirt"""
+    """One panel for a panel skirt."""
 
-    def __init__(self, name, width, depth, match_int_proportion=None) -> None:
+    def __init__(
+        self,
+        name: str,
+        width: float,
+        depth: float,
+        match_int_proportion: Optional[float] = None
+    ) -> None:
         super().__init__(name)
 
         # define edge loop
@@ -33,37 +43,45 @@ class StraightBandPanel(pyg.Panel):
 
 
 class StraightWB(BaseBand):
-    """Simple 2 panel waistband"""
-    def __init__(self, body, design, rise=1.) -> None:
-        """Simple 2 panel waistband
-
-            * rise -- the rise value of the bottoms that the WB is attached to 
-                Adapts the shape of the waistband to sit tight on top 
-                of the given rise level (top measurement). If 1. or anything less than waistband width, 
-                the rise is ignored and the StraightWB is created to sit well on the waist
+    """Simple 2 panel waistband."""
+    
+    def __init__(
+        self,
+        body: BodyDefinition | dict,
+        design: dict,
+        waist: Optional[float] = None,
+        waist_back: Optional[float] = None,
+        rise: float = 1.0
+    ) -> None:
+        """Initialize a simple 2 panel waistband.
         
+        Parameters:
+        -----------
+        body : BodyDefinition | dict
+            Body measurements object or dictionary.
+        design : dict
+            Design parameters dictionary containing waistband specifications.
+        waist : float, optional
+            Waist width for the front panel. If None, will be calculated from body.
+        waist_back : float, optional
+            Waist width for the back panel. If None, will be calculated from body.
+        rise : float, optional
+            The rise value of the bottoms that the WB is attached to.
+            Adapts the shape of the waistband to sit tight on top of the given
+            rise level (top measurement). If 1.0 or anything less than waistband width,
+            the rise is ignored and the StraightWB is created to sit well on the waist.
+            Default is 1.0.
         """
         super().__init__(body, design, rise=rise)
 
-        # Measurements
-        self.waist = design['waistband']['waist']['v'] * body['waist']
-        self.waist_back_frac = body['waist_back_width'] / body['waist']
-        self.hips = body['hips'] * design['waistband']['waist']['v']
-        self.hips_back_frac = body['hip_back_width'] / body['hips']
+        # Create WaistbandDesign from the design dict and store it
+        self.waistband_design = WaistbandDesign(design)
 
         # Params
-        self.width = design['waistband']['width']['v'] 
+        self.waist = waist
+        self.waist_back = waist_back
+        self.width = self.waistband_design.width
         self.rise = rise
-        # Check correct values
-        if self.rise + self.width > 1:
-            self.rise = 1 - self.width
-
-        self.top_width = pyg.utils.lin_interpolation(
-            self.hips, self.waist, self.rise + self.width)
-        self.top_back_fraction = pyg.utils.lin_interpolation(
-            self.hips_back_frac, self.waist_back_frac, self.rise + self.width)
-        
-        self.width = self.width * body['hips_line']
 
         self.define_panels()
 
@@ -90,46 +108,62 @@ class StraightWB(BaseBand):
                 self.back.interfaces['top']),
         }
 
-    def define_panels(self):
-        back_width = self.top_width * self.top_back_fraction
-
+    def define_panels(self) -> None:
+        """Define the front and back panels for the waistband."""
         self.front = StraightBandPanel(
-            'wb_front', 
-            self.top_width - back_width, 
+            'wb_front',
+            self.waist,
             self.width,
             match_int_proportion=self.body['waist'] - self.body['waist_back_width']
         )
-          
+        
         self.back = StraightBandPanel(
-            'wb_back', 
-            back_width, 
+            'wb_back',
+            self.waist_back,
             self.width,
             match_int_proportion=self.body['waist_back_width']
         )
 
 
 class FittedWB(StraightWB):
-    """Also known as Yoke: a waistband that ~follows the body curvature,
-            and hence sits tight
-        Made out of two circular arc panels
+    """Also known as Yoke: a waistband that follows the body curvature and sits tight.
+    
+    Made out of two circular arc panels.
     """
-    def __init__(self, body, design, rise=1.) -> None:
-        """A waistband that ~follows the body curvature, and hence sits tight
+    
+    def __init__(
+        self,
+        body: BodyDefinition | dict,
+        design: dict,
+        rise: float = 1.0
+    ) -> None:
+        """Initialize a waistband that follows the body curvature and sits tight.
         
-            * rise -- the rise value of the bottoms that the WB is attached to 
-                Adapts the shape of the waistband to sit tight on top 
-                of the given rise level. If 1. or anything less than waistband width, 
-                the rise is ignored and the FittedWB is created to sit well on the waist
+        Parameters:
+        -----------
+        body : BodyDefinition | dict
+            Body measurements object or dictionary.
+        design : dict
+            Design parameters dictionary containing waistband specifications.
+        rise : float, optional
+            The rise value of the bottoms that the WB is attached to.
+            Adapts the shape of the waistband to sit tight on top of the given
+            rise level. If 1.0 or anything less than waistband width, the rise is
+            ignored and the FittedWB is created to sit well on the waist.
+            Default is 1.0.
         """
         self.bottom_width = None
         self.bottom_back_fraction = None
         super().__init__(body, design, rise)
 
-    def define_panels(self):
+    def define_panels(self) -> None:
+        """Define the front and back circular arc panels for the fitted waistband."""
         self.bottom_width = pyg.utils.lin_interpolation(
-            self.hips, self.waist, self.rise)
+            self.hips, self.waist, self.rise
+        )
         self.bottom_back_fraction = pyg.utils.lin_interpolation(
-            self.hips_back_frac, self.waist_back_frac, self.rise)
+            self.hips_back_frac, self.waist_back_frac, self.rise
+        )
         
         self.front = CircleArcPanel.from_all_length(
             'wb_front', 
@@ -151,10 +185,25 @@ class FittedWB(StraightWB):
 
 
 class CuffBand(BaseBand):
-    """ Cuff class for sleeves or pants
-        band-like piece of fabric with optional "skirt"
-    """
-    def __init__(self, tag, design, length=None) -> None:
+    """Cuff class for sleeves or pants - band-like piece of fabric with optional skirt."""
+    
+    def __init__(
+        self,
+        tag: str,
+        design: dict,
+        length: Optional[float] = None
+    ) -> None:
+        """Initialize a cuff band.
+        
+        Parameters:
+        -----------
+        tag : str
+            Tag identifier for the cuff (e.g., 'sl_right' for sleeve left).
+        design : dict
+            Design parameters dictionary containing cuff specifications.
+        length : float, optional
+            Length of the cuff. If None, will be taken from design['cuff']['cuff_len']['v'].
+        """
         super().__init__(body=None, design=design, tag=tag)
 
         self.design = design['cuff']
@@ -187,9 +236,25 @@ class CuffBand(BaseBand):
 
 
 class CuffSkirt(BaseBand):
-    """A skirt-like flared cuff """
-
-    def __init__(self, tag, design, length=None) -> None:
+    """A skirt-like flared cuff."""
+    
+    def __init__(
+        self,
+        tag: str,
+        design: dict,
+        length: Optional[float] = None
+    ) -> None:
+        """Initialize a skirt-like flared cuff.
+        
+        Parameters:
+        -----------
+        tag : str
+            Tag identifier for the cuff skirt.
+        design : dict
+            Design parameters dictionary containing cuff specifications.
+        length : float, optional
+            Length of the cuff skirt. If None, will be taken from design['cuff']['cuff_len']['v'].
+        """
         super().__init__(body=None, design=design, tag=tag)
 
         self.design = design['cuff']
@@ -227,10 +292,18 @@ class CuffSkirt(BaseBand):
 
 
 class CuffBandSkirt(pyg.Component):
-    """ Cuff class for sleeves or pants
-        band-like piece of fabric with optional "skirt"
-    """
-    def __init__(self, tag, design) -> None:
+    """Cuff class for sleeves or pants - band-like piece of fabric with optional skirt."""
+    
+    def __init__(self, tag: str, design: dict) -> None:
+        """Initialize a combined cuff band and skirt.
+        
+        Parameters:
+        -----------
+        tag : str
+            Tag identifier for the cuff.
+        design : dict
+            Design parameters dictionary containing cuff specifications.
+        """
         super().__init__(self.__class__.__name__)
 
         self.cuff = CuffBand(
@@ -258,5 +331,12 @@ class CuffBandSkirt(pyg.Component):
             'bottom': self.skirt.interfaces['bottom']
         }
 
-    def length(self):
+    def length(self) -> float:
+        """Return the total length of the cuff (band + skirt).
+        
+        Returns:
+        --------
+        float
+            Total length of the cuff band and skirt combined.
+        """
         return self.cuff.length() + self.skirt.length()

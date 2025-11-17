@@ -456,6 +456,10 @@ class CircleEdge(Edge):
 class CurveEdge(Edge):
     """Curvy edge as Besier curve / B-spline"""
 
+    start: list[float]
+    end: list[float]
+    control_points: list[list[float]]  # control points in relative coordinates
+
     def __init__(self, start=None, end=None, control_points=None,
                  relative=True, 
                  label='') -> None:

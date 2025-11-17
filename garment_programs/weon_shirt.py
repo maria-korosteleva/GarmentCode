@@ -1,16 +1,40 @@
 from copy import deepcopy
-import numpy as np
+from typing import Optional, Any
 
+import numpy as np
 import pygarment as pyg
 
-from assets.garment_programs.base_classes import BaseBodicePanel
+from garment_programs.base_classes import BaseBodicePanel
 from assets.garment_programs import collars
-from assets.garment_programs import weon_torso
-from assets.garment_programs import weon_sleeves
+from garment_programs import weon_torso
+from garment_programs import weon_sleeves
+from pattern_definitions.body_definition import BodyDefinition
+from pattern_definitions.shirt_design import ShirtDesign
 
 
 class BodiceFrontHalf(BaseBodicePanel):
-    def __init__(self, name, body, design) -> None:
+    # Dart and fit constants
+    BOTTOM_DART_WIDTH_FACTOR = 2 / 3
+    SIDE_DART_DEPTH_FACTOR = 0.75
+    BOTTOM_DART_DEPTH_FACTOR = 0.9
+
+    def __init__(
+        self,
+        name: str,
+        body: BodyDefinition | dict,
+        design: dict
+    ) -> None:
+        """Initialize half of a fitted bodice front panel.
+
+        Parameters
+        ----------
+        name : str
+            Name of the panel.
+        body : BodyDefinition | dict
+            Body measurements object or dictionary.
+        design : dict
+            Design parameters dictionary.
+        """
         super().__init__(name, body, design)
 
         m_bust = body['bust']
@@ -24,7 +48,7 @@ class BodiceFrontHalf(BaseBodicePanel):
         waist = (m_waist - body['waist_back_width']) / 2
         sh_tan = np.tan(np.deg2rad(body['_shoulder_incl']))
         shoulder_incl = sh_tan * self.width
-        bottom_d_width = (self.width - waist) * 2 / 3
+        bottom_d_width = (self.width - waist) * self.BOTTOM_DART_WIDTH_FACTOR
 
         adjustment = sh_tan * (self.width - body['shoulder_w'] / 2)
         max_len = body['waist_over_bust_line'] - adjustment
@@ -45,7 +69,7 @@ class BodiceFrontHalf(BaseBodicePanel):
 
         # Side dart
         bust_line = body['waist_line'] - body['_bust_line']
-        side_d_depth = 0.75 * (self.width - bust_point)    # NOTE: calculated value 
+        side_d_depth = self.SIDE_DART_DEPTH_FACTOR * (self.width - bust_point)    # NOTE: calculated value 
         side_d_width = max_len - side_len
         s_edge, side_interface = self.add_dart(
             pyg.EdgeSeqFactory.dart_shape(side_d_width, side_d_depth),
@@ -59,7 +83,7 @@ class BodiceFrontHalf(BaseBodicePanel):
 
         # Bottom dart
         b_edge, b_interface = self.add_dart(
-            pyg.EdgeSeqFactory.dart_shape(bottom_d_width, 0.9 * bust_line),
+            pyg.EdgeSeqFactory.dart_shape(bottom_d_width, self.BOTTOM_DART_DEPTH_FACTOR * bust_line),
             self.edges[0], 
             offset=bust_point + bottom_d_width / 2
         )
@@ -86,9 +110,32 @@ class BodiceFrontHalf(BaseBodicePanel):
 
 
 class BodiceBackHalf(BaseBodicePanel):
-    """Panel for the back of basic fitted bodice block"""
+    """Panel for the back of a basic fitted bodice block."""
 
-    def __init__(self, name, body, design) -> None:
+    # Dart and fit constants
+    SIDE_ADJUSTMENT_THRESHOLD = 4
+    SIDE_ADJUSTMENT_FACTOR = 1 / 6
+    BOTTOM_DART_DEPTH_FACTOR = 1.0
+    SMALL_DART_DEPTH_FACTOR = 0.9
+    DART_POSITION_MULTIPLIER = 0.5
+
+    def __init__(
+        self,
+        name: str,
+        body: BodyDefinition | dict,
+        design: dict
+    ) -> None:
+        """Initialize the back panel of a basic fitted bodice block.
+
+        Parameters
+        ----------
+        name : str
+            Name of the panel.
+        body : BodyDefinition | dict
+            Body measurements object or dictionary.
+        design : dict
+            Design parameters dictionary.
+        """
         super().__init__(name, body, design)
 
         # Overall measurements        
@@ -135,16 +182,16 @@ class BodiceBackHalf(BaseBodicePanel):
         # Bottom dart as cutout -- for straight line
         if waist < self.get_width(self.edges[2].end[1] - self.edges[2].start[1]):
             w_diff = waist_width - waist
-            side_adj = 0  if w_diff < 4 else w_diff / 6  # NOTE: don't take from sides if the difference is too small
+            side_adj = 0 if w_diff < self.SIDE_ADJUSTMENT_THRESHOLD else w_diff * self.SIDE_ADJUSTMENT_FACTOR  # NOTE: don't take from sides if the difference is too small
             bottom_d_width = w_diff - side_adj
             bottom_d_width /= 2   # double darts
-            bottom_d_depth = 1. * (length - body['_bust_line'])  # calculated value
+            bottom_d_depth = self.BOTTOM_DART_DEPTH_FACTOR * (length - body['_bust_line'])  # calculated value
             bottom_d_position = body['bum_points'] / 2
 
             # TODOLOW Avoid hardcoding for matching with the bottoms?
-            dist = bottom_d_position * 0.5  # Dist between darts -> dist between centers
+            dist = bottom_d_position * self.DART_POSITION_MULTIPLIER  # Dist between darts -> dist between centers
             b_edge, b_interface = self.add_dart(
-                pyg.EdgeSeqFactory.dart_shape(bottom_d_width, 0.9 * bottom_d_depth),
+                pyg.EdgeSeqFactory.dart_shape(bottom_d_width, self.SMALL_DART_DEPTH_FACTOR * bottom_d_depth),
                 self.edges[0], 
                 offset=bottom_d_position + dist / 2 + bottom_d_width + bottom_d_width / 2,
             )
@@ -165,28 +212,67 @@ class BodiceBackHalf(BaseBodicePanel):
         # default placement
         self.translate_by([0, body['height'] - body['head_l'] - length - shoulder_incl, 0])
 
-    def get_width(self, level):
+    def get_width(self, level: float) -> float:
+        """Get the width of the panel at a given level.
+        
+        Parameters:
+        -----------
+        level : float
+            Vertical level from the top of the panel.
+        
+        Returns:
+        --------
+        float
+            Width of the panel at the given level.
+        """
         return self.width
 
 class BodiceHalf(pyg.Component):
     """Definition of a half of an upper garment with sleeves and collars"""
 
-    def __init__(self, name, body, design, fitted=True) -> None:
+    # Panel placement constants
+    FRONT_TORSO_TRANSLATION_Z = 30
+    BACK_TORSO_TRANSLATION_Z = -25
+
+    # Sleeve placement constants
+    SLEEVE_PLACEMENT_GAP_BASE = -1
+    SLEEVE_PLACEMENT_GAP_FACTOR = 10
+
+    def __init__(
+        self,
+        name: str,
+        body: BodyDefinition | dict,
+        design: dict,
+        fitted: bool = True
+    ) -> None:
+        """Define half of an upper garment, including torso, sleeves, and collars.
+
+        Parameters
+        ----------
+        name : str
+            Name of the component (e.g., 'right' or 'left').
+        body : BodyDefinition | dict
+            Body measurements object or dictionary.
+        design : dict
+            Design parameters dictionary.
+        fitted : bool, optional
+            If True, creates a fitted bodice; otherwise, a looser torso (tee-style).
+            Default is True.
+        """
         super().__init__(name)
 
         design = deepcopy(design)   # Recalculate freely!
+        
+        # Create ShirtDesign from the design dict and store it
+        self.shirt_design = ShirtDesign(design)
 
         # Torso
         if fitted:
-            self.ftorso = BodiceFrontHalf(
-                f'{name}_ftorso', body, design).translate_by([0, 0, 30])
-            self.btorso = BodiceBackHalf(
-                f'{name}_btorso', body, design).translate_by([0, 0, -25])
+            self.ftorso = BodiceFrontHalf(f'{name}_ftorso', body, design).translate_by([0, 0, self.FRONT_TORSO_TRANSLATION_Z])
+            self.btorso = BodiceBackHalf(f'{name}_btorso', body, design).translate_by([0, 0, self.BACK_TORSO_TRANSLATION_Z])
         else:
-            self.ftorso = weon_torso.TorsoFrontHalfPanel(
-                f'{name}_ftorso', body, design['shirt']).translate_by([0, 0, 30])
-            self.btorso = weon_torso.TorsoBackHalfPanel(
-                f'{name}_btorso', body, design['shirt']).translate_by([0, 0, -25])
+            self.ftorso = weon_torso.TorsoFrontHalfPanel(f'{name}_ftorso', body, design['shirt']).translate_by([0, 0, self.FRONT_TORSO_TRANSLATION_Z])
+            self.btorso = weon_torso.TorsoBackHalfPanel(f'{name}_btorso', body, design['shirt']).translate_by([0, 0, self.BACK_TORSO_TRANSLATION_Z])
 
         # Interfaces
         self.interfaces.update({
@@ -197,11 +283,11 @@ class BodiceHalf(pyg.Component):
         })
 
         # Sleeves/collar cuts
-        self.sleeve = None
-        self.collar_comp = None
+        self.sleeve: Optional[weon_sleeves.Sleeve] = None
+        self.collar_comp: Optional[Any] = None
         self.eval_dep_params(body, design)
 
-        if design['shirt']['strapless']['v'] and fitted:  # NOTE: Strapless design only for fitted tops
+        if self.shirt_design.shirt.strapless and fitted:  # NOTE: Strapless design only for fitted tops
             self.make_strapless(body, design)
         else:
             # Sleeves and collars 
@@ -216,13 +302,26 @@ class BodiceHalf(pyg.Component):
         self.stitching_rules.append((
             self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
 
-    def eval_dep_params(self, body, design):
+    def eval_dep_params(
+        self,
+        body: BodyDefinition | dict,
+        design: dict
+    ) -> None:
+        """Evaluate dependent design parameters based on body measurements.
+        
+        Parameters
+        ----------
+        body : BodyDefinition | dict
+            Body measurements object or dictionary.
+        design : dict
+            Design parameters dictionary (modified in place).
+        """
 
         # Sleeves
         # NOTE assuming the vertical side is the first argument
         max_cwidth = self.ftorso.interfaces['shoulder_corner'].edges[0].length() - 1  # cm
-        min_cwidth = design['shirt']['scye_depth']['v'] - design['shirt']['shoulder_slant']['v']
-        v = design['sleeve']['connecting_width']['v']
+        min_cwidth = self.shirt_design.shirt.scye_depth - self.shirt_design.shirt.shoulder_slant
+        v = self.shirt_design.sleeve.connecting_width
         design['sleeve']['connecting_width']['v'] = min(min_cwidth + min_cwidth * v, max_cwidth)
 
         # Depth
@@ -234,20 +333,37 @@ class BodiceHalf(pyg.Component):
 
         design['collar']['f_strapless_depth'] = {}
         design['collar']['f_strapless_depth']['v'] = min(
-            design['collar']['fc_depth']['v'] * body['_bust_line'], 
+            self.shirt_design.collar.fc_depth * body['_bust_line'], 
             max_f_len)
         
 
         design['collar']['b_strapless_depth'] = {}
         design['collar']['b_strapless_depth']['v'] =  min(
-            design['collar']['bc_depth']['v'] * body['_bust_line'], 
+            self.shirt_design.collar.bc_depth * body['_bust_line'], 
             max_b_len)
 
-    def add_sleeves(self, name, body, design):
+    def add_sleeves(
+        self,
+        name: str,
+        body: BodyDefinition | dict,
+        design: dict
+    ) -> None:
+        """Add sleeves to the bodice half.
+        
+        Parameters
+        ----------
+        name : str
+            Name of the component (e.g., 'right' or 'left').
+        body : BodyDefinition | dict
+            Body measurements object or dictionary.
+        design : dict
+            Design parameters dictionary.
+        """
+
         self.sleeve = weon_sleeves.Sleeve(
             name, body, design, 
-            front_w=(design['shirt']['width_chest']['v'] - design['shirt']['smallest_width']['v']) / 2,
-            back_w=(design['shirt']['width_chest']['v'] - design['shirt']['back_width']['v']) / 2,
+            front_w=(self.shirt_design.shirt.width_chest - self.shirt_design.shirt.smallest_width) / 2,
+            back_w=(self.shirt_design.shirt.width_chest - self.shirt_design.shirt.back_width) / 2,
             front_hole_edge=self.ftorso.edges[-3],
             back_hole_edge=self.btorso.edges[-3],
         )
@@ -263,7 +379,7 @@ class BodiceHalf(pyg.Component):
             verbose=self.verbose
         )
 
-        if not design['sleeve']['sleeveless']['v']:  
+        if not self.shirt_design.sleeve.sleeveless:
             # Ordering
             bodice_sleeve_int = pyg.Interface.from_multiple(
                 f_sleeve_int.reverse(with_edge_dir_reverse=True),
@@ -277,7 +393,7 @@ class BodiceHalf(pyg.Component):
             # NOTE: This is a heuristic tuned for arm poses 30 deg-60 deg 
             # used in the dataset
             # FIXME Needs a better general solution
-            gap = -1 - body['arm_pose_angle'] / 10
+            gap = self.SLEEVE_PLACEMENT_GAP_BASE - body['arm_pose_angle'] / self.SLEEVE_PLACEMENT_GAP_FACTOR
             self.sleeve.place_by_interface(
                 self.sleeve.interfaces['in'], 
                 bodice_sleeve_int, 
@@ -289,11 +405,28 @@ class BodiceHalf(pyg.Component):
         f_sleeve_int.edges.propagate_label(f'{self.name}_armhole')
         b_sleeve_int.edges.propagate_label(f'{self.name}_armhole')
     
-    def add_collars(self, name, body, design):
+    def add_collars(
+        self,
+        name: str,
+        body: BodyDefinition | dict,
+        design: dict
+    ) -> None:
+        """Add collars to the bodice half.
+        
+        Parameters
+        ----------
+        name : str
+            Name of the component (e.g., 'right' or 'left').
+        body : BodyDefinition | dict
+            Body measurements object or dictionary.
+        design : dict
+            Design parameters dictionary.
+        """
+
         # Front
         collar_type = getattr(
             collars, 
-            str(design['collar']['component']['style']['v']), 
+            str(self.shirt_design.collar.component.style), 
             collars.NoPanelsCollar
             )
         
@@ -334,11 +467,24 @@ class BodiceHalf(pyg.Component):
         fc_interface.edges.propagate_label(f'{self.name}_collar')
         bc_interface.edges.propagate_label(f'{self.name}_collar')
 
-    def make_strapless(self, body, design):
+    def make_strapless(
+        self,
+        body: BodyDefinition | dict,
+        design: dict
+    ) -> None:
+        """Modify the bodice half to be strapless.
+        
+        Parameters
+        ----------
+        body : BodyDefinition | dict
+            Body measurements object or dictionary.
+        design : dict
+            Design parameters dictionary.
+        """
 
-        out_depth = design['sleeve']['connecting_width']['v']
-        f_in_depth = design['collar']['f_strapless_depth']['v']
-        b_in_depth = design['collar']['b_strapless_depth']['v']
+        out_depth = design['sleeve']['connecting_width']['v']  # May have been modified in eval_dep_params
+        f_in_depth = design['collar']['f_strapless_depth']['v']  # May have been modified in eval_dep_params
+        b_in_depth = design['collar']['b_strapless_depth']['v']  # May have been modified in eval_dep_params
 
         # Shoulder adjustment for the back
         # TODOLOW Shoulder adj evaluation should be a function
@@ -366,11 +512,26 @@ class BodiceHalf(pyg.Component):
         self.btorso.interfaces['shoulder'].edges.propagate_label('strapless_top')
 
 
-    def _adjust_top_level(self, panel, out_level, in_level, target_remove=None):
-        """Crops the top of the bodice front/back panel for strapless style
-
-            * out_length_diff -- if set, determined the length difference that should be compensates
-            after cutting the depth
+    def _adjust_top_level(
+        self,
+        panel: BaseBodicePanel,
+        out_level: float,
+        in_level: float,
+        target_remove: Optional[float] = None
+    ) -> None:
+        """Crop the top of the bodice front/back panel for strapless style.
+        
+        Parameters
+        ----------
+        panel : BaseBodicePanel
+            The panel to adjust.
+        out_level : float
+            Outer depth to remove.
+        in_level : float
+            Inner depth to remove.
+        target_remove : float, optional
+            If set, determines the length difference that should be compensated
+            after cutting the depth.
         """
         # TODOLOW Should this be the panel's function?
 
@@ -404,23 +565,51 @@ class BodiceHalf(pyg.Component):
         out[1] = min_y - out_level
 
 
-    def length(self):
+    def length(self) -> float:
+        """Return the length of the bodice half.
+        
+        Returns:
+        --------
+        float
+            Length of the bodice half.
+        """
         return self.btorso.length()
+
 
 class Shirt(pyg.Component):
     """Panel for the front of upper garments with darts to properly fit it to
     the shape"""
 
-    def __init__(self, body, design, fitted=False) -> None:
+    def __init__(
+        self,
+        body: BodyDefinition | dict,
+        design: dict,
+        fitted: bool = False
+    ) -> None:
+        """Create a shirt garment component.
+        
+        Parameters
+        ----------
+        body : BodyDefinition | dict
+            Body measurements object or dictionary.
+        design : dict
+            Design parameters dictionary.
+        fitted : bool, optional
+            If True, creates a fitted shirt; otherwise, a looser fit.
+            Default is False.
+        """
         name_with_params = f"{self.__class__.__name__}"
         super().__init__(name_with_params)
 
+        # Create ShirtDesign from the design dict and store it
+        self.shirt_design = ShirtDesign(design)
+        
         design = self.eval_dep_params(design)
 
         self.right = BodiceHalf(f'right', body, design, fitted=fitted)
         self.left = BodiceHalf(
             f'left', body, 
-            design['left'] if design['left']['enable_asym']['v'] else design, 
+            design['left'] if self.shirt_design.left.enable_asym else design, 
             fitted=fitted).mirror()
 
         self.stitching_rules.append((self.right.interfaces['front_in'],
@@ -437,12 +626,25 @@ class Shirt(pyg.Component):
                 self.right.interfaces['b_bottom'],)
         }
 
-    def eval_dep_params(self, design):
+    def eval_dep_params(self, design: dict) -> dict:
+        """Evaluate dependent design parameters based on body measurements.
+        
+        Parameters
+        ----------
+        design : dict
+            Design parameters dictionary.
+        
+        Returns
+        -------
+        dict
+            Updated design parameters dictionary.
+        """
+
         # NOTE: Support for full collars with partially strapless top
         # or combination of paneled collar styles
         # requres further development
         # TODOLOW enable this one to work
-        if design['left']['enable_asym']['v']:
+        if self.shirt_design.left.enable_asym:
             # Force no collars since they are not compatible with each other
             design = deepcopy(design)
             design['collar']['component']['style']['v'] = None
@@ -450,25 +652,45 @@ class Shirt(pyg.Component):
             
             # Left-right design compatibility 
             design['left']['shirt'].update(length={})
-            design['left']['shirt']['length']['v'] = design['shirt']['length']['v']
+            design['left']['shirt']['length']['v'] = self.shirt_design.shirt.length
             
             design['left']['collar'].update(fc_depth={}, bc_depth={})
-            design['left']['collar']['fc_depth']['v'] = design['collar']['fc_depth']['v']
-            design['left']['collar']['bc_depth']['v'] = design['collar']['bc_depth']['v']
+            design['left']['collar']['fc_depth']['v'] = self.shirt_design.collar.fc_depth
+            design['left']['collar']['bc_depth']['v'] = self.shirt_design.collar.bc_depth
 
         return design
 
-    def length(self):
+    def length(self) -> float:
+        """Return the length of the shirt.
+        
+        Returns:
+        --------
+        float
+            Length of the shirt.
+        """
         return self.right.length()
 
 class FittedShirt(Shirt):
-    """Creates fitted shirt
+    """Creates fitted shirt.
     
-        NOTE: Separate class is used for selection convenience.
-        Even though most of the processing is the same 
-        (hence implemented with the same components except for panels), 
-        design parametrization differs significantly. 
-        With that, we decided to separate the top level names
+    NOTE: Separate class is used for selection convenience.
+    Even though most of the processing is the same (hence implemented with
+    the same components except for panels), design parametrization differs
+    significantly. With that, we decided to separate the top level names.
     """
-    def __init__(self, body, design) -> None:
+    
+    def __init__(
+        self,
+        body: BodyDefinition | dict,
+        design: dict
+    ) -> None:
+        """Initialize a fitted shirt.
+        
+        Parameters
+        ----------
+        body : BodyDefinition | dict
+            Body measurements object or dictionary.
+        design : dict
+            Design parameters dictionary.
+        """
         super().__init__(body, design, fitted=True)
