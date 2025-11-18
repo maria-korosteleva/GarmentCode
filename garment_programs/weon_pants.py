@@ -511,6 +511,9 @@ class Pants(BaseBottoms):
                 self.right.interfaces['top_b'].reverse(with_edge_dir_reverse=True), # Flips the edges and restores the direction
             )
         }
+        
+        # Add lower_interface label for attachment constraints
+        self.interfaces['top'].edges.propagate_label('lower_interface')
 
     def length(self) -> float:
         """Get the length of the pants garment.

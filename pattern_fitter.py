@@ -8,8 +8,10 @@ from typing import Any
 import yaml
 import shutil 
 import time
-import traceback
 import argparse
+import sys
+
+from loguru import logger
 
 # Custom
 from pygarment.data_config import Properties
@@ -17,20 +19,49 @@ from garment_programs.garment_factory import GarmentFactory
 from assets.bodies.body_params import BodyParameters
 from pattern_definitions.body_definition import BodyDefinition
 
+# Configure logger
+logger.remove()  # Remove default handler
+logger.add(
+    sys.stderr,
+    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <level>{message}</level>",
+    level="INFO"
+)
+
+
 def get_command_args() -> argparse.Namespace:
-    """command line arguments to control the run"""
-    parser = argparse.ArgumentParser()
+    """Parse command line arguments to control the run.
+    
+    Returns:
+    --------
+    argparse.Namespace
+        Parsed command line arguments.
+    """
+    parser = argparse.ArgumentParser(
+        description='Fit sewing pattern design to various body shapes'
+    )
     parser.add_argument('design_file', help='Path to design parameters file to be used to fit to the bodies', type=str)
-    parser.add_argument('--batch_id', '-b', help='id of a sampling batch', type=int, default=None) 
-    parser.add_argument('--size', '-s', help='size of a sample', type=int, default=10)
+    parser.add_argument('--batch_id', '-b', help='ID of a sampling batch', type=int, default=None) 
+    parser.add_argument('--size', '-s', help='Number of body samples to generate', type=int, default=10)
     parser.add_argument('--name', '-n', help='Name of the dataset', type=str, default='design_fit')
     parser.add_argument('--replicate', '-re', help='Name of the dataset to re-generate. If set, other arguments are ignored', type=str, default=None)
+    parser.add_argument('--verbose', '-v', action='store_true', help='Print verbose output')
     
-
     args = parser.parse_args()
-    print('Commandline arguments: ', args)
-
+    
+    # Set log level based on verbose flag
+    if args.verbose:
+        logger.remove()
+        logger.add(
+            sys.stderr,
+            format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <level>{message}</level>",
+            level="DEBUG"
+        )
+        logger.debug(f'Command line arguments: {args}')
+    else:
+        logger.info(f'Command line arguments: {args}')
+    
     return args
+
 
 def _create_data_folder(properties: Properties, path: Path = Path('')) -> tuple[Path, Path, Path]:
     """Create a new directory to put dataset in and generate appropriate name.
@@ -50,9 +81,8 @@ def _create_data_folder(properties: Properties, path: Path = Path('')) -> tuple[
         - default_folder: Path to the default_body subfolder
         - body_folder: Path to the random_body subfolder
     """
-    if 'data_folder' in properties:  # will this work?
-        # NOTE: This path is for regenerating from existing data, but the logic seems to create a new folder.
-        # This might not be the intended behavior for "regeneration".
+    if 'data_folder' in properties:
+        # Regenerating from existing data
         properties['name'] = properties['data_folder'] + '_regen'
         data_folder = properties['name']
     else:
@@ -68,6 +98,8 @@ def _create_data_folder(properties: Properties, path: Path = Path('')) -> tuple[
 
     default_folder.mkdir(parents=True, exist_ok=True)
     body_folder.mkdir(parents=True, exist_ok=True)
+    
+    logger.info(f"Created dataset folder: {data_folder}")
 
     return path_with_dataset, default_folder, body_folder
 
@@ -107,6 +139,7 @@ def _gather_body_options(body_path: Path) -> list[dict[str, Any]]:
         }
         bodies.append(body_info)
     
+    logger.debug(f"Found {len(bodies)} body options in {body_path}")
     return bodies
 
 
@@ -188,9 +221,9 @@ def _save_sample(
             default_flow_style=False,
             sort_keys=False
         )
+    
     if verbose:
-        print(f'Saved {piece.name}')
-
+        logger.debug(f'Saved {piece.name}')
 
 
 def generate(
@@ -199,7 +232,7 @@ def generate(
     sys_paths: Properties,
     verbose: bool = False
 ) -> tuple[Path, Path]:
-    """Generates a synthetic dataset of patterns with given properties
+    """Generate a synthetic dataset of patterns with given properties.
     
     Parameters:
     -----------
@@ -223,30 +256,29 @@ def generate(
         If the design specifies a garment type other than 'Pants'.
     """
     path = Path(path)
-    gen_config = properties['generator']['config']
     gen_stats = properties['generator']['stats']
     body_samples_path = Path(sys_paths['body_samples_path']) / properties['body_samples']
     body_options = _gather_body_options(body_samples_path)
 
-    # create data folder
+    # Create data folder
     data_folder, default_path, body_sample_path = _create_data_folder(properties, path)
     default_sample_data = default_path / 'data'
     body_sample_data = body_sample_path / 'data'
 
-    # generate data
+    # Generate data
     start_time = time.time()
 
     # Load design 
     with open(properties['design_file'], 'r') as f:
         design = yaml.safe_load(f)['design']
     
-    # Validate garment type - only Pants is supported
+    # Validate garment type - only Pants is supported in this script
     garment_type = design.get('meta', {}).get('bottom', {}).get('v')
     if garment_type is not None and garment_type != 'Pants':
         raise ValueError(
             f"Unsupported garment type: {garment_type}. "
-            f"Only 'Pants' is currently supported. "
-            f"Please use a design file with 'meta.bottom.v: Pants' or set it to null."
+            f"Only 'Pants' is currently supported in pattern_fitter.py. "
+            f"Please use pattern_data_sim.py for other garment types or set 'meta.bottom.v' to null."
         )
 
     # On default body
@@ -260,16 +292,25 @@ def generate(
     piece_default = factory.create_pants()
     piece_default.name = properties['body_default']
     
+    logger.info(f"Generating default body sample: {properties['body_default']}")
     _save_sample(piece_default, default_body_params, design, default_sample_data, verbose=verbose)
-                
     
-    for i in range(properties['size']):
-        # log properties every time
-        properties.serialize(data_folder / 'dataset_properties.yaml')
+    # Generate samples
+    num_samples = properties['size']
+    max_available = len(body_options)
+    if num_samples > max_available:
+        logger.warning(f"Requested {num_samples} samples but only {max_available} available. Limiting to {max_available}.")
+        num_samples = max_available
+    
+    logger.info(f'Generating {num_samples} body samples (out of {max_available} available)...')
+    
+    for i in range(num_samples):
+        # Save properties periodically (every 10 samples or at start)
+        if i % 10 == 0:
+            properties.serialize(data_folder / 'dataset_properties.yaml')
 
         try:
-            # On random body shape
-            # For pants, use apart pose (straight=False)
+            # On random body shape - for pants, use apart pose (straight=False)
             rand_body_params, rand_body_def = body_sample(
                 i + properties['body_sample_start_id'],
                 body_options,
@@ -284,20 +325,27 @@ def generate(
             
             # Save samples
             _save_sample(piece_shaped, rand_body_params, design, body_sample_data, verbose=verbose)
+            
+            if (i + 1) % 10 == 0:
+                logger.info(f'Generated {i + 1}/{num_samples} samples...')
+                
         except KeyboardInterrupt:
-            print("\nInterrupted by user. Exiting generation.")
-            break  # Exit the loop gracefully
-        except Exception:
+            logger.warning("\nInterrupted by user. Exiting generation.")
+            break
+        except Exception as e:
             name = rand_body_params.params.get('body_sample', f'sample_{i}') if 'rand_body_params' in locals() else f'sample_{i}'
-            print(f'Processing for {name} failed.')
-            traceback.print_exc()
+            logger.error(f'Processing for {name} failed: {e}')
+            if verbose:
+                logger.exception("Exception details:")
             continue
 
     elapsed = time.time() - start_time
     gen_stats['generation_time'] = f'{elapsed:.3f} s'
 
-    # log properties
+    # Save final properties
     properties.serialize(data_folder / 'dataset_properties.yaml')
+
+    logger.info(f'Dataset generation completed in {elapsed:.3f} seconds')
 
     return default_path, body_sample_path
 
@@ -315,19 +363,20 @@ def gather_visuals(path: str | Path, verbose: bool = False) -> None:
     vis_path = Path(path) / 'patterns_vis'
     vis_path.mkdir(parents=True, exist_ok=True)
 
-    for p in Path(path).rglob("*.png"):
+    png_files = list(Path(path).rglob("*.png"))
+    logger.info(f"Gathering {len(png_files)} pattern visualization images...")
+    
+    for p in png_files:
         try: 
             shutil.copy(p, vis_path)
         except shutil.SameFileError:
             if verbose:
-                print('File {} already exists'.format(p.name))
+                logger.debug(f'File {p.name} already exists in destination')
             pass
 
 
 if __name__ == '__main__':
-
     system_props = Properties('./system.json')
-
     args = get_command_args()
 
     if args.replicate is not None:
@@ -346,15 +395,20 @@ if __name__ == '__main__':
             to_subfolders=True)
         props.set_section_config('generator')
 
-    # Generator
-    default_path, body_sample_path = generate(
-        system_props['datasets_path'], props, system_props, verbose=False)
+    # Generate dataset
+    try:
+        default_path, body_sample_path = generate(
+            system_props['datasets_path'], props, system_props, verbose=args.verbose)
 
-    # Gather the pattern images separately
-    gather_visuals(default_path)
-    gather_visuals(body_sample_path)
+        # Gather the pattern images separately
+        gather_visuals(default_path, verbose=args.verbose)
+        gather_visuals(body_sample_path, verbose=args.verbose)
 
-    # At the end -- it takes some time to gather the info
-    props.add_sys_info()  
+        # At the end -- it takes some time to gather the info
+        props.add_sys_info()  
 
-    print('Data generation completed!')
+        logger.success('Data generation completed!')
+    except Exception as e:
+        logger.error(f'Error during dataset generation: {e}')
+        logger.exception("Exception details:")
+        sys.exit(1)

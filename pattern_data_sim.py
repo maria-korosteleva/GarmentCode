@@ -18,12 +18,12 @@ import argparse
 import sys
 import shutil
 import time
-import traceback
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
 import yaml
+from loguru import logger
 
 # Custom modules
 import pygarment.data_config as data_config
@@ -32,6 +32,14 @@ from pygarment.data_config import Properties
 from garment_programs.garment_factory import create_garment, GarmentFactory
 from assets.bodies.body_params import BodyParameters
 from pattern_definitions.body_definition import BodyDefinition
+
+# Configure logger
+logger.remove()  # Remove default handler
+logger.add(
+    sys.stderr,
+    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <level>{message}</level>",
+    level="INFO"
+)
 
 
 def get_command_args() -> argparse.Namespace:
@@ -80,7 +88,7 @@ def get_command_args() -> argparse.Namespace:
     )
     parser.add_argument(
         '--num_samples',
-        help='Number of body samples to generate (default: 1)',
+        help='Number of body samples to generate (default: 1). Use None for all samples.',
         type=int,
         default=1
     )
@@ -88,7 +96,7 @@ def get_command_args() -> argparse.Namespace:
     # Simulation options
     parser.add_argument(
         '--config', '-c',
-        help='Name of .json file with desired simulation & rendering config',
+        help='Name of .json/.yaml file with desired simulation & rendering config',
         type=str,
         default=None
     )
@@ -131,8 +139,15 @@ def get_command_args() -> argparse.Namespace:
     if args.skip_simulation and args.data:
         parser.error("--skip_simulation can only be used with --design")
     
+    # Set log level based on verbose flag
     if args.verbose:
-        print('Command line arguments:', args)
+        logger.remove()
+        logger.add(
+            sys.stderr,
+            format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <level>{message}</level>",
+            level="DEBUG"
+        )
+        logger.debug(f'Command line arguments: {args}')
     
     return args
 
@@ -172,6 +187,8 @@ def _create_data_folder(properties: Properties, path: Path = Path('')) -> tuple[
     
     default_folder.mkdir(parents=True, exist_ok=True)
     body_folder.mkdir(parents=True, exist_ok=True)
+    
+    logger.info(f"Created dataset folder: {data_folder}")
     
     return path_with_dataset, default_folder, body_folder
 
@@ -214,6 +231,7 @@ def _gather_body_options(body_path: Path) -> list[dict[str, Any]]:
         }
         bodies.append(body_info)
     
+    logger.debug(f"Found {len(bodies)} body options in {body_path}")
     return bodies
 
 
@@ -298,8 +316,9 @@ def _save_sample(
             default_flow_style=False,
             sort_keys=False
         )
+    
     if verbose:
-        print(f'Saved {piece.name}')
+        logger.debug(f'Saved {piece.name}')
 
 
 def generate_dataset(
@@ -334,7 +353,6 @@ def generate_dataset(
         If required files or directories are not found.
     """
     path = Path(path)
-    gen_config = properties['generator']['config']
     gen_stats = properties['generator']['stats']
     body_samples_path = Path(sys_paths['body_samples_path']) / properties['body_samples']
     body_options = _gather_body_options(body_samples_path)
@@ -359,15 +377,12 @@ def generate_dataset(
     # Check if this is a composite garment (has both upper and lower, or waistband)
     is_composite = (upper_type and bottom_type) or (upper_type and wb_type) or (bottom_type and wb_type)
     
-    # Determine which garment to create
+    # Determine which garment to create and appropriate pose
     if is_composite:
         # Composite garment (dress/jumpsuit) - use factory's composite method
-        if verbose:
-            print(f'Detected composite garment: upper={upper_type}, bottom={bottom_type}, wb={wb_type}')
-        
-        # Use straight pose for composite garments (they typically include upper garments)
-        use_straight_pose = True
-        garment_type = 'Composite'  # Special marker for composite garments
+        logger.info(f'Detected composite garment: upper={upper_type}, bottom={bottom_type}, wb={wb_type}')
+        use_straight_pose = True  # Composite garments typically include upper garments
+        garment_type = 'Composite'
     elif upper_type:
         garment_type = upper_type  # 'Shirt' or 'FittedShirt'
         use_straight_pose = True  # Upper garments use straight pose
@@ -380,8 +395,8 @@ def generate_dataset(
             f"Found: upper={upper_type}, bottom={bottom_type}"
         )
     
-    if verbose and not is_composite:
-        print(f'Detected garment type: {garment_type}')
+    if not is_composite:
+        logger.info(f'Detected garment type: {garment_type}')
     
     # On default body
     default_body_params = BodyParameters(
@@ -397,22 +412,23 @@ def generate_dataset(
         piece_default = create_garment(garment_type, default_body_def, design)
     piece_default.name = properties['body_default']
     
+    logger.info(f"Generating default body sample: {properties['body_default']}")
     _save_sample(piece_default, default_body_params, design, default_sample_data, verbose=verbose)
     
     # Generate samples - limit to requested number or available options, whichever is smaller
     max_available = len(body_options)
     requested_samples = properties['num_samples'] if 'num_samples' in properties else max_available
-    num_samples = min(requested_samples, max_available)
-    if verbose:
-        print(f'Generating {num_samples} body samples (out of {max_available} available)...')
+    num_samples = min(requested_samples, max_available) if requested_samples is not None else max_available
+    
+    logger.info(f'Generating {num_samples} body samples (out of {max_available} available)...')
     
     for i in range(num_samples):
-        # Log properties every time
-        properties.serialize(data_folder / 'dataset_properties.yaml')
+        # Save properties periodically (every 10 samples or at start)
+        if i % 10 == 0:
+            properties.serialize(data_folder / 'dataset_properties.yaml')
         
         try:
             # On random body shape
-            # Use appropriate pose based on garment type (straight for upper, apart for lower)
             rand_body_params, rand_body_def = body_sample(
                 i + properties['body_sample_start_id'],
                 body_options,
@@ -432,27 +448,26 @@ def generate_dataset(
             # Save samples
             _save_sample(piece_shaped, rand_body_params, design, body_sample_data, verbose=verbose)
             
-            if verbose and (i + 1) % 10 == 0:
-                print(f'Generated {i + 1}/{num_samples} samples...')
+            if (i + 1) % 10 == 0:
+                logger.info(f'Generated {i + 1}/{num_samples} samples...')
                 
         except KeyboardInterrupt:
-            print("\nInterrupted by user. Exiting generation.")
-            break  # Exit the loop gracefully
-        except Exception:
+            logger.warning("\nInterrupted by user. Exiting generation.")
+            break
+        except Exception as e:
             name = rand_body_params.params.get('body_sample', f'sample_{i}') if 'rand_body_params' in locals() else f'sample_{i}'
-            print(f'Processing for {name} failed.')
+            logger.error(f'Processing for {name} failed: {e}')
             if verbose:
-                traceback.print_exc()
+                logger.exception("Exception details:")
             continue
     
     elapsed = time.time() - start_time
     gen_stats['generation_time'] = f'{elapsed:.3f} s'
     
-    # Log properties
+    # Save final properties
     properties.serialize(data_folder / 'dataset_properties.yaml')
     
-    if verbose:
-        print(f'Dataset generation completed in {elapsed:.3f} seconds')
+    logger.info(f'Dataset generation completed in {elapsed:.3f} seconds')
     
     return default_path, body_sample_path
 
@@ -470,12 +485,15 @@ def gather_visuals(path: str | Path, verbose: bool = False) -> None:
     vis_path = Path(path) / 'patterns_vis'
     vis_path.mkdir(parents=True, exist_ok=True)
     
-    for p in Path(path).rglob("*.png"):
+    png_files = list(Path(path).rglob("*.png"))
+    logger.info(f"Gathering {len(png_files)} pattern visualization images...")
+    
+    for p in png_files:
         try:
             shutil.copy(p, vis_path)
         except shutil.SameFileError:
             if verbose:
-                print(f'File {p.name} already exists')
+                logger.debug(f'File {p.name} already exists in destination')
             pass
 
 
@@ -493,12 +511,14 @@ def gather_renders(out_data_path: Path, verbose: bool = False) -> None:
     renders_path.mkdir(exist_ok=True)
     
     render_files = list(out_data_path.glob('**/*render*.png'))
+    logger.info(f"Gathering {len(render_files)} render images...")
+    
     for file in render_files:
         try:
             shutil.copy(str(file), str(renders_path))
         except shutil.SameFileError:
             if verbose:
-                print(f'File {file} already exists')
+                logger.debug(f'File {file} already exists in destination')
             pass
 
 
@@ -539,32 +559,34 @@ def run_simulation(
     
     props = data_config.Properties(dataset_file_body)
     if 'frozen' in props and props['frozen']:
-        # Avoid accidental re-runs of data
-        print('Warning: dataset is frozen, processing is skipped')
+        logger.warning('Dataset is frozen, processing is skipped')
         return False
     
     # Define sim props
-    props.set_basic(data_folder=dataset)  # In case data properties are from other dataset/folder, update info
+    props.set_basic(data_folder=dataset)
     if command_args.config is not None:
+        config_path = Path(system_config['sim_configs_path']) / command_args.config
+        logger.info(f"Loading simulation config from: {config_path}")
         props.merge(
-            Path(system_config['sim_configs_path']) / command_args.config,
+            config_path,
             re_write=command_args.rewrite_config
-        )  # Re-write sim config only explicitly
+        )
     
-    # Main loop
+    # Main simulation loop - supports batching via num_samples=None for all samples
+    logger.info(f"Starting simulation for dataset: {dataset} (body_type: {body_type})")
     finished = sim.batch_sim(
         datapath,
         output_path,
         props,
         run_default_body=command_args.default_body,
-        num_samples=None,  # Process all samples (removed minibatch support)
+        num_samples=None,  # None = process all samples, can be set to a number for batching
         caching=command_args.caching,
         force_restart=False
     )
     
     # Try and resim fails once
     if finished:
-        # NOTE: Could be larger than a regular batch
+        logger.info("Attempting to resimulate failed cases...")
         finished = sim.resim_fails(
             datapath,
             output_path,
@@ -590,8 +612,7 @@ if __name__ == "__main__":
     
     # Step 1: Generate dataset if design file is provided
     if command_args.design and not command_args.skip_generation:
-        if command_args.verbose:
-            print(f'Generating dataset from design file: {command_args.design}')
+        logger.info(f'Generating dataset from design file: {command_args.design}')
         
         # Set up properties for generation
         if command_args.replicate is not None:
@@ -631,15 +652,11 @@ if __name__ == "__main__":
             # Get the dataset name from properties
             dataset_name = props['data_folder']
             
-            if command_args.verbose:
-                print(f'Data generation completed! Dataset: {dataset_name}')
-            else:
-                print('Data generation completed!')
+            logger.info(f'Data generation completed! Dataset: {dataset_name}')
                 
         except Exception as e:
-            print(f'Error during dataset generation: {e}')
-            if command_args.verbose:
-                traceback.print_exc()
+            logger.error(f'Error during dataset generation: {e}')
+            logger.exception("Exception details:")
             sys.exit(1)
     
     # Step 2: Run simulation if not skipped
@@ -649,26 +666,22 @@ if __name__ == "__main__":
             if command_args.data:
                 dataset_name = command_args.data
             else:
-                print('Error: No dataset available for simulation')
+                logger.error('No dataset available for simulation')
                 sys.exit(1)
-        
-        if command_args.verbose:
-            print(f'Running simulation on dataset: {dataset_name}')
         
         try:
             finished = run_simulation(dataset_name, system_config, command_args)
             
             if finished:
-                print('Dataset processing finished')
+                logger.success('Dataset processing finished')
                 sys.exit(0)
             else:
-                print('Dataset processing not finished')
+                logger.warning('Dataset processing not finished')
                 sys.exit(1)
         except Exception as e:
-            print(f'Error during simulation: {e}')
-            if command_args.verbose:
-                traceback.print_exc()
+            logger.error(f'Error during simulation: {e}')
+            logger.exception("Exception details:")
             sys.exit(1)
     else:
-        print('Simulation skipped')
+        logger.info('Simulation skipped')
         sys.exit(0)

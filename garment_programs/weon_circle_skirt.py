@@ -284,6 +284,9 @@ class SkirtCircle(StackableSkirtComponent):
             'bottom': pyg.Interface.from_multiple(self.front.interfaces['bottom'], self.back.interfaces['bottom'])
         }
         
+        # Add lower_interface label for attachment constraints
+        self.interfaces['top'].edges.propagate_label('lower_interface')
+        
     def add_cut(
         self,
         panel: CircleArcPanel | AsymHalfCirclePanel,

@@ -39,7 +39,7 @@ sim:
 
       enable_attachment_constraint: true   
       attachment_stiffness: 
-      - 1000.
+      - 100000.
       - 1000.   
       - 1000. 
       - 1000.
@@ -48,7 +48,7 @@ sim:
       - 0.  
       - 0. 
       - 0.
-      attachment_frames: 400
+      attachment_frames: 400000
       attachment_label_names: 
       - lower_interface
       - right_collar
