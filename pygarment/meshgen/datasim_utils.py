@@ -287,25 +287,31 @@ def init_sim_props(props, batch_run=False, force_restart=False):
 
     if batch_run and 'processed' in props['sim']['stats'] and not force_restart:
         # Resuming existing batch processing -- do not clean stats
-        # Assuming the last example processed example caused the failure
-        last_processed = props['sim']['stats']['processed'][-1]
+        # Check if processed list is not empty before accessing
+        processed_list = props['sim']['stats']['processed']
+        if not processed_list:
+            # No processed items, start fresh
+            logger.info("No processed items found, starting fresh batch processing")
+        else:
+            # Assuming the last example processed example caused the failure
+            last_processed = processed_list[-1]
 
-        if not any([(name in last_processed) or (last_processed in name) for name in
-                    props['render']['stats']['render_time']]):
-            # Crash detected -- the last example does not appear in the stats
-            if last_processed not in props['sim']['stats']['fails']['crashes']:
-                # Remove last from processed if it did not crash
-                if last_processed not in props['sim']['stats']['stop_over']:   
-                    props['sim']['stats']['processed'].pop()
-                    logger.debug(f"Removed last processed pattern (likely crashed): {last_processed}")
-                else:
-                    # Already passed here once -> add as crash
-                    props['sim']['stats']['fails']['crashes'].append(last_processed)
-                    logger.warning(f"Marking pattern as crash (second attempt): {last_processed}")
+            if not any([(name in last_processed) or (last_processed in name) for name in
+                        props['render']['stats']['render_time']]):
+                # Crash detected -- the last example does not appear in the stats
+                if last_processed not in props['sim']['stats']['fails']['crashes']:
+                    # Remove last from processed if it did not crash
+                    if last_processed not in props['sim']['stats']['stop_over']:   
+                        props['sim']['stats']['processed'].pop()
+                        logger.debug(f"Removed last processed pattern (likely crashed): {last_processed}")
+                    else:
+                        # Already passed here once -> add as crash
+                        props['sim']['stats']['fails']['crashes'].append(last_processed)
+                        logger.warning(f"Marking pattern as crash (second attempt): {last_processed}")
 
-        props['sim']['stats']['stop_over'].append(last_processed)  # Indicate resuming dataset simulation
-        logger.info(f"Resuming batch processing from: {last_processed}")
-        return True
+            props['sim']['stats']['stop_over'].append(last_processed)  # Indicate resuming dataset simulation
+            logger.info(f"Resuming batch processing from: {last_processed}")
+            return True
 
     # Starting fresh - prepare cumulative stats
     props.set_section_stats('sim', 

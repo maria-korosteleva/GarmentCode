@@ -13,6 +13,12 @@ from garment_programs.weon_shirt import Shirt, FittedShirt
 from garment_programs.weon_circle_skirt import SkirtCircle, AsymmSkirtCircle
 from garment_programs.weon_bands import StraightWB, FittedWB
 from pattern_definitions.body_definition import BodyDefinition
+from pattern_definitions.pants_design import PantsDesign
+from pattern_definitions.shirt_design import ShirtDesign
+from pattern_definitions.skirt_design import SkirtDesign
+from pattern_definitions.waistband_design import WaistbandDesign
+
+
 
 
 class GarmentFactory:
@@ -76,7 +82,10 @@ class GarmentFactory:
                 "Design dictionary must contain 'pants' key for pants creation"
             )
         
-        return Pants(self._body, self._design)
+        pants = Pants(design=PantsDesign(self._design))
+        pants.apply_body_alignment(self._body)
+        
+        return pants
     
     def create_shirt(self, fitted: bool = False) -> Shirt:
         """Create a shirt garment instance.
@@ -102,7 +111,10 @@ class GarmentFactory:
                 "Design dictionary must contain 'shirt' key for shirt creation"
             )
         
-        return Shirt(self._body, self._design, fitted=fitted)
+        shirt = Shirt(shirt_design=ShirtDesign(self._design), arm_pose_angle=self._body.arm_pose_angle, fitted=fitted)
+        shirt.apply_body_alignment(self._body)
+
+        return shirt
     
     def create_fitted_shirt(self) -> FittedShirt:
         """Create a fitted shirt garment instance.
@@ -122,7 +134,13 @@ class GarmentFactory:
                 "Design dictionary must contain 'shirt' key for fitted shirt creation"
             )
         
-        return FittedShirt(self._body, self._design)
+        shirt = FittedShirt(
+            shirt_design=ShirtDesign(self._design),
+            arm_pose_angle=self._body.arm_pose_angle
+        )
+        shirt.apply_body_alignment(self._body)
+        
+        return shirt
     
     def create_skirt_circle(self, **kwargs) -> SkirtCircle:
         """Create a circle skirt garment instance.
@@ -148,7 +166,19 @@ class GarmentFactory:
                 "Design dictionary must contain 'flare-skirt' key for skirt creation"
             )
         
-        return SkirtCircle(self._body, self._design, **kwargs)
+        skirt_design = SkirtDesign(self._design)
+        waist_front = self._body.waist - self._body.waist_back_width
+        waist_back = self._body.waist_back_width
+        
+        skirt = SkirtCircle(
+            skirt_design=skirt_design,
+            waist_front=waist_front,
+            waist_back=waist_back,
+            **kwargs
+        )
+        skirt.apply_body_alignment(self._body)
+        
+        return skirt
     
     def create_asymm_skirt_circle(self, **kwargs) -> AsymmSkirtCircle:
         """Create an asymmetric circle skirt garment instance.
@@ -174,7 +204,19 @@ class GarmentFactory:
                 "Design dictionary must contain 'flare-skirt' key for asymmetric skirt creation"
             )
         
-        return AsymmSkirtCircle(self._body, self._design, **kwargs)
+        skirt_design = SkirtDesign(self._design)
+        waist_front = self._body.waist - self._body.waist_back_width
+        waist_back = self._body.waist_back_width
+        
+        skirt = AsymmSkirtCircle(
+            skirt_design=skirt_design,
+            waist_front=waist_front,
+            waist_back=waist_back,
+            **kwargs
+        )
+        skirt.apply_body_alignment(self._body)
+        
+        return skirt
     
     def create_straight_wb(
         self,
@@ -187,9 +229,9 @@ class GarmentFactory:
         Parameters:
         -----------
         waist : float, optional
-            Waist width for the front panel. If None, will be calculated from body.
+            Total waist measurement. If None, will be calculated from body.
         waist_back : float, optional
-            Waist width for the back panel. If None, will be calculated from body.
+            Back waist width. If None, will be calculated from body.
         rise : float, optional
             The rise value of the bottoms that the WB is attached to.
             Default is 1.0.
@@ -209,7 +251,25 @@ class GarmentFactory:
                 "Design dictionary must contain 'waistband' key for waistband creation"
             )
         
-        return StraightWB(self._body, self._design, waist=waist, waist_back=waist_back, rise=rise)
+        waistband_design = WaistbandDesign(self._design)
+        
+        # Use provided values or calculate from body
+        if waist is None:
+            waist = self._body.waist
+        if waist_back is None:
+            waist_back = self._body.waist_back_width
+        waist_front = waist - waist_back
+        
+        wb = StraightWB(
+            waistband_design=waistband_design,
+            waist=waist,
+            waist_back=waist_back,
+            waist_front=waist_front,
+            rise=rise
+        )
+        wb.apply_body_alignment(self._body)
+        
+        return wb
     
     def create_fitted_wb(self, rise: float = 1.0) -> FittedWB:
         """Create a fitted waistband (yoke) instance.
@@ -235,7 +295,26 @@ class GarmentFactory:
                 "Design dictionary must contain 'waistband' key for fitted waistband creation"
             )
         
-        return FittedWB(self._body, self._design, rise=rise)
+        waistband_design = WaistbandDesign(self._design)
+        
+        waist = self._body.waist
+        waist_back = self._body.waist_back_width
+        waist_front = waist - waist_back
+        hips = self._body.hips
+        hips_back = self._body.hip_back_width
+        
+        wb = FittedWB(
+            waistband_design=waistband_design,
+            waist=waist,
+            waist_back=waist_back,
+            waist_front=waist_front,
+            hips=hips,
+            hips_back=hips_back,
+            rise=rise
+        )
+        wb.apply_body_alignment(self._body)
+        
+        return wb
     
     def create_composite_garment(self) -> pyg.Component:
         """Create a composite garment (dress/jumpsuit) with upper, waistband, and lower components.
@@ -316,7 +395,7 @@ class GarmentFactory:
             if wb_type == 'StraightWB':
                 wb = self.create_straight_wb(
                     waist=waist_width,
-                    waist_back=waist_width,
+                    waist_back=self._body.waist_back_width,
                     rise=1.0
                 )
             elif wb_type == 'FittedWB':

@@ -340,7 +340,7 @@ class PantsHalf(BaseBottoms):
     
     def __init__(self,
                  tag: str,
-                 design: dict,
+                 design: PantsDesign,
                  ) -> None:
         """Initialize a pants half (left or right leg).
         
@@ -352,10 +352,9 @@ class PantsHalf(BaseBottoms):
         -----------
         tag : str
             Side identifier: 'r' for right leg or 'l' for left leg.
-        design : dict
-            Design parameters dictionary. Must contain a 'pants' key with
-            measurements including 'front_rise', 'back_rise', 'waist',
-            'width_hips', 'length_waist_to_hip', and panel width/length values.
+        design : PantsDesign
+            Pants design parameters object containing measurements for widths
+            and lengths needed to construct the panels. 
 
         Notes:
         ------
@@ -364,10 +363,10 @@ class PantsHalf(BaseBottoms):
         - Both panels use calculated rise measurements based on front and back rises
         - Panels are positioned with different Z translations for 3D shaping
         """
-        super().__init__(design, tag)
+        super().__init__(tag)
 
         # Create PantsDesign from the design dict and store it
-        self.pants_design = PantsDesign(design)
+        self.pants_design = design
         
         rise_middle = (self.pants_design.back_rise + self.pants_design.front_rise) / 2
         hips_crotch_diff = rise_middle - self.pants_design.length_waist_to_hip
@@ -454,7 +453,7 @@ class Pants(BaseBottoms):
     left: PantsHalf
     body: BodyDefinition
 
-    def __init__(self, body: BodyDefinition, design: dict) -> None:
+    def __init__(self, design: PantsDesign) -> None:
         """Initialize a complete pants garment.
         
         Creates both left and right pants halves, positions them based on body
@@ -463,12 +462,6 @@ class Pants(BaseBottoms):
 
         Parameters:
         -----------
-        body : BodyDefinition
-            Body measurements object containing body parameters.
-            Required parameters:
-            - hips_line: Vertical position of the hips line
-            - crotch_hip_diff: Vertical difference between crotch and hips
-            - computed_waist_level: Vertical position of the waist level (computed property)
         design : dict
             Design parameters dictionary containing all measurements needed
             for constructing the pants panels.
@@ -480,18 +473,10 @@ class Pants(BaseBottoms):
         half to ensure symmetry. Interfaces are created for connecting to
         waistbands or other components at the top.
         """
-        super().__init__(design)
-
-        self.body = body
-
-        # used for panel placement
-        body_crotch_height = self.body.hips_line - self.body.crotch_hip_diff
-        body_waist_level = self.body.computed_waist_level
+        super().__init__()
 
         self.right = PantsHalf('r', design)
-        self.right.translate_by([0, body_waist_level - body_crotch_height, 0])
         self.left = PantsHalf('l', design).mirror()
-        self.left.translate_by([0, body_waist_level - body_crotch_height, 0])
 
         self.stitching_rules = pyg.Stitches(
             (self.right.interfaces['crotch_f'], self.left.interfaces['crotch_f']),
@@ -527,3 +512,23 @@ class Pants(BaseBottoms):
             The length of the pants in the design units.
         """
         return self.right.length()
+
+    def apply_body_alignment(self, body: BodyDefinition) -> None:
+        """Apply body alignment to position the pants correctly.
+        
+        Translates the pants garment vertically based on the body's waist
+        level and crotch height to ensure proper fit and alignment.
+
+        Parameters:
+        -----------
+        body : BodyDefinition
+            Body measurements object containing body parameters.
+            Required parameters:
+            - hips_line: Vertical position of the hips line
+            - crotch_hip_diff: Vertical difference between crotch and hips
+            - computed_waist_level: Vertical position of the waist level (computed property)
+        """
+        body_crotch_height = body.hips_line - body.crotch_hip_diff
+        body_waist_level = body.computed_waist_level
+
+        self.translate_by([0, body_waist_level - body_crotch_height, 0])

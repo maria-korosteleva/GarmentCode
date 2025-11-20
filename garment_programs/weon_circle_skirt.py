@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
 import pygarment as pyg
@@ -12,7 +12,10 @@ class CircleArcPanel(pyg.Panel):
     """One panel circle skirt"""
 
     # Calculation constants
-    QUARTER_CIRCLE_RAD = np.pi / 2
+    QUARTER_CIRCLE_RAD: float = np.pi / 2
+    
+    # Class attributes
+    waist_width: float
 
     def __init__(
         self,
@@ -181,19 +184,25 @@ class AsymHalfCirclePanel(pyg.Panel):
 class SkirtCircle(StackableSkirtComponent):
     """Simple circle skirt"""
 
-    MIN_LENGTH = 5
-
-    # Panel placement constants
-    FRONT_TRANSLATION_Z = 15
-    BACK_TRANSLATION_Z = -15
-
-    # Asymmetric calculation constants
-    FULL_CIRCLE_RAD = 2 * np.pi
+    # Class constants
+    MIN_LENGTH: int = 5
+    FRONT_TRANSLATION_Z: int = 15
+    BACK_TRANSLATION_Z: int = -15
+    FULL_CIRCLE_RAD: float = 2 * np.pi
+    
+    # Class attributes
+    skirt_design: SkirtDesign
+    slit: bool
+    waist_front: float
+    waist_back: float
+    front: CircleArcPanel
+    back: CircleArcPanel
 
     def __init__(
         self,
-        body: BodyDefinition | dict,
-        design: dict,
+        skirt_design: SkirtDesign,
+        waist_front: float,
+        waist_back: float,
         tag: str = '',
         length: Optional[float] = None,
         slit: bool = True,
@@ -205,10 +214,12 @@ class SkirtCircle(StackableSkirtComponent):
 
         Parameters
         ----------
-        body : BodyDefinition | dict
-            Body measurements object or dictionary.
-        design : dict
-            Design parameters dictionary.
+        skirt_design : SkirtDesign
+            Skirt design parameters object.
+        waist_front : float
+            Front waist measurement (waist - waist_back_width).
+        waist_back : float
+            Back waist measurement (waist_back_width).
         tag : str, optional
             A tag for the component name (e.g., 'r' or 'l'). Default is ''.
         length : float, optional
@@ -222,53 +233,56 @@ class SkirtCircle(StackableSkirtComponent):
         **kwargs
             Additional keyword arguments.
         """
-        super().__init__(body, design, tag)
+        super().__init__(tag=tag)
 
-        # Create SkirtDesign from the design dict and store it
-        self.skirt_design = SkirtDesign(design)
+        # Store design and waist measurements
+        self.skirt_design = skirt_design
+        self.slit = slit
+        self.waist_front = waist_front
+        self.waist_back = waist_back
         
         bottom_width = self.skirt_design.bottom_width
-        length = max(self.skirt_design.length, self.MIN_LENGTH) if length is None else length
+        skirt_length = max(self.skirt_design.length, self.MIN_LENGTH) if length is None else length
         waist = self.skirt_design.waist_width
 
-        # panels
+        # panels (created without body positioning - will be applied in apply_body_alignment)
         if not asymm:  # Typical symmetric skirt
             self.front = CircleArcPanel.from_w_length_suns(
                 f'skirt_front_{tag}' if tag else 'skirt_front', 
-                length, waist, bottom_width,
-                match_top_int_proportion=self.body['waist'] - self.body['waist_back_width'],
-                ).translate_by([0, body['_waist_level'], self.FRONT_TRANSLATION_Z])
+                skirt_length, waist, bottom_width,
+                match_top_int_proportion=waist_front,
+            ).translate_by([0, 0, self.FRONT_TRANSLATION_Z])
 
             self.back = CircleArcPanel.from_w_length_suns(
                 f'skirt_back_{tag}'  if tag else 'skirt_back', 
-                length, waist, bottom_width,
-                match_top_int_proportion=self.body['waist_back_width'],
-                ).translate_by([0, body['_waist_level'], self.BACK_TRANSLATION_Z])
+                skirt_length, waist, bottom_width,
+                match_top_int_proportion=waist_back,
+            ).translate_by([0, 0, self.BACK_TRANSLATION_Z])
         else:
             # NOTE: Asymmetic front/back is only defined on full skirt (1 sun)
             w_rad = waist / self.FULL_CIRCLE_RAD
-            f_length = self.skirt_design.asymm.front_length * length
-            tot_len = w_rad * 2 + length + f_length 
+            f_length = self.skirt_design.asymm.front_length * skirt_length
+            tot_len = w_rad * 2 + skirt_length + f_length 
             del_r = tot_len / 2 - f_length - w_rad
             s_length = np.sqrt((tot_len / 2)**2 - del_r**2) - w_rad
 
             self.front = AsymHalfCirclePanel(
                 f'skirt_front_{tag}' if tag else 'skirt_front', 
                 w_rad, f_length, s_length,
-                match_top_int_proportion=self.body['waist'] - self.body['waist_back_width'],
-                ).translate_by([0, body['_waist_level'], self.FRONT_TRANSLATION_Z])
+                match_top_int_proportion=waist_front,
+            ).translate_by([0, 0, self.FRONT_TRANSLATION_Z])
 
             self.back = AsymHalfCirclePanel(
                 f'skirt_back_{tag}'  if tag else 'skirt_back', 
-                w_rad, length, s_length,
-                match_top_int_proportion=self.body['waist_back_width'],
-                ).translate_by([0, body['_waist_level'], self.BACK_TRANSLATION_Z])
+                w_rad, skirt_length, s_length,
+                match_top_int_proportion=waist_back,
+            ).translate_by([0, 0, self.BACK_TRANSLATION_Z])
 
         # Add a cut
         if self.skirt_design.cut.add and slit:
             self.add_cut(
                 self.front if self.skirt_design.cut.place > 0 else self.back, 
-                self.skirt_design, length)
+                self.skirt_design, skirt_length)
 
         # Stitches
         self.stitching_rules = pyg.Stitches(
@@ -289,9 +303,9 @@ class SkirtCircle(StackableSkirtComponent):
         
     def add_cut(
         self,
-        panel: CircleArcPanel | AsymHalfCirclePanel,
+        panel: Union[CircleArcPanel, 'AsymHalfCirclePanel'],
         skirt_design: SkirtDesign,
-        sk_length: float
+        skirt_length: float
     ) -> None:
         """Add a cut to the skirt.
         
@@ -301,10 +315,10 @@ class SkirtCircle(StackableSkirtComponent):
             The panel to add the cut to.
         skirt_design : SkirtDesign
             Skirt design parameters object containing cut specifications.
-        sk_length : float
+        skirt_length : float
             Length of the skirt (used for calculating cut dimensions).
         """
-        width, depth = skirt_design.cut.width * sk_length, skirt_design.cut.depth * sk_length
+        width, depth = skirt_design.cut.width * skirt_length, skirt_design.cut.depth * skirt_length
 
         target_edge = panel.interfaces['bottom'].edges[0]
         t_len = target_edge.length()
@@ -351,13 +365,33 @@ class SkirtCircle(StackableSkirtComponent):
         """
         return self.front.waist_width
 
+    def apply_body_alignment(self, body: BodyDefinition) -> None:
+        """Apply body alignment to position the skirt correctly.
+        
+        Translates the skirt garment vertically based on the body's waist
+        level to ensure proper fit and alignment.
+        
+        Parameters
+        ----------
+        body : BodyDefinition
+            Body measurements object containing body parameters.
+            Required parameters:
+            - computed_waist_level: Vertical position of the waist level (computed property)
+        """
+        waist_level = body.computed_waist_level
+        
+        # Position front and back panels at waist level
+        self.front.translate_by([0, waist_level, 0])
+        self.back.translate_by([0, waist_level, 0])
+
 class AsymmSkirtCircle(SkirtCircle):
     """Front/back asymmetric skirt."""
     
     def __init__(
         self,
-        body: BodyDefinition | dict,
-        design: dict,
+        skirt_design: SkirtDesign,
+        waist_front: float,
+        waist_back: float,
         tag: str = '',
         length: Optional[float] = None,
         slit: bool = True,
@@ -367,10 +401,12 @@ class AsymmSkirtCircle(SkirtCircle):
         
         Parameters
         ----------
-        body : BodyDefinition | dict
-            Body measurements object or dictionary.
-        design : dict
-            Design parameters dictionary.
+        skirt_design : SkirtDesign
+            Skirt design parameters object.
+        waist_front : float
+            Front waist measurement (waist - waist_back_width).
+        waist_back : float
+            Back waist measurement (waist_back_width).
         tag : str, optional
             A tag for the component name. Default is ''.
         length : float, optional
@@ -380,4 +416,4 @@ class AsymmSkirtCircle(SkirtCircle):
         **kwargs
             Additional keyword arguments.
         """
-        super().__init__(body, design, tag, length, slit, asymm=True)
+        super().__init__(skirt_design, waist_front, waist_back, tag, length, slit, asymm=True)

@@ -2,7 +2,6 @@ from copy import deepcopy
 from typing import Callable, Optional
 
 import numpy as np
-from scipy.spatial.transform import Rotation as R
 
 from garment_programs import weon_bands
 import pygarment as pyg
@@ -192,17 +191,19 @@ def ArmholeCurve(
 class SleevePanel(pyg.Panel):
     """Trying proper sleeve panel"""
     
-    MIN_LENGTH = 5    # Minimum sleeve length
+    # Class constants
+    MIN_LENGTH: int = 5    # Minimum sleeve length
+    
+    # Class attributes
+    sleeve_design: SleeveDesign
 
     def __init__(
         self,
         name: str,
-        body: BodyDefinition | dict,
-        design: dict,
+        sleeve_design: SleeveDesign,
         open_shape: pyg.EdgeSequence,
         armhole_width: float,
         length_shift: float = 0,
-        x_translation: float = 0,
         _standing_margin: int = 5
     ) -> None:
         """Define a standard sleeve panel (half a sleeve).
@@ -211,9 +212,7 @@ class SleevePanel(pyg.Panel):
         ----------
         name : str
             Name of the panel.
-        body : BodyDefinition | dict
-            Body measurements object or dictionary.
-        design : dict
+        sleeve_design : SleeveDesign
             Design parameters dictionary.
         open_shape : pyg.EdgeSequence
             Edge sequence defining the sleeve opening shape.
@@ -222,15 +221,13 @@ class SleevePanel(pyg.Panel):
         length_shift : float, optional
             Force update sleeve length by this amount. Can be used to adjust
             length evaluation to fit the cuff. Default is 0.
-        x_translation : float, optional
-            Translation along the x-axis. Default is 0.
         _standing_margin : int, optional
             Margin for standing shoulder. Default is 5.
         """
         super().__init__(name)
 
         # Create SleeveDesign from the design dict and store it
-        self.sleeve_design = SleeveDesign(design)
+        self.sleeve_design = sleeve_design
 
         standing = self.sleeve_design.standing_shoulder
 
@@ -257,32 +254,6 @@ class SleevePanel(pyg.Panel):
 
         if standing:
             raise NotImplementedError('Standing shoulder is not implemented yet')
-            shoulder_angle = np.deg2rad(body['_shoulder_incl'])
-            rest_angle = max(np.deg2rad(self.sleeve_design.sleeve_angle),
-                            shoulder_angle)
-            if rest_angle > (shoulder_angle + np.deg2rad(_standing_margin)):  # Add a "shelve" to create square shoulder appearance
-                top_edge = self.edges[-1]
-                start = top_edge.start
-                len = self.sleeve_design.standing_shoulder_len
-
-                x_shift = len * np.cos(rest_angle - shoulder_angle)
-                y_shift = len * np.sin(rest_angle - shoulder_angle)
-
-                standing_edge = pyg.Edge(
-                    start=start,
-                    end=[start[0] - x_shift, start[1] + y_shift]
-                )
-                top_edge.start = standing_edge.end
-
-                self.edges.substitute(top_edge, [standing_edge, top_edge])
-            else:
-                if self.verbose:
-                    print(f'{self.__class__.__name__}::WARNING::'
-                        f'Sleeve rest angle {np.rad2deg(rest_angle):.3f} should be '
-                        f'larger than shoulder angle {body["_shoulder_incl"]} by '
-                        f'at least {_standing_margin} deg to enable '
-                        'standing shoulder. Standing shoulder ignored')
-                standing = False
 
         # Interfaces
         self.interfaces = {
@@ -295,12 +266,7 @@ class SleevePanel(pyg.Panel):
 
         # Default placement
         self.set_pivot(self.edges[-1].start) 
-        self.translate_to([
-            x_translation,
-            body['height'] - body['head_l'],
-            0, 
-        ])
-        
+
     def length(self, longest_dim: bool = False) -> float:
         """Return the length of the sleeve panel.
         
@@ -311,6 +277,7 @@ class SleevePanel(pyg.Panel):
             Default is False.
         
         Returns
+        design: dict,
         -------
         float
             Length of the sleeve panel.
@@ -320,16 +287,27 @@ class SleevePanel(pyg.Panel):
 
 class Sleeve(pyg.Component):
     """Trying to do a proper sleeve"""
+    
+    # Class constants
+    SLEEVE_Z_TRANSLATION: int = 15  # Translation in Z to separate front and back sleeves
+
+    # Class attributes
+    sleeve_design: SleeveDesign
+    f_sleeve: Optional[SleevePanel]
+    b_sleeve: Optional[SleevePanel]
+    cuff: Optional[weon_bands.CuffBand]
+    verbose: bool
 
     def __init__(
         self,
         tag: str,
-        body: BodyDefinition | dict,
-        design: dict,
+        sleeve_design: SleeveDesign,
+        shirt_design: TorsoDesign,
         front_w: float | Callable[[float], float],
         back_w: float | Callable[[float], float],
         front_hole_edge: pyg.Edge,
-        back_hole_edge: pyg.Edge
+        back_hole_edge: pyg.Edge,
+        adjusted_connecting_width: float,
     ) -> None:
         """Definition of a sleeve.
         
@@ -337,9 +315,9 @@ class Sleeve(pyg.Component):
         ----------
         tag : str
             Tag for the sleeve component.
-        body : BodyDefinition | dict
-            Body measurements object or dictionary.
-        design : dict
+        sleeve_design : SleeveDesign
+            Design parameters dictionary.
+        shirt_design : TorsoDesign
             Design parameters dictionary.
         front_w : float | Callable[[float], float]
             Width of the front sleeve opening or a function to calculate it.
@@ -351,28 +329,26 @@ class Sleeve(pyg.Component):
             Edge defining the front sleeve hole.
         back_hole_edge : pyg.Edge
             Edge defining the back sleeve hole.
+        adjusted_connecting_width : Optional[float]
+            Adjusted connecting width for sleeve calculations.
         """
         super().__init__(f'{self.__class__.__name__}_{tag}')
 
+        self.sleeve_design = sleeve_design
+
         # Get shirt design for translation calculation
-        shirt_design = TorsoDesign(design)
         x_sleeve_translation = - (shirt_design.neck_to_shoulder_distance**2 - shirt_design.shoulder_slant**2)**0.5
         x_sleeve_translation -= shirt_design.neck_width / 2
         armhole_width = shirt_design.scye_depth - shirt_design.shoulder_slant
         
-        # Create SleeveDesign from the design dict and store it
-        self.sleeve_design = SleeveDesign(design)
-        self.body = body
-
         dist = ((front_hole_edge.start[0] - back_hole_edge.end[0])**2 + (front_hole_edge.start[1] - back_hole_edge.end[1])**2)**0.5
         dist_y = abs(front_hole_edge.start[1] - back_hole_edge.end[1])
         rest_angle = np.pi / 2 - np.arcsin(self.sleeve_design.bicep_width / dist) - np.arccos(dist_y / dist)
 
-        connecting_width = self.sleeve_design.connecting_width
         smoothing_coeff = self.sleeve_design.smoothing_coeff
 
-        front_w = front_w(connecting_width) if callable(front_w) else front_w
-        back_w = back_w(connecting_width) if callable(back_w) else back_w
+        front_w = front_w(adjusted_connecting_width) if callable(front_w) else front_w
+        back_w = back_w(adjusted_connecting_width) if callable(back_w) else back_w
 
         # --- Define sleeve opening shapes ----
         # NOTE: Non-trad armholes only for sleeveless styles due to 
@@ -419,17 +395,15 @@ class Sleeve(pyg.Component):
 
         # ----- Get sleeve panels -------
         self.f_sleeve = SleevePanel(
-            f'{tag}_sleeve_f', body, design, front_opening,
+            f'{tag}_sleeve_f', sleeve_design, front_opening,
             armhole_width=armhole_width,
             length_shift=-cuff_len_adj,
-            x_translation=-x_sleeve_translation,
-            ).translate_by([0, 0, 15])
+            ).translate_by([x_sleeve_translation, 0, self.SLEEVE_Z_TRANSLATION])
         self.b_sleeve = SleevePanel(
-            f'{tag}_sleeve_b', body, design, back_opening,
+            f'{tag}_sleeve_b', sleeve_design, back_opening,
             armhole_width=armhole_width,
             length_shift=-cuff_len_adj,
-            x_translation=-x_sleeve_translation,
-            ).translate_by([0, 0, -15])
+            ).translate_by([x_sleeve_translation, 0, -self.SLEEVE_Z_TRANSLATION])
 
         # Connect panels
         self.stitching_rules = pyg.Stitches(
@@ -453,46 +427,7 @@ class Sleeve(pyg.Component):
 
         # Cuff
         if self.sleeve_design.cuff.type:
-            # Class
-            # Copy to avoid editing original design dict
-            cdesign = deepcopy(design)
-            cuff_circ = self.interfaces['out'].edges.length() / self.sleeve_design.cuff.top_ruffle
-            # Ensure it fits regardless of parameters
-            cuff_circ = max(cuff_circ, body['wrist'])
-            cdesign['sleeve']['cuff']['b_width'] = dict(v=cuff_circ)
-            cdesign['sleeve']['cuff']['cuff_len']['v'] = cuff_len_adj
-
-            cuff_class = getattr(weon_bands, self.sleeve_design.cuff.type)
-            self.cuff = cuff_class(f'sl_{tag}', cdesign)
-
-            # Position
-            self.cuff.rotate_by(
-                R.from_euler(
-                    'XYZ', 
-                    [0, 0, -90],  # from -Ox direction 
-                    degrees=True
-                )
-            )
-            self.cuff.place_by_interface(
-                self.cuff.interfaces['top'],
-                self.interfaces['out'],
-                gap=2,
-                alignment='top'
-            )
-
-            self.stitching_rules.append(
-                (
-                    self.cuff.interfaces['top'], 
-                    self.interfaces['out']
-                )
-            )
-            
-            # UPD out interface!
-            self.interfaces['out'] = self.cuff.interfaces['bottom']
-
-        # Final rotation of sleeve piece
-        self.rotate_by(R.from_euler(
-            'XYZ', [0, 0, body['arm_pose_angle']], degrees=True)) 
+            raise NotImplementedError('Cuffs are not implemented yet')
 
         # Set label 
         self.set_panel_label('arm')
@@ -508,12 +443,7 @@ class Sleeve(pyg.Component):
         if not self.sleeve_design.cuff.type:
             return 0
         
-        cuff_len_adj = self.sleeve_design.cuff.cuff_len * self.body['arm_length']
-        max_len = self.sleeve_design.length * self.body['arm_length']
-        if cuff_len_adj > max_len * 0.7:
-            cuff_len_adj = max_len * 0.7
-        
-        return cuff_len_adj
+        raise NotImplementedError('Cuffs are not implemented yet')
 
     def length(self) -> float:
         """Return the length of the sleeve including cuff (if any).
@@ -527,6 +457,9 @@ class Sleeve(pyg.Component):
             return 0
         
         if self.sleeve_design.cuff.type:
-            return self.f_sleeve.length() + self.cuff.length()
+            if self.cuff is not None:
+                return self.f_sleeve.length() + self.cuff.length()
+            else:
+                raise ValueError('Cuff is not defined, but cuff type is set in the design')
         
         return self.f_sleeve.length()

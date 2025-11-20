@@ -313,7 +313,7 @@ class BodiceHalf(pyg.Component):
             collars.NoPanelsCollar
             )
         
-        self.collar_comp = collar_type(name, body, design)
+        self.collar_comp = collar_type(name, design)
         
         # Project shape
         _, fc_interface = pyg.ops.cut_corner(

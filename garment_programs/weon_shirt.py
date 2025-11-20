@@ -3,10 +3,11 @@ from typing import Optional, Any
 
 import numpy as np
 import pygarment as pyg
+from scipy.spatial.transform import Rotation as R
 
 from garment_programs.base_classes import BaseBodicePanel
-from assets.garment_programs import collars
-from garment_programs import weon_torso
+from assets.garment_programs.collars import NoPanelsCollar
+from garment_programs.weon_torso import TorsoFrontHalfPanel, TorsoBackHalfPanel
 from garment_programs import weon_sleeves
 from pattern_definitions.body_definition import BodyDefinition
 from pattern_definitions.shirt_design import ShirtDesign
@@ -14,9 +15,12 @@ from pattern_definitions.shirt_design import ShirtDesign
 
 class BodiceFrontHalf(BaseBodicePanel):
     # Dart and fit constants
-    BOTTOM_DART_WIDTH_FACTOR = 2 / 3
-    SIDE_DART_DEPTH_FACTOR = 0.75
-    BOTTOM_DART_DEPTH_FACTOR = 0.9
+    BOTTOM_DART_WIDTH_FACTOR: float = 2 / 3
+    SIDE_DART_DEPTH_FACTOR: float = 0.75
+    BOTTOM_DART_DEPTH_FACTOR: float = 0.9
+    
+    # Class attributes
+    width: float
 
     def __init__(
         self,
@@ -35,7 +39,7 @@ class BodiceFrontHalf(BaseBodicePanel):
         design : dict
             Design parameters dictionary.
         """
-        super().__init__(name, body, design)
+        super().__init__(name, design)
 
         m_bust = body['bust']
         m_waist = body['waist']
@@ -113,11 +117,14 @@ class BodiceBackHalf(BaseBodicePanel):
     """Panel for the back of a basic fitted bodice block."""
 
     # Dart and fit constants
-    SIDE_ADJUSTMENT_THRESHOLD = 4
-    SIDE_ADJUSTMENT_FACTOR = 1 / 6
-    BOTTOM_DART_DEPTH_FACTOR = 1.0
-    SMALL_DART_DEPTH_FACTOR = 0.9
-    DART_POSITION_MULTIPLIER = 0.5
+    SIDE_ADJUSTMENT_THRESHOLD: int = 4
+    SIDE_ADJUSTMENT_FACTOR: float = 1 / 6
+    BOTTOM_DART_DEPTH_FACTOR: float = 1.0
+    SMALL_DART_DEPTH_FACTOR: float = 0.9
+    DART_POSITION_MULTIPLIER: float = 0.5
+    
+    # Class attributes
+    width: float
 
     def __init__(
         self,
@@ -136,7 +143,7 @@ class BodiceBackHalf(BaseBodicePanel):
         design : dict
             Design parameters dictionary.
         """
-        super().__init__(name, body, design)
+        super().__init__(name, design)
 
         # Overall measurements        
         self.width = body['back_width'] / 2
@@ -227,22 +234,32 @@ class BodiceBackHalf(BaseBodicePanel):
         """
         return self.width
 
+
 class BodiceHalf(pyg.Component):
     """Definition of a half of an upper garment with sleeves and collars"""
 
     # Panel placement constants
-    FRONT_TORSO_TRANSLATION_Z = 30
-    BACK_TORSO_TRANSLATION_Z = -25
+    FRONT_TORSO_TRANSLATION_Z: int = 30
+    BACK_TORSO_TRANSLATION_Z: int = -25
 
     # Sleeve placement constants
-    SLEEVE_PLACEMENT_GAP_BASE = -1
-    SLEEVE_PLACEMENT_GAP_FACTOR = 10
+    SLEEVE_PLACEMENT_GAP_BASE: int = -1
+    SLEEVE_PLACEMENT_GAP_FACTOR: int = 10
+
+    # Class attributes
+    shirt_design: ShirtDesign
+    ftorso: TorsoFrontHalfPanel
+    btorso: TorsoBackHalfPanel
+    sleeve: Optional[weon_sleeves.Sleeve]
+    collar_comp: Optional[Any]
+    _bodice_sleeve_int: Optional[pyg.EdgeSequence]
+    _sleeve_placement_gap: Optional[float]
 
     def __init__(
         self,
         name: str,
-        body: BodyDefinition | dict,
-        design: dict,
+        shirt_design: ShirtDesign,
+        arm_pose_angle: float,
         fitted: bool = True
     ) -> None:
         """Define half of an upper garment, including torso, sleeves, and collars.
@@ -253,26 +270,28 @@ class BodiceHalf(pyg.Component):
             Name of the component (e.g., 'right' or 'left').
         body : BodyDefinition | dict
             Body measurements object or dictionary.
-        design : dict
-            Design parameters dictionary.
+        shirt_design : ShirtDesign
+            Shirt design object.
+        arm_pose_angle : float
+            Arm pose angle.
         fitted : bool, optional
             If True, creates a fitted bodice; otherwise, a looser torso (tee-style).
             Default is True.
         """
         super().__init__(name)
 
-        design = deepcopy(design)   # Recalculate freely!
-        
         # Create ShirtDesign from the design dict and store it
-        self.shirt_design = ShirtDesign(design)
+        self.shirt_design = shirt_design
 
         # Torso
         if fitted:
-            self.ftorso = BodiceFrontHalf(f'{name}_ftorso', body, design).translate_by([0, 0, self.FRONT_TORSO_TRANSLATION_Z])
-            self.btorso = BodiceBackHalf(f'{name}_btorso', body, design).translate_by([0, 0, self.BACK_TORSO_TRANSLATION_Z])
+            raise NotImplementedError("Fitted bodice not implemented yet.")
         else:
-            self.ftorso = weon_torso.TorsoFrontHalfPanel(f'{name}_ftorso', body, design['shirt']).translate_by([0, 0, self.FRONT_TORSO_TRANSLATION_Z])
-            self.btorso = weon_torso.TorsoBackHalfPanel(f'{name}_btorso', body, design['shirt']).translate_by([0, 0, self.BACK_TORSO_TRANSLATION_Z])
+            self.ftorso = TorsoFrontHalfPanel(name=f'{name}_ftorso', shirt_design=shirt_design)
+            self.ftorso.translate_by([0, 0, self.FRONT_TORSO_TRANSLATION_Z])
+
+            self.btorso = TorsoBackHalfPanel(name=f'{name}_btorso', shirt_design=shirt_design)
+            self.btorso.translate_by([0, 0, self.BACK_TORSO_TRANSLATION_Z])
 
         # Interfaces
         self.interfaces.update({
@@ -285,14 +304,21 @@ class BodiceHalf(pyg.Component):
         # Sleeves/collar cuts
         self.sleeve: Optional[weon_sleeves.Sleeve] = None
         self.collar_comp: Optional[Any] = None
-        self.eval_dep_params(body, design)
+        self._bodice_sleeve_int: Optional[pyg.EdgeSequence] = None
+        self._sleeve_placement_gap: Optional[float] = None
 
-        if self.shirt_design.shirt.strapless and fitted:  # NOTE: Strapless design only for fitted tops
-            self.make_strapless(body, design)
+        if self.shirt_design.torso_design.strapless and fitted:  # NOTE: Strapless design only for fitted tops
+            #self.make_strapless(body, design)
+            raise NotImplementedError("Strapless design not implemented yet.")
         else:
             # Sleeves and collars 
-            self.add_sleeves(name, body, design)
-            self.add_collars(name, body, design)
+            # NOTE assuming the vertical side is the first argument
+            max_cwidth = self.ftorso.interfaces['shoulder_corner'].edges[0].length() - 1  # cm
+            min_cwidth = self.shirt_design.torso_design.scye_depth - self.shirt_design.torso_design.shoulder_slant
+            adjusted_connecting_width = min(min_cwidth + min_cwidth * self.shirt_design.sleeve_design.connecting_width, max_cwidth)
+            self.add_sleeves(name, arm_pose_angle, adjusted_connecting_width)
+
+            self.add_collars(name)
             self.stitching_rules.append((
                 self.ftorso.interfaces['shoulder'], 
                 self.btorso.interfaces['shoulder']
@@ -302,51 +328,11 @@ class BodiceHalf(pyg.Component):
         self.stitching_rules.append((
             self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
 
-    def eval_dep_params(
-        self,
-        body: BodyDefinition | dict,
-        design: dict
-    ) -> None:
-        """Evaluate dependent design parameters based on body measurements.
-        
-        Parameters
-        ----------
-        body : BodyDefinition | dict
-            Body measurements object or dictionary.
-        design : dict
-            Design parameters dictionary (modified in place).
-        """
-
-        # Sleeves
-        # NOTE assuming the vertical side is the first argument
-        max_cwidth = self.ftorso.interfaces['shoulder_corner'].edges[0].length() - 1  # cm
-        min_cwidth = self.shirt_design.shirt.scye_depth - self.shirt_design.shirt.shoulder_slant
-        v = self.shirt_design.sleeve.connecting_width
-        design['sleeve']['connecting_width']['v'] = min(min_cwidth + min_cwidth * v, max_cwidth)
-
-        # Depth
-        # Collar depth is given w.r.t. length.
-        # adjust for the shoulder inclination
-        tg = np.tan(np.deg2rad(body['_shoulder_incl']))
-        max_f_len = self.ftorso.interfaces['collar_corner'].edges[1].length() - tg * self.ftorso.get_width(0) - 1  # cm
-        max_b_len = self.btorso.interfaces['collar_corner'].edges[1].length() - tg * self.btorso.get_width(0) - 1  # cm
-
-        design['collar']['f_strapless_depth'] = {}
-        design['collar']['f_strapless_depth']['v'] = min(
-            self.shirt_design.collar.fc_depth * body['_bust_line'], 
-            max_f_len)
-        
-
-        design['collar']['b_strapless_depth'] = {}
-        design['collar']['b_strapless_depth']['v'] =  min(
-            self.shirt_design.collar.bc_depth * body['_bust_line'], 
-            max_b_len)
-
     def add_sleeves(
         self,
         name: str,
-        body: BodyDefinition | dict,
-        design: dict
+        arm_pose_angle: float,
+        connecting_width: float
     ) -> None:
         """Add sleeves to the bodice half.
         
@@ -354,18 +340,23 @@ class BodiceHalf(pyg.Component):
         ----------
         name : str
             Name of the component (e.g., 'right' or 'left').
-        body : BodyDefinition | dict
-            Body measurements object or dictionary.
         design : dict
             Design parameters dictionary.
+        arm_pose_angle : float
+            Arm pose angle.
+        connecting_width: float
+            Connecting width of the sleeves.
         """
 
         self.sleeve = weon_sleeves.Sleeve(
-            name, body, design, 
-            front_w=(self.shirt_design.shirt.width_chest - self.shirt_design.shirt.smallest_width) / 2,
-            back_w=(self.shirt_design.shirt.width_chest - self.shirt_design.shirt.back_width) / 2,
+            tag=name,
+            shirt_design=self.shirt_design.torso_design,
+            sleeve_design=self.shirt_design.sleeve_design,
+            front_w=(self.shirt_design.torso_design.width_chest - self.shirt_design.torso_design.smallest_width) / 2,
+            back_w=(self.shirt_design.torso_design.width_chest - self.shirt_design.torso_design.back_width) / 2,
             front_hole_edge=self.ftorso.edges[-3],
             back_hole_edge=self.btorso.edges[-3],
+            adjusted_connecting_width=connecting_width,
         )
 
         _, f_sleeve_int = pyg.ops.cut_corner(
@@ -379,7 +370,7 @@ class BodiceHalf(pyg.Component):
             verbose=self.verbose
         )
 
-        if not self.shirt_design.sleeve.sleeveless:
+        if not self.shirt_design.sleeve_design.sleeveless:
             # Ordering
             bodice_sleeve_int = pyg.Interface.from_multiple(
                 f_sleeve_int.reverse(with_edge_dir_reverse=True),
@@ -393,23 +384,49 @@ class BodiceHalf(pyg.Component):
             # NOTE: This is a heuristic tuned for arm poses 30 deg-60 deg 
             # used in the dataset
             # FIXME Needs a better general solution
-            gap = self.SLEEVE_PLACEMENT_GAP_BASE - body['arm_pose_angle'] / self.SLEEVE_PLACEMENT_GAP_FACTOR
+            gap = self.SLEEVE_PLACEMENT_GAP_BASE - arm_pose_angle / self.SLEEVE_PLACEMENT_GAP_FACTOR
             self.sleeve.place_by_interface(
                 self.sleeve.interfaces['in'], 
                 bodice_sleeve_int, 
                 gap=gap,   
                 alignment='top',
             )
+            
+            # Store armhole interface and gap for re-alignment after rotation
+            self._bodice_sleeve_int = bodice_sleeve_int
+            self._sleeve_placement_gap = gap
 
         # Add edge labels
         f_sleeve_int.edges.propagate_label(f'{self.name}_armhole')
         b_sleeve_int.edges.propagate_label(f'{self.name}_armhole')
     
+    def translate_and_rotate_sleeve(self, translation: tuple[float, float, float], angle: float) -> None:
+        """Translate and rotate the sleeve piece, then re-align with armhole.
+        
+        Parameters
+        ----------
+        translation : tuple[float, float, float]
+            Translation to apply to the sleeve piece.
+        angle : float
+            Angle to rotate the sleeve piece.
+        """
+        if self.sleeve is not None:
+            self.sleeve.translate_by(translation)
+            self.sleeve.rotate_by(R.from_euler(
+                'XYZ', [0, 0, angle], degrees=True))
+            
+            # Re-align sleeve with armhole after rotation to maintain proper connection
+            if self._bodice_sleeve_int is not None and not self.shirt_design.sleeve_design.sleeveless:
+                self.sleeve.place_by_interface(
+                    self.sleeve.interfaces['in'], 
+                    self._bodice_sleeve_int, 
+                    gap=self._sleeve_placement_gap,   
+                    alignment='top',
+                ) 
+
     def add_collars(
         self,
         name: str,
-        body: BodyDefinition | dict,
-        design: dict
     ) -> None:
         """Add collars to the bodice half.
         
@@ -417,20 +434,10 @@ class BodiceHalf(pyg.Component):
         ----------
         name : str
             Name of the component (e.g., 'right' or 'left').
-        body : BodyDefinition | dict
-            Body measurements object or dictionary.
-        design : dict
-            Design parameters dictionary.
         """
 
         # Front
-        collar_type = getattr(
-            collars, 
-            str(self.shirt_design.collar.component.style), 
-            collars.NoPanelsCollar
-            )
-        
-        self.collar_comp = collar_type(name, body, design)
+        self.collar_comp = NoPanelsCollar(name, self.shirt_design.collar_design)
         
         # Project shape
         _, fc_interface = pyg.ops.cut_corner(
@@ -580,37 +587,48 @@ class Shirt(pyg.Component):
     """Panel for the front of upper garments with darts to properly fit it to
     the shape"""
 
+    # Class constants
+    FRONT_TORSO_TRANSLATION_Z: int = 30
+    
+    # Class attributes
+    shirt_design: ShirtDesign
+    right: BodiceHalf
+    left: BodiceHalf
+
     def __init__(
         self,
-        body: BodyDefinition | dict,
-        design: dict,
+        shirt_design: ShirtDesign,
+        arm_pose_angle: float,
         fitted: bool = False
     ) -> None:
         """Create a shirt garment component.
         
         Parameters
         ----------
-        body : BodyDefinition | dict
-            Body measurements object or dictionary.
-        design : dict
-            Design parameters dictionary.
+        shirt_design : ShirtDesign
+            Shirt design object.
+        arm_pose_angle : float
+            Arm pose angle, only used for bosy-sleeve init aligment.
         fitted : bool, optional
             If True, creates a fitted shirt; otherwise, a looser fit.
             Default is False.
         """
+
         name_with_params = f"{self.__class__.__name__}"
         super().__init__(name_with_params)
 
         # Create ShirtDesign from the design dict and store it
-        self.shirt_design = ShirtDesign(design)
+        self.shirt_design = shirt_design
         
-        design = self.eval_dep_params(design)
-
-        self.right = BodiceHalf(f'right', body, design, fitted=fitted)
-        self.left = BodiceHalf(
-            f'left', body, 
-            design['left'] if self.shirt_design.left.enable_asym else design, 
-            fitted=fitted).mirror()
+        self.right = BodiceHalf(f'right',
+                                self.shirt_design,
+                                arm_pose_angle=arm_pose_angle,
+                                fitted=fitted
+                                )
+        self.left = BodiceHalf(f'left',
+                               self.shirt_design,
+                               arm_pose_angle=arm_pose_angle,
+                               fitted=fitted).mirror()
 
         self.stitching_rules.append((self.right.interfaces['front_in'],
                                      self.left.interfaces['front_in']))
@@ -626,40 +644,6 @@ class Shirt(pyg.Component):
                 self.right.interfaces['b_bottom'],)
         }
 
-    def eval_dep_params(self, design: dict) -> dict:
-        """Evaluate dependent design parameters based on body measurements.
-        
-        Parameters
-        ----------
-        design : dict
-            Design parameters dictionary.
-        
-        Returns
-        -------
-        dict
-            Updated design parameters dictionary.
-        """
-
-        # NOTE: Support for full collars with partially strapless top
-        # or combination of paneled collar styles
-        # requres further development
-        # TODOLOW enable this one to work
-        if self.shirt_design.left.enable_asym:
-            # Force no collars since they are not compatible with each other
-            design = deepcopy(design)
-            design['collar']['component']['style']['v'] = None
-            design['left']['collar']['component'] = dict(style=dict(v=None))
-            
-            # Left-right design compatibility 
-            design['left']['shirt'].update(length={})
-            design['left']['shirt']['length']['v'] = self.shirt_design.shirt.length
-            
-            design['left']['collar'].update(fc_depth={}, bc_depth={})
-            design['left']['collar']['fc_depth']['v'] = self.shirt_design.collar.fc_depth
-            design['left']['collar']['bc_depth']['v'] = self.shirt_design.collar.bc_depth
-
-        return design
-
     def length(self) -> float:
         """Return the length of the shirt.
         
@@ -669,6 +653,27 @@ class Shirt(pyg.Component):
             Length of the shirt.
         """
         return self.right.length()
+    
+    def apply_body_alignment(self, body: BodyDefinition) -> None:
+        """Apply body alignment to the shirt.
+        
+        Parameters
+        ----------
+        body : BodyDefinition | dict
+            Body measurements object or dictionary.
+        """
+        # Apply sleeve rotations
+        angle = body.arm_pose_angle
+
+        self.right.translate_and_rotate_sleeve(translation=(0, 0, 0), angle=angle)
+        
+        # Apply to left sleeve (angle negated because left side is mirrored)
+        self.left.translate_and_rotate_sleeve(translation=(0, 0, 0), angle=-angle)
+        
+        # Position entire shirt relative to body height (torso panels are positioned at Y=0,
+        # but should be at body.height - body.head_l to align with body)
+        self.translate_by([0, body.height - body.head_l, 0])
+
 
 class FittedShirt(Shirt):
     """Creates fitted shirt.
@@ -681,8 +686,8 @@ class FittedShirt(Shirt):
     
     def __init__(
         self,
-        body: BodyDefinition | dict,
-        design: dict
+        shirt_design: ShirtDesign,
+        arm_pose_angle: float,
     ) -> None:
         """Initialize a fitted shirt.
         
@@ -693,4 +698,4 @@ class FittedShirt(Shirt):
         design : dict
             Design parameters dictionary.
         """
-        super().__init__(body, design, fitted=True)
+        super().__init__(shirt_design, arm_pose_angle, fitted=True)

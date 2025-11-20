@@ -7,8 +7,8 @@ import numpy as np
 import pygarment as pyg
 
 from garment_programs.base_classes import BaseBodicePanel
-from pattern_definitions.body_definition import BodyDefinition
 from pattern_definitions.torso_design import TorsoDesign
+from pattern_definitions.shirt_design import ShirtDesign
 
 
 class TorsoFrontHalfPanel(BaseBodicePanel):
@@ -16,11 +16,13 @@ class TorsoFrontHalfPanel(BaseBodicePanel):
     
         Fits to the bust size
     """
+    # Class attributes
+    width: float
+    
     def __init__(
         self,
         name: str,
-        body: BodyDefinition | dict,
-        design: dict
+        shirt_design: ShirtDesign,
     ) -> None:
         """Create a front half panel for a simple upper garment (e.g. T-Shirt).
         
@@ -28,15 +30,10 @@ class TorsoFrontHalfPanel(BaseBodicePanel):
         ----------
         name : str
             Name of the panel.
-        body : BodyDefinition | dict
-            Body measurements object or dictionary.
-        design : dict
-            Design parameters dictionary.
+        Shirt_design : ShirtDesign
+            Shirt design parameters.
         """
-        super().__init__(name, body, design)
-
-        # Create TorsoDesign from the design dict and store it
-        self.torso_design = TorsoDesign(design)
+        super().__init__(name, shirt_design.torso_design)
 
         # sizes   
         waist = self.torso_design.width_waist / 2
@@ -80,20 +77,22 @@ class TorsoFrontHalfPanel(BaseBodicePanel):
         }
 
         # default placement
-        self.translate_by([0, body['height'] - body['head_l'] - max_len, 0])
+        self.translate_by([0, - max_len, 0])
 
-    def get_width(self, level):
+    def get_width(self, level: float) -> float:
         """Get the width of the panel at a given level"""
         return super().get_width(level) + self.width - self.neck_to_shoulder_delta_x - self.torso_design.neck_width / 2
 
 
 class TorsoBackHalfPanel(BaseBodicePanel):
     """ Half of a simple non-fitted upper garment (e.g. T-Shirt) """
+    # Class attributes
+    width: float
+    
     def __init__(
         self,
         name: str,
-        body: BodyDefinition | dict,
-        design: dict,
+        shirt_design: ShirtDesign,
         match_length_to_front: bool = True
     ) -> None:
         """Create a back half panel for a simple upper garment (e.g. T-Shirt).
@@ -102,18 +101,13 @@ class TorsoBackHalfPanel(BaseBodicePanel):
         ----------
         name : str
             Name of the panel.
-        body : BodyDefinition | dict
-            Body measurements object or dictionary.
-        design : dict
-            Design parameters dictionary.
+        shirt_design : ShirtDesign
+            Shirt design parameters.
         match_length_to_front : bool, optional
             Whether to match the back length to the front length.
             Default is True.
         """
-        super().__init__(name, body, design)
-
-        # Create TorsoDesign from the design dict and store it
-        self.torso_design = TorsoDesign(design)
+        super().__init__(name, shirt_design.torso_design)
 
         # sizes   
         waist = self.torso_design.width_waist / 2
@@ -165,8 +159,8 @@ class TorsoBackHalfPanel(BaseBodicePanel):
         }
 
         # default placement
-        self.translate_by([0, body['height'] - body['head_l'] - max_len, 0])
+        self.translate_by([0, - max_len, 0])
 
-    def get_width(self, level):
+    def get_width(self, level: float) -> float:
         """Get the width of the panel at a given level"""
         return super().get_width(level) + self.width - self.neck_to_shoulder_delta_x - self.torso_design.neck_width / 2

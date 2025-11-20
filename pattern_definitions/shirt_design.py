@@ -205,16 +205,19 @@ class LeftDesign:
     Attributes:
     -----------
     enable_asym : bool
-        Whether to enable asymmetric design.
+        Flag to enable asymmetric design for the left side.
     shirt : TorsoDesign
-        Shirt design parameters for left side (subset of full shirt design).
+        Torso design parameters for the left side.
     collar : CollarDesign
-        Collar design parameters for left side.
+        Collar design parameters for the left side.
     sleeve : SleeveDesign
-        Sleeve design parameters for left side.
+        Sleeve design parameters for the left side.
     """
     
-    def __init__(self, left_dict: dict) -> None:
+    def __init__(
+            self,
+            left_dict: dict,
+    ) -> None:
         """Initialize left design from dictionary.
         
         Parameters:
@@ -233,25 +236,26 @@ class LeftDesign:
         
         sleeve_dict = left_dict.get('sleeve', {})
         self._sleeve: SleeveDesign = SleeveDesign(sleeve_dict)
+        self._sleeve: SleeveDesign = SleeveDesign(sleeve_dict)
     
     @property
     def enable_asym(self) -> bool:
-        """Whether to enable asymmetric design."""
+        """Flag to enable asymmetric design for the left side."""
         return self._enable_asym
     
     @property
     def shirt(self) -> TorsoDesign:
-        """Shirt design parameters for left side (subset of full shirt design)."""
+        """Torso design parameters for the left side."""
         return self._shirt
     
     @property
     def collar(self) -> CollarDesign:
-        """Collar design parameters for left side."""
+        """Collar design parameters for the left side."""
         return self._collar
     
     @property
     def sleeve(self) -> SleeveDesign:
-        """Sleeve design parameters for left side."""
+        """Sleeve design parameters for the left side."""
         return self._sleeve
 
 
@@ -263,14 +267,15 @@ class ShirtDesign:
     
     Attributes:
     -----------
-    shirt : TorsoDesign
-        Shirt/torso design parameters (extends TorsoDesign with additional fields).
-    collar : CollarDesign
+    torso_design : TorsoDesign
+        Main torso design parameters.
+    collar_design : CollarDesign
         Collar design parameters.
-    sleeve : SleeveDesign
+    sleeve_design : SleeveDesign
         Sleeve design parameters.
-    left : LeftDesign
-        Left/right asymmetric design parameters.
+    left_design : LeftDesign
+        Asymmetric design parameters for the left side.
+    
     """
     
     def __init__(self, design_dict: dict) -> None:
@@ -279,41 +284,42 @@ class ShirtDesign:
         Parameters:
         -----------
         design_dict : dict
-            Dictionary containing shirt design parameters. The dictionary should
-            contain 'shirt', 'collar', 'sleeve', and optionally 'left' keys.
-            
-            Each parameter should have a 'v' key containing the actual value.
+            Dictionary containing shirt design parameters.
         """
         # Initialize nested designs
         shirt_dict = design_dict.get('shirt', {})
         self._shirt: TorsoDesign = TorsoDesign(shirt_dict)
+        self._torso_design: TorsoDesign = TorsoDesign(design_dict)
+        self._sleeve_design: SleeveDesign = SleeveDesign(design_dict)
+        self._shirt: TorsoDesign = self.torso_design
         
         collar_dict = design_dict.get('collar', {})
-        self._collar: CollarDesign = CollarDesign(collar_dict)
+        self._collar_design: CollarDesign = CollarDesign(collar_dict)
         
         sleeve_dict = design_dict.get('sleeve', {})
-        self._sleeve: SleeveDesign = SleeveDesign(sleeve_dict)
+        self._sleeve_design: SleeveDesign = SleeveDesign(sleeve_dict)
+        self._sleeve_design: SleeveDesign = self.sleeve_design
         
         left_dict = design_dict.get('left', {})
-        self._left: LeftDesign = LeftDesign(left_dict)
+        self._left_design: LeftDesign = LeftDesign(left_dict)
+        self._left_design: LeftDesign = LeftDesign(left_dict)
     
     @property
-    def shirt(self) -> TorsoDesign:
-        """Shirt/torso design parameters (extends TorsoDesign with additional fields)."""
-        return self._shirt
-    
-    @property
-    def collar(self) -> CollarDesign:
+    def collar_design(self) -> CollarDesign:
         """Collar design parameters."""
-        return self._collar
+        return self._collar_design
     
     @property
-    def sleeve(self) -> SleeveDesign:
+    def sleeve_design(self) -> SleeveDesign:
         """Sleeve design parameters."""
-        return self._sleeve
+        return self._sleeve_design
     
     @property
-    def left(self) -> LeftDesign:
-        """Left/right asymmetric design parameters."""
-        return self._left
+    def left_design(self) -> LeftDesign:
+        """Asymmetric design parameters for the left side."""
+        return self._left_design
 
+    @property
+    def torso_design(self) -> TorsoDesign:
+        """Main torso design parameters."""
+        return self._torso_design

@@ -1,15 +1,27 @@
 import math
+from typing import Optional, Any
 
 import pygarment as pyg
 
+from pattern_definitions.torso_design import TorsoDesign
+from pattern_definitions.body_definition import BodyDefinition
+
 class BaseBodicePanel(pyg.Panel):
     """Base class for bodice panels that defines expected interfaces and common functions"""
-    def __init__(self, name, body, design) -> None:
+    
+    # Class attributes
+    neck_to_shoulder_delta_x: float
+    neck_width: float
+    torso_design: TorsoDesign
+
+    def __init__(self,
+                 name: str,
+                 torso_design: TorsoDesign
+                 ) -> None:
         super().__init__(name)
-        self.neck_to_shoulder_delta_x = math.sqrt(design['neck_to_shoulder_distance']['v'] ** 2 - design['shoulder_slant']['v'] ** 2)
-        self.neck_width = design['neck_width']['v']
-        self.body = body
-        self.design = design
+        self.torso_design = torso_design
+        self.neck_to_shoulder_delta_x = math.sqrt(torso_design.neck_to_shoulder_distance ** 2 - torso_design.shoulder_slant ** 2)
+        self.neck_width = torso_design.neck_width
         
         self.interfaces = {
             'outside': object(),
@@ -21,7 +33,7 @@ class BaseBodicePanel(pyg.Panel):
             'collar_corner': object(),
         }
 
-    def get_width(self, level):
+    def get_width(self, level: float) -> float:
         """Return the panel width at a given level (excluding darts)
            * Level is counted from the top of the panel
         
@@ -47,13 +59,14 @@ class BaseBottoms(pyg.Component):
         * List of interfaces
         * Presence of the rise value
     """
-    def __init__(self, design, tag='') -> None:
+    # Class attributes
+    body: Optional[BodyDefinition]
+    
+    def __init__(self, tag: str = '') -> None:
         """Base bottoms initialization
         """
         super().__init__(
             self.__class__.__name__ if not tag else f'{self.__class__.__name__}_{tag}')
-        
-        self.design = design
         
         # Set of interfaces that need to be implemented
         self.interfaces = {
@@ -65,21 +78,23 @@ class StackableSkirtComponent(BaseBottoms):
         Abstract definition of a skirt that can be stacked with other stackable skirts
         (connecting bottom to another StackableSkirtComponent())
     """
+    # Class attributes
+    body: BodyDefinition
+    skirt_design: Any  # Will be SkirtDesign when imported
+    length_override: Optional[float]
+    slit: bool
+    top_ruffles: bool
 
-    def __init__(self, body, design, tag='', length=None, rise=None, slit=True, top_ruffles=True) -> None:
-        """Skirt initialization
+    def __init__(self, tag: str = '') -> None:
+        """Skirt initialization.
 
-            Extra parameters (length, sleets, top_ruffles) 
-            can be used to overwrite parameters in design dictionary
+        Parameters:
+        -----------
+        tag : str, optional
+            Tag identifier for the skirt component. Default is ''.
         """
-        # BaseBottoms only accepts design and tag, not body or rise
-        super().__init__(design, tag)
-        
-        # Store body and other parameters as instance variables
-        self.body = body
-        self.rise = rise
-        self.slit = slit
-        self.top_ruffles = top_ruffles
+        # BaseBottoms only accepts tag
+        super().__init__(tag=tag)
 
         # Set of interfaces that need to be implemented
         self.interfaces = {
@@ -91,7 +106,18 @@ class StackableSkirtComponent(BaseBottoms):
 
 
 class BaseBand(pyg.Component):
-    def __init__(self, body, design, tag='', rise=None) -> None:
+    # Class attributes
+    body: Optional[BodyDefinition]
+    design: Optional[Any]
+    rise: Optional[float]
+    
+    def __init__(
+        self,
+        body: Optional[BodyDefinition],
+        design: Optional[Any],
+        tag: str = '',
+        rise: Optional[float] = None
+    ) -> None:
         """Base band initialization
         """
         super().__init__(
@@ -106,6 +132,6 @@ class BaseBand(pyg.Component):
             'bottom': object()
         }
 
-    def length(self):
+    def length(self) -> float:
         """Base length == Length of a first panel"""
         return self._get_subcomponents()[0].length()

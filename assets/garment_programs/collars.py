@@ -4,6 +4,7 @@ from scipy.spatial.transform import Rotation as R
 import pygarment as pyg
 
 from garment_programs.weon_bands import StraightBandPanel
+from pattern_definitions.shirt_design import CollarDesign
 from assets.garment_programs.circle_skirt import CircleArcPanel
 
 
@@ -91,30 +92,33 @@ def Bezier2NeckHalf(depth, width, flip=False, x=0.5, y=0.3, **kwargs):
 class NoPanelsCollar(pyg.Component):
     """Face collar class that only forms the projected shapes """
     
-    def __init__(self, name, body, design) -> None:
+    def __init__(self,
+                 name: str,
+                 design: CollarDesign
+                 ) -> None:
         super().__init__(name)
 
         # Front
-        collar_type = globals()[design['collar']['f_collar']['v']]
+        collar_type = globals()[design.f_collar]
         f_collar = collar_type(
-            design['collar']['fc_depth']['v'],
-            design['collar']['width']['v'], 
-            angle=design['collar']['fc_angle']['v'], 
-            flip=design['collar']['f_flip_curve']['v'],
-            x=design['collar']['f_bezier_x']['v'],
-            y=design['collar']['f_bezier_y']['v'],
+            design.fc_depth,
+            design.width, 
+            angle=design.fc_angle, 
+            flip=design.f_flip_curve,
+            x=design.f_bezier_x,
+            y=design.f_bezier_y,
             verbose=self.verbose
         )
 
         # Back
-        collar_type = globals()[design['collar']['b_collar']['v']]
+        collar_type = globals()[design.b_collar]
         b_collar = collar_type(
-            design['collar']['bc_depth']['v'], 
-            design['collar']['width']['v'], 
-            angle=design['collar']['bc_angle']['v'],
-            flip=design['collar']['b_flip_curve']['v'],
-            x=design['collar']['b_bezier_x']['v'],
-            y=design['collar']['b_bezier_y']['v'],
+            design.bc_depth, 
+            design.width, 
+            angle=design.bc_angle,
+            flip=design.b_flip_curve,
+            x=design.b_bezier_x,
+            y=design.b_bezier_y,
             verbose=self.verbose
         )
         
