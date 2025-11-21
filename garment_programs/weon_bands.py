@@ -4,6 +4,7 @@ import pygarment as pyg
 from assets.garment_programs.circle_skirt import CircleArcPanel
 from assets.garment_programs import skirt_paneled
 from garment_programs.base_classes import BaseBand
+from garment_programs.garment_enums import InterfaceName
 from pattern_definitions.body_definition import BodyDefinition
 from pattern_definitions.waistband_design import WaistbandDesign
 
@@ -25,13 +26,13 @@ class StraightBandPanel(pyg.Panel):
 
         # define interface
         self.interfaces = {
-            'right': pyg.Interface(self, self.edges[0]),
-            'top': pyg.Interface(self, 
+            InterfaceName.RIGHT: pyg.Interface(self, self.edges[0]),
+            InterfaceName.TOP: pyg.Interface(self, 
                                  self.edges[1], 
                                  ruffle=width / match_int_proportion if match_int_proportion is not None else 1.
                                  ).reverse(True),
-            'left': pyg.Interface(self, self.edges[2]),
-            'bottom': pyg.Interface(self, 
+            InterfaceName.LEFT: pyg.Interface(self, self.edges[2]),
+            InterfaceName.BOTTOM: pyg.Interface(self, 
                                     self.edges[3], 
                                     ruffle=width / match_int_proportion if match_int_proportion is not None else 1.
                                     )
@@ -103,23 +104,23 @@ class StraightWB(BaseBand):
         self.back.translate_by([0, 0, self.BACK_TRANSLATION_Z]) 
         
         self.stitching_rules = pyg.Stitches(
-            (self.front.interfaces['right'], self.back.interfaces['right']),
-            (self.front.interfaces['left'], self.back.interfaces['left'])
+            (self.front.interfaces[InterfaceName.RIGHT], self.back.interfaces[InterfaceName.RIGHT]),
+            (self.front.interfaces[InterfaceName.LEFT], self.back.interfaces[InterfaceName.LEFT])
         )
 
         self.interfaces = {
-            'bottom_f': self.front.interfaces['bottom'],  
-            'bottom_b': self.back.interfaces['bottom'],
+            InterfaceName.BOTTOM_F: self.front.interfaces[InterfaceName.BOTTOM],  
+            InterfaceName.BOTTOM_B: self.back.interfaces[InterfaceName.BOTTOM],
 
-            'top_f': self.front.interfaces['top'],
-            'top_b': self.back.interfaces['top'],
+            InterfaceName.TOP_F: self.front.interfaces[InterfaceName.TOP],
+            InterfaceName.TOP_B: self.back.interfaces[InterfaceName.TOP],
 
-            'bottom': pyg.Interface.from_multiple(
-                self.front.interfaces['bottom'],
-                self.back.interfaces['bottom']),
-            'top': pyg.Interface.from_multiple(
-                self.front.interfaces['top'], 
-                self.back.interfaces['top']),
+            InterfaceName.BOTTOM: pyg.Interface.from_multiple(
+                self.front.interfaces[InterfaceName.BOTTOM],
+                self.back.interfaces[InterfaceName.BOTTOM]),
+            InterfaceName.TOP: pyg.Interface.from_multiple(
+                self.front.interfaces[InterfaceName.TOP], 
+                self.back.interfaces[InterfaceName.TOP]),
         }
 
     def define_panels(self) -> None:
@@ -301,19 +302,19 @@ class CuffBand(BaseBand):
         self.back.translate_by([0, 0, -15])  
 
         self.stitching_rules = pyg.Stitches(
-            (self.front.interfaces['right'], self.back.interfaces['right']),
-            (self.front.interfaces['left'], self.back.interfaces['left'])
+            (self.front.interfaces[InterfaceName.RIGHT], self.back.interfaces[InterfaceName.RIGHT]),
+            (self.front.interfaces[InterfaceName.LEFT], self.back.interfaces[InterfaceName.LEFT])
         )
 
         self.interfaces = {
-            'bottom': pyg.Interface.from_multiple(
-                self.front.interfaces['bottom'], 
-                self.back.interfaces['bottom']),
-            'top_front': self.front.interfaces['top'],
-            'top_back': self.back.interfaces['top'],
-            'top': pyg.Interface.from_multiple(
-                self.front.interfaces['top'], 
-                self.back.interfaces['top']),
+            InterfaceName.BOTTOM: pyg.Interface.from_multiple(
+                self.front.interfaces[InterfaceName.BOTTOM], 
+                self.back.interfaces[InterfaceName.BOTTOM]),
+            InterfaceName.TOP_FRONT: self.front.interfaces[InterfaceName.TOP],
+            InterfaceName.TOP_BACK: self.back.interfaces[InterfaceName.TOP],
+            InterfaceName.TOP: pyg.Interface.from_multiple(
+                self.front.interfaces[InterfaceName.TOP], 
+                self.back.interfaces[InterfaceName.TOP]),
         }
 
 
@@ -363,18 +364,18 @@ class CuffSkirt(BaseBand):
         self.back.translate_by([0, 0, -15])  
 
         self.stitching_rules = pyg.Stitches(
-            (self.front.interfaces['right'], self.back.interfaces['right']),
-            (self.front.interfaces['left'], self.back.interfaces['left'])
+            (self.front.interfaces[InterfaceName.RIGHT], self.back.interfaces[InterfaceName.RIGHT]),
+            (self.front.interfaces[InterfaceName.LEFT], self.back.interfaces[InterfaceName.LEFT])
         )
 
         self.interfaces = {
-            'top': pyg.Interface.from_multiple(
-                self.front.interfaces['top'], self.back.interfaces['top']),
-            'top_front': self.front.interfaces['top'],
-            'top_back': self.back.interfaces['top'],
-            'bottom': pyg.Interface.from_multiple(
-                self.front.interfaces['bottom'], 
-                self.back.interfaces['bottom']),
+            InterfaceName.TOP: pyg.Interface.from_multiple(
+                self.front.interfaces[InterfaceName.TOP], self.back.interfaces[InterfaceName.TOP]),
+            InterfaceName.TOP_FRONT: self.front.interfaces[InterfaceName.TOP],
+            InterfaceName.TOP_BACK: self.back.interfaces[InterfaceName.TOP],
+            InterfaceName.BOTTOM: pyg.Interface.from_multiple(
+                self.front.interfaces[InterfaceName.BOTTOM], 
+                self.back.interfaces[InterfaceName.BOTTOM]),
         }
 
 
@@ -412,14 +413,14 @@ class CuffBandSkirt(pyg.Component):
         self.skirt.place_below(self.cuff)
 
         self.stitching_rules = pyg.Stitches(
-            (self.cuff.interfaces['bottom'], self.skirt.interfaces['top']),
+            (self.cuff.interfaces[InterfaceName.BOTTOM], self.skirt.interfaces[InterfaceName.TOP]),
         )
 
         self.interfaces = {
-            'top': self.cuff.interfaces['top'],
-            'top_front': self.cuff.interfaces['top_front'],
-            'top_back': self.cuff.interfaces['top_back'],
-            'bottom': self.skirt.interfaces['bottom']
+            InterfaceName.TOP: self.cuff.interfaces[InterfaceName.TOP],
+            InterfaceName.TOP_FRONT: self.cuff.interfaces[InterfaceName.TOP_FRONT],
+            InterfaceName.TOP_BACK: self.cuff.interfaces[InterfaceName.TOP_BACK],
+            InterfaceName.BOTTOM: self.skirt.interfaces[InterfaceName.BOTTOM]
         }
 
     def length(self) -> float:

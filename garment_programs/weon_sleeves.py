@@ -5,7 +5,7 @@ import numpy as np
 
 from garment_programs import weon_bands
 import pygarment as pyg
-from pattern_definitions.body_definition import BodyDefinition
+from garment_programs.garment_enums import InterfaceName, PanelLabel
 from pattern_definitions.sleeve_design import SleeveDesign
 from pattern_definitions.torso_design import TorsoDesign
 
@@ -258,10 +258,10 @@ class SleevePanel(pyg.Panel):
         # Interfaces
         self.interfaces = {
             # NOTE: interface needs reversing because the open_shape was reversed for construction
-            'in': pyg.Interface(self, open_shape, ruffle=self.sleeve_design.connect_ruffle),
-            'out': pyg.Interface(self, self.edges[0], ruffle=self.sleeve_design.cuff.top_ruffle),
-            'top': pyg.Interface(self, self.edges[-2:] if standing else self.edges[-1]),  
-            'bottom': pyg.Interface(self, pyg.EdgeSequence(self.edges[1], self.edges[2]))
+            InterfaceName.IN: pyg.Interface(self, open_shape, ruffle=self.sleeve_design.connect_ruffle),
+            InterfaceName.OUT: pyg.Interface(self, self.edges[0], ruffle=self.sleeve_design.cuff.top_ruffle),
+            InterfaceName.TOP: pyg.Interface(self, self.edges[-2:] if standing else self.edges[-1]),  
+            InterfaceName.BOTTOM: pyg.Interface(self, pyg.EdgeSequence(self.edges[1], self.edges[2]))
         }
 
         # Default placement
@@ -282,7 +282,7 @@ class SleevePanel(pyg.Panel):
         float
             Length of the sleeve panel.
         """
-        return self.interfaces['bottom'].edges.length()
+        return self.interfaces[InterfaceName.BOTTOM].edges.length()
 
 
 class Sleeve(pyg.Component):
@@ -375,8 +375,8 @@ class Sleeve(pyg.Component):
         )
         
         self.interfaces = {
-            'in_front_shape': pyg.Interface(self, front_project),
-            'in_back_shape': pyg.Interface(self, back_project)
+            InterfaceName.IN_FRONT_SHAPE: pyg.Interface(self, front_project),
+            InterfaceName.IN_BACK_SHAPE: pyg.Interface(self, back_project)
         }
 
         if self.sleeve_design.sleeveless:
@@ -407,21 +407,21 @@ class Sleeve(pyg.Component):
 
         # Connect panels
         self.stitching_rules = pyg.Stitches(
-            (self.f_sleeve.interfaces['top'],
-             self.b_sleeve.interfaces['top']),
-            (self.f_sleeve.interfaces['bottom'],
-             self.b_sleeve.interfaces['bottom']),
+            (self.f_sleeve.interfaces[InterfaceName.TOP],
+             self.b_sleeve.interfaces[InterfaceName.TOP]),
+            (self.f_sleeve.interfaces[InterfaceName.BOTTOM],
+             self.b_sleeve.interfaces[InterfaceName.BOTTOM]),
         )
 
         # Interfaces
         self.interfaces.update({
-            'in': pyg.Interface.from_multiple(
-                self.f_sleeve.interfaces['in'], 
-                self.b_sleeve.interfaces['in'].reverse(with_edge_dir_reverse=True)
+            InterfaceName.IN: pyg.Interface.from_multiple(
+                self.f_sleeve.interfaces[InterfaceName.IN], 
+                self.b_sleeve.interfaces[InterfaceName.IN].reverse(with_edge_dir_reverse=True)
             ),
-            'out': pyg.Interface.from_multiple(
-                    self.f_sleeve.interfaces['out'], 
-                    self.b_sleeve.interfaces['out']
+            InterfaceName.OUT: pyg.Interface.from_multiple(
+                    self.f_sleeve.interfaces[InterfaceName.OUT], 
+                    self.b_sleeve.interfaces[InterfaceName.OUT]
                 ),
         })
 
@@ -430,7 +430,7 @@ class Sleeve(pyg.Component):
             raise NotImplementedError('Cuffs are not implemented yet')
 
         # Set label 
-        self.set_panel_label('arm')
+        self.set_panel_label(PanelLabel.ARM)
 
     def _cuff_len_adj(self) -> float:
         """Evaluate sleeve length adjustment due to cuffs (if any).

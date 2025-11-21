@@ -7,7 +7,7 @@ import numpy as np
 import pygarment as pyg
 
 from garment_programs.base_classes import BaseBodicePanel
-from pattern_definitions.torso_design import TorsoDesign
+from garment_programs.garment_enums import InterfaceName
 from pattern_definitions.shirt_design import ShirtDesign
 
 
@@ -66,14 +66,14 @@ class TorsoFrontHalfPanel(BaseBodicePanel):
 
         # Interfaces
         self.interfaces = {
-            'outside':  pyg.Interface(self, pyg.EdgeSequence(right_bottom, right_middle)),   
-            'inside': pyg.Interface(self, self.edges[-1]),
-            'shoulder': pyg.Interface(self, self.edges[-2]),
-            'bottom': pyg.Interface(self, bottom),
+            InterfaceName.OUTSIDE:  pyg.Interface(self, pyg.EdgeSequence(right_bottom, right_middle)),   
+            InterfaceName.INSIDE: pyg.Interface(self, self.edges[-1]),
+            InterfaceName.SHOULDER: pyg.Interface(self, self.edges[-2]),
+            InterfaceName.BOTTOM: pyg.Interface(self, bottom),
             
             # Reference to the corner for sleeve and collar projections
-            'shoulder_corner': pyg.Interface(self, [self.edges[-3], self.edges[-2]]),
-            'collar_corner': pyg.Interface(self, [self.edges[-2], self.edges[-1]])
+            InterfaceName.SHOULDER_CORNER: pyg.Interface(self, [self.edges[-3], self.edges[-2]]),
+            InterfaceName.COLLAR_CORNER: pyg.Interface(self, [self.edges[-2], self.edges[-1]])
         }
 
         # default placement
@@ -148,14 +148,14 @@ class TorsoBackHalfPanel(BaseBodicePanel):
 
         # Interfaces
         self.interfaces = {
-            'outside':  pyg.Interface(self, pyg.EdgeSequence(right_bottom, right_middle)),   
-            'inside': pyg.Interface(self, self.edges[-1]),
-            'shoulder': pyg.Interface(self, self.edges[-2]),
-            'bottom': pyg.Interface(self, bottom),
+            InterfaceName.OUTSIDE:  pyg.Interface(self, pyg.EdgeSequence(right_bottom, right_middle)),   
+            InterfaceName.INSIDE: pyg.Interface(self, self.edges[-1]),
+            InterfaceName.SHOULDER: pyg.Interface(self, self.edges[-2]),
+            InterfaceName.BOTTOM: pyg.Interface(self, bottom),
             
             # Reference to the corner for sleeve and collar projections
-            'shoulder_corner': pyg.Interface(self, [self.edges[-3], self.edges[-2]]),
-            'collar_corner': pyg.Interface(self, [self.edges[-2], self.edges[-1]])
+            InterfaceName.SHOULDER_CORNER: pyg.Interface(self, [self.edges[-3], self.edges[-2]]),
+            InterfaceName.COLLAR_CORNER: pyg.Interface(self, [self.edges[-2], self.edges[-1]])
         }
 
         # default placement

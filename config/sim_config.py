@@ -1,6 +1,6 @@
 from typing import Any
 
-from config import SimulationControl, GarmentProperties, SimulationOptions
+from config import SimulationControl, GarmentMaterialProperties, SimulationOptions
 
 class SimConfig:
     """
@@ -34,7 +34,7 @@ class SimConfig:
     # Class variable type annotations
     _props: dict[str, Any]
     _control: SimulationControl
-    _properties: GarmentProperties
+    _properties: GarmentMaterialProperties
     _options: SimulationOptions
     
     def __init__(self, sim_props: dict[str, Any]) -> None:
@@ -90,7 +90,7 @@ class SimConfig:
         
         # Initialize specialized config classes using Pydantic models
         self._control = SimulationControl(**sim_props_control)
-        self._properties = GarmentProperties(**sim_props_material)
+        self._properties = GarmentMaterialProperties(**sim_props_material)
         self._options = SimulationOptions(**sim_props_option)
         
         # Update smoothing steps based on max_sim_steps
@@ -117,7 +117,7 @@ class SimConfig:
         return self._control
     
     @property
-    def properties(self) -> GarmentProperties:
+    def properties(self) -> GarmentMaterialProperties:
         """Garment material and fabric properties."""
         return self._properties
     

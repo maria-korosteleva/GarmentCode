@@ -3,6 +3,7 @@ from typing import Optional, Any
 
 import pygarment as pyg
 
+from garment_programs.garment_enums import InterfaceName
 from pattern_definitions.torso_design import TorsoDesign
 from pattern_definitions.body_definition import BodyDefinition
 
@@ -24,13 +25,13 @@ class BaseBodicePanel(pyg.Panel):
         self.neck_width = torso_design.neck_width
         
         self.interfaces = {
-            'outside': object(),
-            'inside': object(),
-            'shoulder': object(),
-            'bottom': object(),
+            InterfaceName.OUTSIDE: object(),
+            InterfaceName.INSIDE: object(),
+            InterfaceName.SHOULDER: object(),
+            InterfaceName.BOTTOM: object(),
 
-            'shoulder_corner': object(),
-            'collar_corner': object(),
+            InterfaceName.SHOULDER_CORNER: object(),
+            InterfaceName.COLLAR_CORNER: object(),
         }
 
     def get_width(self, level: float) -> float:
@@ -40,7 +41,7 @@ class BaseBodicePanel(pyg.Panel):
         NOTE: for fitted bodice, the request is only valid for values between 0 and bust_level
         """
         # NOTE: this evaluation assumes that the top edge width is the same as bodice shoulder width 
-        side_edge = self.interfaces['outside'].edges[-1]
+        side_edge = self.interfaces[InterfaceName.OUTSIDE].edges[-1]
 
         x = side_edge.end[0] - side_edge.start[0]
         y = side_edge.end[1] - side_edge.start[1]
@@ -70,7 +71,7 @@ class BaseBottoms(pyg.Component):
         
         # Set of interfaces that need to be implemented
         self.interfaces = {
-            'top': object()
+            InterfaceName.TOP: object()
         }
         
 class StackableSkirtComponent(BaseBottoms):
@@ -98,10 +99,10 @@ class StackableSkirtComponent(BaseBottoms):
 
         # Set of interfaces that need to be implemented
         self.interfaces = {
-            'top': object(),
-            'bottom_f': object(),
-            'bottom_b': object(),
-            'bottom': object()
+            InterfaceName.TOP: object(),
+            InterfaceName.BOTTOM_F: object(),
+            InterfaceName.BOTTOM_B: object(),
+            InterfaceName.BOTTOM: object()
         }
 
 
@@ -128,8 +129,8 @@ class BaseBand(pyg.Component):
         
         # Set of interfaces that need to be implemented
         self.interfaces = {
-            'top': object(),
-            'bottom': object()
+            InterfaceName.TOP: object(),
+            InterfaceName.BOTTOM: object()
         }
 
     def length(self) -> float:

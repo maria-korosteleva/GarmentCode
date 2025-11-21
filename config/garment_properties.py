@@ -3,7 +3,7 @@
 from pydantic import BaseModel, Field
 
 
-class GarmentProperties(BaseModel):
+class GarmentMaterialProperties(BaseModel):
     """
     Material and fabric properties for garment simulation.
     

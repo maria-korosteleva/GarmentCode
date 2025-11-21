@@ -4,6 +4,7 @@ import numpy as np
 import pygarment as pyg
 
 from garment_programs.base_classes import StackableSkirtComponent
+from garment_programs.garment_enums import InterfaceName, EdgeLabel
 from pattern_definitions.body_definition import BodyDefinition
 from pattern_definitions.skirt_design import SkirtDesign
 
@@ -72,14 +73,14 @@ class CircleArcPanel(pyg.Panel):
 
         # Interfaces
         self.interfaces = {
-            'top': pyg.Interface(self, self.edges[0],
+            InterfaceName.TOP: pyg.Interface(self, self.edges[0],
                                  ruffle=self.edges[0].length() / match_top_int_proportion if match_top_int_proportion is not None else 1.
                                  ).reverse(True),
-            'bottom': pyg.Interface(self, self.edges[2],
+            InterfaceName.BOTTOM: pyg.Interface(self, self.edges[2],
                                     ruffle=self.edges[2].length() / match_bottom_int_proportion if match_bottom_int_proportion is not None else 1.
                                     ),
-            'left': pyg.Interface(self, self.edges[1]),
-            'right': pyg.Interface(self, self.edges[3])
+            InterfaceName.LEFT: pyg.Interface(self, self.edges[1]),
+            InterfaceName.RIGHT: pyg.Interface(self, self.edges[3])
         }
 
     def length(self, *args) -> float:
@@ -90,7 +91,7 @@ class CircleArcPanel(pyg.Panel):
         float
             Length of the panel's right edge.
         """
-        return self.interfaces['right'].edges.length()
+        return self.interfaces[InterfaceName.RIGHT].edges.length()
     
     @staticmethod
     def from_w_length_suns(
@@ -161,14 +162,14 @@ class AsymHalfCirclePanel(pyg.Panel):
 
         # Interfaces
         self.interfaces = {
-            'top': pyg.Interface(self, self.edges[0],
+            InterfaceName.TOP: pyg.Interface(self, self.edges[0],
                                  ruffle=self.edges[0].length() / match_top_int_proportion if match_top_int_proportion is not None else 1.
                                  ).reverse(True),
-            'bottom': pyg.Interface(self, self.edges[2],
+            InterfaceName.BOTTOM: pyg.Interface(self, self.edges[2],
                                     ruffle=self.edges[2].length() / match_bottom_int_proportion if match_bottom_int_proportion is not None else 1.
                                     ),
-            'left': pyg.Interface(self, self.edges[1]),
-            'right': pyg.Interface(self, self.edges[3])
+            InterfaceName.LEFT: pyg.Interface(self, self.edges[1]),
+            InterfaceName.RIGHT: pyg.Interface(self, self.edges[3])
         }
     
     def length(self, *args) -> float:
@@ -179,7 +180,7 @@ class AsymHalfCirclePanel(pyg.Panel):
         float
             Length of the panel's right edge.
         """
-        return self.interfaces['right'].edges.length()
+        return self.interfaces[InterfaceName.RIGHT].edges.length()
 
 class SkirtCircle(StackableSkirtComponent):
     """Simple circle skirt"""
@@ -286,20 +287,20 @@ class SkirtCircle(StackableSkirtComponent):
 
         # Stitches
         self.stitching_rules = pyg.Stitches(
-            (self.front.interfaces['right'], self.back.interfaces['right']),
-            (self.front.interfaces['left'], self.back.interfaces['left'])
+            (self.front.interfaces[InterfaceName.RIGHT], self.back.interfaces[InterfaceName.RIGHT]),
+            (self.front.interfaces[InterfaceName.LEFT], self.back.interfaces[InterfaceName.LEFT])
         )
 
         # Interfaces
         self.interfaces = {
-            'top': pyg.Interface.from_multiple(self.front.interfaces['top'], self.back.interfaces['top']),
-            'bottom_f': self.front.interfaces['bottom'],
-            'bottom_b': self.back.interfaces['bottom'],
-            'bottom': pyg.Interface.from_multiple(self.front.interfaces['bottom'], self.back.interfaces['bottom'])
+            InterfaceName.TOP: pyg.Interface.from_multiple(self.front.interfaces[InterfaceName.TOP], self.back.interfaces[InterfaceName.TOP]),
+            InterfaceName.BOTTOM_F: self.front.interfaces[InterfaceName.BOTTOM],
+            InterfaceName.BOTTOM_B: self.back.interfaces[InterfaceName.BOTTOM],
+            InterfaceName.BOTTOM: pyg.Interface.from_multiple(self.front.interfaces[InterfaceName.BOTTOM], self.back.interfaces[InterfaceName.BOTTOM])
         }
         
         # Add lower_interface label for attachment constraints
-        self.interfaces['top'].edges.propagate_label('lower_interface')
+        self.interfaces[InterfaceName.TOP].edges.propagate_label(EdgeLabel.LOWER_INTERFACE)
         
     def add_cut(
         self,
@@ -320,7 +321,7 @@ class SkirtCircle(StackableSkirtComponent):
         """
         width, depth = skirt_design.cut.width * skirt_length, skirt_design.cut.depth * skirt_length
 
-        target_edge = panel.interfaces['bottom'].edges[0]
+        target_edge = panel.interfaces[InterfaceName.BOTTOM].edges[0]
         t_len = target_edge.length()
         offset = abs(skirt_design.cut.place * t_len)
 
@@ -341,7 +342,7 @@ class SkirtCircle(StackableSkirtComponent):
         )
 
         panel.edges.substitute(target_edge, new_edges)
-        panel.interfaces['bottom'].substitute(
+        panel.interfaces[InterfaceName.BOTTOM].substitute(
             target_edge, interf_edges,
             [panel for _ in range(len(interf_edges))])
         

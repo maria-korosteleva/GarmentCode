@@ -3,6 +3,7 @@ import numpy as np
 
 import pygarment as pyg
 from garment_programs.base_classes import BaseBottoms
+from garment_programs.garment_enums import InterfaceName, EdgeLabel
 from pattern_definitions.pants_design import PantsDesign
 from pattern_definitions.body_definition import BodyDefinition
 
@@ -169,7 +170,7 @@ class PantPanel(pyg.Panel):
             target_tan1=np.array([1, 0]),
             initial_guess=[0.5, -0.5] 
         )
-        crotch_bottom.label = 'crotch_point_seam'
+        crotch_bottom.label = EdgeLabel.CROTCH_POINT_SEAM
 
         left_top = pyg.CurveEdgeFactory.interpolate_with_tangents(
             start=crotch_bottom.end,
@@ -202,12 +203,12 @@ class PantPanel(pyg.Panel):
 
         # Out interfaces (easier to define before adding a dart)
         self.interfaces = {
-            'outside': pyg.Interface(
+            InterfaceName.OUTSIDE: pyg.Interface(
                 self, 
                 pyg.EdgeSequence(right_1, right_2, right_3, right_4, right_5)),
-            'crotch': pyg.Interface(self, pyg.EdgeSequence(crotch_top, crotch_bottom)),
-            'inside': pyg.Interface(self, pyg.EdgeSequence(left_top, left_middle, left_bottom)),
-            'bottom': pyg.Interface(self, bottom)
+            InterfaceName.CROTCH: pyg.Interface(self, pyg.EdgeSequence(crotch_top, crotch_bottom)),
+            InterfaceName.INSIDE: pyg.Interface(self, pyg.EdgeSequence(left_top, left_middle, left_bottom)),
+            InterfaceName.BOTTOM: pyg.Interface(self, bottom)
         }
 
         # Add top dart
@@ -215,13 +216,13 @@ class PantPanel(pyg.Panel):
         if dart_width > 0:
             top_edges, int_edges = self.add_darts(
                 top, dart_width, dart_depth, dart_position, double_dart=double_dart)
-            self.interfaces['top'] = pyg.Interface(
+            self.interfaces[InterfaceName.TOP] = pyg.Interface(
                 self, int_edges, 
                 ruffle=waist / match_top_int_to if match_top_int_to is not None else 1.
             ) 
             self.edges.substitute(top, top_edges)
         else:
-            self.interfaces['top'] = pyg.Interface(
+            self.interfaces[InterfaceName.TOP] = pyg.Interface(
                 self, top, 
                 ruffle=waist / match_top_int_to if match_top_int_to is not None else 1.
         ) 
@@ -405,15 +406,15 @@ class PantsHalf(BaseBottoms):
             )
 
         self.stitching_rules = pyg.Stitches(
-            (self.front.interfaces['outside'], self.back.interfaces['outside']),
-            (self.front.interfaces['inside'], self.back.interfaces['inside'])
+            (self.front.interfaces[InterfaceName.OUTSIDE], self.back.interfaces[InterfaceName.OUTSIDE]),
+            (self.front.interfaces[InterfaceName.INSIDE], self.back.interfaces[InterfaceName.INSIDE])
         )
 
         self.interfaces = {
-            'crotch_f': self.front.interfaces['crotch'],
-            'crotch_b': self.back.interfaces['crotch'],
-            'top_f': self.front.interfaces['top'], 
-            'top_b': self.back.interfaces['top'] 
+            InterfaceName.CROTCH_F: self.front.interfaces[InterfaceName.CROTCH],
+            InterfaceName.CROTCH_B: self.back.interfaces[InterfaceName.CROTCH],
+            InterfaceName.TOP_F: self.front.interfaces[InterfaceName.TOP], 
+            InterfaceName.TOP_B: self.back.interfaces[InterfaceName.TOP] 
         }
 
     def length(self) -> float:
@@ -480,26 +481,26 @@ class Pants(BaseBottoms):
         self.left = PantsHalf('l', design).mirror()
 
         self.stitching_rules = pyg.Stitches(
-            (self.right.interfaces['crotch_f'], self.left.interfaces['crotch_f']),
-            (self.right.interfaces['crotch_b'], self.left.interfaces['crotch_b']),
+            (self.right.interfaces[InterfaceName.CROTCH_F], self.left.interfaces[InterfaceName.CROTCH_F]),
+            (self.right.interfaces[InterfaceName.CROTCH_B], self.left.interfaces[InterfaceName.CROTCH_B]),
         )
 
         self.interfaces = {
-            'top_f': pyg.Interface.from_multiple(
-                self.right.interfaces['top_f'], self.left.interfaces['top_f']),
-            'top_b': pyg.Interface.from_multiple(
-                self.right.interfaces['top_b'], self.left.interfaces['top_b']),
+            InterfaceName.TOP_F: pyg.Interface.from_multiple(
+                self.right.interfaces[InterfaceName.TOP_F], self.left.interfaces[InterfaceName.TOP_F]),
+            InterfaceName.TOP_B: pyg.Interface.from_multiple(
+                self.right.interfaces[InterfaceName.TOP_B], self.left.interfaces[InterfaceName.TOP_B]),
             # Some are reversed for correct connection
-            'top': pyg.Interface.from_multiple(   # around the body starting from front right
-                self.right.interfaces['top_f'].flip_edges(),
-                self.left.interfaces['top_f'].reverse(with_edge_dir_reverse=True),
-                self.left.interfaces['top_b'].flip_edges(),
-                self.right.interfaces['top_b'].reverse(with_edge_dir_reverse=True), # Flips the edges and restores the direction
+            InterfaceName.TOP: pyg.Interface.from_multiple(   # around the body starting from front right
+                self.right.interfaces[InterfaceName.TOP_F].flip_edges(),
+                self.left.interfaces[InterfaceName.TOP_F].reverse(with_edge_dir_reverse=True),
+                self.left.interfaces[InterfaceName.TOP_B].flip_edges(),
+                self.right.interfaces[InterfaceName.TOP_B].reverse(with_edge_dir_reverse=True), # Flips the edges and restores the direction
             )
         }
         
         # Add lower_interface label for attachment constraints
-        self.interfaces['top'].edges.propagate_label('lower_interface')
+        self.interfaces[InterfaceName.TOP].edges.propagate_label(EdgeLabel.LOWER_INTERFACE)
 
     def length(self) -> float:
         """Get the length of the pants garment.

@@ -12,6 +12,7 @@ from garment_programs.weon_pants import Pants
 from garment_programs.weon_shirt import Shirt, FittedShirt
 from garment_programs.weon_circle_skirt import SkirtCircle, AsymmSkirtCircle
 from garment_programs.weon_bands import StraightWB, FittedWB
+from garment_programs.garment_enums import InterfaceName, EdgeLabel, PanelLabel
 from pattern_definitions.body_definition import BodyDefinition
 from pattern_definitions.pants_design import PantsDesign
 from pattern_definitions.shirt_design import ShirtDesign
@@ -365,7 +366,7 @@ class GarmentFactory:
                 raise ValueError(f"Unsupported upper garment type: {upper_type}")
             
             composite.subs.append(upper)
-            upper.set_panel_label('body', overwrite=False)
+            upper.set_panel_label(PanelLabel.BODY, overwrite=False)
         
         # Create lower garment if specified
         lower: pyg.Component | None = None
@@ -408,18 +409,18 @@ class GarmentFactory:
             # Place waistband below upper garment (if upper exists)
             if composite.subs and len(composite.subs) > 1:
                 wb.place_by_interface(
-                    wb.interfaces['top'],
-                    composite.subs[-2].interfaces['bottom'],
+                    wb.interfaces[InterfaceName.TOP],
+                    composite.subs[-2].interfaces[InterfaceName.BOTTOM],
                     gap=5
                 )
                 composite.stitching_rules.append((
-                    composite.subs[-2].interfaces['bottom'],
-                    wb.interfaces['top']
+                    composite.subs[-2].interfaces[InterfaceName.BOTTOM],
+                    wb.interfaces[InterfaceName.TOP]
                 ))
             
             # Add waist label
-            wb.interfaces['top'].edges.propagate_label('lower_interface')
-            wb.set_panel_label('body', overwrite=False)
+            wb.interfaces[InterfaceName.TOP].edges.propagate_label(EdgeLabel.LOWER_INTERFACE)
+            wb.set_panel_label(PanelLabel.BODY, overwrite=False)
         
         # Attach lower garment if present
         if lower:
@@ -428,21 +429,21 @@ class GarmentFactory:
             # Place lower garment below upper or waistband
             if len(composite.subs) > 1:
                 lower.place_by_interface(
-                    lower.interfaces['top'],
-                    composite.subs[-2].interfaces['bottom'],
+                    lower.interfaces[InterfaceName.TOP],
+                    composite.subs[-2].interfaces[InterfaceName.BOTTOM],
                     gap=5
                 )
                 composite.stitching_rules.append((
-                    composite.subs[-2].interfaces['bottom'],
-                    lower.interfaces['top']
+                    composite.subs[-2].interfaces[InterfaceName.BOTTOM],
+                    lower.interfaces[InterfaceName.TOP]
                 ))
             
             # Add waist label if no waistband
             if not wb_type:
-                lower.interfaces['top'].edges.propagate_label('lower_interface')
+                lower.interfaces[InterfaceName.TOP].edges.propagate_label(EdgeLabel.LOWER_INTERFACE)
             
             # Set panel segmentation labels
-            lower.set_panel_label('leg', overwrite=False)
+            lower.set_panel_label(PanelLabel.LEG, overwrite=False)
         
         return composite
     

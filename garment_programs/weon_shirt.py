@@ -7,8 +7,10 @@ from scipy.spatial.transform import Rotation as R
 from garment_programs.base_classes import BaseBodicePanel
 from garment_programs.weon_torso import TorsoFrontHalfPanel, TorsoBackHalfPanel
 from garment_programs import weon_sleeves
+from garment_programs.garment_enums import InterfaceName, EdgeLabel
 from pattern_definitions.body_definition import BodyDefinition
-from assets.garment_programs.collars import NoPanelsCollar
+from garment_programs.weon_collars import NoPanelsCollar
+
 from pattern_definitions.shirt_design import ShirtDesign
 from pattern_definitions.torso_design import TorsoDesign
 
@@ -97,15 +99,15 @@ class BodiceFrontHalf(BaseBodicePanel):
 
         # Interfaces
         self.interfaces = {
-            'outside':  pyg.Interface(self, side_interface),   # side_interface,    # pyp.Interface(self, [side_interface]),  #, self.edges[-3]]),
-            'inside': pyg.Interface(self, self.edges[-1]),
-            'shoulder': pyg.Interface(self, self.edges[-2]),
-            'bottom': pyg.Interface(self, b_interface),
+            InterfaceName.OUTSIDE:  pyg.Interface(self, side_interface),   # side_interface,    # pyp.Interface(self, [side_interface]),  #, self.edges[-3]]),
+            InterfaceName.INSIDE: pyg.Interface(self, self.edges[-1]),
+            InterfaceName.SHOULDER: pyg.Interface(self, self.edges[-2]),
+            InterfaceName.BOTTOM: pyg.Interface(self, b_interface),
 
             # Reference to the corner for sleeve and collar projections
-            'shoulder_corner': pyg.Interface(
+            InterfaceName.SHOULDER_CORNER: pyg.Interface(
                 self, [self.edges[-3], self.edges[-2]]),
-            'collar_corner': pyg.Interface(
+            InterfaceName.COLLAR_CORNER: pyg.Interface(
                 self, [self.edges[-2], self.edges[-1]])
         }
   
@@ -174,15 +176,15 @@ class BodiceBackHalf(BaseBodicePanel):
         
         # Take some fabric from the top to match the shoulder width
         self.interfaces = {
-            'outside': pyg.Interface(
+            InterfaceName.OUTSIDE: pyg.Interface(
                 self, [self.edges[1], self.edges[2]]),
-            'inside': pyg.Interface(self, self.edges[-1]),
-            'shoulder': pyg.Interface(self, self.edges[-2]),
-            'bottom': pyg.Interface(self, self.edges[0]),
+            InterfaceName.INSIDE: pyg.Interface(self, self.edges[-1]),
+            InterfaceName.SHOULDER: pyg.Interface(self, self.edges[-2]),
+            InterfaceName.BOTTOM: pyg.Interface(self, self.edges[0]),
             # Reference to the corners for sleeve and collar projections
-            'shoulder_corner': pyg.Interface(
+            InterfaceName.SHOULDER_CORNER: pyg.Interface(
                 self, pyg.EdgeSequence(self.edges[-3], self.edges[-2])),
-            'collar_corner': pyg.Interface(
+            InterfaceName.COLLAR_CORNER: pyg.Interface(
                 self, pyg.EdgeSequence(self.edges[-2], self.edges[-1]))
         }
 
@@ -211,7 +213,7 @@ class BodiceBackHalf(BaseBodicePanel):
             )
 
             self.edges.substitute(0, b_edge)
-            self.interfaces['bottom'] = pyg.Interface(self, b_interface)
+            self.interfaces[InterfaceName.BOTTOM] = pyg.Interface(self, b_interface)
 
             # Remove fabric from the sides if the diff is big enough
             b_edge[-1].end[0] += side_adj
@@ -295,10 +297,10 @@ class BodiceHalf(pyg.Component):
 
         # Interfaces
         self.interfaces.update({
-            'f_bottom': self.ftorso.interfaces['bottom'],
-            'b_bottom': self.btorso.interfaces['bottom'],
-            'front_in': self.ftorso.interfaces['inside'],
-            'back_in': self.btorso.interfaces['inside']
+            InterfaceName.F_BOTTOM: self.ftorso.interfaces[InterfaceName.BOTTOM],
+            InterfaceName.B_BOTTOM: self.btorso.interfaces[InterfaceName.BOTTOM],
+            InterfaceName.FRONT_IN: self.ftorso.interfaces[InterfaceName.INSIDE],
+            InterfaceName.BACK_IN: self.btorso.interfaces[InterfaceName.INSIDE]
         })
 
         # Sleeves/collar cuts
@@ -313,20 +315,20 @@ class BodiceHalf(pyg.Component):
         else:
             # Sleeves and collars 
             # NOTE assuming the vertical side is the first argument
-            max_cwidth = self.ftorso.interfaces['shoulder_corner'].edges[0].length() - 1  # cm
+            max_cwidth = self.ftorso.interfaces[InterfaceName.SHOULDER_CORNER].edges[0].length() - 1  # cm
             min_cwidth = self.shirt_design.torso_design.scye_depth - self.shirt_design.torso_design.shoulder_slant
             adjusted_connecting_width = min(min_cwidth + min_cwidth * self.shirt_design.sleeve_design.connecting_width, max_cwidth)
             self.add_sleeves(name, arm_pose_angle, adjusted_connecting_width)
 
             self.add_collars(name)
             self.stitching_rules.append((
-                self.ftorso.interfaces['shoulder'], 
-                self.btorso.interfaces['shoulder']
+                self.ftorso.interfaces[InterfaceName.SHOULDER], 
+                self.btorso.interfaces[InterfaceName.SHOULDER]
             ))  # tops
 
         # Main connectivity
         self.stitching_rules.append((
-            self.ftorso.interfaces['outside'], self.btorso.interfaces['outside']))   # sides
+            self.ftorso.interfaces[InterfaceName.OUTSIDE], self.btorso.interfaces[InterfaceName.OUTSIDE]))   # sides
 
     def add_sleeves(
         self,
@@ -360,13 +362,13 @@ class BodiceHalf(pyg.Component):
         )
 
         _, f_sleeve_int = pyg.ops.cut_corner(
-            self.sleeve.interfaces['in_front_shape'].edges, 
-            self.ftorso.interfaces['shoulder_corner'], 
+            self.sleeve.interfaces[InterfaceName.IN_FRONT_SHAPE].edges, 
+            self.ftorso.interfaces[InterfaceName.SHOULDER_CORNER], 
             verbose=self.verbose
         )
         _, b_sleeve_int = pyg.ops.cut_corner(
-            self.sleeve.interfaces['in_back_shape'].edges, 
-            self.btorso.interfaces['shoulder_corner'],
+            self.sleeve.interfaces[InterfaceName.IN_BACK_SHAPE].edges, 
+            self.btorso.interfaces[InterfaceName.SHOULDER_CORNER],
             verbose=self.verbose
         )
 
@@ -377,7 +379,7 @@ class BodiceHalf(pyg.Component):
                 b_sleeve_int.reverse(),
             )    
             self.stitching_rules.append((
-                self.sleeve.interfaces['in'], 
+                self.sleeve.interfaces[InterfaceName.IN], 
                 bodice_sleeve_int
             ))
 
@@ -386,7 +388,7 @@ class BodiceHalf(pyg.Component):
             # FIXME Needs a better general solution
             gap = self.SLEEVE_PLACEMENT_GAP_BASE - arm_pose_angle / self.SLEEVE_PLACEMENT_GAP_FACTOR
             self.sleeve.place_by_interface(
-                self.sleeve.interfaces['in'], 
+                self.sleeve.interfaces[InterfaceName.IN], 
                 bodice_sleeve_int, 
                 gap=gap,   
                 alignment='top',
@@ -397,8 +399,8 @@ class BodiceHalf(pyg.Component):
             self._sleeve_placement_gap = gap
 
         # Add edge labels
-        f_sleeve_int.edges.propagate_label(f'{self.name}_armhole')
-        b_sleeve_int.edges.propagate_label(f'{self.name}_armhole')
+        f_sleeve_int.edges.propagate_label(f'{self.name}_{EdgeLabel.ARMHOLE}')
+        b_sleeve_int.edges.propagate_label(f'{self.name}_{EdgeLabel.ARMHOLE}')
     
     def translate_and_rotate_sleeve(self, translation: tuple[float, float, float], angle: float) -> None:
         """Translate and rotate the sleeve piece, then re-align with armhole.
@@ -418,7 +420,7 @@ class BodiceHalf(pyg.Component):
             # Re-align sleeve with armhole after rotation to maintain proper connection
             if self._bodice_sleeve_int is not None and not self.shirt_design.sleeve_design.sleeveless:
                 self.sleeve.place_by_interface(
-                    self.sleeve.interfaces['in'], 
+                    self.sleeve.interfaces[InterfaceName.IN], 
                     self._bodice_sleeve_int, 
                     gap=self._sleeve_placement_gap,   
                     alignment='top',
@@ -441,38 +443,38 @@ class BodiceHalf(pyg.Component):
         
         # Project shape
         _, fc_interface = pyg.ops.cut_corner(
-            self.collar_comp.interfaces['front_proj'].edges, 
-            self.ftorso.interfaces['collar_corner'],
+            self.collar_comp.interfaces[InterfaceName.FRONT_PROJ].edges, 
+            self.ftorso.interfaces[InterfaceName.COLLAR_CORNER],
             verbose=self.verbose
         )
         _, bc_interface = pyg.ops.cut_corner(
-            self.collar_comp.interfaces['back_proj'].edges, 
-            self.btorso.interfaces['collar_corner'],
+            self.collar_comp.interfaces[InterfaceName.BACK_PROJ].edges, 
+            self.btorso.interfaces[InterfaceName.COLLAR_CORNER],
             verbose=self.verbose
         )
 
         # Add stitches/interfaces
-        if 'bottom' in self.collar_comp.interfaces:
+        if InterfaceName.BOTTOM in self.collar_comp.interfaces:
             self.stitching_rules.append((
                 pyg.Interface.from_multiple(fc_interface, bc_interface), 
-                self.collar_comp.interfaces['bottom']
+                self.collar_comp.interfaces[InterfaceName.BOTTOM]
             ))
 
         # Upd front interfaces accordingly
-        if 'front' in self.collar_comp.interfaces:
-            self.interfaces['front_collar'] = self.collar_comp.interfaces['front']
-            self.interfaces['front_in'] = pyg.Interface.from_multiple(
-                self.ftorso.interfaces['inside'], self.interfaces['front_collar']
+        if InterfaceName.FRONT in self.collar_comp.interfaces:
+            self.interfaces[InterfaceName.FRONT_COLLAR] = self.collar_comp.interfaces[InterfaceName.FRONT]
+            self.interfaces[InterfaceName.FRONT_IN] = pyg.Interface.from_multiple(
+                self.ftorso.interfaces[InterfaceName.INSIDE], self.interfaces[InterfaceName.FRONT_COLLAR]
             )
-        if 'back' in self.collar_comp.interfaces:
-            self.interfaces['back_collar'] = self.collar_comp.interfaces['back']
-            self.interfaces['back_in'] = pyg.Interface.from_multiple(
-                self.btorso.interfaces['inside'], self.interfaces['back_collar']
+        if InterfaceName.BACK in self.collar_comp.interfaces:
+            self.interfaces[InterfaceName.BACK_COLLAR] = self.collar_comp.interfaces[InterfaceName.BACK]
+            self.interfaces[InterfaceName.BACK_IN] = pyg.Interface.from_multiple(
+                self.btorso.interfaces[InterfaceName.INSIDE], self.interfaces[InterfaceName.BACK_COLLAR]
             )
         
         # Add edge labels
-        fc_interface.edges.propagate_label(f'{self.name}_collar')
-        bc_interface.edges.propagate_label(f'{self.name}_collar')
+        fc_interface.edges.propagate_label(f'{self.name}_{EdgeLabel.COLLAR}')
+        bc_interface.edges.propagate_label(f'{self.name}_{EdgeLabel.COLLAR}')
 
     def make_strapless(
         self,
@@ -505,8 +507,8 @@ class BodiceHalf(pyg.Component):
         self._adjust_top_level(self.btorso, out_depth, b_in_depth)
 
         # Front depth determined by ~compensating for lenght difference
-        len_back = self.btorso.interfaces['outside'].edges.length()
-        len_front = self.ftorso.interfaces['outside'].edges.length()
+        len_back = self.btorso.interfaces[InterfaceName.OUTSIDE].edges.length()
+        len_front = self.ftorso.interfaces[InterfaceName.OUTSIDE].edges.length()
         self._adjust_top_level(self.ftorso, out_depth, f_in_depth, target_remove=(len_front - len_back))
         
         # Placement
@@ -515,8 +517,8 @@ class BodiceHalf(pyg.Component):
         # self.translate_by([0, out_depth - body['_armscye_depth'] * 0.75, 0])   # adjust for better localisation
 
         # Add a label
-        self.ftorso.interfaces['shoulder'].edges.propagate_label('strapless_top')
-        self.btorso.interfaces['shoulder'].edges.propagate_label('strapless_top')
+        self.ftorso.interfaces[InterfaceName.SHOULDER].edges.propagate_label(EdgeLabel.STRAPLESS_TOP)
+        self.btorso.interfaces[InterfaceName.SHOULDER].edges.propagate_label(EdgeLabel.STRAPLESS_TOP)
 
 
     def _adjust_top_level(
@@ -542,7 +544,7 @@ class BodiceHalf(pyg.Component):
         """
         # TODOLOW Should this be the panel's function?
 
-        panel_top = panel.interfaces['shoulder'].edges[0]
+        panel_top = panel.interfaces[InterfaceName.SHOULDER].edges[0]
         min_y = min(panel_top.start[1], panel_top.end[1])  
 
         # Order vertices
@@ -554,7 +556,7 @@ class BodiceHalf(pyg.Component):
         ins[1] = min_y - in_level
 
         # Outside could be inclined, so needs further calculations
-        outside_edge = panel.interfaces['outside'].edges[-1]
+        outside_edge = panel.interfaces[InterfaceName.OUTSIDE].edges[-1]
         bot, top = outside_edge.start, outside_edge.end
         if bot is out:
             bot, top = top, bot
@@ -630,18 +632,18 @@ class Shirt(pyg.Component):
                                arm_pose_angle=arm_pose_angle,
                                fitted=fitted).mirror()
 
-        self.stitching_rules.append((self.right.interfaces['front_in'],
-                                     self.left.interfaces['front_in']))
-        self.stitching_rules.append((self.right.interfaces['back_in'],
-                                     self.left.interfaces['back_in']))
+        self.stitching_rules.append((self.right.interfaces[InterfaceName.FRONT_IN],
+                                     self.left.interfaces[InterfaceName.FRONT_IN]))
+        self.stitching_rules.append((self.right.interfaces[InterfaceName.BACK_IN],
+                                     self.left.interfaces[InterfaceName.BACK_IN]))
 
         # Adjust interface ordering for correct connectivity
         self.interfaces = {   # Bottom connection
-            'bottom': pyg.Interface.from_multiple(
-                self.right.interfaces['f_bottom'].reverse(),
-                self.left.interfaces['f_bottom'],
-                self.left.interfaces['b_bottom'].reverse(),
-                self.right.interfaces['b_bottom'],)
+            InterfaceName.BOTTOM: pyg.Interface.from_multiple(
+                self.right.interfaces[InterfaceName.F_BOTTOM].reverse(),
+                self.left.interfaces[InterfaceName.F_BOTTOM],
+                self.left.interfaces[InterfaceName.B_BOTTOM].reverse(),
+                self.right.interfaces[InterfaceName.B_BOTTOM],)
         }
 
     def length(self) -> float:
