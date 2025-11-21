@@ -584,17 +584,6 @@ def run_simulation(
         force_restart=False
     )
     
-    # Try and resim fails once
-    if finished:
-        logger.info("Attempting to resimulate failed cases...")
-        finished = sim.resim_fails(
-            datapath,
-            output_path,
-            props,
-            run_default_body=command_args.default_body,
-            caching=command_args.caching
-        )
-    
     props.add_sys_info()  # Save system information
     props.serialize(dataset_file)
     

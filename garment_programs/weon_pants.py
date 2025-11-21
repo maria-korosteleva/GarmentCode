@@ -169,6 +169,7 @@ class PantPanel(pyg.Panel):
             target_tan1=np.array([1, 0]),
             initial_guess=[0.5, -0.5] 
         )
+        crotch_bottom.label = 'crotch_point_seam'
 
         left_top = pyg.CurveEdgeFactory.interpolate_with_tangents(
             start=crotch_bottom.end,

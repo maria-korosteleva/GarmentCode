@@ -7,7 +7,7 @@ import trimesh
 import pyrender
 from PIL import Image
 
-from pygarment.meshgen.sim_config import PathCofig
+from config import PathCofig
 
 
 def rotate_matrix_y(matrix, angle_deg):

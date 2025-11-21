@@ -21,7 +21,7 @@ import pygarment.pattern.wrappers as wrappers
 from pygarment.pattern import rotation as rotation_tools
 import pygarment.pattern.utils as pat_utils
 import pygarment.meshgen.triangulation_utils as tri_utils
-from pygarment.meshgen.sim_config import PathCofig
+from config import PathCofig
 from pygarment.meshgen.render.texture_utils import texture_mesh_islands, save_obj
 
 # TODOLOW Some stitching errors are not getting detected
@@ -559,6 +559,8 @@ class BoxMesh(wrappers.VisPattern):
         Input:
             * pattern_file: pattern template in custom JSON format
     """
+    crotch_vertex_id = None
+
     def __init__(self, path, res=1.0):
         super(BoxMesh, self).__init__(path)
         self.mesh_resolution = res #Vertices are spread with distance ~mesh_resolution cm
@@ -1451,6 +1453,77 @@ class BoxMesh(wrappers.VisPattern):
 
         # NOTE: self.vertices now contains all mesh vertices
         # self.faces now contains all mesh faces
+
+        self.crotch_vertex_id = self._identify_crotch_vertex()
+        print(f"Crotch vertex global ID: {self.crotch_vertex_id}")
+
+    def _identify_crotch_vertex(self) -> int:
+        """
+        Identifies and prints the global vertex ID of the crotch point.
+        The crotch point is where the 'crotch' and 'inside' seams meet.
+        It is marked by the 'crotch_point_seam' label on an edge.
+        The crotch vertex is the end vertex of the edge with this label
+        (where it connects to the inside seam).
+        """
+        crotch_vertex_global_id = -1
+        
+        # Debug: Check what panels we have
+        pants_panels = [name for name in self.panels.keys() if 'pants' in name.lower() or 'pant' in name.lower()]
+        print(f'{self.__class__.__name__}::DEBUG::Looking for crotch vertex in panels: {pants_panels}')
+        
+        # Find edges with 'crotch_point_seam' label
+        found_crotch_edges = []
+        for panel_name, panel in self.panels.items():
+            if 'pants' not in panel_name.lower() and 'pant' not in panel_name.lower():
+                continue
+            
+            # Debug: Check all edge labels in this panel
+            edge_labels = [(idx, edge.label) for idx, edge in enumerate(panel.edges) if edge.label]
+            if edge_labels:
+                print(f'{self.__class__.__name__}::DEBUG::Panel {panel_name} has labeled edges: {edge_labels}')
+            
+            for edge_idx, edge in enumerate(panel.edges):
+                if edge.label == 'crotch_point_seam':
+                    found_crotch_edges.append((panel_name, edge_idx, edge))
+                    print(f'{self.__class__.__name__}::DEBUG::Found edge with "crotch_point_seam" label in panel {panel_name}, edge_idx {edge_idx}')
+        
+        if not found_crotch_edges:
+            print(f'{self.__class__.__name__}::WARNING::No edge with "crotch_point_seam" label found in any pants panel')
+            return -1
+        
+        # Process found crotch edges
+        for panel_name, edge_idx, crotch_edge in found_crotch_edges:
+            # The crotch vertex is at the end of this edge (where it connects to inside seam)
+            if not crotch_edge.vertex_range:
+                print(f'{self.__class__.__name__}::WARNING::Edge with "crotch_point_seam" label has no vertex_range for panel {panel_name}')
+                continue
+            
+            # The end vertex is the last one in the vertex_range
+            end_local_id = crotch_edge.vertex_range[-1]
+            print(f'{self.__class__.__name__}::DEBUG::Looking for vertex (panel={panel_name}, local_id={end_local_id}) in verts_loc_glob')
+            
+            end_global_id = self.verts_loc_glob.get((panel_name, end_local_id))
+            
+            if end_global_id is None:
+                # Debug: Check what vertices are available for this panel
+                panel_verts = {k: v for k, v in self.verts_loc_glob.items() if k[0] == panel_name}
+                print(f'{self.__class__.__name__}::DEBUG::Vertex not found in verts_loc_glob. Available vertices for {panel_name}: {list(panel_verts.keys())[:10]}... (showing first 10)')
+                continue
+            
+            crotch_vertex_global_id = int(end_global_id)
+            print(f"Found crotch vertex for panel {panel_name}: local_id={end_local_id}, global_id={crotch_vertex_global_id}")
+            break
+        
+        if crotch_vertex_global_id == -1:
+            print(f'{self.__class__.__name__}::WARNING::Could not identify crotch vertex - vertex not in verts_loc_glob')
+        else:
+            # Label all vertices below the crotch vertex (in Y direction)
+            crotch_y = self.vertices[crotch_vertex_global_id][1]
+            below_crotch_vertices = [i for i, v in enumerate(self.vertices) if v[1] < crotch_y]
+            self.vertex_labels.setdefault('crotch', []).extend(below_crotch_vertices)
+            print(f'{self.__class__.__name__}::DEBUG::Labeled {len(below_crotch_vertices)} vertices below crotch (y < {crotch_y:.2f})')
+        
+        return crotch_vertex_global_id
 
     # !SECTION
     # SECTION -- Serialization routines

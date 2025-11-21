@@ -13,7 +13,8 @@ from warp.sim.collide import count_self_intersections, count_body_cloth_intersec
 from warp.sim.integrator_xpbd import replace_mesh_points
 
 # Custom
-from pygarment.meshgen.sim_config import PathCofig, SimConfig
+from config import PathCofig
+from config.sim_config import SimConfig
 from pygarment.pattern.core import BasicPattern
 
 class Cloth:
@@ -273,7 +274,18 @@ class Cloth:
         for i, attach_label in enumerate(config.attachment_labels):     
             if attach_label in vertex_labels.keys() and len(vertex_labels[attach_label]) > 0:
                 constaint_verts = vertex_labels[attach_label]
-                if attach_label == 'lower_interface':
+                if attach_label == 'crotch':
+                    lables_present = True
+                    crotch_level = body_dict['_leg_length'] - body_dict['crotch_hip_diff']
+                    builder.add_attachment(
+                        constaint_verts, 
+                        wp.vec3(0, crotch_level, 0),
+                        wp.vec3(0., -1., 0.),    # Vertical attachment
+                        stiffness = config.attachment_stiffness[i],
+                        damping = config.attachment_damping[i]
+                    )
+                elif attach_label == 'lower_interface':
+                    pass
                     lables_present = True
                     if '_waist_level' in body_dict:
                         waist_level = body_dict['_waist_level']

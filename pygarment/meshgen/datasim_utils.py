@@ -13,7 +13,7 @@ from loguru import logger
 # BoxMeshGen
 import pygarment.meshgen.boxmeshgen as bmg
 from pygarment.meshgen.boxmeshgen import BoxMesh
-from pygarment.meshgen.sim_config import PathCofig
+from config import PathCofig
 
 # Warp simulation
 from pygarment.meshgen.simulation import run_sim
@@ -131,69 +131,6 @@ def batch_sim(data_path, output_path, dataset_props,
     return process_finished
 
 
-def resim_fails(data_path, output_path, dataset_props,
-              run_default_body=False, caching=False):
-    """Resimulate failure cases -- maybe some of them would get fixed
-
-    Parameters:
-    -----------
-    data_path : Path
-        Path to folder with patterns
-    output_path : Path
-        Path to output folder
-    dataset_props : Properties
-        Dataset properties
-    run_default_body : bool, optional
-        Run on default body
-    caching : bool, optional
-        Enable caching
-
-    Returns:
-    --------
-    bool
-        True if all failures were resimulated successfully
-    """
-    logger.info('Resimulating failed cases...')
-
-    sim_stats = dataset_props['sim']['stats']
-    
-    # Collect fails and remove them from fails list if any
-    fails = sim_stats['fails']
-    to_resim = set()
-    for key in fails:
-        if key not in ['cloth_body_intersection', 'cloth_self_intersection']:
-            for el in fails[key]:
-                to_resim.add(el)
-            fails[key] = []   # Clear fails list for this category
-    
-    if not len(to_resim):
-        logger.info("No failures to resimulate")
-        # Return previous finished state
-        return dataset_props['frozen'] if 'frozen' in dataset_props else False
-    
-    logger.info(f"Found {len(to_resim)} failed cases to resimulate")
-    
-    if 'processed' not in sim_stats:
-        sim_stats['processed'] = _get_pattern_names(data_path)
-    dataset_props['frozen'] = False
-
-    # Remove fails from processed to trigger re-simulation
-    for sample in to_resim:
-        if sample in sim_stats['processed']:
-            sim_stats['processed'].remove(sample)
-
-    # Start simulation again - batch size is number of failures + 1 (flexible for future batching)
-    finished = batch_sim(
-        data_path, output_path, dataset_props, 
-        run_default_body=run_default_body, 
-        num_samples=len(to_resim) + 1,  # Process failures + safety margin
-        caching=caching, 
-        force_restart=False
-    )
-
-    return finished
-
-
 # ------- Utils -------
 def init_sim_props(props, batch_run=False, force_restart=False):
     """
@@ -217,21 +154,34 @@ def init_sim_props(props, batch_run=False, force_restart=False):
     if 'sim' not in props:
         props.set_section_config(
             'sim',
-            max_sim_steps=1000,
-            max_meshgen_time=20,  # in seconds
-            max_frame_time=15,  # in seconds
-            max_sim_time=1500,  # in seconds
-            zero_gravity_steps=10,
-            static_threshold=0.03,
-            non_static_percent=1.5,
-            max_body_collisions=0,
-            max_self_collisions=0,
-            resolution_scale=1.0,
-            ground=False,  # Do not add floor s.t. garment falls infinitely if falls
+            config={
+                'control': {
+                    'max_sim_steps': 1000,
+                    'max_frame_time': 15,  # in seconds
+                    'max_sim_time': 1500,  # in seconds
+                    'zero_gravity_steps': 10,
+                    'static_threshold': 0.03,
+                    'non_static_percent': 1.5,
+                    'max_body_collisions': 0,
+                    'max_self_collisions': 0,
+                    'resolution_scale': 1.0,
+                    'ground': False,  # Do not add floor s.t. garment falls infinitely if falls
+                },
+                'material': {},
+                'options': {},
+                'max_meshgen_time': 20,  # Legacy parameter, in seconds
+            }
         )
 
-    if 'material' not in props['sim']['config']:
-        props['sim']['config']['material'] = {  
+    config_dict = props['sim']['config']
+    
+    # Ensure control section exists
+    if 'control' not in config_dict:
+        config_dict['control'] = {}
+    
+    # Ensure material section exists
+    if 'material' not in config_dict or not config_dict['material']:
+        config_dict['material'] = {  
             'garment_tri_ka': 10000.0,  
             'garment_edge_ke': 1.0,  
             'garment_tri_ke': 10000.0,
@@ -244,8 +194,9 @@ def init_sim_props(props, batch_run=False, force_restart=False):
             'fabric_friction': 0.5
         }
 
-    if 'options' not in props['sim']['config']:
-        props['sim']['config']['options'] = {
+    # Ensure options section exists
+    if 'options' not in config_dict or not config_dict['options']:
+        config_dict['options'] = {
             'enable_particle_particle_collisions': False,
             'enable_triangle_particle_collisions': True, 
             'enable_edge_edge_collisions': True,
@@ -357,14 +308,20 @@ def template_simulation(paths: PathCofig, props, caching=False):
         Enable caching of simulation frames
     """
     sim_props = props['sim']
-    res = sim_props['config']['resolution_scale']
+    # Support both new structure (control section) and old structure (top-level)
+    config_dict = sim_props['config']
+    if 'control' in config_dict:
+        res = config_dict['control'].get('resolution_scale', 1.0)
+    else:
+        # Old structure: resolution_scale at top level
+        res = config_dict.get('resolution_scale', 1.0)
 
     garment = BoxMesh(paths.in_g_spec, res)
 
     logger.debug(f'Loading garment: {garment.name}')
 
     meshgen_start_time = time.time()
-    timeout_after = int(get_dict_default_value(sim_props['config'], 'max_meshgen_time', 20))
+    timeout_after = int(get_dict_default_value(config_dict, 'max_meshgen_time', 20))
 
     try:
         _load_boxmesh_timeout(garment, timeout_after)
@@ -401,7 +358,7 @@ def template_simulation(paths: PathCofig, props, caching=False):
         # Successfully loaded garment
         sim_props['stats']['meshgen_time'][garment.name] = time.time() - meshgen_start_time
         sim_props['stats']['face_count'][garment.name] = len(garment.faces)
-        sim_props_option = sim_props['config']['options']
+        sim_props_option = config_dict.get('options', {})
         
         vertex_normals = get_dict_default_value(sim_props_option, 'store_vertex_normals', False)
         store_panels = get_dict_default_value(sim_props_option, 'store_panels', False)
@@ -419,7 +376,7 @@ def template_simulation(paths: PathCofig, props, caching=False):
             paths,
             save_v_norms=vertex_normals,
             store_usd=caching,  # NOTE: False for fast simulation!
-            optimize_storage=sim_props['config']['optimize_storage'],
+            optimize_storage=config_dict.get('optimize_storage', False),
             verbose=False
         )
         logger.debug(f'Simulation completed for {garment.name}')

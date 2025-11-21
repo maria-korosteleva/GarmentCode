@@ -27,7 +27,8 @@ import warp as wp
 # Custom code
 from pygarment.meshgen.render.pythonrender import render_images
 from pygarment.meshgen.garment import Cloth
-from pygarment.meshgen.sim_config import SimConfig, PathCofig
+from config import PathCofig
+from config.sim_config import SimConfig
 
 wp.init()
 
