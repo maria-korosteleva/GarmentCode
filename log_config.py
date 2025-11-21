@@ -9,7 +9,7 @@ import sys
 from loguru import logger
 
 
-def setup_logger(level: str = "INFO") -> None:
+def setup_logger(level: str = "DEBUG") -> None:
     """
     Configure loguru logger with the standard format.
     
@@ -19,7 +19,7 @@ def setup_logger(level: str = "INFO") -> None:
     logger.remove()  # Remove default handler
     logger.add(
         sys.stderr,
-        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <level>{message}</level>",
+        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | <level>{message}</level>",
         level=level
     )
 
@@ -34,7 +34,7 @@ def set_log_level(level: str) -> None:
     logger.remove()
     logger.add(
         sys.stderr,
-        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <level>{message}</level>",
+        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | <level>{message}</level>",
         level=level
     )
 
