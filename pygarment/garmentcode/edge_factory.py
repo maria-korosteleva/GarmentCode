@@ -2,6 +2,7 @@ import numpy as np
 from numpy.linalg import norm
 import svgpathtools as svgpath
 from scipy.optimize import minimize
+from loguru import logger
 
 from pygarment.garmentcode.edge import EdgeSequence, Edge, CurveEdge
 from pygarment.garmentcode.edge import CircleEdge
@@ -176,8 +177,8 @@ class CurveEdgeFactory:
 
         if not out.success:
             if verbose:
-                print('Curve From Extreme::WARNING::Optimization not successful')
-                print(out)
+                logger.warning('Optimization not successful')
+                logger.debug(str(out))
 
         cp = out.x.tolist()
 
@@ -209,9 +210,9 @@ class CurveEdgeFactory:
         )
 
         if not out.success:
-            print('CurveEdgeFactory::Curve From Tangents::WARNING::Optimization not successful')
+            logger.warning('Optimization not successful')
             if verbose:
-                print(out)
+                logger.debug(str(out))
 
         cp = out.x.tolist()
 
@@ -273,7 +274,7 @@ class EdgeSeqFactory:
             # skip segments of length zero
             if close_enough(seg.length(), tol=dist_tol):
                 if verbose:
-                    print('Skipped: ', seg)
+                    logger.debug('Skipped: {}'.format(seg))
                 continue
             edges.append(EdgeFactory.from_svg_curve(seg))
 

@@ -24,6 +24,9 @@ import trimesh
 # Warp
 import warp as wp
 
+# Logging
+from loguru import logger
+
 # Custom code
 from pygarment.meshgen.render.pythonrender import render_images
 from pygarment.meshgen.garment import Cloth
@@ -126,7 +129,7 @@ def sim_frame_sequence(garment, config, store_usd=False, verbose=False):
     for frame in range(0, config.max_sim_steps):
         
         if verbose:
-            print(f'\n------ Frame {frame + 1} ------')
+            logger.info(f'\n------ Frame {frame + 1} ------')
         else:
             update_progress(frame, config.max_sim_steps)
 
@@ -149,7 +152,7 @@ def sim_frame_sequence(garment, config, store_usd=False, verbose=False):
 
         if verbose:
             num_cloth_cloth_contacts = garment.count_self_intersections()
-            print(f'\nSelf-Intersection: {num_cloth_cloth_contacts}')
+            logger.debug(f'\nSelf-Intersection: {num_cloth_cloth_contacts}')
 
         if frame >= config.zero_gravity_steps and frame >= config.min_sim_steps:
             static, _ = garment.is_static()
@@ -179,27 +182,27 @@ def run_sim(
     garment = Cloth(cloth_name, config, paths, caching=store_usd)
 
     try:
-        print("Simulation..")
+        logger.info("Simulation..")
         sim_frame_sequence(garment, config, store_usd, verbose=verbose)
     
     except FrameTimeOutError:
-        print(f"FrameTimeOutError at frame {garment.frame}")
+        logger.error(f"FrameTimeOutError at frame {garment.frame}")
         props.add_fail('sim', 'frame_timeout', cloth_name)
     except SimTimeOutError:
-        print("SimTimeOutError")
+        logger.error("SimTimeOutError")
         props.add_fail('sim', 'simulation_timeout', cloth_name)
     except SimulationError:
-        print("Simulation failed")
+        logger.error("Simulation failed")
         props.add_fail('sim', 'gt_edges_creation', cloth_name)
     except BaseException as e:
-        print(f'Sim::{cloth_name}::crashed with {e}')
+        logger.error(f'Simulation crashed for {cloth_name}: {e}')
 
         if isinstance(e, KeyboardInterrupt):
             # Allow to stop simulation loops by keyboard interrupt
             # It's not a real crash, so don't write down the failure
             sec = round(time.time() - start_time, 3)
             min = int(sec / 60)
-            print(f"Simulation pipeline took: {min} m {sec - min * 60} s")
+            logger.info(f"Simulation pipeline took: {min} m {sec - min * 60} s")
             raise e
 
         traceback.print_exc()
@@ -207,7 +210,7 @@ def run_sim(
     else:  # Other quality checks
         if garment.frame == config.max_sim_steps - 1:
             _, non_st_count = garment.is_static()
-            print('\nFailed to achieve static equilibrium for {} with {} non-static vertices out of {}'.format(
+            logger.warning('\nFailed to achieve static equilibrium for {} with {} non-static vertices out of {}'.format(
                 cloth_name, non_st_count, len(garment.current_verts)))
             props.add_fail('sim', 'static_equilibrium', cloth_name)
 
@@ -216,7 +219,7 @@ def run_sim(
 
         # 3D penetrations
         num_body_collisions = garment.count_body_intersections()
-        print("BODY CLOTH INTERSECTIONS: ", num_body_collisions)
+        logger.info("BODY CLOTH INTERSECTIONS: {}", num_body_collisions)
         num_self_collisions = garment.count_self_intersections()
 
         sim_props['stats']['body_collisions'][cloth_name] = num_body_collisions
@@ -225,17 +228,17 @@ def run_sim(
         if num_body_collisions > config.max_body_collisions:
             props.add_fail('sim', 'cloth_body_intersection', cloth_name)
         if num_self_collisions: 
-            print(f'Self-Intersecting with {num_self_collisions}, '
+            logger.info(f'Self-Intersecting with {num_self_collisions}, '
                   f'is fail: {num_self_collisions > config.max_self_collisions}')
             if num_self_collisions > config.max_self_collisions:
                 props.add_fail('sim', 'cloth_self_intersection', cloth_name)
         else:
-            print('Not self-intersecting!!!')
+            logger.info('Not self-intersecting!!!')
 
     # ---- Postprocessing ----
     # NOTE: Attempt even on failures for accurate picture and post-analysis
     frame = garment.frame
-    print(f"\nSimulation took #frames={frame + 1}")
+    logger.info(f"\nSimulation took #frames={frame + 1}")
 
     sim_props['stats']['sim_time'][cloth_name] = sim_time = time.time() - start_time
     sim_props['stats']['spf'][cloth_name] = sim_time / frame if frame else sim_time
@@ -248,7 +251,7 @@ def run_sim(
     render_images(paths, garment.v_body, garment.f_body, render_props['config'])
     render_image_time = time.time() - s_time
     render_props['stats']['render_time'][cloth_name] = render_image_time  
-    print(f"Rendering {cloth_name} took {render_image_time}s")
+    logger.info(f"Rendering {cloth_name} took {render_image_time}s")
 
     if optimize_storage:
         optimize_garment_storage(paths)
@@ -256,4 +259,4 @@ def run_sim(
     # Final info output
     sec = round(time.time() - start_time, 3)
     min = int(sec / 60)
-    print(f"\nSimulation pipeline took: {min} m {sec - min * 60} s")
+    logger.info(f"\nSimulation pipeline took: {min} m {sec - min * 60} s")

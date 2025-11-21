@@ -5,6 +5,7 @@ from pathlib import Path
 import trimesh
 
 from pygarment.data_config import Properties
+from loguru import logger
 
 def load_mesh(path):
     v, f = igl.read_triangle_mesh(str(path))
@@ -48,7 +49,7 @@ if __name__ == "__main__":
         if '.obj' in file.name:
             process_body(file, out_path / file.name)
 
-            print(file.name)
+            logger.info(file.name)
 
     
 

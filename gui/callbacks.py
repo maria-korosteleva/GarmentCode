@@ -19,6 +19,7 @@ import asyncio
 
 # Custom
 from .gui_pattern import GUIPattern
+from loguru import logger
 
 
 icon_github = """
@@ -271,12 +272,9 @@ class GUIState:
 
                     # NOTE Events control: https://nicegui.io/documentation/slider#throttle_events_with_leading_and_trailing_options
                 elif 'file' in p_type:
-                    print(f'GUI::NotImplementedERROR::{param}::'
-                          '"file" parameter type is not yet supported in Web GarmentCode. '
-                          'Creation of corresponding UI element skipped'
-                    )
+                    logger.error(f'"{param}": "file" parameter type is not yet supported in Web GarmentCode. Creation of corresponding UI element skipped')
                 else:
-                    print(f'GUI::WARNING::Unknown parameter type: {p_type}')
+                    logger.warning(f'Unknown parameter type: {p_type}')
                     ui_elems[param] = ui.input(label=param_name, value=val, placeholder='Type the value',
                         validation={'Input too long': lambda value: len(value) < 20},
                         on_change=lambda e, dic=design_params, param=param: self.update_pattern_ui_state(dic, param, e.value)
@@ -504,7 +502,7 @@ class GUIState:
         # NOTE: Fixing to the "same value" issue in lambdas 
         # https://github.com/zauberzeug/nicegui/wiki/FAQs#why-have-all-my-elements-the-same-value
    
-        print('INFO::Updating pattern...')
+        logger.info('Updating pattern...')
 
         # Update the values
         if param_dict is not None:
@@ -536,7 +534,7 @@ class GUIState:
             raise e
         except BaseException as e:
             traceback.print_exc()
-            print(e)
+            logger.error(str(e))
             self.spin_dialog.close()  # If open
             ui.notify(
                 'Failed to generate pattern correctly. Try different parameter values',
@@ -655,7 +653,7 @@ class GUIState:
     async def update_3d_scene(self):
         """According the whatever pattern current state"""
 
-        print('INFO::Updating 3D...')
+        logger.info('Updating 3D...')
 
         # Cleanup 
         if self.ui_garment_3d is not None:
@@ -663,7 +661,7 @@ class GUIState:
             self.ui_garment_3d = None
         
         if not self.pattern_state.svg_filename:
-            print('INFO::Current garment is empty, skipped 3D update')
+            logger.info('Current garment is empty, skipped 3D update')
             ui.notify('Current garment is empty. Chose a design to start simulating!')
             self.ui_body_3d.visible(True)
             self.ui_body_3d_switch.set_value(True)
@@ -695,7 +693,7 @@ class GUIState:
             raise e
         except BaseException as e:
             traceback.print_exc()
-            print(e)
+            logger.error(str(e))
             self.ui_3d_scene.set_visibility(True)
             self.spin_dialog.close()  # If open
             ui.notify(

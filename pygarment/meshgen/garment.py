@@ -4,6 +4,8 @@ import pickle
 import numpy as np
 import yaml
 
+from loguru import logger
+
 import warp as wp
 
 import warp.sim.render
@@ -125,7 +127,7 @@ class Cloth:
         #Load ground truth stitching lengths
         if not self.paths.g_orig_edge_len.exists():
             orig_lens_dict = None
-            print("no original length dict found")
+            logger.warning("no original length dict found")
         else:
             with open(self.paths.g_orig_edge_len, 'rb') as file:
                 orig_lens_dict = pickle.load(file)
@@ -333,19 +335,16 @@ class Cloth:
                         damping = config.attachment_damping[i]
                     )
                 else:
-                    print(f'{self.name}::WARNING::Requested attachment label {attach_label} '
-                          'is not supported. Skipped')
+                    logger.warning(f'Requested attachment label {attach_label} is not supported. Skipped')
                     continue
                     
-                print(f'Using attachment for {attach_label} with {len(constaint_verts)} vertices')
+                logger.info(f'Using attachment for {attach_label} with {len(constaint_verts)} vertices')
 
         if not lables_present:
             # Loaded garment is not labeled -- update config
             config.enable_attachment_constraint = False
             config.update_min_steps()
-            print(f'{self.name}::WARNING::Requested attachment labels {config.attachment_labels} '
-                  'are not present. Attachment is turned off'
-                )
+            logger.warning(f'Requested attachment labels {config.attachment_labels} are not present. Attachment is turned off')
 
     def _load_panel_labels(self):
         pattern = BasicPattern(self.paths.g_specs)
@@ -562,7 +561,7 @@ class Cloth:
             diff_L1[diff_L1 > threshold])  # compare vertex-wise to allow accurate control over outliers
 
         if non_static_len == 0 or (non_static_len < len(curr_verts_arr) * 0.01 * non_static_percent):
-            print('\nStatic with {} non-static vertices out of {}'.format(non_static_len, len(curr_verts_arr)))
+            logger.info('\nStatic with {} non-static vertices out of {}'.format(non_static_len, len(curr_verts_arr)))
             # Store last frame
             return True, non_static_len
         else:

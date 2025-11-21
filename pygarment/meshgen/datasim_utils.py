@@ -5,7 +5,6 @@ import time
 import multiprocessing
 import platform
 import signal
-import sys
 from pathlib import Path
 
 from loguru import logger

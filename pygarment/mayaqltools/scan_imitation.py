@@ -8,6 +8,7 @@ from maya import OpenMaya
 from maya import cmds
 import numpy as np
 from datetime import datetime
+from loguru import logger
 
 # My modules 
 from pygarment.mayaqltools import utils
@@ -61,7 +62,7 @@ def remove_invisible(target, obstacles=[], num_rays=30, visibile_rays=4):
         BUT at least one ray is always required to consider face as visible!
     """
     # Follows the idea of self_intersect_3D() checks used in simulation pipeline
-    print('Performing scanning imitation on {} with obstacles {}'.format(target, obstacles))
+    logger.info('Performing scanning imitation on {} with obstacles {}'.format(target, obstacles))
     
     # generate apropriate camera surface
     camera_surface_obj, ray_dist = _camera_surface(target, obstacles)
@@ -110,7 +111,7 @@ def remove_invisible(target, obstacles=[], num_rays=30, visibile_rays=4):
         cmds.polyDelFacet(tuple(delete_strs))  # as this is the last command to execute, it could be undone with Ctrl-Z once
 
     passed = datetime.now() - start_time
-    print('{}::Removed {} faces after {}. Press Ctrl-Z to undo the changes'.format(target, len(to_delete), passed))
+    logger.info('Removed {} faces after {}. Press Ctrl-Z to undo the changes'.format(len(to_delete), passed))
 
     return len(to_delete), passed.total_seconds()
     

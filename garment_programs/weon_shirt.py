@@ -1,4 +1,3 @@
-from copy import deepcopy
 from typing import Optional, Any
 
 import numpy as np
@@ -6,11 +5,12 @@ import pygarment as pyg
 from scipy.spatial.transform import Rotation as R
 
 from garment_programs.base_classes import BaseBodicePanel
-from assets.garment_programs.collars import NoPanelsCollar
 from garment_programs.weon_torso import TorsoFrontHalfPanel, TorsoBackHalfPanel
 from garment_programs import weon_sleeves
 from pattern_definitions.body_definition import BodyDefinition
+from assets.garment_programs.collars import NoPanelsCollar
 from pattern_definitions.shirt_design import ShirtDesign
+from pattern_definitions.torso_design import TorsoDesign
 
 
 class BodiceFrontHalf(BaseBodicePanel):
@@ -26,7 +26,7 @@ class BodiceFrontHalf(BaseBodicePanel):
         self,
         name: str,
         body: BodyDefinition | dict,
-        design: dict
+        torso_design: TorsoDesign
     ) -> None:
         """Initialize half of a fitted bodice front panel.
 
@@ -36,10 +36,10 @@ class BodiceFrontHalf(BaseBodicePanel):
             Name of the panel.
         body : BodyDefinition | dict
             Body measurements object or dictionary.
-        design : dict
+        torso_design : TorsoDesign
             Design parameters dictionary.
         """
-        super().__init__(name, design)
+        super().__init__(name, torso_design)
 
         m_bust = body['bust']
         m_waist = body['waist']
@@ -130,7 +130,7 @@ class BodiceBackHalf(BaseBodicePanel):
         self,
         name: str,
         body: BodyDefinition | dict,
-        design: dict
+        torso_design: TorsoDesign
     ) -> None:
         """Initialize the back panel of a basic fitted bodice block.
 
@@ -140,10 +140,10 @@ class BodiceBackHalf(BaseBodicePanel):
             Name of the panel.
         body : BodyDefinition | dict
             Body measurements object or dictionary.
-        design : dict
+        torso_design : TorsoDesign
             Design parameters dictionary.
         """
-        super().__init__(name, design)
+        super().__init__(name, torso_design)
 
         # Overall measurements        
         self.width = body['back_width'] / 2

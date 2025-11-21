@@ -2,13 +2,14 @@
 
 import pygarment.pattern.core as pattern
 import yaml
+from loguru import logger
 
 # panels
 def count_panels(pattern:pattern.BasicPattern, props, verbose=False):
     
     n_panels = len(pattern.pattern['panels'].keys())
     if verbose:
-        print(pattern.name, ' Panel count ', n_panels)
+        logger.info('{} Panel count {}'.format(pattern.name, n_panels))
 
     props['generator']['stats']['panel_count'][pattern.name] = n_panels
 
@@ -126,7 +127,7 @@ def garment_type(el_name, design, props, verbose=False):
 
 
     if verbose:
-        print(el_name, ' types ', main_type, add_types)
+        logger.info('{} types {} {}'.format(el_name, main_type, add_types))
 
     props['generator']['stats']['garment_types'][el_name] = {
         'main': main_type,

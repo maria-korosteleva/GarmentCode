@@ -18,14 +18,7 @@ from pygarment.data_config import Properties
 from garment_programs.garment_factory import GarmentFactory
 from assets.bodies.body_params import BodyParameters
 from pattern_definitions.body_definition import BodyDefinition
-
-# Configure logger
-logger.remove()  # Remove default handler
-logger.add(
-    sys.stderr,
-    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <level>{message}</level>",
-    level="INFO"
-)
+from log_config import set_log_level
 
 
 def get_command_args() -> argparse.Namespace:
@@ -50,12 +43,7 @@ def get_command_args() -> argparse.Namespace:
     
     # Set log level based on verbose flag
     if args.verbose:
-        logger.remove()
-        logger.add(
-            sys.stderr,
-            format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <level>{message}</level>",
-            level="DEBUG"
-        )
+        set_log_level("DEBUG")
         logger.debug(f'Command line arguments: {args}')
     else:
         logger.info(f'Command line arguments: {args}')

@@ -6,6 +6,7 @@ from numpy.linalg import norm
 from scipy.spatial.transform import Rotation as R
 from scipy.optimize import minimize
 import svgpathtools as svgpath
+from loguru import logger
 
 from pygarment.garmentcode.edge import Edge, CurveEdge, EdgeSequence, ILENGTH_S_TOL
 from pygarment.garmentcode.interface import Interface
@@ -87,12 +88,12 @@ def cut_corner(target_shape: EdgeSequence, target_interface: Interface,
        bounds=[(0, 1), (0, 1)])
     
     if verbose and not out.success:
-        print(f'Cut_corner::ERROR::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
-        print(out)
+        logger.error('Finding the projection (translation) is unsuccessful. Likely an error in edges choice')
+        logger.debug(str(out))
 
     if verbose and not close_enough(out.fun):
-        print(f'Cut_corner::WARNING::projection on {target_interface} finished with fun={out.fun}')
-        print(out) 
+        logger.warning(f'Projection on {target_interface} finished with fun={out.fun}')
+        logger.debug(str(out)) 
 
     loc = out.x
     point1 = c_to_list(curve1.point(loc[0]))
@@ -261,11 +262,11 @@ def cut_into_edge_single(target_shape, base_edge: Edge, offset=0, right=True,
 
     # Error checks
     if verbose and not out.success:
-        print(f'Cut_edge::ERROR::finding the projection (translation) is unsuccessful. Likely an error in edges choice')
+        logger.error('Finding the projection (translation) is unsuccessful. Likely an error in edges choice')
 
     if not close_enough(out.fun, tol=0.01):
         if verbose:
-            print(out) 
+            logger.debug(str(out)) 
         raise RuntimeError(f'Cut_edge::ERROR::projection on {base_edge} finished with fun={out.fun}')
     
     if rel_offset + shift[0] > 1 + tol or (rel_offset - shift[1]) < 0 - tol:
@@ -332,8 +333,8 @@ def _fit_location_corner(l, diff_target, curve1, curve2,
     diff_curr = point2 - point1
 
     if verbose:
-        print('Location Progression: ', (diff_curr[0] - diff_target[0])**2,
-              (diff_curr[1] - diff_target[1])**2)
+        logger.debug('Location Progression: {} {}'.format((diff_curr[0] - diff_target[0])**2,
+              (diff_curr[1] - diff_target[1])**2))
 
     return ((diff_curr[0] - diff_target[0])**2 
             + (diff_curr[1] - diff_target[1])**2)
@@ -350,7 +351,7 @@ def _fit_location_edge(shift, location, width_target, curve,
     point2 = c_to_np(curve.point(location - shift[1]))
 
     if verbose:
-        print('Location Progression: ', (_dist(point1, point2) - width_target)**2)
+        logger.debug('Location Progression: {}'.format((_dist(point1, point2) - width_target)**2))
 
     # regularize points to be at the same distance from center
     reg_symmetry = (_dist(point1, pointc) - _dist(point2, pointc))**2
@@ -436,7 +437,7 @@ def even_armhole_openings(front_opening, back_opening, tol=1e-2, verbose: bool =
 
     intersect_t = target_segment.intersect(inter_segment)
     if len(intersect_t) != 1 and verbose:
-        print(
+        logger.warning(
             f'Redistribute Sleeve Openings::WARNING::{len(intersect_t)} intersection points instead of one. '
             f'Front and back opening curves might be the same with lengths: {cfront.length()}, {cback.length()}'
         )
@@ -563,8 +564,8 @@ def curve_match_tangents(curve, target_tan0, target_tan1, target_len=None,
     )
     if not out.success:
         if verbose:
-            print(f'Curve_match_tangents::WARNING::optimization not successfull')
-            print(out)
+            logger.warning('Optimization not successful')
+            logger.debug(str(out))
 
     shift = out.x
 

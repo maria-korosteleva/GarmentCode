@@ -4,6 +4,7 @@ from scipy.spatial.transform import Rotation as R
 import numpy as np
 from copy import copy
 from argparse import Namespace
+from loguru import logger
 
 from pygarment.pattern.core import BasicPattern
 from pygarment.garmentcode.base import BaseComponent
@@ -386,7 +387,7 @@ class Panel(BaseComponent):
             # NOTE: sometimes happens on thin arcs
             avg_norm = norms[0]   
             if self.verbose:
-                print(f'{self.__class__.__name__}::{self.name}::WARNING::Norm evaluation failed, assigning norm based on the first edge')
+                logger.warning('Norm evaluation failed, assigning norm based on the first edge')
 
         final_norm = avg_norm / np.linalg.norm(avg_norm)
 

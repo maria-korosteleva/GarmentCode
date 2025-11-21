@@ -3,6 +3,7 @@ from copy import deepcopy, copy
 import numpy as np
 from numpy.linalg import norm
 import svgpathtools as svgpath  # https://github.com/mathandy/svgpathtools
+from loguru import logger
 
 from pygarment.garmentcode.utils import R2D
 from pygarment.garmentcode.utils import close_enough
@@ -753,7 +754,7 @@ class EdgeSequence:
             if self.edges[i].start is not self.edges[i-1].end:
                 if self.verbose:
                     # This should be helpful to catch bugs
-                    print(f'{self.__class__.__name__}::WARNING!::Edge sequence is not properly chained')
+                    logger.warning('Edge sequence is not properly chained')
                 return False
         return True
 
@@ -938,7 +939,7 @@ class EdgeSequence:
             chained_edges = self.chained_order()
             chained_edges.isChained()
             if chained_edges.isLoop():
-                print(f'{self.__class__.__name__}::WARNING::Extending looped edge sequences is not available')
+                logger.warning('Extending looped edge sequences is not available')
                 return self
         else: 
             chained_edges = self

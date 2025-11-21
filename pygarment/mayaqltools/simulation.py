@@ -6,6 +6,7 @@ import os
 
 # Maya
 from maya import cmds
+from loguru import logger
 
 # My modules
 from pygarment.pattern.core import BasicPattern
@@ -34,7 +35,7 @@ def single_file_sim(resources, props, caching=False):
                             scene, props['sim'], caching=caching)
 
         # Fin
-        print('\nFinished experiment')
+        logger.info('\nFinished experiment')
         try:
             # remove unnecessaty field
             del props['sim']['stats']['processed']
@@ -42,7 +43,7 @@ def single_file_sim(resources, props, caching=False):
             pass
         props.serialize(os.path.join(resources['templates_path'], 'props.json'))
     except Exception as e:
-        print(e)
+        logger.error(str(e))
 
 
 def batch_sim(resources, data_path, dataset_props, 
@@ -75,7 +76,7 @@ def batch_sim(resources, data_path, dataset_props,
     # ----- Init -----
     if 'frozen' in dataset_props and dataset_props['frozen']:
         # avoid accidential re-runs of data
-        print('WARNING: dataset is frozen, processing is skipped')
+        logger.warning('WARNING: dataset is frozen, processing is skipped')
         return True
 
     resume = init_sim_props(dataset_props, batch_run=True, force_restart=force_restart)
@@ -96,7 +97,7 @@ def batch_sim(resources, data_path, dataset_props,
         pattern_spec_norm = os.path.normpath(pattern_spec)
         pattern_name = BasicPattern.name_from_path(pattern_spec_norm)
         if resume and pattern_name in dataset_props['sim']['stats']['processed']:
-            print('Skipped as already processed {}'.format(pattern_spec_norm))
+            logger.info('Skipped as already processed {}'.format(pattern_spec_norm))
             continue
 
         dataset_props['sim']['stats']['processed'].append(pattern_name)
@@ -111,7 +112,7 @@ def batch_sim(resources, data_path, dataset_props,
         
         if pattern_name in dataset_props['sim']['stats']['fails']['crashes']:
             # if we successfully finished simulating crashed example -- it's not a crash any more!
-            print('Crash successfully resimulated!')
+            logger.info('Crash successfully resimulated!')
             dataset_props['sim']['stats']['fails']['crashes'].remove(pattern_name)
 
         count += 1  # count actively processed cases
@@ -119,7 +120,7 @@ def batch_sim(resources, data_path, dataset_props,
             break
 
     # Fin
-    print('\nFinished batch of ' + os.path.basename(data_path))
+    logger.info('\nFinished batch of ' + os.path.basename(data_path))
     try:
         if len(dataset_props['sim']['stats']['processed']) >= len(pattern_specs):
             # processing successfully finished -- no need to resume later
@@ -129,7 +130,7 @@ def batch_sim(resources, data_path, dataset_props,
         else:
             process_finished = False
     except KeyError:
-        print('KeyError -processed-')
+        logger.warning('KeyError -processed-')
         process_finished = True
         pass
 
@@ -207,7 +208,7 @@ def template_simulation(spec, scene, sim_props, delete_on_clean=False, caching=F
     """
         Simulate given template within given scene & save log files
     """
-    print('\nGarment load')
+    logger.info('\nGarment load')
     garment = mymaya.MayaGarment(spec)
     try:
         garment.load(

@@ -2,6 +2,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 import pygarment as pyg
+from loguru import logger
 
 from garment_programs.weon_bands import StraightBandPanel
 from pattern_definitions.shirt_design import CollarDesign
@@ -36,9 +37,7 @@ def TrapezoidNeckHalf(depth, width, angle=90, verbose=True, **kwargs):
     bottom_x = -depth * np.cos(rad_angle) / np.sin(rad_angle)
     if bottom_x > width / 2:  # Invalid angle/depth/width combination resulted in invalid shape
         if verbose:
-            print('TrapezoidNeckHalf::WARNING::Parameters are invalid and create overlap: '
-                  f'{bottom_x} > {width / 2}. '
-                  'The collar is reverted to VNeck')
+            logger.warning(f'Parameters are invalid and create overlap: {bottom_x} > {width / 2}. The collar is reverted to VNeck')
 
         return VNeckHalf(depth, width)
 

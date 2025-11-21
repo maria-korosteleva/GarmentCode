@@ -10,6 +10,7 @@ import traceback
 import sys
 from pathlib import Path
 import numpy as np
+from loguru import logger
 
 # for system info
 import platform
@@ -81,7 +82,7 @@ class Properties():
                 raise ValueError(f'{self.__class__.__name__}::ERROR::Unsupported file type on serialization: {extention}')
             
         except Exception as e:
-            print('Exception occured while saving properties:')
+            logger.error('Exception occured while saving properties:')
             traceback.print_exception(*sys.exc_info()) 
             # save backup, s.t. the data is not lost due to interruption of
             # the file override
@@ -303,7 +304,7 @@ class Properties():
                 # runtime = warp.context.Runtime()
                 warp.init()
             else:
-                print(f'{self.__class__.__name__}::INFO::Saving GPU info -- warp already initialized')
+                logger.info('Saving GPU info -- warp already initialized')
             curr_device = warp.get_device()   
             self.properties['system_info']['GPU'] = curr_device.name if curr_device.is_cuda else 'Not used'
         except ImportError:
@@ -334,8 +335,7 @@ class Properties():
         self.count_fails(log=True)
 
         if not (updated_frames and updated_render and updated_sim_time and updated_spf and updated_self_collisions and updated_body_collisions):
-            print(f'{self.__class__.__name__}::WARNING::Sim stats summary '
-                  'requested, but not all sections were updated')
+            logger.warning('Sim stats summary requested, but not all sections were updated')
 
     # ---- Private utils ----
     def _from_file(self, filename):

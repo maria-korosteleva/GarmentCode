@@ -17,6 +17,7 @@ import maya.mel as mel
 # My modules
 from pygarment import mayaqltools as mymaya
 from pygarment import data_config
+from loguru import logger
 
 
 # -------- Main call - Draw the UI -------------
@@ -209,7 +210,7 @@ def text_button_group(callback, state, label='', button_label='Click'):
 # ----- Callbacks -----
 # -- Loading --
 def sample_callback(text, *args):
-    print('Called ' + text)
+    logger.debug('Called {}'.format(text))
     
 
 def template_field_callback(view_field, state, *args):
@@ -352,7 +353,7 @@ def start_sim_callback(button, state, *args):
     if state.garment is None or state.scene is None:
         cmds.confirmDialog(title='Error', message='Load pattern specification & body info first')
         return
-    print('Simulating..')
+    logger.info('Simulating..')
 
     # Reload geometry in case something changed
     state.reload_garment()
@@ -369,7 +370,7 @@ def stop_sim_callback(button, state, *args):
     """Stop simulation execution"""
     # toggle playback
     cmds.play(state=False)
-    print('Simulation::Stopped')
+    logger.info('Simulation stopped')
     # uppdate button state
     cmds.button(button, edit=True, 
                 label='Start Sim', backgroundColor=[227 / 256, 255 / 256, 119 / 256],
@@ -441,7 +442,7 @@ def display_segmentation_callback(button, state, *args):
 
         state.garment.display_vertex_segmentation(state.scene.scene['cloth_shader'])
 
-        print('Segmentation displayed!')
+        logger.info('Segmentation displayed!')
         state.segmented = True
 
         cmds.button(button, edit=True, 
@@ -541,7 +542,7 @@ def quick_save_callback(view_field, state, *args):
 
     state.garment.save_mesh(new_dir)
 
-    print('Garment info saved to ' + new_dir)
+    logger.info('Garment info saved to {}'.format(new_dir))
 
 
 def full_save_callback(view_field, state, *args):
@@ -564,6 +565,6 @@ def full_save_callback(view_field, state, *args):
     state.fetch()
     state.serialize(new_dir)
 
-    print('Pattern spec, props, 3D mesh & render saved to ' + new_dir)
+    logger.info('Pattern spec, props, 3D mesh & render saved to {}'.format(new_dir))
 
     cmds.select(state.garment.get_qlcloth_props_obj())  # for props change
