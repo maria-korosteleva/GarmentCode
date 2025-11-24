@@ -46,25 +46,34 @@ sim:
       global_max_velocity: 25.0
       
       enable_attachment_constraint: true   
-      attachment_stiffness: 
-        - 0.
-        - 100000000.
-        - 1000.   
-        - 1000. 
-        - 1000.
-      attachment_damping: 
-        - 10.
-        - 10.
-        - 0.  
-        - 0. 
-        - 0.
       attachment_frames: 400000
-      attachment_label_names: 
-        - lower_interface
-        - crotch
-        - right_collar
-        - left_collar
-        - strapless_top
+      attachment_constraints:
+        - label: right_collar
+          stiffness: 1000.
+          damping: 0.
+          # Uses default calculation: x = -(neck_w - 2) / 2
+          # Can override with explicit position if needed
+          # direction: null  # Default: [1, 0, 0] (right)
+        - label: left_collar
+          stiffness: 1000.
+          damping: 0.
+          # Uses default calculation: x = (neck_w - 2) / 2
+          # Can override with explicit position if needed
+          # direction: null  # Default: [-1, 0, 0] (left)
+        - label: strapless_top
+          stiffness: 1000.
+          damping: 0.
+          position_calculation:
+            x:
+              positive: []
+              negative: []
+            y:
+              positive: ['height']
+              negative: ['head_l', 'armscye_depth']
+            z:
+              positive: []
+              negative: []
+          # direction: null  # Default: [0, 1, 0] (upward)
       
       enable_cloth_reference_drag: true 
       cloth_reference_margin: 0.1

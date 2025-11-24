@@ -1,4 +1,4 @@
-from typing import Optional, Any
+from typing import Optional, Any, List
 
 import pygarment as pyg
 from assets.garment_programs.circle_skirt import CircleArcPanel
@@ -7,6 +7,7 @@ from garment_programs.base_classes import BaseBand
 from garment_programs.garment_enums import InterfaceName
 from pattern_definitions.body_definition import BodyDefinition
 from pattern_definitions.waistband_design import WaistbandDesign
+from config import AttachmentConstraint
 
 class StraightBandPanel(pyg.Panel):
     """One panel for a panel skirt."""
@@ -147,6 +148,19 @@ class StraightWB(BaseBand):
             match_int_proportion=self.waist_back
         )
     
+    def get_attachment_constraints(self) -> List[AttachmentConstraint]:
+        """Get the list of attachment constraints for this waistband garment.
+        
+        Returns the attachment constraints required for simulating this waistband garment.
+        Waistbands do not require any attachment constraints by default.
+        
+        Returns:
+        --------
+        List[AttachmentConstraint]
+            An empty list (waistbands do not require attachment constraints).
+        """
+        return []
+
     def apply_body_alignment(self, body: BodyDefinition) -> None:
         """Apply body alignment to position the waistband correctly.
         

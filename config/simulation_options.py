@@ -1,6 +1,80 @@
 """Simulation options and feature flags."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator, field_validator
+
+
+class AttachmentConstraint(BaseModel):
+    """
+    Represents a single attachment constraint configuration.
+    
+    Attributes
+    ----------
+    label : str
+        Attachment label name (e.g., 'crotch', 'lower_interface', 'right_collar')
+    stiffness : float
+        Stiffness value for this attachment constraint
+    damping : float
+        Damping value for this attachment constraint
+    position : list[float] | None
+        Optional explicit position vector [x, y, z] for attachment point. If provided,
+        this overrides position_calculation. If None, position is calculated from
+        position_calculation or label-specific defaults.
+    direction : list[float] | None
+        Optional direction vector [x, y, z] for attachment direction. If None, uses
+        label-specific default direction.
+    position_calculation : dict[str, dict[str, list[str]]] | None
+        Optional position calculation specification. If provided, position is calculated
+        as: sum(positive_params) - sum(negative_params) for each axis.
+        Format: {
+            'x': {'positive': [param_names], 'negative': [param_names]},
+            'y': {'positive': [param_names], 'negative': [param_names]},
+            'z': {'positive': [param_names], 'negative': [param_names]}
+        }
+        Body parameter names can include computed properties (e.g., 'computed_leg_length',
+        '_leg_length' for legacy format).
+    """
+    label: str = Field(description="Attachment label name (e.g., 'crotch', 'lower_interface')")
+    stiffness: float = Field(description="Stiffness value for this attachment constraint")
+    damping: float = Field(description="Damping value for this attachment constraint")
+    position: list[float] | None = Field(
+        default=None,
+        description="Optional explicit position vector [x, y, z]. Overrides position_calculation if provided."
+    )
+    direction: list[float] | None = Field(
+        default=None,
+        description="Optional direction vector [x, y, z] for attachment direction. If None, uses label-specific default."
+    )
+    position_calculation: dict[str, dict[str, list[str]]] | None = Field(
+        default=None,
+        description="Position calculation from body parameters. Format: {'x': {'positive': [...], 'negative': [...]}, ...}"
+    )
+    
+    @field_validator('position')
+    @classmethod
+    def validate_position(cls, v):
+        if v is not None and len(v) != 3:
+            raise ValueError('position must be a list of exactly 3 floats [x, y, z]')
+        return v
+    
+    @field_validator('direction')
+    @classmethod
+    def validate_direction(cls, v):
+        if v is not None and len(v) != 3:
+            raise ValueError('direction must be a list of exactly 3 floats [x, y, z]')
+        return v
+    
+    @field_validator('position_calculation')
+    @classmethod
+    def validate_position_calculation(cls, v):
+        if v is not None:
+            for axis in ['x', 'y', 'z']:
+                if axis not in v:
+                    raise ValueError(f'position_calculation must include {axis} axis')
+                if 'positive' not in v[axis] or 'negative' not in v[axis]:
+                    raise ValueError(f'position_calculation[{axis}] must have "positive" and "negative" keys')
+                if not isinstance(v[axis]['positive'], list) or not isinstance(v[axis]['negative'], list):
+                    raise ValueError(f'position_calculation[{axis}]["positive"] and ["negative"] must be lists')
+        return v
 
 
 class SimulationOptions(BaseModel):
@@ -23,14 +97,10 @@ class SimulationOptions(BaseModel):
         Enable body collision filters for selective collision detection
     enable_attachment_constraint : bool
         Enable attachment constraints for garment-body attachment
-    attachment_labels : list[str]
-        List of attachment label names (e.g., 'crotch', 'lower_interface')
+    attachment_constraints : list[AttachmentConstraint]
+        List of attachment constraint configurations
     attachment_frames : int
         Number of frames to maintain attachment constraints
-    attachment_stiffness : list[float]
-        Stiffness values for each attachment constraint
-    attachment_damping : list[float]
-        Damping values for each attachment constraint
     global_damping_factor : float
         Global damping factor for velocity damping
     global_damping_effective_velocity : float
@@ -69,14 +139,26 @@ class SimulationOptions(BaseModel):
 
     # Attachment constraints
     enable_attachment_constraint: bool = Field(default=False, description="Enable attachment constraints for garment-body attachment")
-    attachment_labels: list[str] = Field(
-        default_factory=list, 
-        alias='attachment_label_names',
-        description="List of attachment label names (e.g., 'crotch', 'lower_interface')"
+    attachment_constraints: list[AttachmentConstraint] = Field(
+        default_factory=list,
+        description="List of attachment constraint configurations"
     )
     attachment_frames: int = Field(default=100, description="Number of frames to maintain attachment constraints")
-    attachment_stiffness: list[float] = Field(default_factory=list, description="Stiffness values for each attachment constraint")
-    attachment_damping: list[float] = Field(default_factory=list, description="Damping values for each attachment constraint")
+    
+    # Legacy fields for backward compatibility (deprecated, use attachment_constraints instead)
+    attachment_labels: list[str] | None = Field(
+        default=None,
+        alias='attachment_label_names',
+        description="[DEPRECATED] List of attachment label names. Use attachment_constraints instead."
+    )
+    attachment_stiffness: list[float] | None = Field(
+        default=None,
+        description="[DEPRECATED] Stiffness values for each attachment constraint. Use attachment_constraints instead."
+    )
+    attachment_damping: list[float] | None = Field(
+        default=None,
+        description="[DEPRECATED] Damping values for each attachment constraint. Use attachment_constraints instead."
+    )
 
     # Global damping properties
     global_damping_factor: float = Field(default=1.0, description="Global damping factor for velocity damping")
@@ -109,9 +191,49 @@ class SimulationOptions(BaseModel):
         "populate_by_name": True,  # Allow both 'attachment_labels' and 'attachment_label_names'
     }
 
+    @model_validator(mode='after')
+    def _convert_legacy_attachment_format(self) -> 'SimulationOptions':
+        """
+        Convert legacy format (parallel lists) to new AttachmentConstraint format.
+        
+        Supports backward compatibility with YAML files that use:
+        - attachment_label_names: [list of strings]
+        - attachment_stiffness: [list of floats]
+        - attachment_damping: [list of floats]
+        
+        These are converted to attachment_constraints: [list of AttachmentConstraint objects]
+        """
+        # If attachment_constraints is already populated, use it
+        if self.attachment_constraints:
+            return self
+        
+        # If legacy fields are present, convert them
+        if (self.attachment_labels is not None and 
+            self.attachment_stiffness is not None and 
+            self.attachment_damping is not None):
+            
+            labels = self.attachment_labels
+            stiffnesses = self.attachment_stiffness
+            dampings = self.attachment_damping
+            
+            # Validate that all lists have the same length
+            if len(labels) != len(stiffnesses) or len(labels) != len(dampings):
+                raise ValueError(
+                    f"attachment_labels ({len(labels)}), attachment_stiffness ({len(stiffnesses)}), "
+                    f"and attachment_damping ({len(dampings)}) must have the same length"
+                )
+            
+            # Convert to AttachmentConstraint objects
+            self.attachment_constraints = [
+                AttachmentConstraint(label=label, stiffness=stiff, damping=damp)
+                for label, stiff, damp in zip(labels, stiffnesses, dampings)
+            ]
+        
+        return self
+
     def model_post_init(self, __context) -> None:
-        """Post-initialization validation: disable attachment constraint if frames or labels are missing."""
-        if not self.attachment_frames or not self.attachment_labels:
+        """Post-initialization validation: disable attachment constraint if frames or constraints are missing."""
+        if not self.attachment_frames or not self.attachment_constraints:
             self.enable_attachment_constraint = False
 
     def update_smoothing_steps(self, max_sim_steps: int) -> None:

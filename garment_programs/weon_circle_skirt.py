@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 import numpy as np
 import pygarment as pyg
@@ -7,6 +7,7 @@ from garment_programs.base_classes import StackableSkirtComponent
 from garment_programs.garment_enums import InterfaceName, EdgeLabel
 from pattern_definitions.body_definition import BodyDefinition
 from pattern_definitions.skirt_design import SkirtDesign
+from config import AttachmentConstraint
 
 
 class CircleArcPanel(pyg.Panel):
@@ -365,6 +366,34 @@ class SkirtCircle(StackableSkirtComponent):
             Waist width of the skirt.
         """
         return self.front.waist_width
+
+    def get_attachment_constraints(self) -> List[AttachmentConstraint]:
+        """Get the list of attachment constraints for this skirt garment.
+        
+        Returns the attachment constraints required for simulating this skirt garment.
+        Skirts require a lower_interface constraint at the waist level.
+        
+        Returns:
+        --------
+        List[AttachmentConstraint]
+            A list containing the lower_interface attachment constraint for skirts.
+        """
+        lower_interface_constraint = AttachmentConstraint(
+            label='lower_interface',
+            stiffness=0.0,
+            damping=10.0,
+            position_calculation={
+                'x': {'positive': [], 'negative': []},
+                'y': {
+                    'positive': ['computed_waist_level'],
+                    'negative': []
+                },
+                'z': {'positive': [], 'negative': []}
+            },
+            direction=None  # Will use default [0, 1, 0] (upward)
+        )
+        
+        return [lower_interface_constraint]
 
     def apply_body_alignment(self, body: BodyDefinition) -> None:
         """Apply body alignment to position the skirt correctly.

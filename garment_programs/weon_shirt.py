@@ -1,4 +1,4 @@
-from typing import Optional, Any
+from typing import Optional, Any, List
 
 import numpy as np
 import pygarment as pyg
@@ -13,6 +13,7 @@ from garment_programs.weon_collars import NoPanelsCollar
 
 from pattern_definitions.shirt_design import ShirtDesign
 from pattern_definitions.torso_design import TorsoDesign
+from config import AttachmentConstraint
 
 
 class BodiceFrontHalf(BaseBodicePanel):
@@ -655,6 +656,19 @@ class Shirt(pyg.Component):
             Length of the shirt.
         """
         return self.right.length()
+    
+    def get_attachment_constraints(self) -> List[AttachmentConstraint]:
+        """Get the list of attachment constraints for this shirt garment.
+        
+        Returns the attachment constraints required for simulating this shirt garment.
+        Shirts do not require any attachment constraints by default.
+        
+        Returns:
+        --------
+        List[AttachmentConstraint]
+            An empty list (shirts do not require attachment constraints).
+        """
+        return []
     
     def apply_body_alignment(self, body: BodyDefinition) -> None:
         """Apply body alignment to the shirt.

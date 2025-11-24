@@ -8,6 +8,7 @@ import pyrender
 from PIL import Image
 
 from config import PathCofig
+from config.render_config import RenderConfig
 
 
 def rotate_matrix_y(matrix, angle_deg):
@@ -126,10 +127,10 @@ def render(
         pyrender_garm_mesh, pyrender_body_mesh, 
         side, 
         paths: PathCofig, 
-        render_props=None
+        render_config: RenderConfig | None = None
     ):
-    if render_props and 'resolution' in render_props:
-        view_width, view_height = render_props['resolution']
+    if render_config and render_config.resolution:
+        view_width, view_height = render_config.resolution
     else:
         view_width, view_height = 1080, 1080
     # Create a pyrender scene
@@ -140,7 +141,7 @@ def render(
     scene.add(pyrender_garm_mesh)
     scene.add(pyrender_body_mesh)
 
-    camera_location=render_props['front_camera_location'] if 'front_camera_location' in render_props else None
+    camera_location = render_config.front_camera_location if render_config and render_config.front_camera_location else None
     create_camera(
         pyrender, pyrender_body_mesh, scene, side,
         camera_location=camera_location
@@ -189,11 +190,23 @@ def load_meshes(paths:PathCofig, body_v, body_f):
     
     return pyrender_garm_mesh, pyrender_body_mesh
 
-def render_images(paths: PathCofig, body_v, body_f, render_props):
-
+def render_images(paths: PathCofig, body_v, body_f, render_config: RenderConfig):
+    """Render images for all specified sides.
+    
+    Parameters
+    ----------
+    paths : PathCofig
+        Path configuration object
+    body_v : np.ndarray
+        Body mesh vertices
+    body_f : np.ndarray
+        Body mesh faces
+    render_config : RenderConfig
+        Render configuration object
+    """
     pyrender_garm_mesh, pyrender_body_mesh = load_meshes(paths, body_v, body_f)
 
-    for side in render_props['sides']:
-        render(pyrender_garm_mesh, pyrender_body_mesh, side, paths, render_props)
+    for side in render_config.sides:
+        render(pyrender_garm_mesh, pyrender_body_mesh, side, paths, render_config)
 
 

@@ -156,10 +156,12 @@ class SimConfig:
         self.enable_edge_edge_collisions = self._options.enable_edge_edge_collisions
         self.enable_body_collision_filters = self._options.enable_body_collision_filters
         self.enable_attachment_constraint = self._options.enable_attachment_constraint
-        self.attachment_labels = self._options.attachment_labels
+        self.attachment_constraints = self._options.attachment_constraints
         self.attachment_frames = self._options.attachment_frames
-        self.attachment_stiffness = self._options.attachment_stiffness
-        self.attachment_damping = self._options.attachment_damping
+        # Backward compatibility: expose legacy attributes
+        self.attachment_labels = [constraint.label for constraint in self._options.attachment_constraints]
+        self.attachment_stiffness = [constraint.stiffness for constraint in self._options.attachment_constraints]
+        self.attachment_damping = [constraint.damping for constraint in self._options.attachment_constraints]
         self.global_damping_factor = self._options.global_damping_factor
         self.global_damping_effective_velocity = self._options.global_damping_effective_velocity
         self.global_max_velocity = self._options.global_max_velocity

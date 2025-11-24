@@ -1,11 +1,13 @@
 
 import numpy as np
+from typing import List
 
 import pygarment as pyg
 from garment_programs.base_classes import BaseBottoms
 from garment_programs.garment_enums import InterfaceName, EdgeLabel
 from pattern_definitions.pants_design import PantsDesign
 from pattern_definitions.body_definition import BodyDefinition
+from config import AttachmentConstraint
 
 
 class PantPanel(pyg.Panel):
@@ -514,6 +516,50 @@ class Pants(BaseBottoms):
             The length of the pants in the design units.
         """
         return self.right.length()
+
+    def get_attachment_constraints(self) -> List[AttachmentConstraint]:
+        """Get the list of attachment constraints for this pants garment.
+        
+        Returns the attachment constraints required for simulating this pants garment.
+        Pants require both a crotch constraint to anchor the garment at the crotch level
+        and a lower_interface constraint at the waist level.
+        
+        Returns:
+        --------
+        List[AttachmentConstraint]
+            A list containing the crotch and lower_interface attachment constraints for pants.
+        """
+        crotch_constraint = AttachmentConstraint(
+            label='crotch',
+            stiffness=100000000.0,
+            damping=10.0,
+            position_calculation={
+                'x': {'positive': [], 'negative': []},
+                'y': {
+                    'positive': ['_leg_length'],
+                    'negative': ['crotch_hip_diff']
+                },
+                'z': {'positive': [], 'negative': []}
+            },
+            direction=None  # Will use default [0, -1, 0] (downward)
+        )
+        
+        lower_interface_constraint = AttachmentConstraint(
+            label='lower_interface',
+            stiffness=0.0,
+            damping=10.0,
+            position_calculation={
+                'x': {'positive': [], 'negative': []},
+                'y': {
+                    'positive': ['computed_waist_level'],
+                    'negative': []
+                },
+                'z': {'positive': [], 'negative': []}
+            },
+            direction=None  # Will use default [0, 1, 0] (upward)
+        )
+        
+        return [crotch_constraint, lower_interface_constraint]
 
     def apply_body_alignment(self, body: BodyDefinition) -> None:
         """Apply body alignment to position the pants correctly.

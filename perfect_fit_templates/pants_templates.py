@@ -67,24 +67,31 @@ class PantsTemplateBase(ABC):
         """
         self._body_definition = body_definition
 
-        waist_half = self._body_definition.waist * 0.5
-        hips_half = self._body_definition.hips * 0.5
+        waist_half = self._body_definition.waist / 2
+        hips_half = self._body_definition.hips / 2
+        waist_to_crotch = self._body_definition.crotch_hip_diff + self._body_definition.hips_line
 
         self._front_rise: float = (
-            self._body_definition.hips_line * raise_to_waist_ratio.value +
+            waist_to_crotch * raise_to_waist_ratio.value +
             self._body_definition.computed_leg_length * crotch_displacement_ratio.value
         )
         self._back_rise: float = (
-            self._body_definition.hips_line * raise_to_waist_ratio.value * self.RATIO_RAISE_BACK_TO_FRONT +
+            waist_to_crotch * raise_to_waist_ratio.value * self.RATIO_RAISE_BACK_TO_FRONT +
             self._body_definition.computed_leg_length * crotch_displacement_ratio.value
         )
         self._waist: float = waist_half
         self._width_hips: float = hips_half * hip_position_ratio.value
-        self._width_thigh: float = self._body_definition.leg_circ * 0.5 * thigh_position_ratio.value
-        self._width_gusset_crotch: float = self._body_definition.crotch_hip_diff * 0.5
-        self._crotch_shift_ratio: float = crotch_displacement_ratio.value
+        self._width_thigh: float = self._body_definition.leg_circ * thigh_position_ratio.value / 2
 
-        self._length_waist_to_hip: float = self._front_rise - self._body_definition.computed_leg_length * crotch_displacement_ratio.value
+        min_ext = body_definition.leg_circ - body_definition.hips / 2  + 5  # 2 inch ease: from pattern making book 
+        front_hip = (body_definition.hips - body_definition.hip_back_width) / 2
+        crotch_extention = min_ext * thigh_position_ratio.value  
+        front_extention = front_hip / 4    # From pattern making book
+        back_extention = crotch_extention - front_extention
+        self._width_gusset_crotch: float = (front_extention + back_extention) / 2
+
+        self._length_waist_to_hip: float = body_definition.hips_line
+        self._crotch_shift_ratio: float = crotch_displacement_ratio.value
 
     @abstractmethod
     def get_design(self) -> PantsDesign:
@@ -112,12 +119,12 @@ class LoosePantsSraightLeg(PantsTemplateBase):
 
         super().__init__(body_definition, raise_to_waist_ratio, crotch_displacement_ratio, hip_position_ratio, thigh_position_ratio)
 
-        self._length_thigh_to_knee: float = self._body_definition.computed_leg_length * 0.5
-        self._length_knee_to_calf: float = self._body_definition.computed_leg_length * 0.25
-        self._length_calf_to_ankle: float = self._body_definition.computed_leg_length * 0.25
-        self._width_knee: float = self._body_definition.leg_circ * 0.3
-        self._width_calf: float = self._body_definition.leg_circ * 0.35
-        self._width_ankle: float = self._body_definition.leg_circ * 0.4
+        self._length_thigh_to_knee: float = self._body_definition.computed_leg_length * 0.4
+        self._length_knee_to_calf: float = self._body_definition.computed_leg_length * 0.2
+        self._length_calf_to_ankle: float = self._body_definition.computed_leg_length * 0.2
+        self._width_knee: float = self._body_definition.leg_circ * 0.4
+        self._width_calf: float = self._body_definition.leg_circ * 0.4
+        self._width_ankle: float = self._body_definition.leg_circ * 0.5
 
 
 

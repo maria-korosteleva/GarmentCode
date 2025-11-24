@@ -1,11 +1,12 @@
 import math
-from typing import Optional, Any
+from typing import Optional, Any, List
 
 import pygarment as pyg
 
 from garment_programs.garment_enums import InterfaceName
 from pattern_definitions.torso_design import TorsoDesign
 from pattern_definitions.body_definition import BodyDefinition
+from config import AttachmentConstraint
 
 class BaseBodicePanel(pyg.Panel):
     """Base class for bodice panels that defines expected interfaces and common functions"""
@@ -73,6 +74,20 @@ class BaseBottoms(pyg.Component):
         self.interfaces = {
             InterfaceName.TOP: object()
         }
+    
+    def get_attachment_constraints(self) -> List[AttachmentConstraint]:
+        """Get the list of attachment constraints for this garment.
+        
+        Default implementation returns an empty list. Subclasses should override
+        this method to return garment-specific constraints.
+        
+        Returns:
+        --------
+        List[AttachmentConstraint]
+            An empty list by default. Subclasses should override to return
+            garment-specific constraints.
+        """
+        return []
         
 class StackableSkirtComponent(BaseBottoms):
     """
@@ -136,3 +151,17 @@ class BaseBand(pyg.Component):
     def length(self) -> float:
         """Base length == Length of a first panel"""
         return self._get_subcomponents()[0].length()
+    
+    def get_attachment_constraints(self) -> List[AttachmentConstraint]:
+        """Get the list of attachment constraints for this garment.
+        
+        Default implementation returns an empty list. Subclasses should override
+        this method to return garment-specific constraints.
+        
+        Returns:
+        --------
+        List[AttachmentConstraint]
+            An empty list by default. Subclasses should override to return
+            garment-specific constraints.
+        """
+        return []

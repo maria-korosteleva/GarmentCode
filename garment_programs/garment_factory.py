@@ -19,6 +19,7 @@ from pattern_definitions.body_definition import BodyDefinition
 from pattern_definitions.shirt_design import ShirtDesign
 from pattern_definitions.skirt_design import SkirtDesign
 from pattern_definitions.waistband_design import WaistbandDesign
+from config import AttachmentConstraint
 
 
 
@@ -480,7 +481,7 @@ def create_garment(
     body: BodyDefinition,
     design: dict,
     **kwargs: Any
-) -> pyg.Component:
+) -> tuple[pyg.Component, list[AttachmentConstraint]]:
     """Factory function to create garments by type name.
     
     This function provides a simple interface for creating garments based on
@@ -512,9 +513,13 @@ def create_garment(
     
     Returns:
     --------
-    pyg.Component
-        The created garment instance (Pants, Shirt, FittedShirt, SkirtCircle,
-        AsymmSkirtCircle, StraightWB, or FittedWB).
+    tuple[pyg.Component, list[AttachmentConstraint]]
+        A tuple containing:
+        - The created garment instance (Pants, Shirt, FittedShirt, SkirtCircle,
+          AsymmSkirtCircle, StraightWB, or FittedWB)
+        - A list of AttachmentConstraint objects for the garment.
+          For pants, this includes a crotch constraint. For other garment types,
+          this is an empty list.
     
     Raises:
     -------
@@ -544,5 +549,11 @@ def create_garment(
             f"Supported types: {list(garment_creators.keys())}"
         )
     
-    return garment_creators[garment_type]()
+    garment = garment_creators[garment_type]()
+    
+    # Get attachment constraints from the garment itself
+    # All garment classes implement get_attachment_constraints() method
+    constraints = garment.get_attachment_constraints()  # type: ignore[attr-defined]
+    
+    return garment, constraints
 

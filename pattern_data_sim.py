@@ -30,6 +30,7 @@ import pygarment.data_config as data_config
 import pygarment.meshgen.datasim_utils as sim
 from pygarment.data_config import Properties
 from garment_programs.garment_factory import create_garment, GarmentFactory
+from config import AttachmentConstraint
 from assets.bodies.body_params import BodyParameters
 from pattern_definitions.body_definition import BodyDefinition
 from log_config import set_log_level
@@ -314,7 +315,7 @@ def generate_dataset(
     properties: Properties,
     sys_paths: Properties,
     verbose: bool = False
-) -> tuple[Path, Path]:
+) -> tuple[Path, Path, dict[str, Any], dict[str, Any]]:
     """Generate a synthetic dataset of patterns with given properties.
     
     Parameters:
@@ -330,8 +331,12 @@ def generate_dataset(
     
     Returns:
     --------
-    tuple[Path, Path]
-        Tuple containing (default_path, body_sample_path).
+    tuple[Path, Path, dict, dict]
+        Tuple containing:
+        - default_path: Path to default body data folder
+        - body_sample_path: Path to random body data folder
+        - default_pattern_data: Dict mapping pattern names to their data (piece, body_params, design)
+        - body_sample_pattern_data: Dict mapping pattern names to their data (piece, body_params, design)
     
     Raises:
     -------
@@ -349,6 +354,10 @@ def generate_dataset(
     data_folder, default_path, body_sample_path = _create_data_folder(properties, path)
     default_sample_data = default_path / 'data'
     body_sample_data = body_sample_path / 'data'
+    
+    # Store pattern data in memory (for direct passing to simulation)
+    default_pattern_data: dict[str, dict[str, Any]] = {}
+    body_sample_pattern_data: dict[str, dict[str, Any]] = {}
     
     # Generate data
     start_time = time.time()
@@ -396,12 +405,23 @@ def generate_dataset(
     if is_composite:
         factory = GarmentFactory(default_body_def, design)
         piece_default = factory.create_composite_garment()
+        # Composite garments don't have constraints yet, use empty list
+        constraints_default: list[AttachmentConstraint] = []
     else:
-        piece_default = create_garment(garment_type, default_body_def, design)
+        piece_default, constraints_default = create_garment(garment_type, default_body_def, design)
     piece_default.name = properties['body_default']
     
     logger.info(f"Generating default body sample: {properties['body_default']}")
     _save_sample(piece_default, default_body_params, design, default_sample_data, verbose=verbose)
+    
+    # Store default body pattern data in memory
+    default_pattern_data[piece_default.name] = {
+        'piece': piece_default,
+        'body_params': default_body_params,
+        'body_def': default_body_def,
+        'design': design,
+        'attachment_constraints': constraints_default
+    }
     
     # Generate samples - limit to requested number or available options, whichever is smaller
     max_available = len(body_options)
@@ -429,12 +449,23 @@ def generate_dataset(
             if is_composite:
                 factory = GarmentFactory(rand_body_def, design)
                 piece_shaped = factory.create_composite_garment()
+                # Composite garments don't have constraints yet, use empty list
+                constraints_shaped: list[AttachmentConstraint] = []
             else:
-                piece_shaped = create_garment(garment_type, rand_body_def, design)
+                piece_shaped, constraints_shaped = create_garment(garment_type, rand_body_def, design)
             piece_shaped.name = name
             
             # Save samples
             _save_sample(piece_shaped, rand_body_params, design, body_sample_data, verbose=verbose)
+            
+            # Store body sample pattern data in memory
+            body_sample_pattern_data[name] = {
+                'piece': piece_shaped,
+                'body_params': rand_body_params,
+                'body_def': rand_body_def,
+                'design': design,
+                'attachment_constraints': constraints_shaped
+            }
             
             if (i + 1) % 10 == 0:
                 logger.info(f'Generated {i + 1}/{num_samples} samples...')
@@ -457,7 +488,7 @@ def generate_dataset(
     
     logger.info(f'Dataset generation completed in {elapsed:.3f} seconds')
     
-    return default_path, body_sample_path
+    return default_path, body_sample_path, default_pattern_data, body_sample_pattern_data
 
 
 def gather_visuals(path: str | Path, verbose: bool = False) -> None:
@@ -513,7 +544,8 @@ def gather_renders(out_data_path: Path, verbose: bool = False) -> None:
 def run_simulation(
     dataset: str,
     system_config: Properties,
-    command_args: argparse.Namespace
+    command_args: argparse.Namespace,
+    pattern_data: dict[str, dict[str, Any]] | None = None
 ) -> bool:
     """Run simulation on an existing dataset.
     
@@ -525,6 +557,11 @@ def run_simulation(
         System configuration properties.
     command_args : argparse.Namespace
         Parsed command line arguments.
+    pattern_data : dict[str, dict[str, Any]] | None, optional
+        Optional in-memory pattern data dict mapping pattern names to their data.
+        If provided, this data will be used directly instead of reading from disk.
+        Format: {pattern_name: {'piece': ..., 'body_params': ..., 'body_def': ..., 'design': ...}}
+        If None, data will be read from disk (backward compatible).
     
     Returns:
     --------
@@ -562,15 +599,31 @@ def run_simulation(
     
     # Main simulation loop - supports batching via num_samples=None for all samples
     logger.info(f"Starting simulation for dataset: {dataset} (body_type: {body_type})")
-    finished = sim.batch_sim(
-        datapath,
-        output_path,
-        props,
-        run_default_body=command_args.default_body,
-        num_samples=None,  # None = process all samples, can be set to a number for batching
-        caching=command_args.caching,
-        force_restart=False
-    )
+    
+    # Use in-memory data if available, otherwise read from disk
+    if pattern_data is not None:
+        logger.info(f"Using in-memory pattern data for {len(pattern_data)} patterns")
+        finished = sim.batch_sim_with_data(
+            pattern_data,
+            datapath,  # Still needed for output paths and file structure
+            output_path,
+            props,
+            run_default_body=command_args.default_body,
+            num_samples=None,
+            caching=command_args.caching,
+            force_restart=False
+        )
+    else:
+        logger.info("Reading pattern data from disk (backward compatible mode)")
+        finished = sim.batch_sim(
+            datapath,
+            output_path,
+            props,
+            run_default_body=command_args.default_body,
+            num_samples=None,  # None = process all samples, can be set to a number for batching
+            caching=command_args.caching,
+            force_restart=False
+        )
     
     props.add_sys_info()  # Save system information
     props.serialize(dataset_file)
@@ -612,7 +665,7 @@ if __name__ == "__main__":
         
         # Generate dataset
         try:
-            default_path, body_sample_path = generate_dataset(
+            default_path, body_sample_path, default_pattern_data, body_sample_pattern_data = generate_dataset(
                 system_config['datasets_path'],
                 props,
                 system_config,
@@ -636,6 +689,12 @@ if __name__ == "__main__":
             logger.exception("Exception details:")
             sys.exit(1)
     
+    # Store pattern data for simulation stage (if generation was run)
+    pattern_data_for_sim: dict[str, Any] | None = None
+    if command_args.design is not None:
+        # Generation was run, use the appropriate pattern data
+        pattern_data_for_sim = default_pattern_data if command_args.default_body else body_sample_pattern_data
+    
     # Step 2: Run simulation if not skipped
     if not command_args.skip_simulation:
         # Determine dataset name
@@ -646,19 +705,7 @@ if __name__ == "__main__":
                 logger.error('No dataset available for simulation')
                 sys.exit(1)
         
-        try:
-            finished = run_simulation(dataset_name, system_config, command_args)
-            
-            if finished:
-                logger.success('Dataset processing finished')
-                sys.exit(0)
-            else:
-                logger.warning('Dataset processing not finished')
-                sys.exit(1)
-        except Exception as e:
-            logger.error(f'Error during simulation: {e}')
-            logger.exception("Exception details:")
-            sys.exit(1)
+        finished = run_simulation(dataset_name, system_config, command_args, pattern_data_for_sim)
     else:
         logger.info('Simulation skipped')
         sys.exit(0)
