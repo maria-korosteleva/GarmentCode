@@ -1,16 +1,12 @@
-import sys
 import time
 import traceback
 import trimesh
 from typing import Optional, Any
 
-# Warp
+from loguru import logger
+from tqdm import tqdm
 import warp as wp
 
-# Logging
-from loguru import logger
-
-# Custom code
 from pygarment.meshgen.render.pythonrender import render_images
 from pygarment.meshgen.garment import SimulationGarment
 from pygarment.meshgen.garment_data import GarmentData
@@ -19,6 +15,7 @@ from config.sim_config import SimConfig
 from config.dataset_properties import DatasetProperties
 
 wp.init()
+
 
 class SimulationError(BaseException):
     """Exception raised when panel stitching cannot be executed correctly."""
@@ -45,35 +42,30 @@ def optimize_garment_storage(paths: PathCofig) -> None:
         boxmesh = trimesh.load(paths.g_box_mesh)
         boxmesh.export(paths.g_box_mesh_compressed)
         paths.g_box_mesh.unlink()
-    except BaseException:
-        pass
+        logger.info(f'Converted {paths.g_box_mesh} to {paths.g_box_mesh_compressed} and removed original OBJ.')
+    except BaseException as e:
+        logger.warning(f"Failed to convert {paths.g_box_mesh} to PLY: {e}")
 
     try:
         simmesh = trimesh.load(paths.g_sim)
         simmesh.export(paths.g_sim_compressed)
         paths.g_sim.unlink()
-    except BaseException:
-        pass
+        logger.info(f'Converted {paths.g_sim} to {paths.g_sim_compressed} and removed original OBJ.')
+    except BaseException as e:
+        logger.warning(f"Failed to convert {paths.g_sim} to PLY: {e}")
 
     # Remove large texture file and mtl -- not so necessary
-    paths.g_texture_fabric.unlink(missing_ok=True)
-    paths.g_mtl.unlink(missing_ok=True)
+    try:
+        paths.g_texture_fabric.unlink(missing_ok=True)
+        logger.info(f"Removed texture file: {paths.g_texture_fabric}")
+    except Exception as e:
+        logger.warning(f"Failed to remove texture file {paths.g_texture_fabric}: {e}")
 
-
-def update_progress(progress: int, total: int) -> None:
-    """Display a progress bar in the console.
-    
-    Parameters
-    ----------
-    progress : int
-        Current progress value (number of completed items).
-    total : int
-        Total number of items to process.
-    """
-    amtDone = progress / total
-    num_dash = int(amtDone * 50)
-    sys.stdout.write('\rProgress: [{0:50s}] {1:.1f}%'.format('#' * num_dash + '-' * (50 - num_dash), amtDone * 100))
-    sys.stdout.flush()
+    try:
+        paths.g_mtl.unlink(missing_ok=True)
+        logger.info(f"Removed material file: {paths.g_mtl}")
+    except Exception as e:
+        logger.warning(f"Failed to remove material file {paths.g_mtl}: {e}")
 
 
 def sim_frame_sequence(
@@ -83,7 +75,7 @@ def sim_frame_sequence(
     verbose: bool = False
 ) -> None:
     """Run the simulation frame sequence.
-    
+
     Executes the simulation for the specified number of frames, checking for
     static equilibrium after the minimum number of steps and zero gravity steps.
     
@@ -109,11 +101,14 @@ def sim_frame_sequence(
     if store_usd:
         garment.render_usd_frame()
 
-    for frame in range(0, config.max_sim_steps):
+    # Use tqdm for progress bar if not verbose
+    frame_iter = (
+        range(0, config.max_sim_steps)
+        if verbose else tqdm(range(0, config.max_sim_steps), desc="Simulation frames", unit="frame")
+    )
+    for frame in frame_iter:
         if verbose:
             logger.info(f'\n------ Frame {frame + 1} ------')
-        else:
-            update_progress(frame, config.max_sim_steps)
 
         garment.frame = frame
         garment.run_frame()
@@ -125,6 +120,7 @@ def sim_frame_sequence(
         if frame >= config.zero_gravity_steps and frame >= config.min_sim_steps:
             static, _ = garment.is_static()
             if static:
+                logger.info(f"Simulation stopped early at frame {frame+1} due to static equilibrium.")
                 break
         
 
@@ -139,7 +135,7 @@ def run_sim(
     garment_data: Optional[GarmentData] = None
 ) -> None:
     """Initialize and run the simulation.
-    
+
     This function sets up the simulation environment, runs the frame sequence,
     performs quality checks, saves the results, and optionally renders images.
     
@@ -196,11 +192,11 @@ def run_sim(
         sim_frame_sequence(garment, config, store_usd, verbose=verbose)
     except SimulationError as e:
         logger.error(f"Simulation failed for {cloth_name}: {e}")
-        traceback.print_exc()
+        logger.error(traceback.format_exc())
         raise
     except BaseException as e:
         logger.error(f'Simulation crashed for {cloth_name}: {e}')
-        traceback.print_exc()
+        logger.error(traceback.format_exc())
         raise
 
     # Quality checks (log warnings and continue)
@@ -239,5 +235,5 @@ def run_sim(
 
     # Final info output
     sec = round(time.time() - start_time, 3)
-    min = int(sec / 60)
-    logger.info(f"\nSimulation pipeline took: {min} m {sec - min * 60} s")
+    min_ = int(sec / 60)
+    logger.info(f"\nSimulation pipeline took: {min_} m {sec - min_ * 60} s")

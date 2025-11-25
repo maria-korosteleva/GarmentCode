@@ -546,17 +546,17 @@ class Pants(BaseBottoms):
         
         lower_interface_constraint = AttachmentConstraint(
             label='lower_interface',
-            stiffness=0.0,
+            stiffness=1000,
             damping=10.0,
             position_calculation={
                 'x': {'positive': [], 'negative': []},
                 'y': {
-                    'positive': ['computed_waist_level'],
+                    'positive': ['fit_waist_level'],
                     'negative': []
                 },
                 'z': {'positive': [], 'negative': []}
             },
-            direction=None  # Will use default [0, 1, 0] (upward)
+            direction=[0, 1, 0]  # Will use default [0, 1, 0] (upward)
         )
         
         return [crotch_constraint, lower_interface_constraint]

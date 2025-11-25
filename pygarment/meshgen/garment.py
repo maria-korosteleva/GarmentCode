@@ -116,7 +116,6 @@ class SimulationGarment:
         self.model.particle_cohesion = config.particle_cohesion
         self.model.particle_adhesion = config.particle_adhesion
 
-        #self.integrator = wp.sim.SemiImplicitIntegrator() #intialize semi-implicit time-integrator
         self.integrator = wp.sim.XPBDIntegrator() #intialize semi-implicit time-integrator
         self.state_0 = self.model.state() #returns state object for model (holds all *time-varying* data for a model)
         self.state_1 = self.model.state() #i.e. body/particle positions and velocities

@@ -9,6 +9,7 @@ from typing import Union, Any
 import pygarment as pyg
 from loguru import logger
 
+from perfect_fit_templates.pants_templates import RaiseWaist, CrotchDisplacementRatio, GeneralFit, LegLength, PerfectFitPantsStyleSpec, PerfectFitPantsDesign
 from garment_programs.weon_pants import Pants
 from garment_programs.weon_shirt import Shirt, FittedShirt
 from garment_programs.weon_circle_skirt import SkirtCircle, AsymmSkirtCircle
@@ -20,7 +21,6 @@ from pattern_definitions.skirt_design import SkirtDesign
 from pattern_definitions.waistband_design import WaistbandDesign
 from pattern_definitions.pants_design import PantsDesign
 from config import AttachmentConstraint
-
 
 
 
@@ -63,11 +63,10 @@ class GarmentFactory:
         return self._design
     
     def create_pants(self) -> Pants:
-        """Create a pants garment instance.
+        """Create a pants garment instance from regular design specification.
         
         Creates a Pants garment using the factory's body and design parameters.
-        The design dictionary is automatically converted to PantsDesign internally
-        by the Pants class.
+        Uses regular PantsDesign conversion from the design dictionary.
         
         Returns:
         --------
@@ -85,8 +84,71 @@ class GarmentFactory:
                 "Design dictionary must contain 'pants' key for pants creation"
             )
         
-        pants = Pants(design=PantsDesign(self._design))
-        logger.info("Creating perfect fit for loose pants and straight legs design")
+        pants_design = PantsDesign(self._design)
+        logger.info("Creating pants from regular design specification")
+        
+        pants = Pants(design=pants_design)
+        pants.apply_body_alignment(self._body)
+        
+        return pants
+    
+    def create_pants_perfect_fit(self) -> Pants:
+        """Create a pants garment instance from perfect fit specification.
+        
+        Creates a Pants garment using perfect fit parameters from the design dictionary.
+        The design dictionary should contain perfect fit parameters at the top level:
+        - garment_type: str (e.g., "pants")
+        - raise_to_waist_ratio: str (e.g., "MID")
+        - crotch_displacement_ratio: str (e.g., "LOW_CROTCH")
+        - general_fit_ratio: str (e.g., "REGULAR")
+        - leg_length_ratio: str (e.g., "ANKLE")
+        - pants_style_spec: str (e.g., "BOOT_CUT")
+        
+        Returns:
+        --------
+        Pants
+            A fully initialized Pants garment instance.
+        
+        Raises:
+        -------
+        ValueError
+            If required perfect fit parameters are missing or contain invalid enum values.
+        """
+        # Extract perfect fit parameters from design dict
+        try:
+            raise_to_waist = RaiseWaist[self._design.get('raise_to_waist_ratio', 'MID')]
+            crotch_displacement = CrotchDisplacementRatio[self._design.get('crotch_displacement_ratio', 'LOW_CROTCH')]
+            general_fit = GeneralFit[self._design.get('general_fit_ratio', 'REGULAR')]
+            leg_length = LegLength[self._design.get('leg_length_ratio', 'ANKLE')]
+            pants_style = PerfectFitPantsStyleSpec[self._design.get('pants_style_spec', 'STRAIGHT')]
+        except KeyError as e:
+            raise ValueError(
+                f"Invalid enum value in perfect fit specification: {e}. "
+                f"Available values: RaiseWaist: {[e.name for e in RaiseWaist]}, "
+                f"CrotchDisplacementRatio: {[e.name for e in CrotchDisplacementRatio]}, "
+                f"GeneralFit: {[e.name for e in GeneralFit]}, "
+                f"LegLength: {[e.name for e in LegLength]}, "
+                f"PerfectFitPantsStyleSpec: {[e.name for e in PerfectFitPantsStyleSpec]}"
+            )
+        
+        # Create perfect fit pants design
+        pants_design = PerfectFitPantsDesign(
+            body_definition=self._body,
+            raise_to_waist_ratio=raise_to_waist,
+            crotch_displacement_ratio=crotch_displacement,
+            general_fit_ratio=general_fit,
+            leg_length_ratio=leg_length,
+            pants_style_spec=pants_style
+        ).get_design()
+        
+        logger.info(
+            f"Creating perfect fit pants: "
+            f"style={pants_style.name}, "
+            f"fit={general_fit.name}, "
+            f"length={leg_length.name}"
+        )
+        
+        pants = Pants(design=pants_design)
         pants.apply_body_alignment(self._body)
         
         return pants

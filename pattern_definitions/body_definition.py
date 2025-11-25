@@ -147,12 +147,21 @@ class BodyDefinition:
         self.waist_line: float = _get_value('waist_line', 0.0)
         self.waist_over_bust_line: float = _get_value('waist_over_bust_line', 0.0)
         self.wrist: float = _get_value('wrist', 0.0)
+        self._fit_waist_level: float = self.computed_waist_level
     
     @property
     def computed_waist_level(self) -> float:
         """Computed vertical position of waist level (height - head_l - waist_line)."""
         return self.height - self.head_l - self.waist_line
-    
+
+    @property
+    def fit_waist_level(self) -> float:
+        return self._fit_waist_level
+
+    @fit_waist_level.setter
+    def fit_waist_level(self, value: float) -> None:
+        self._fit_waist_level = value
+
     @property
     def computed_leg_length(self) -> float:
         """Computed leg length (computed_waist_level - hips_line)."""

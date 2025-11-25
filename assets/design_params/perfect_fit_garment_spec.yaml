@@ -1,0 +1,6 @@
+garment_type: "pants"
+raise_to_waist_ratio: "MID"
+crotch_displacement_ratio: "LOW_CROTCH"
+general_fit_ratio: "REGULAR"
+leg_length_ratio: "ANKLE"
+pants_style_spec: "TIGHTS"

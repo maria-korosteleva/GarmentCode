@@ -14,7 +14,7 @@ from loguru import logger
 import pygarment.meshgen.boxmeshgen as bmg
 from pygarment.meshgen.boxmeshgen import BoxMesh
 from config import PathCofig
-from config.dataset_properties import DatasetProperties
+from pygarment.meshgen.pattern_data import PatternData, SimulationConfig
 
 # Warp simulation
 from pygarment.meshgen.simulation import run_sim
@@ -26,10 +26,8 @@ import json
 
 
 def batch_sim_with_data(
-    pattern_data: dict[str, dict[str, Any]],
-    data_path: Path,
-    output_path: Path,
-    dataset_props: Any,
+    pattern_data: dict[str, PatternData],
+    sim_config: 'SimulationConfig',
     run_default_body: bool = False,
     num_samples: Optional[int] = None,
     caching: bool = False,
@@ -43,17 +41,12 @@ def batch_sim_with_data(
     
     Parameters
     ----------
-    pattern_data : dict[str, dict[str, Any]]
-        Dictionary mapping pattern names to their data structures.
-        Format: {pattern_name: {'piece': ..., 'body_params': ..., 'body_def': ..., 'design': ...}}
-    data_path : Path
-        Path to folder with patterns (for given body type). Used for output paths
-        and file structure.
-    output_path : Path
-        Path to folder where the simulated dataset will be saved.
-    dataset_props : Any
-        Dataset properties object (same as `batch_sim`). Must support dictionary-like
-        access with keys 'sim', 'body_default', 'body_samples', and 'frozen'.
+    pattern_data : dict[str, PatternData]
+        Dictionary mapping pattern names to PatternData objects.
+        Each PatternData contains piece, body_params, body_def, design, 
+        attachment_constraints, and paths.
+    sim_config : SimulationConfig
+        Simulation configuration object with SimConfig and RenderConfig.
     run_default_body : bool, optional
         If True, runs the dataset on the default body. Default is False.
     num_samples : int, optional
@@ -78,17 +71,39 @@ def batch_sim_with_data(
     interruption and resumption.
     """
     # ----- Init -----
-    if 'frozen' in dataset_props and dataset_props['frozen']:
+    # Check if frozen
+    if sim_config.frozen:
         logger.warning('Dataset is frozen, processing is skipped')
         return True
 
-    resume = init_sim_props(dataset_props, batch_run=True, force_restart=force_restart)
-    body_type = 'default_body' if run_default_body else 'random_body'
-    data_props_file = output_path / f'dataset_properties_{body_type}.yaml'
+    # Create Properties for stats tracking (still needed for stats serialization)
+    from pygarment.data_config import Properties
+    props = Properties()
+    props['sim'] = {
+        'config': sim_config.sim_config._props,
+        'stats': {}
+    }
+    props['render'] = {
+        'config': sim_config.render_config.model_dump(),
+        'stats': {}
+    }
+    props['data_folder'] = sim_config.data_folder
+    props['frozen'] = sim_config.frozen
     
-    # Convert to DatasetProperties for type-safe config access
-    # Note: stats are still accessed via dict since they're runtime data
-    dataset_props_obj = DatasetProperties.from_props(dataset_props)
+    # Initialize sim props (for stats initialization)
+    resume = init_sim_props(props, batch_run=True, force_restart=force_restart)
+    
+    body_type = 'default_body' if run_default_body else 'random_body'
+    # Get output path from first pattern's PathCofig
+    if not pattern_data:
+        logger.error("No pattern data provided")
+        return False
+    first_pattern = next(iter(pattern_data.values()))
+    if not isinstance(first_pattern, PatternData):
+        logger.error("Pattern data must contain PatternData objects")
+        return False
+    output_path = first_pattern.paths.out
+    data_props_file = output_path / f'dataset_properties_{body_type}.yaml'
     
     # Get pattern names from in-memory data
     pattern_names = list(pattern_data.keys())
@@ -101,47 +116,52 @@ def batch_sim_with_data(
     count = 0
     for pattern_name in pattern_names:
         # Skip processed cases -- in case of resume
-        # Stats are runtime data, so we access via dict
-        if resume and pattern_name in dataset_props_obj.sim.stats.get('processed', []):
+        if resume and pattern_name in props['sim']['stats'].get('processed', []):
             logger.debug(f'Skipped as already processed: {pattern_name}')
             continue
 
         # Initialize processed list if needed
-        if 'processed' not in dataset_props_obj.sim.stats:
-            dataset_props_obj.sim.stats['processed'] = []
-        dataset_props_obj.sim.stats['processed'].append(pattern_name)
-        # Update props before serialization
-        dataset_props_obj.update_props(dataset_props)
-        _serialize_props_with_sim_stats(dataset_props, data_props_file)  # Save before potential crash
+        if 'processed' not in props['sim']['stats']:
+            props['sim']['stats']['processed'] = []
+        props['sim']['stats']['processed'].append(pattern_name)
+        # Serialize before potential crash
+        _serialize_props_with_sim_stats(props, data_props_file)
 
         try:
-            # Create paths config (still needed for output structure)
-            paths = PathCofig(
-                in_element_path=data_path / pattern_name,
-                out_path=output_path,
-                in_name=pattern_name,
-                body_name=dataset_props['body_default'],
-                samples_name=dataset_props['body_samples'],
-                default_body=run_default_body
-            )
-            
-            # Use in-memory pattern data
+            # Use in-memory pattern data (includes PathCofig)
             pattern_info = pattern_data[pattern_name]
-            attachment_constraints = pattern_info.get('attachment_constraints', None)
+            if not isinstance(pattern_info, PatternData):
+                logger.error(f"Pattern {pattern_name} is not a PatternData object")
+                props.add_fail('sim', 'crashes', pattern_name)
+                continue
+            
+            # Create a stats tracking object for this pattern
+            from pygarment.data_config import Properties
+            pattern_props = Properties()
+            pattern_props['sim'] = {
+                'config': sim_config.sim_config._props,
+                'stats': props['sim']['stats']  # Share stats with batch
+            }
+            pattern_props['render'] = {
+                'config': sim_config.render_config.model_dump(),
+                'stats': props['render']['stats']  # Share stats with batch
+            }
+            
             template_simulation_with_data(
-                paths, 
-                dataset_props, 
-                pattern_info['piece'],
-                pattern_info['body_params'],
-                pattern_info['body_def'],
-                pattern_info['design'],
+                pattern_info.paths, 
+                sim_config,
+                pattern_props,  # For stats tracking
+                pattern_info.piece,
+                pattern_info.body_params,
+                pattern_info.body_def,
+                pattern_info.design,
                 caching=caching,
-                attachment_constraints=attachment_constraints
+                attachment_constraints=pattern_info.attachment_constraints
             )
         except BaseException as e: 
             # Not all files available
             logger.error(f"Pattern simulation failed for {pattern_name}: {e}")
-            dataset_props.add_fail('sim', 'crashes', pattern_name)
+            props.add_fail('sim', 'crashes', pattern_name)
 
         count += 1  # count actively processed cases
         
@@ -154,18 +174,15 @@ def batch_sim_with_data(
             break
 
     # Check completion status
-    # Refresh dataset_props_obj to get latest stats
-    dataset_props_obj = DatasetProperties.from_props(dataset_props)
-    processed_count = len(dataset_props_obj.sim.stats.get('processed', []))
+    processed_count = len(props['sim']['stats'].get('processed', []))
     logger.info(f'\nFinished batch processing: {processed_count}/{total_patterns} patterns processed')
     
     try:
         if processed_count >= total_patterns:
             # Processing successfully finished -- no need to resume later
-            if 'processed' in dataset_props_obj.sim.stats:
-                del dataset_props_obj.sim.stats['processed']
-            dataset_props['frozen'] = True
-            dataset_props_obj.update_props(dataset_props)
+            if 'processed' in props['sim']['stats']:
+                del props['sim']['stats']['processed']
+            props['frozen'] = True
             process_finished = True
             logger.success("All patterns processed successfully. Dataset frozen.")
         else:
@@ -175,9 +192,8 @@ def batch_sim_with_data(
         logger.warning('KeyError accessing processed stats')
         process_finished = True
 
-    # Logs - update props before serialization
-    dataset_props_obj.update_props(dataset_props)
-    _serialize_props_with_sim_stats(dataset_props, data_props_file)
+    # Serialize final state
+    _serialize_props_with_sim_stats(props, data_props_file)
 
     return process_finished
 
@@ -218,18 +234,10 @@ def batch_sim(data_path, output_path, dataset_props,
     bool
         True if all samples were processed successfully, False otherwise
     """
-    # ----- Init -----
-    if 'frozen' in dataset_props and dataset_props['frozen']:
-        logger.warning('Dataset is frozen, processing is skipped')
-        return True
 
     resume = init_sim_props(dataset_props, batch_run=True, force_restart=force_restart)
     body_type = 'default_body' if run_default_body else 'random_body'
     data_props_file = output_path / f'dataset_properties_{body_type}.yaml'
-    
-    # Convert to DatasetProperties for type-safe config access
-    # Note: stats are still accessed via dict since they're runtime data
-    dataset_props_obj = DatasetProperties.from_props(dataset_props)
     
     pattern_names = _get_pattern_names(data_path)
 
@@ -242,18 +250,14 @@ def batch_sim(data_path, output_path, dataset_props,
     count = 0
     for pattern_name in pattern_names:
         # Skip processed cases -- in case of resume
-        # Stats are runtime data, so we access via dict
-        if resume and pattern_name in dataset_props_obj.sim.stats.get('processed', []):
+        if resume and pattern_name in dataset_props['sim']['stats'].get('processed', []):
             logger.debug(f'Skipped as already processed: {pattern_name}')
             continue
 
         # Initialize processed list if needed
-        if 'processed' not in dataset_props_obj.sim.stats:
-            dataset_props_obj.sim.stats['processed'] = []
-        dataset_props_obj.sim.stats['processed'].append(pattern_name)
-        # Update props before serialization
-        dataset_props_obj.update_props(dataset_props)
-        _serialize_props_with_sim_stats(dataset_props, data_props_file)  # Save before potential crash
+        if 'processed' not in dataset_props['sim']['stats']:
+            dataset_props['sim']['stats']['processed'] = []
+        dataset_props['sim']['stats']['processed'].append(pattern_name)
 
         try:
             paths = PathCofig(
@@ -282,18 +286,15 @@ def batch_sim(data_path, output_path, dataset_props,
             break
 
     # Check completion status
-    # Refresh dataset_props_obj to get latest stats
-    dataset_props_obj = DatasetProperties.from_props(dataset_props)
-    processed_count = len(dataset_props_obj.sim.stats.get('processed', []))
+    processed_count = len(dataset_props['sim']['stats'].get('processed', []))
     logger.info(f'\nFinished batch processing: {processed_count}/{total_patterns} patterns processed')
     
     try:
         if processed_count >= total_patterns:
             # Processing successfully finished -- no need to resume later
-            if 'processed' in dataset_props_obj.sim.stats:
-                del dataset_props_obj.sim.stats['processed']
+            if 'processed' in dataset_props['sim']['stats']:
+                del dataset_props['sim']['stats']['processed']
             dataset_props['frozen'] = True
-            dataset_props_obj.update_props(dataset_props)
             process_finished = True
             logger.success("All patterns processed successfully. Dataset frozen.")
         else:
@@ -303,8 +304,7 @@ def batch_sim(data_path, output_path, dataset_props,
         logger.warning('KeyError accessing processed stats')
         process_finished = True
 
-    # Logs - update props before serialization
-    dataset_props_obj.update_props(dataset_props)
+    # Serialize final state
     _serialize_props_with_sim_stats(dataset_props, data_props_file)
 
     return process_finished
@@ -426,27 +426,22 @@ def init_sim_props(props, batch_run=False, force_restart=False):
             # Assuming the last example processed example caused the failure
             last_processed = processed_list[-1]
 
-            # Access render stats through DatasetProperties for type safety
-            dataset_props_temp = DatasetProperties.from_props(props)
-            render_time_keys = dataset_props_temp.render.stats.get('render_time', {}).keys()
+            # Access render stats
+            render_time_keys = props['render']['stats'].get('render_time', {}).keys()
             if not any([(name in last_processed) or (last_processed in name) for name in render_time_keys]):
                 # Crash detected -- the last example does not appear in the stats
-                # Stats are runtime data, so we access via dict
-                if last_processed not in dataset_props_temp.sim.stats.get('fails', {}).get('crashes', []):
+                if last_processed not in props['sim']['stats'].get('fails', {}).get('crashes', []):
                     # Remove last from processed if it did not crash
-                    if last_processed not in dataset_props_temp.sim.stats.get('stop_over', []):   
-                        dataset_props_temp.sim.stats.setdefault('processed', []).pop()
-                        dataset_props_temp.update_props(props)
+                    if last_processed not in props['sim']['stats'].get('stop_over', []):   
+                        props['sim']['stats'].setdefault('processed', []).pop()
                         logger.debug(f"Removed last processed pattern (likely crashed): {last_processed}")
                     else:
                         # Already passed here once -> add as crash
-                        dataset_props_temp.sim.stats.setdefault('fails', {}).setdefault('crashes', []).append(last_processed)
-                        dataset_props_temp.update_props(props)
+                        props['sim']['stats'].setdefault('fails', {}).setdefault('crashes', []).append(last_processed)
                         logger.warning(f"Marking pattern as crash (second attempt): {last_processed}")
 
             # Indicate resuming dataset simulation
-            dataset_props_temp.sim.stats.setdefault('stop_over', []).append(last_processed)
-            dataset_props_temp.update_props(props)
+            props['sim']['stats'].setdefault('stop_over', []).append(last_processed)
             logger.info(f"Resuming batch processing from: {last_processed}")
             return True
 
@@ -482,7 +477,8 @@ def init_sim_props(props, batch_run=False, force_restart=False):
 
 def template_simulation_with_data(
     paths: PathCofig,
-    props: Any,  # Properties object with dict-like access and add_fail method
+    sim_config: SimulationConfig,
+    stats_props: Any,  # Properties object for stats tracking
     piece: Any,
     body_params: Any,
     body_def: Any,
@@ -500,10 +496,10 @@ def template_simulation_with_data(
     ----------
     paths : PathCofig
         Path configuration object containing all necessary file paths.
-    props : dict[str, Any]
-        Dictionary containing simulation and render properties. Must have keys:
-        - 'sim': Dictionary with simulation configuration
-        - 'render': Dictionary with rendering configuration
+    sim_config : SimulationConfig
+        Simulation configuration object with SimConfig and RenderConfig.
+    stats_props : Properties
+        Properties object for tracking simulation and render statistics.
     piece : Any
         Garment piece object. Must have an `assembly()` method that returns a
         pattern object with a `serialize()` method.
@@ -528,9 +524,8 @@ def template_simulation_with_data(
     compatibility and allows for later disk-based processing or debugging.
     
     If attachment_constraints are provided, they will be injected into the
-    simulation config (props['sim']['config']['options']['attachment_constraints'])
-    before creating the SimConfig object. This allows garment-specific constraints
-    to be used during simulation.
+    simulation config before creating the SimConfig object. This allows 
+    garment-specific constraints to be used during simulation.
     
     Raises
     ------
@@ -541,14 +536,15 @@ def template_simulation_with_data(
     BaseException
         If any other error occurs during pattern loading or simulation.
     """
-    # Convert props to DatasetProperties for class-based access
-    dataset_props = DatasetProperties.from_props(props)
-    
-    # Inject attachment constraints into config if provided (using classes)
+    # Inject attachment constraints into config if provided
     if attachment_constraints is not None and len(attachment_constraints) > 0:
-        dataset_props.update_attachment_constraints(attachment_constraints)
-        # Write back to props dict for serialization
-        dataset_props.update_props(props)
+        # Update attachment constraints in SimConfig
+        sim_config.sim_config.options.attachment_constraints = attachment_constraints
+        sim_config.sim_config.options.enable_attachment_constraint = True
+        # Update exposed attributes
+        sim_config.sim_config.attachment_constraints = attachment_constraints
+        sim_config.sim_config.enable_attachment_constraint = True
+        
         logger.debug(f'Injected {len(attachment_constraints)} attachment constraints into simulation config')
     
     # Ensure pattern data is saved to expected location (for backup)
@@ -579,12 +575,8 @@ def template_simulation_with_data(
         with open(design_params_path, 'w') as f:
             yaml.dump({'design': design}, f, default_flow_style=False, sort_keys=False)
     
-    # Create BoxMesh from pattern and load it
-    # Use DatasetProperties class for type-safe config access
-    # (dataset_props was already created above if constraints were injected)
-    if attachment_constraints is None or len(attachment_constraints) == 0:
-        dataset_props = DatasetProperties.from_props(props)
-    config = dataset_props.sim.get_sim_config()
+    # Use SimConfig from sim_config
+    config = sim_config.sim_config
     res = config.resolution_scale
     
     garment_box_mesh = BoxMesh(spec_path, res)
@@ -592,38 +584,42 @@ def template_simulation_with_data(
     # Load BoxMesh with timeout handling (same as template_simulation)
     meshgen_start_time = time.time()
     # max_meshgen_time is an optional config value not in SimConfig classes
-    timeout_after = int(dataset_props.sim.get_optional_config_value('max_meshgen_time', 20))
+    timeout_after = int(config._props.get('max_meshgen_time', 20))
     
     try:
         _load_boxmesh_timeout(garment_box_mesh, timeout_after)
     except TimeoutError as e:
         logger.error(f"Mesh generation timeout for {garment_box_mesh.name}: {e}")
-        props.add_fail('sim', 'meshgen-timeout', garment_box_mesh.name)
+        stats_props.add_fail('sim', 'meshgen-timeout', garment_box_mesh.name)
         return
     except bmg.PatternLoadingError as e:
         logger.error(f"Pattern loading error for {garment_box_mesh.name}: {e}")
-        props.add_fail('sim', 'pattern_loading', garment_box_mesh.name)
+        stats_props.add_fail('sim', 'pattern_loading', garment_box_mesh.name)
         return
     except BaseException as e:
         logger.error(f"Pattern loading failed due to unknown error for {garment_box_mesh.name}: {e}")
         logger.exception("Exception details:")
-        props.add_fail('sim', 'crashes', garment_box_mesh.name)
+        stats_props.add_fail('sim', 'crashes', garment_box_mesh.name)
         return
     
     # Successfully loaded garment
-    dataset_props.sim.stats['meshgen_time'][garment_box_mesh.name] = time.time() - meshgen_start_time
-    dataset_props.sim.stats['face_count'][garment_box_mesh.name] = len(garment_box_mesh.faces)
+    stats_props['sim']['stats']['meshgen_time'][garment_box_mesh.name] = time.time() - meshgen_start_time
+    stats_props['sim']['stats']['face_count'][garment_box_mesh.name] = len(garment_box_mesh.faces)
     
     # Serialize BoxMesh (for backup and rendering)
     # Note: store_vertex_normals and store_panels are optional fields in options dict
-    options_dict = dataset_props.sim.get_options_dict()
+    options_dict = config._props.get('options', {})
     vertex_normals = options_dict.get('store_vertex_normals', False)
     store_panels = options_dict.get('store_panels', False)
+    
+    # Use render config from sim_config
+    render_config = sim_config.render_config
+    
     garment_box_mesh.serialize(
         paths, 
         with_v_norms=vertex_normals, 
         store_panels=store_panels,
-        uv_config=dataset_props.render.config.uv_texture.model_dump()
+        uv_config=render_config.uv_texture.model_dump()
     )
     
     # Load body mesh data (same as load_obj in garment.py)
@@ -650,13 +646,16 @@ def template_simulation_with_data(
     
     # Run simulation with in-memory data
     logger.debug(f'Running simulation for {garment_box_mesh.name} with in-memory data...')
+    optimize_storage = config._props.get('optimize_storage', False)
+    
+    # Use stats_props which already has the correct structure
     run_sim(
         garment_box_mesh.name,  
-        props, 
+        stats_props,
         paths,
         save_v_norms=vertex_normals,  # Already extracted above
         store_usd=caching,
-        optimize_storage=dataset_props.sim.get_optional_config_value('optimize_storage', False),
+        optimize_storage=optimize_storage,
         verbose=False,
         garment_data=garment_data
     )
@@ -675,9 +674,9 @@ def template_simulation(paths: PathCofig, props, caching=False):
     caching : bool, optional
         Enable caching of simulation frames
     """
-    # Use DatasetProperties class instead of dictionary access
-    dataset_props = DatasetProperties.from_props(props)
-    config = dataset_props.sim.get_sim_config()
+    # Get config from props
+    from config.sim_config import SimConfig
+    config = SimConfig(props['sim']['config'])
     res = config.resolution_scale
 
     garment = BoxMesh(paths.in_g_spec, res)
@@ -686,7 +685,7 @@ def template_simulation(paths: PathCofig, props, caching=False):
 
     meshgen_start_time = time.time()
     # max_meshgen_time is an optional config value not in SimConfig classes
-    timeout_after = int(dataset_props.sim.get_optional_config_value('max_meshgen_time', 20))
+    timeout_after = int(props['sim']['config'].get('max_meshgen_time', 20))
 
     try:
         _load_boxmesh_timeout(garment, timeout_after)
@@ -721,27 +720,33 @@ def template_simulation(paths: PathCofig, props, caching=False):
         props.add_fail('sim', failure_case, garment.name)
     else:
         # Successfully loaded garment
-        dataset_props.sim.stats['meshgen_time'][garment.name] = time.time() - meshgen_start_time
-        dataset_props.sim.stats['face_count'][garment.name] = len(garment.faces)
+        props['sim']['stats']['meshgen_time'][garment.name] = time.time() - meshgen_start_time
+        props['sim']['stats']['face_count'][garment.name] = len(garment.faces)
         # Note: store_vertex_normals and store_panels are optional fields in options dict
-        options_dict = dataset_props.sim.get_options_dict()
+        options_dict = props['sim']['config'].get('options', {})
         vertex_normals = options_dict.get('store_vertex_normals', False)
         store_panels = options_dict.get('store_panels', False)
+        
+        # Get render config for UV texture
+        from config.render_config import RenderConfig
+        render_config = RenderConfig(**props['render']['config'])
+        
         garment.serialize(
             paths, 
             with_v_norms=vertex_normals, 
             store_panels=store_panels,
-            uv_config=dataset_props.render.config.uv_texture.model_dump()
+            uv_config=render_config.uv_texture.model_dump()
         )
 
         logger.debug(f'Running simulation for {garment.name}...')
+        optimize_storage = props['sim']['config'].get('optimize_storage', False)
         run_sim(
             garment.name,  
             props, 
             paths,
             save_v_norms=vertex_normals,
             store_usd=caching,  # NOTE: False for fast simulation!
-            optimize_storage=dataset_props.sim.get_optional_config_value('optimize_storage', False),
+            optimize_storage=optimize_storage,
             verbose=False
         )
         logger.debug(f'Simulation completed for {garment.name}')
@@ -809,18 +814,19 @@ def get_dict_default_value(props, name, default_value):
     return default_value
 
 
-def _serialize_props_with_sim_stats(dataset_props, filename):
-    """Compute data processing statistics and serialize props to file
+def _serialize_props_with_sim_stats(props: Any, filename: Path) -> None:
+    """Serialize Properties to file with stats summary
     
     Parameters:
     -----------
-    dataset_props : Properties
+    props : Properties
         Properties object to serialize
     filename : Path
         Output file path
     """
-    dataset_props.stats_summary()
-    dataset_props.serialize(filename)
+    if hasattr(props, 'stats_summary'):
+        props.stats_summary()
+    props.serialize(filename)
 
 
 def _get_pattern_names(data_path: Path):

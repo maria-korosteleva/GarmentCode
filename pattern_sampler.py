@@ -292,7 +292,6 @@ def generate(path, properties, sys_paths, verbose=False):
     gen_stats['generation_time'] = f'{elapsed:.3f} s'
 
     # log properties
-    props.stats_summary()
     properties.serialize(data_folder / 'dataset_properties.yaml')
 
     return default_path, body_sample_path

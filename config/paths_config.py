@@ -5,9 +5,6 @@ from typing import Optional
 import yaml
 from datetime import datetime
 
-from pygarment.data_config import Properties
-
-
 class PathCofig:
     """
     Routines for getting paths to various relevant objects with standard names.
@@ -88,7 +85,8 @@ class PathCofig:
     """
     
     # Class variable type annotations
-    _system: Properties
+    _bodies_default_path: Path
+    _body_samples_path: Path | None
     _body_name: str
     _samples_folder_name: str
     _use_default_body: bool
@@ -132,7 +130,9 @@ class PathCofig:
                  samples_name: str = '', 
                  default_body: bool = True,
                  smpl_body: bool = False,
-                 add_timestamp: bool = False) -> None:
+                 add_timestamp: bool = False,
+                 bodies_default_path: str | Path | None = None,
+                 body_samples_path: str | Path | None = None) -> None:
         """
         Initialize path configuration for simulation inputs and outputs.
         
@@ -156,9 +156,28 @@ class PathCofig:
             Whether to use SMPL segmentation (default: False)
         add_timestamp : bool, optional
             Whether to add timestamp to output folder name (default: False)
+        bodies_default_path : str | Path | None, optional
+            Path to default bodies directory. If None, will try to read from system.json (backward compatibility)
+        body_samples_path : str | Path | None, optional
+            Path to body samples directory. If None, will try to read from system.json (backward compatibility)
         """
-
-        self._system = Properties('./system.json')  # TODOlOW More stable path?
+        # Set system paths - accept as parameters or fall back to Properties for backward compatibility
+        if bodies_default_path is not None:
+            self._bodies_default_path = Path(bodies_default_path)
+        else:
+            # Backward compatibility: read from system.json
+            from pygarment.data_config import Properties
+            system = Properties('./system.json')
+            self._bodies_default_path = Path(system['bodies_default_path'])
+        
+        if body_samples_path is not None:
+            self._body_samples_path = Path(body_samples_path)
+        else:
+            # Backward compatibility: read from system.json
+            from pygarment.data_config import Properties
+            system = Properties('./system.json')
+            self._body_samples_path = Path(system.get('body_samples_path', '')) if 'body_samples_path' in system else None
+        
         self._body_name = body_name
         self._samples_folder_name = samples_name
         self._use_default_body = default_body
@@ -193,9 +212,11 @@ class PathCofig:
         """
         # Base path
         if not self._samples_folder_name or self._use_default_body:
-            self.bodies_path = Path(self._system['bodies_default_path'])   
+            self.bodies_path = self._bodies_default_path
         else:
-            self.bodies_path = Path(self._system['body_samples_path']) / self._samples_folder_name / 'meshes'
+            if self._body_samples_path is None:
+                raise ValueError("body_samples_path must be provided when using sampled bodies")
+            self.bodies_path = self._body_samples_path / self._samples_folder_name / 'meshes'
 
         # Body measurements
         if not self._samples_folder_name:
@@ -210,7 +231,7 @@ class PathCofig:
 
         self.in_body_obj = self.bodies_path / f'{self._body_name}.obj'
         self.in_g_spec = self.input / f'{self.in_tag}_specification.json'
-        self.body_seg = Path(self._system['bodies_default_path']) / ('ggg_body_segmentation.json' if not self.use_smpl_seg else 'smpl_vert_segmentation.json')
+        self.body_seg = self._bodies_default_path / ('ggg_body_segmentation.json' if not self.use_smpl_seg else 'smpl_vert_segmentation.json')
         self.in_design_params = self.input / 'design_params.yaml'
 
     def _update_boxmesh_paths(self) -> None:
