@@ -9,7 +9,6 @@ from typing import Union, Any
 import pygarment as pyg
 from loguru import logger
 
-from perfect_fit_templates.pants_templates import LoosePantsSraightLeg
 from garment_programs.weon_pants import Pants
 from garment_programs.weon_shirt import Shirt, FittedShirt
 from garment_programs.weon_circle_skirt import SkirtCircle, AsymmSkirtCircle
@@ -19,6 +18,7 @@ from pattern_definitions.body_definition import BodyDefinition
 from pattern_definitions.shirt_design import ShirtDesign
 from pattern_definitions.skirt_design import SkirtDesign
 from pattern_definitions.waistband_design import WaistbandDesign
+from pattern_definitions.pants_design import PantsDesign
 from config import AttachmentConstraint
 
 
@@ -85,8 +85,7 @@ class GarmentFactory:
                 "Design dictionary must contain 'pants' key for pants creation"
             )
         
-        #pants = Pants(design=PantsDesign(self._design))
-        pants = Pants(LoosePantsSraightLeg(self._body).get_design())
+        pants = Pants(design=PantsDesign(self._design))
         logger.info("Creating perfect fit for loose pants and straight legs design")
         pants.apply_body_alignment(self._body)
         
