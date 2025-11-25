@@ -1,5 +1,6 @@
 import numpy as np
 
+from loguru import logger
 from pygarment.garmentcode.interface import Interface
 from pygarment.garmentcode.utils import close_enough
 
@@ -34,7 +35,7 @@ class StitchingRule:
                 len1 := int1.projecting_lengths().sum(),
                 len2 := int2.projecting_lengths().sum(),
                 tol=0.3):   # NOTE = 3 mm
-            print(
+            logger.warning(
                 f'{self.__class__.__name__}::WARNING::Projected edges do not match in the stitch: \n'
                 f'{len1}: {int1}\n{len2}: {int2}')
 
@@ -115,7 +116,7 @@ class StitchingRule:
                 if flip: 
                     split_frac = 1 - split_frac
                     if self.verbose:
-                        print(f'{self.__class__.__name__}::INFO::{base_edge} from {base_panel.name} reoriented in interface')
+                        logger.info(f'{base_edge} from {base_panel.name} reoriented in interface')
 
                 # Split the base edge accordingly
                 subdiv = base_edge.subdivide_len([split_frac, 1 - split_frac])
@@ -146,7 +147,7 @@ class StitchingRule:
         """Produce a stitch that connects two interfaces
         """
         if self.verbose and not self.isMatching():
-            print(f'{self.__class__.__name__}::WARNING::Stitch sides do not match on assembly!!')
+            logger.warning('Stitch sides do not match on assembly')
 
         stitches = []
 

@@ -3,8 +3,9 @@ from copy import deepcopy
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from assets.garment_programs import bands
+from garment_programs import weon_bands
 import pygarment as pyg
+from loguru import logger
 
 
 # ------  Armhole shapes ------
@@ -167,10 +168,7 @@ class SleevePanel(pyg.Panel):
                 self.edges.substitute(top_edge, [standing_edge, top_edge])
             else:
                 if self.verbose:
-                    print(f'{self.__class__.__name__}::WARNING::'
-                        f'Sleeve rest angle {np.rad2deg(rest_angle):.3f} should be '
-                        f'larger than shoulder angle {body["_shoulder_incl"]} by '
-                        f'at least {_standing_margin} deg to enable '
+                    logger.warning(f'Sleeve rest angle {np.rad2deg(rest_angle):.3f} should be larger than shoulder angle {body["_shoulder_incl"]} by at least {_standing_margin} deg to enable '
                         'standing shoulder. Standing shoulder ignored')
                 standing = False
 
@@ -307,7 +305,7 @@ class Sleeve(pyg.Component):
             cdesign['cuff']['b_width'] = dict(v=cuff_circ)
             cdesign['cuff']['cuff_len']['v'] = cuff_len_adj
 
-            cuff_class = getattr(bands, cdesign['cuff']['type']['v'])
+            cuff_class = getattr(weon_bands, cdesign['cuff']['type']['v'])
             self.cuff = cuff_class(f'sl_{tag}', cdesign)
 
             # Position

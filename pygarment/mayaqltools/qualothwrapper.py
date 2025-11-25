@@ -11,6 +11,7 @@ import sys
 
 from maya import mel
 from maya import cmds
+from loguru import logger
 
 
 def load_plugin():
@@ -21,7 +22,7 @@ def load_plugin():
     """
     maya_year = int(mel.eval('getApplicationVersionAsFloat'))
     plugin_name = 'qualoth_' + str(maya_year) + '_x64'
-    print('Loading ', plugin_name)
+    logger.info('Loading {}'.format(plugin_name))
 
     cmds.loadPlugin(plugin_name)
 
@@ -94,13 +95,13 @@ def start_maya_sim(garment, props):
     solver = _init_sim(config)
 
     # Allow to assemble without gravity
-    print('Simulation::Assemble without gravity')
+    logger.info('Assembling without gravity')
     _set_gravity(solver, 0)
     for frame in range(1, config['zero_gravity_steps']):
         cmds.currentTime(frame)  # step
 
     # resume normally
-    print('Simulation::normal playback.. Use ESC key to stop simulation')
+    logger.info('Normal playback. Use ESC key to stop simulation')
     _set_gravity(solver, -980)
     cmds.currentTime(frame - 1)  # one step back to start from simulated state
     cmds.play()
@@ -119,7 +120,7 @@ def run_sim(garment, props):
 
     start_time = time.time()
     # Allow to assemble without gravity + skip checks for first few frames
-    print('Simulating {}'.format(garment.name))
+    logger.info('Simulating {}'.format(garment.name))
     _set_gravity(solver, 0)
     for frame in range(1, config['zero_gravity_steps']):
         cmds.currentTime(frame)  # step
@@ -137,7 +138,7 @@ def run_sim(garment, props):
         _update_progress(frame, config['max_sim_steps'])  # progress bar
         static, non_st_count = garment.is_static(config['static_threshold'], config['non_static_percent'])
         if static:  # Success!
-            print('\nAchieved static equilibrium for {}'.format(garment.name))
+            logger.info('\nAchieved static equilibrium for {}'.format(garment.name))
             break
 
     # stats
@@ -148,7 +149,7 @@ def run_sim(garment, props):
     # Fail checks
     # static equilibrium never detected -- might have false negs!
     if frame == config['max_sim_steps'] - 1:
-        print('\nFailed to achieve static equilibrium for {} with {} non-static vertices out of {}'.format(
+        logger.warning('\nFailed to achieve static equilibrium for {} with {} non-static vertices out of {}'.format(
             garment.name, non_st_count, len(garment.current_verts)))
         _record_fail(props, 'static_equilibrium', garment.name)
     # 3D penetrations 

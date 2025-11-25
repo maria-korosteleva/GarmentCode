@@ -2,6 +2,13 @@
     A Python library for building parametric sewing pattern programs
 """
 
+# Configure logging automatically when package is imported
+try:
+    import log_config  # noqa: F401
+except ImportError:
+    # If log_config is not available, use default loguru configuration
+    pass
+
 # Building blocks
 from pygarment.garmentcode.component import Component
 from pygarment.garmentcode.panel import Panel

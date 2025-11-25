@@ -15,7 +15,8 @@ import pygarment as pyg
 from pygarment.meshgen.boxmeshgen import BoxMesh
 from pygarment.meshgen.simulation import run_sim
 import pygarment.data_config as data_config
-from pygarment.meshgen.sim_config import PathCofig
+from config import PathCofig
+from loguru import logger
 
 verbose = False
 
@@ -349,7 +350,7 @@ class GUIPattern:
                 root_dir=self.save_path
             ))
 
-        print(f'Success! {self.sew_pattern.name} saved to {self.saved_garment_folder}')
+        logger.info(f'Success! {self.sew_pattern.name} saved to {self.saved_garment_folder}')
 
         return self.saved_garment_archive if pack else self.saved_garment_folder
 

@@ -1,3 +1,64 @@
 [build-system]
 requires = ['setuptools>=42']
 build-backend = 'setuptools.build_meta'
+
+[project]
+name = "pygarment"
+version = "2.0.2"
+description = "A modular programming framework for designing parametric sewing patterns"
+readme = "ReadMe.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Maria Korosteleva", email = "maria.korosteleva.public@gmail.com"}
+]
+keywords = ["garment-programming", "garment-modeling", "sewing-patterns"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "PyYAML>=6.0",
+    "numpy<2",
+    "scipy",
+    "svgwrite",
+    "svgpathtools",
+    "psutil",
+    "matplotlib",
+    "CairoSVG",
+    "trimesh",
+    "libigl",
+    "pyrender",
+    "cgal",
+    "loguru>=0.7.0",
+    "pydantic",
+]
+
+[project.optional-dependencies]
+gui = [
+    "nicegui>=3.0.0",
+]
+
+[project.urls]
+Homepage = "https://igl.ethz.ch/projects/garmentcode/"
+Repository = "https://github.com/maria-korosteleva/GarmentCode"
+"Bug Tracker" = "https://github.com/maria-korosteleva/GarmentCode/issues"
+
+[tool.setuptools]
+package-dir = {"" = "pygarment"}
+
+[tool.setuptools.packages.find]
+where = ["pygarment"]
+
+[tool.mypy]
+[[tool.mypy.overrides]]
+module = [
+    "scipy.*",
+    "numpy.*",
+    "svgpathtools.*",
+    "trimesh.*",
+    "pyrender.*",
+    "warp.*",
+    "yaml.*",
+]
+ignore_missing_imports = true

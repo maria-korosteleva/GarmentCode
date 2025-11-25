@@ -5,7 +5,8 @@ from pathlib import Path
 from pygarment.meshgen.boxmeshgen import BoxMesh
 from pygarment.meshgen.simulation import run_sim
 import pygarment.data_config as data_config
-from pygarment.meshgen.sim_config import PathCofig
+from config import PathCofig
+from loguru import logger
 
 
 def get_command_args():
@@ -24,7 +25,7 @@ def get_command_args():
         default='./assets/Sim_props/default_sim_props.yaml')
 
     args = parser.parse_args()
-    print('Commandline arguments: ', args)
+    logger.info('Commandline arguments: {}'.format(args))
 
     return args
 
@@ -51,8 +52,8 @@ if __name__ == "__main__":
     )
 
     # Generate and save garment box mesh (if not existent)
-    print(f"Generate box mesh of {garment_name} with resolution {props['sim']['config']['resolution_scale']}...")
-    print('\nGarment load: ', paths.in_g_spec)
+    logger.info(f"Generate box mesh of {garment_name} with resolution {props['sim']['config']['resolution_scale']}...")
+    logger.info('\nGarment load: {}'.format(paths.in_g_spec))
 
     garment_box_mesh = BoxMesh(paths.in_g_spec, props['sim']['config']['resolution_scale'])
     garment_box_mesh.load()

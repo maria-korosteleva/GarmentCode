@@ -2,6 +2,7 @@ import numpy as np
 from numpy.linalg import norm
 import svgpathtools as svgpath
 from scipy.optimize import minimize
+from loguru import logger
 
 from pygarment.garmentcode.edge import EdgeSequence, Edge, CurveEdge
 from pygarment.garmentcode.edge import CircleEdge
@@ -176,8 +177,8 @@ class CurveEdgeFactory:
 
         if not out.success:
             if verbose:
-                print('Curve From Extreme::WARNING::Optimization not successful')
-                print(out)
+                logger.warning('Optimization not successful')
+                logger.debug(str(out))
 
         cp = out.x.tolist()
 
@@ -209,13 +210,52 @@ class CurveEdgeFactory:
         )
 
         if not out.success:
-            print('CurveEdgeFactory::Curve From Tangents::WARNING::Optimization not successful')
+            logger.warning('Optimization not successful')
             if verbose:
-                print(out)
+                logger.debug(str(out))
 
         cp = out.x.tolist()
 
         return CurveEdge(start, end, control_points=[cp], relative=True)
+
+    @staticmethod
+    def interpolate_with_tangents(
+        start: list[float],
+        end: list[float],
+        initial_guess: list[float] | None = None,
+        target_tan0: list[float] | None = None,
+        target_tan1: list[float] | None = None,
+        pre_start: list[float] | None = None,
+        post_end: list[float] | None = None
+    ) -> CurveEdge:
+        """
+        Interpolate a curve between start and end with the given initial guess and pre_start and post_end tangents.
+
+        Args:
+            start: Start point of the curve
+            end: End point of the curve
+            initial_guess: Initial guess for the control point
+            target_tan0: Tangent at the start point
+            target_tan1: Tangent at the end point
+            pre_start: Tangent at the start point
+            post_end: Tangent at the end point
+        """
+        
+        target_tan0 = None
+        target_tan1 = None
+        if pre_start is not None:
+            target_tan0 = [start[0] - pre_start[0], start[1] - pre_start[1]]
+        if post_end is not None:
+            target_tan1 = [post_end[0] - end[0], post_end[1] - end[1]]
+
+        return CurveEdgeFactory.curve_from_tangents(
+            start,
+            end,
+            target_tan0=target_tan0,
+            target_tan1=target_tan1,
+            initial_guess=initial_guess
+        )
+
 
 class EdgeSeqFactory:
     """Create EdgeSequence objects for some common edge sequence patterns
@@ -234,7 +274,7 @@ class EdgeSeqFactory:
             # skip segments of length zero
             if close_enough(seg.length(), tol=dist_tol):
                 if verbose:
-                    print('Skipped: ', seg)
+                    logger.debug('Skipped: {}'.format(seg))
                 continue
             edges.append(EdgeFactory.from_svg_curve(seg))
 

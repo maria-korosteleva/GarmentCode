@@ -4,11 +4,10 @@ import numpy as np
 import pygarment as pyg
 
 
-from assets.garment_programs.base_classes import BaseBodicePanel
+from garment_programs.base_classes import BaseBodicePanel
 from assets.garment_programs import sleeves
 from assets.garment_programs import collars
 from assets.garment_programs import tee
-from scipy.spatial.transform import Rotation as R
 
 class BodiceFrontHalf(BaseBodicePanel):
     def __init__(self, name, body, design) -> None:
@@ -314,7 +313,7 @@ class BodiceHalf(pyg.Component):
             collars.NoPanelsCollar
             )
         
-        self.collar_comp = collar_type(name, body, design)
+        self.collar_comp = collar_type(name, design)
         
         # Project shape
         _, fc_interface = pyg.ops.cut_corner(

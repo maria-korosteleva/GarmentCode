@@ -1,51 +1,44 @@
-# Copyright (c) 2022 NVIDIA CORPORATION.  All rights reserved.
-# NVIDIA CORPORATION and its licensors retain all intellectual property
-# and proprietary rights in and to this software, related documentation
-# and any modifications thereto.  Any use, reproduction, disclosure or
-# distribution of this software and related documentation without an express
-# license agreement from NVIDIA CORPORATION is strictly prohibited.
-
-###########################################################################
-# Example Sim Cloth
-#
-# Shows a simulation of an FEM cloth model colliding against a static
-# rigid body mesh using the wp.sim.ModelBuilder().
-#
-###########################################################################
-
 import sys
 import time
 import traceback
-import platform
-import multiprocessing
-import signal
 import trimesh
+from typing import Optional, Any
 
 # Warp
 import warp as wp
 
+# Logging
+from loguru import logger
+
 # Custom code
 from pygarment.meshgen.render.pythonrender import render_images
-from pygarment.meshgen.garment import Cloth
-from pygarment.meshgen.sim_config import SimConfig, PathCofig
+from pygarment.meshgen.garment import SimulationGarment
+from pygarment.meshgen.garment_data import GarmentData
+from config import PathCofig
+from config.sim_config import SimConfig
+from config.dataset_properties import DatasetProperties
 
 wp.init()
 
 class SimulationError(BaseException):
-    """To be rised when panel stitching cannot be executed correctly"""
+    """Exception raised when panel stitching cannot be executed correctly."""
     pass
 
-class FrameTimeOutError(BaseException):
-    """To be rised when frame takes too long to simulate"""
-    pass
 
-class SimTimeOutError(BaseException):
-    """To be rised when simulation takes too long"""
-    pass
-
-def optimize_garment_storage(paths: PathCofig):
-    """Prepare the data element for compact storage: store the meshes as ply instead of obj, 
-        remove texture files 
+def optimize_garment_storage(paths: PathCofig) -> None:
+    """Prepare the data element for compact storage.
+    
+    Converts OBJ meshes to PLY format and removes texture files to reduce storage size.
+    
+    Parameters
+    ----------
+    paths : PathCofig
+        Path configuration object containing paths to garment mesh files.
+        
+    Note
+    ----
+    This function silently handles any errors during conversion, continuing with
+    the next file if one fails.
     """
     # Objs to ply
     try:
@@ -67,187 +60,179 @@ def optimize_garment_storage(paths: PathCofig):
     paths.g_mtl.unlink(missing_ok=True)
 
 
-def update_progress(progress, total):
-    """Progress bar in console"""
-    # https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
+def update_progress(progress: int, total: int) -> None:
+    """Display a progress bar in the console.
+    
+    Parameters
+    ----------
+    progress : int
+        Current progress value (number of completed items).
+    total : int
+        Total number of items to process.
+    """
     amtDone = progress / total
     num_dash = int(amtDone * 50)
     sys.stdout.write('\rProgress: [{0:50s}] {1:.1f}%'.format('#' * num_dash + '-' * (50 - num_dash), amtDone * 100))
     sys.stdout.flush()
 
-def _run_frame_with_timeout(garment, frame_timeout, frame_num):
-    """Run frame while keeping a cap on time to run it"""
-    try:
-        if platform.system() == "Windows":
-            """https://stackoverflow.com/a/14920854"""
 
-            if frame_num == 0: #only do it on first frame due to slowdown
-                p_frame = multiprocessing.Process(target=garment.run_frame(), name="FrameSimulation")
-                p_frame.start()
-
-                # Wait timeout_after seconds for garment.run_frame()
-                p_frame.join(frame_timeout)
-
-                # If thread is active
-                if p_frame.is_alive():
-                    # Terminate the process
-                    p_frame.terminate()
-                    p_frame.join()
-                    raise TimeoutError
-            else:
-                garment.run_frame()
-
-        elif platform.system() in ["Linux", "OSX"]:
-            """https://code-maven.com/python-timeout"""
-
-            def alarm_handler(signum, frame):
-                raise TimeoutError
-
-            signal.signal(signal.SIGALRM, alarm_handler)
-            signal.alarm(frame_timeout)
-            try:
-                garment.run_frame()
-            except TimeoutError as ex:
-                raise TimeoutError
-            else:
-                signal.alarm(0)
-
-    except TimeoutError as e:
-        raise FrameTimeOutError
-
-def sim_frame_sequence(garment, config, store_usd=False, verbose=False):
-
+def sim_frame_sequence(
+    garment: SimulationGarment,
+    config: SimConfig,
+    store_usd: bool = False,
+    verbose: bool = False
+) -> None:
+    """Run the simulation frame sequence.
+    
+    Executes the simulation for the specified number of frames, checking for
+    static equilibrium after the minimum number of steps and zero gravity steps.
+    
+    Parameters
+    ----------
+    garment : SimulationGarment
+        The garment simulation object to run frames on.
+    config : SimConfig
+        Simulation configuration containing frame limits and step counts.
+    store_usd : bool, optional
+        Whether to store USD frames. If True, saves the initial state as USD.
+        Default is False.
+    verbose : bool, optional
+        Whether to print verbose output including frame-by-frame information
+        and self-intersection counts. Default is False.
+        
+    Note
+    ----
+    The simulation will stop early if static equilibrium is achieved after
+    both `zero_gravity_steps` and `min_sim_steps` have been completed.
+    """
     # Save initial state
     if store_usd:
         garment.render_usd_frame()
 
-    start_time = time.time()
     for frame in range(0, config.max_sim_steps):
-        
         if verbose:
-            print(f'\n------ Frame {frame + 1} ------')
+            logger.info(f'\n------ Frame {frame + 1} ------')
         else:
             update_progress(frame, config.max_sim_steps)
 
-        garment.frame = frame 
-
-        #Run frame and raise FrameTimeOutError if frame takes too long to simulate
-
-        static = False
-        if config.max_frame_time is None:
-            # No frame time limits
-            garment.run_frame()
-        else:
-            # NOTE: frame timeouts only work in the main thread of the program. 
-            # disable frame timeout by passing 'null' as a max_frame_time parameter in config
-            _run_frame_with_timeout(
-                garment, 
-                frame_timeout=config.max_frame_time if frame > 0 else config.max_frame_time * 2,
-                frame_num=frame
-            )
+        garment.frame = frame
+        garment.run_frame()
 
         if verbose:
             num_cloth_cloth_contacts = garment.count_self_intersections()
-            print(f'\nSelf-Intersection: {num_cloth_cloth_contacts}')
+            logger.debug(f'\nSelf-Intersection: {num_cloth_cloth_contacts}')
 
         if frame >= config.zero_gravity_steps and frame >= config.min_sim_steps:
             static, _ = garment.is_static()
-        if static:
-            break
-
-        runtime = time.time() - start_time
-        if runtime > config.max_sim_time:
-            raise SimTimeOutError
+            if static:
+                break
         
 
 def run_sim(
-        cloth_name, props, paths: PathCofig, 
-        save_v_norms=False, store_usd=False, 
-        optimize_storage=False,
-        verbose=False): 
-    """Initialize and run the simulation
-    !! Important !! 
-        'store_usd' parameter slows down the simulation to CPU rates because of required CPU-GPU copies and file writes. Use only for debugging
+    cloth_name: str,
+    props: dict[str, Any],
+    paths: PathCofig,
+    save_v_norms: bool = False,
+    store_usd: bool = False,
+    optimize_storage: bool = False,
+    verbose: bool = False,
+    garment_data: Optional[GarmentData] = None
+) -> None:
+    """Initialize and run the simulation.
+    
+    This function sets up the simulation environment, runs the frame sequence,
+    performs quality checks, saves the results, and optionally renders images.
+    
+    Parameters
+    ----------
+    cloth_name : str
+        Name of the cloth/garment being simulated.
+    props : Any
+        Properties object (dict-like) containing simulation and render properties.
+        Will be converted to DatasetProperties internally. Must have keys:
+        - 'sim': Dictionary with simulation configuration and stats
+        - 'render': Dictionary with rendering configuration and stats
+    paths : PathCofig
+        Path configuration object containing all necessary file paths.
+    save_v_norms : bool, optional
+        Whether to save vertex normals in the output mesh. Default is False.
+    store_usd : bool, optional
+        Whether to store USD frames. Slows down simulation significantly
+        due to CPU-GPU copies and file writes. Use only for debugging.
+        Default is False.
+    optimize_storage : bool, optional
+        Whether to optimize storage by converting OBJ files to PLY format
+        and removing texture files. Default is False.
+    verbose : bool, optional
+        Whether to print verbose output during simulation. Default is False.
+    garment_data : GarmentData, optional
+        Optional in-memory garment data. If provided, the simulation will
+        use this data directly instead of reading from disk. This improves
+        performance by avoiding redundant I/O operations. Default is None
+        (read from disk).
+        
+    Raises
+    ------
+    SimulationError
+        If the simulation fails due to a known error condition.
+    BaseException
+        If the simulation crashes due to an unexpected error.
+        
+    Note
+    ----
+    After simulation, quality checks are performed and logged as warnings
+    if issues are detected. The simulation continues regardless of quality
+    check results.
     """
-    sim_props = props['sim']
-    render_props = props['render']
-
     start_time = time.time()
 
-    config = SimConfig(sim_props['config'])   # Why separate class at all? 
-    garment = Cloth(cloth_name, config, paths, caching=store_usd)
+    # Use DatasetProperties class instead of dictionary access
+    dataset_props = DatasetProperties.from_props(props)
+    config = dataset_props.sim.get_sim_config()
+    garment = SimulationGarment(cloth_name, config, paths, caching=store_usd, garment_data=garment_data)
 
     try:
-        print("Simulation..")
+        logger.info("Simulation..")
         sim_frame_sequence(garment, config, store_usd, verbose=verbose)
-    
-    except FrameTimeOutError:
-        print(f"FrameTimeOutError at frame {garment.frame}")
-        props.add_fail('sim', 'frame_timeout', cloth_name)
-    except SimTimeOutError:
-        print("SimTimeOutError")
-        props.add_fail('sim', 'simulation_timeout', cloth_name)
-    except SimulationError:
-        print("Simulation failed")
-        props.add_fail('sim', 'gt_edges_creation', cloth_name)
-    except BaseException as e:
-        print(f'Sim::{cloth_name}::crashed with {e}')
-
-        if isinstance(e, KeyboardInterrupt):
-            # Allow to stop simulation loops by keyboard interrupt
-            # It's not a real crash, so don't write down the failure
-            sec = round(time.time() - start_time, 3)
-            min = int(sec / 60)
-            print(f"Simulation pipeline took: {min} m {sec - min * 60} s")
-            raise e
-
+    except SimulationError as e:
+        logger.error(f"Simulation failed for {cloth_name}: {e}")
         traceback.print_exc()
-        props.add_fail('sim', 'crashes', cloth_name)
-    else:  # Other quality checks
-        if garment.frame == config.max_sim_steps - 1:
-            _, non_st_count = garment.is_static()
-            print('\nFailed to achieve static equilibrium for {} with {} non-static vertices out of {}'.format(
-                cloth_name, non_st_count, len(garment.current_verts)))
-            props.add_fail('sim', 'static_equilibrium', cloth_name)
+        raise
+    except BaseException as e:
+        logger.error(f'Simulation crashed for {cloth_name}: {e}')
+        traceback.print_exc()
+        raise
 
-        if time.time() - start_time < 0.5:  # 0.5 sec  -- finished suspiciously fast
-            props.add_fail('sim', 'fast_finish', cloth_name)
-
-        # 3D penetrations
-        num_body_collisions = garment.count_body_intersections()
-        print("BODY CLOTH INTERSECTIONS: ", num_body_collisions)
-        num_self_collisions = garment.count_self_intersections()
-
-        sim_props['stats']['body_collisions'][cloth_name] = num_body_collisions
-        sim_props['stats']['self_collisions'][cloth_name] = num_self_collisions
-
-        if num_body_collisions > config.max_body_collisions:
-            props.add_fail('sim', 'cloth_body_intersection', cloth_name)
-        if num_self_collisions: 
-            print(f'Self-Intersecting with {num_self_collisions}, '
-                  f'is fail: {num_self_collisions > config.max_self_collisions}')
-            if num_self_collisions > config.max_self_collisions:
-                props.add_fail('sim', 'cloth_self_intersection', cloth_name)
-        else:
-            print('Not self-intersecting!!!')
-
-    # ---- Postprocessing ----
-    # NOTE: Attempt even on failures for accurate picture and post-analysis
+    # Quality checks (log warnings and continue)
     frame = garment.frame
-    print(f"\nSimulation took #frames={frame + 1}")
+    logger.info(f"\nSimulation took #frames={frame + 1}")
 
-    sim_props['stats']['sim_time'][cloth_name] = sim_time = time.time() - start_time
-    sim_props['stats']['spf'][cloth_name] = sim_time / frame if frame else sim_time
-    sim_props['stats']['fin_frame'][cloth_name] = frame
+    if garment.frame == config.max_sim_steps - 1:
+        _, non_st_count = garment.is_static()
+        logger.warning(f'Failed to achieve static equilibrium for {cloth_name} with {non_st_count} non-static vertices out of {len(garment.current_verts)}')
 
-    garment.save_frame(save_v_norms=save_v_norms) #saving after stats
+    if time.time() - start_time < 0.5:  # 0.5 sec -- finished suspiciously fast
+        logger.warning(f'Simulation finished suspiciously fast for {cloth_name} (< 0.5s)')
+
+    # 3D penetrations
+    num_body_collisions = garment.count_body_intersections()
+    logger.info(f"Body-Cloth Intersections: {num_body_collisions}")
+    num_self_collisions = garment.count_self_intersections()
+
+    if num_body_collisions > config.max_body_collisions:
+        logger.warning(f'Excessive body-cloth intersections for {cloth_name}: {num_body_collisions} > {config.max_body_collisions}')
+    
+    if num_self_collisions:
+        logger.info(f'Self-Intersecting with {num_self_collisions}')
+        if num_self_collisions > config.max_self_collisions:
+            logger.warning(f'Excessive self-intersections for {cloth_name}: {num_self_collisions} > {config.max_self_collisions}')
+    else:
+        logger.info('Mesh is intersection-free')
+
+    garment.save_frame(save_v_norms=save_v_norms)
 
     # Render images
-    s_time = time.time()
-    render_images(paths, garment.v_body, garment.f_body, render_props['config'])
-    render_image_time = time.time() - s_time
-    render_props['stats']['render_time'][cloth_name] = render_image_time  
-    print(f"Rendering {cloth_name} took {render_image_time}s")
+    render_images(paths, garment.v_body, garment.f_body, dataset_props.render.config)
 
     if optimize_storage:
         optimize_garment_storage(paths)
@@ -255,4 +240,4 @@ def run_sim(
     # Final info output
     sec = round(time.time() - start_time, 3)
     min = int(sec / 60)
-    print(f"\nSimulation pipeline took: {min} m {sec - min * 60} s")
+    logger.info(f"\nSimulation pipeline took: {min} m {sec - min * 60} s")

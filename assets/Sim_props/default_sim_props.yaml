@@ -1,69 +1,96 @@
 sim:
   config:
     optimize_storage: true
-
-    max_sim_steps: 2400
-    max_frame_time: 60
-    max_meshgen_time: 60
-    max_sim_time: 600
-    static_threshold: 0.03
-    non_static_percent: 1.5
-
-    max_body_collisions: 35
-    max_self_collisions: 300 
-
-    zero_gravity_steps: 10
-    resolution_scale: 1.0
-    ground: false
+    
+    # Simulation control parameters (scheduler, timing, stopping criteria)
+    control:
+      sim_fps: 60.0
+      sim_substeps: 10
+      sim_wo_gravity_percentage: 0
+      zero_gravity_steps: 10
+      resolution_scale: 1.0
+      ground: false
+      
+      static_threshold: 0.03
+      max_sim_steps: 2400
+      max_frame_time: 60
+      max_sim_time: 600
+      non_static_percent: 1.5
+      
+      max_body_collisions: 35
+      max_self_collisions: 300
+    
+    # Garment material and fabric properties
     material:
-      garment_tri_ka: 10000.0
       garment_edge_ke: 1.0   # Very soft fabric
-      garment_tri_ke: 10000.0
-      spring_ke: 50000.0
       garment_edge_kd: 10.0
+      garment_tri_ke: 10000.0
       garment_tri_kd: 1.0
+      garment_tri_ka: 10000.0
+      spring_ke: 50000.0
       spring_kd: 10.0
       fabric_density: 1.0
       fabric_thickness: 0.1
       fabric_friction: 0.5
+    
+    # Simulation options and feature flags
     options:
       enable_particle_particle_collisions: false
       enable_triangle_particle_collisions: true
       enable_edge_edge_collisions: true
       enable_body_collision_filters: true
       enable_global_collision_filter: true
-
+      
       global_damping_factor: 0.25
       global_damping_effective_velocity: 0.0
       global_max_velocity: 25.0
-
+      
       enable_attachment_constraint: true   
-      attachment_stiffness: 
-      - 1000.
-      - 1000.   
-      - 1000. 
-      - 1000.
-      attachment_damping: 
-      - 10.
-      - 0.  
-      - 0. 
-      - 0.
-      attachment_frames: 400
-      attachment_label_names: 
-      - lower_interface
-      - right_collar
-      - left_collar
-      - strapless_top
-
+      attachment_frames: 400000
+      attachment_constraints:
+        - label: right_collar
+          stiffness: 1000.
+          damping: 0.
+          # Uses default calculation: x = -(neck_w - 2) / 2
+          # Can override with explicit position if needed
+          # direction: null  # Default: [1, 0, 0] (right)
+        - label: left_collar
+          stiffness: 1000.
+          damping: 0.
+          # Uses default calculation: x = (neck_w - 2) / 2
+          # Can override with explicit position if needed
+          # direction: null  # Default: [-1, 0, 0] (left)
+        - label: strapless_top
+          stiffness: 1000.
+          damping: 0.
+          position_calculation:
+            x:
+              positive: []
+              negative: []
+            y:
+              positive: ['height']
+              negative: ['head_l', 'armscye_depth']
+            z:
+              positive: []
+              negative: []
+          # direction: null  # Default: [0, 1, 0] (upward)
+      
       enable_cloth_reference_drag: true 
       cloth_reference_margin: 0.1
+      cloth_reference_k: 1.0e7
+      
       enable_body_smoothing: false
       smoothing_total_smoothing_factor: 1.0
       smoothing_recover_start_frame: 150
       smoothing_num_steps: 100
       smoothing_frame_gap_between_steps: 1
+      
       body_collision_thickness: 0.25
       body_friction: 0.5
+    
+    # Legacy/deprecated parameters (kept for backward compatibility)
+    max_meshgen_time: 60  # Used in datasim_utils, not in config classes
+    
   stats:
     fails: {}
     sim_time: {}
@@ -71,6 +98,7 @@ sim:
     fin_frame: {}
     self_collisions: {}
     body_collisions: {}
+    
 render:
   config:
     resolution:

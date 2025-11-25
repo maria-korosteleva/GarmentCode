@@ -9,6 +9,7 @@ import numpy as np
 import os
 import random
 import svgpathtools as svgpath
+from loguru import logger
 
 # My
 from . import rotation as rotation_tools
@@ -81,9 +82,7 @@ class BasicPattern(object):
         """(Re)loads pattern info from spec file. 
         Useful when spec is updated from outside"""
         if self.spec_file is None:
-            print('BasicPattern::WARNING::{}::Pattern is not connected to any file. Reloadig from file request ignored.'.format(
-                self.name
-            ))
+            logger.warning(f'Pattern {self.name} is not connected to any file. Reloading from file request ignored')
             return
 
         with open(self.spec_file, 'r') as f_json:
@@ -313,15 +312,15 @@ class BasicPattern(object):
                 # now we have cm
                 self.properties['original_units_in_meter'] = self.properties['units_in_meter']
                 self.properties['units_in_meter'] = 100
-                print('WARNING: pattern units converted to cm')
+                logger.warning('WARNING: pattern units converted to cm')
         else:
-            print('WARNING: units not specified in the pattern. Scaling normalization was not applied')
+            logger.warning('WARNING: units not specified in the pattern. Scaling normalization was not applied')
 
         # after curvature is converted!!
         # Only if requested
         if ('normalize_panel_translation' in self.properties 
                 and self.properties['normalize_panel_translation']):
-            print('Normalizing translation!')
+            logger.info('Normalizing translation!')
             self.properties['normalize_panel_translation'] = False  # one-time use property. Preverts rotation issues on future reads
             for panel in self.pattern['panels']:
                 # put origin in the middle of the panel-- 
@@ -337,7 +336,7 @@ class BasicPattern(object):
         # Recalculate origins and traversal order of panel edge loops if not normalized already
         if ('normalized_edge_loops' not in self.properties
                 or not self.properties['normalized_edge_loops']):
-            print('{}::WARNING::normalizing the order and origin choice for edge loops in panels'.format(self.__class__.__name__))
+            logger.warning('Normalizing the order and origin choice for edge loops in panels')
             self.properties['normalized_edge_loops'] = True
             for panel in self.pattern['panels']:
                 self._normalize_edge_loop(panel)
@@ -380,7 +379,7 @@ class BasicPattern(object):
 
         # Loop Origin
         loop_origin_id = self._vert_at_left_corner(vertices)
-        print('{}:{}: Origin: {} -> {}'.format(
+        logger.debug('{}:{}: Origin: {} -> {}'.format(
             self.name, panel_name, panel['edges'][0]['endpoints'][0], loop_origin_id))
 
         rotated_edges, rotated_edge_ids = self._rotate_edges(
@@ -393,9 +392,7 @@ class BasicPattern(object):
         flipped = False
         # due to the choice of origin (at the corner), first & last edge cross-product will reliably show panel normal direction 
         if np.cross(first_edge, last_edge) > 0:  # should be negative -- counterclockwise
-            print('{}::{}::panel <{}> flipped'.format(
-                self.__class__.__name__, self.name, panel_name
-            ))
+            logger.debug(f'Panel <{panel_name}> flipped')
             flipped = True
 
             # Vertices
@@ -405,7 +402,7 @@ class BasicPattern(object):
             # Edges
             # new loop origin after update
             loop_origin_id = self._vert_at_left_corner(vertices)
-            print('{}:{}: Origin: {} -> {}'.format(
+            logger.debug('{}:{}: Origin: {} -> {}'.format(
                 self.name, panel_name, panel['edges'][0]['endpoints'][0], loop_origin_id))
 
             rotated_edges, rotated_edge_ids = self._rotate_edges(rotated_edges, rotated_edge_ids, loop_origin_id)
@@ -529,7 +526,9 @@ class BasicPattern(object):
                 intersect_t = [el for el in intersect_t if el is not None]
 
                 if intersect_t:  # Any other case of intersections
+                    logger.warning(f'{panel_name} is self-intersecting!!')
                     return True      
+
         return False 
 
 # NOTE: Deprecated. Preserved for backward compatibility 
@@ -613,7 +612,7 @@ class ParametrizedPattern(BasicPattern):
             # now we have cm everywhere -- no need to keep units info
             self.properties.pop('original_units_in_meter', None)
 
-            print('WARNING: Parameter units were converted to cm')
+            logger.warning('WARNING: Parameter units were converted to cm')
 
     def _normalize_edge_loop(self, panel_name):
         """Update the edge loops and edge ids references in parameters & constraints after change"""
@@ -919,7 +918,7 @@ class ParametrizedPattern(BasicPattern):
                             updated_once = True
         if updated_once:
             # only display worning if some new invalidation happened
-            print('ParametrizedPattern::WARNING::Parameter (& constraints) values are invalidated')
+            logger.warning('Parameter (& constraints) values are invalidated')
 
     # ---------- Randomization -------------
     def _randomize_pattern(self):
@@ -934,7 +933,7 @@ class ParametrizedPattern(BasicPattern):
             if not self.is_self_intersecting():
                 break
 
-            print('WARNING::Randomized pattern is self-intersecting. Re-try..')
+            logger.warning('Randomized pattern is self-intersecting. Re-try..')
             self._restore(spec_backup)
             # Try again
             self._randomize_parameters()

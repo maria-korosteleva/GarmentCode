@@ -4,7 +4,7 @@
 import numpy as np
 import pygarment as pyg
 
-from assets.garment_programs.base_classes import BaseBodicePanel
+from garment_programs.base_classes import BaseBodicePanel
 
 
 class TorsoFrontHalfPanel(BaseBodicePanel):

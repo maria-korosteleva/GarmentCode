@@ -21,8 +21,9 @@ import pygarment.pattern.wrappers as wrappers
 from pygarment.pattern import rotation as rotation_tools
 import pygarment.pattern.utils as pat_utils
 import pygarment.meshgen.triangulation_utils as tri_utils
-from pygarment.meshgen.sim_config import PathCofig
+from config import PathCofig
 from pygarment.meshgen.render.texture_utils import texture_mesh_islands, save_obj
+from loguru import logger
 
 # TODOLOW Some stitching errors are not getting detected
 
@@ -455,8 +456,7 @@ class Edge:
         self.n_edge_verts = n_edge_verts
 
         if n_edge_verts == 2 and res > 1.0:
-            print(f'{self.__class__.__name__}::{self.name}::WARNING::Detected edge represented only by two vertices..'
-                  'mesh resolution might be too low. resolution = {}, edge length = {}'.format(res, edgelength))
+            logger.warning(f'Detected edge represented only by two vertices. Mesh resolution might be too low. Resolution = {res}, edge length = {edgelength}')
 
 
     def set_vertex_range(self, start_idx, begin_in, end_in, end_idx):
@@ -559,6 +559,8 @@ class BoxMesh(wrappers.VisPattern):
         Input:
             * pattern_file: pattern template in custom JSON format
     """
+    crotch_vertex_id = None
+
     def __init__(self, path, res=1.0):
         super(BoxMesh, self).__init__(path)
         self.mesh_resolution = res #Vertices are spread with distance ~mesh_resolution cm
@@ -584,7 +586,7 @@ class BoxMesh(wrappers.VisPattern):
         Loads all relevant functions and prints their time consumptions
         """
         if self.is_self_intersecting(): 
-            print(f'{self.__class__.__name__}::WARNING::{self.name}::Provided pattern has self-intersecting panels. Simulation might crash')
+            logger.warning(f'Provided pattern has self-intersecting panels. Simulation might crash')
 
         self.load_panels()
         self.gen_panel_meshes()
@@ -631,8 +633,7 @@ class BoxMesh(wrappers.VisPattern):
         try:
             edge = ret_panel.edges[edge_id]
         except BaseException:
-            print(f'{self.__class__.__name__}::ERROR::{self.name}::Provided pattern'
-                  f' fails for stitch id {stitch_id} and {[panel_name,edge_id]}')
+            logger.error(f'Provided pattern fails for stitch id {stitch_id} and {[panel_name,edge_id]}')
             raise PatternLoadingError(
                 f'{self.__class__.__name__}::{self.name}::ERROR::Provided pattern'
                 f' fails for stitch id {stitch_id} and {[panel_name,edge_id]}')
@@ -682,7 +683,7 @@ class BoxMesh(wrappers.VisPattern):
                             f'in stitch do not match: {edge0.label} and {edge1.label}')
                     stitch.label = edge0.label if edge0.label else edge1.label
         else:
-            print(f'{self.__class__.__name__}::INFO::No stitching information provided')
+            logger.info('No stitching information provided')
 
     # !SECTION
     # SECTION -- generate per-panel meshes
@@ -778,8 +779,8 @@ class BoxMesh(wrappers.VisPattern):
             if not panel.is_manifold():
                 raise DegenerateTrianglesError(
                     f'{self.__class__.__name__}::ERROR::{self.name}::{panel.panel_name}:'
-                    ':panel contains degenerate triangles'
-                )
+                     ':panel contains degenerate triangles'
+                    )
 
     # !SECTION
     # SECTION -- Merge mesh vertices in stitches
@@ -1181,7 +1182,7 @@ class BoxMesh(wrappers.VisPattern):
             same_panel_stitching_dict, 
             front_end_only=False)
         if not valid:
-            print(f'{self.__class__.__name__}::{self.name}::ERROR::Invalid stitching. Unable to fix')
+            logger.error('Invalid stitching. Unable to fix')
             raise StitchingError()
 
     # !SECTION
@@ -1307,9 +1308,7 @@ class BoxMesh(wrappers.VisPattern):
             el = self._set_el_within_range(low,up)
         else:
             # raise ValueError(f"Not possible to set triangle edge of vertices {id1} and {id2}")
-            print(f'{self.__class__.__name__}::WARNING::{self.name}::Impossible to set '
-                  f' ground truth edge length of vertices {id1} and {id2}. '
-                  'Simulation is going to crash')
+            logger.warning(f'Impossible to set ground truth edge length of vertices {id1} and {id2}. Simulation is going to crash')
             return low
         return el
 
@@ -1452,6 +1451,77 @@ class BoxMesh(wrappers.VisPattern):
         # NOTE: self.vertices now contains all mesh vertices
         # self.faces now contains all mesh faces
 
+        self.crotch_vertex_id = self._identify_crotch_vertex()
+        logger.debug(f"Crotch vertex global ID: {self.crotch_vertex_id}")
+
+    def _identify_crotch_vertex(self) -> int:
+        """
+        Identifies and prints the global vertex ID of the crotch point.
+        The crotch point is where the 'crotch' and 'inside' seams meet.
+        It is marked by the 'crotch_point_seam' label on an edge.
+        The crotch vertex is the end vertex of the edge with this label
+        (where it connects to the inside seam).
+        """
+        crotch_vertex_global_id = -1
+        
+        # Debug: Check what panels we have
+        pants_panels = [name for name in self.panels.keys() if 'pants' in name.lower() or 'pant' in name.lower()]
+        logger.debug(f'Looking for crotch vertex in panels: {pants_panels}')
+        
+        # Find edges with 'crotch_point_seam' label
+        found_crotch_edges = []
+        for panel_name, panel in self.panels.items():
+            if 'pants' not in panel_name.lower() and 'pant' not in panel_name.lower():
+                continue
+            
+            # Debug: Check all edge labels in this panel
+            edge_labels = [(idx, edge.label) for idx, edge in enumerate(panel.edges) if edge.label]
+            if edge_labels:
+                logger.debug(f'Panel {panel_name} has labeled edges: {edge_labels}')
+            
+            for edge_idx, edge in enumerate(panel.edges):
+                if edge.label == 'crotch_point_seam':
+                    found_crotch_edges.append((panel_name, edge_idx, edge))
+                    logger.debug(f'Found edge with "crotch_point_seam" label in panel {panel_name}, edge_idx {edge_idx}')
+        
+        if not found_crotch_edges:
+            logger.warning('No edge with "crotch_point_seam" label found in any pants panel')
+            return -1
+        
+        # Process found crotch edges
+        for panel_name, edge_idx, crotch_edge in found_crotch_edges:
+            # The crotch vertex is at the end of this edge (where it connects to inside seam)
+            if not crotch_edge.vertex_range:
+                logger.warning(f'Edge with "crotch_point_seam" label has no vertex_range for panel {panel_name}')
+                continue
+            
+            # The end vertex is the last one in the vertex_range
+            end_local_id = crotch_edge.vertex_range[-1]
+            logger.debug(f'Looking for vertex (panel={panel_name}, local_id={end_local_id}) in verts_loc_glob')
+            
+            end_global_id = self.verts_loc_glob.get((panel_name, end_local_id))
+            
+            if end_global_id is None:
+                # Debug: Check what vertices are available for this panel
+                panel_verts = {k: v for k, v in self.verts_loc_glob.items() if k[0] == panel_name}
+                logger.debug(f'Vertex not found in verts_loc_glob. Available vertices for {panel_name}: {list(panel_verts.keys())[:10]}... (showing first 10)')
+                continue
+            
+            crotch_vertex_global_id = int(end_global_id)
+            logger.debug(f"Found crotch vertex for panel {panel_name}: local_id={end_local_id}, global_id={crotch_vertex_global_id}")
+            break
+        
+        if crotch_vertex_global_id == -1:
+            logger.warning('Could not identify crotch vertex - vertex not in verts_loc_glob')
+        else:
+            # Label all vertices below the crotch vertex (in Y direction)
+            crotch_y = self.vertices[crotch_vertex_global_id][1]
+            below_crotch_vertices = [i for i, v in enumerate(self.vertices) if v[1] < crotch_y]
+            self.vertex_labels.setdefault('crotch', []).extend(below_crotch_vertices)
+            logger.debug(f'Labeled {len(below_crotch_vertices)} vertices below crotch (y < {crotch_y:.2f})')
+        
+        return crotch_vertex_global_id
+
     # !SECTION
     # SECTION -- Serialization routines
     def eval_vertex_normals(self):
@@ -1501,7 +1571,7 @@ class BoxMesh(wrappers.VisPattern):
             * filename (str): Name of the boxmmesh
         """
         if not self.loaded:
-            print(f'{self.__class__.__name__}::{self.name}::WARNING::Pattern is not yet loaded. Nothing saved')
+            logger.warning('Pattern is not yet loaded. Nothing saved')
             return
         
         uv_config = {  # Defaults
@@ -1544,7 +1614,7 @@ class BoxMesh(wrappers.VisPattern):
             * filename (str): Name of the stitch segmentation file
         """
         if not self.loaded:
-            print(f'{self.__class__.__name__}::{self.name}::WARNING::Pattern is not yet loaded. Nothing saved')
+            logger.warning('Pattern is not yet loaded. Nothing saved')
             return
 
         rows = self.stitch_segmentation
@@ -1570,7 +1640,7 @@ class BoxMesh(wrappers.VisPattern):
             * filename (str): Name of the orig_lens file
         """
         if not self.loaded:
-            print(f'{self.__class__.__name__}::{self.name}::WARNING::Pattern is not yet loaded. Nothing saved')
+            logger.warning('Pattern is not yet loaded. Nothing saved')
             return
 
         with open(self.paths.g_orig_edge_len, 'wb') as file:
@@ -1596,7 +1666,7 @@ class BoxMesh(wrappers.VisPattern):
             * not_annotated (bool): if True, stores visualisations with annotations
         """
         if not self.loaded:
-            print(f'{self.__class__.__name__}::{self.name}::WARNING::Pattern is not yet loaded. Nothing saved')
+            logger.warning('Pattern is not yet loaded. Nothing saved')
             return
 
         self.paths = paths    
@@ -1608,7 +1678,7 @@ class BoxMesh(wrappers.VisPattern):
             for panel in self.panels.values():
                 folder_path = Path(log_dir) / "panels"
                 panel.save_panel_mesh_obj(folder_path)
-            print(f"Stored panels to {folder_path}...")
+            logger.info(f"Stored panels to {folder_path}...")
 
 
         self.save_box_mesh_obj(with_normals=with_v_norms, in_uv_config=uv_config)
@@ -1620,11 +1690,11 @@ class BoxMesh(wrappers.VisPattern):
         if self.paths.in_design_params.exists():
             shutil.copy(self.paths.in_design_params, self.paths.design_params)
         else:
-            print(f'{self.__class__.__name__}::{self.name}::WARNING::Path does not exist: {self.paths.in_design_params}')
+            logger.warning(f'Path does not exist: {self.paths.in_design_params}')
         if self.paths.in_body_mes.exists():
             shutil.copy(self.paths.in_body_mes, self.paths.body_mes)
         else:
-            print(f'{self.__class__.__name__}::{self.name}::WARNING::Path does not exist: {self.paths.in_body_mes}')
+            logger.warning(f'Path does not exist: {self.paths.in_body_mes}')
 
         return log_dir
     # !SECTION

@@ -6,6 +6,7 @@ import yaml
 from assets.garment_programs.meta_garment import MetaGarment
 from assets.bodies.body_params import BodyParameters
 from pygarment.data_config import Properties
+from loguru import logger
 
 
 if __name__ == '__main__':
@@ -39,7 +40,7 @@ if __name__ == '__main__':
         pattern = piece.assembly()
 
         if piece.is_self_intersecting():
-            print(f'{piece.name} is Self-intersecting')
+            logger.warning(f'{piece.name} is Self-intersecting')
 
         # Save as json file
         sys_props = Properties('./system.json')
@@ -57,4 +58,4 @@ if __name__ == '__main__':
         else:
             shutil.copy(design_files['base'], folder)
 
-        print(f'Success! {piece.name} saved to {folder}')
+        logger.info(f'Success! {piece.name} saved to {folder}')

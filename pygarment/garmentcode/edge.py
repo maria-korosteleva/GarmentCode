@@ -3,6 +3,7 @@ from copy import deepcopy, copy
 import numpy as np
 from numpy.linalg import norm
 import svgpathtools as svgpath  # https://github.com/mathandy/svgpathtools
+from loguru import logger
 
 from pygarment.garmentcode.utils import R2D
 from pygarment.garmentcode.utils import close_enough
@@ -456,6 +457,10 @@ class CircleEdge(Edge):
 class CurveEdge(Edge):
     """Curvy edge as Besier curve / B-spline"""
 
+    start: list[float]
+    end: list[float]
+    control_points: list[list[float]]  # control points in relative coordinates
+
     def __init__(self, start=None, end=None, control_points=None,
                  relative=True, 
                  label='') -> None:
@@ -512,6 +517,60 @@ class CurveEdge(Edge):
 
         t_mid = curve.ilength(curve.length()/2, s_tol=ILENGTH_S_TOL)
         return c_to_list(curve.point(t_mid))
+    
+    def evaluate_at_length(self, length: float, reverse: bool = False) -> list[float]:
+        """Get the 2D point at a given length from the start (or end if reverse=True)
+        
+        Parameters:
+            length: Distance along the curve from the start (or end if reverse is True)
+            reverse: If True, evaluate from the end point going backwards
+            
+        Returns:
+            2D point as [x, y] list
+        """
+
+        curve = self.as_curve()
+        total_length = curve.length()
+        
+        # Handle reverse flag
+        if reverse:
+            target_length = total_length - length
+        else:
+            target_length = length
+        
+        if target_length < 0:
+            # Extrapolate backward from start point
+            start_point = curve.point(0.0)
+            tangent = curve.derivative(0.0)
+            tangent_norm = abs(tangent)
+            if tangent_norm > 1e-10:
+                tangent_unit = -tangent / tangent_norm  # Negate for backward direction
+                extrap_dist = -target_length  # target_length is negative
+                extrap_point = start_point + tangent_unit * extrap_dist
+
+                return c_to_list(extrap_point)
+
+            else:
+                return c_to_list(start_point)
+
+        elif target_length > total_length:
+            # Extrapolate forward from end point
+            end_point = curve.point(1.0)
+            tangent = curve.derivative(1.0)
+            tangent_norm = abs(tangent)
+            if tangent_norm > 1e-10:
+                tangent_unit = tangent / tangent_norm
+                extrap_dist = target_length - total_length
+                extrap_point = end_point + tangent_unit * extrap_dist
+
+                return c_to_list(extrap_point)
+            else:
+                return c_to_list(end_point)
+        else:
+            # Normal case: point is within the curve
+            t = curve.ilength(target_length, s_tol=ILENGTH_S_TOL)
+
+            return c_to_list(curve.point(t))
     
     def _subdivide(self, fractions: list, by_length=False):
         """Add intermediate vertices to an edge, 
@@ -695,7 +754,7 @@ class EdgeSequence:
             if self.edges[i].start is not self.edges[i-1].end:
                 if self.verbose:
                     # This should be helpful to catch bugs
-                    print(f'{self.__class__.__name__}::WARNING!::Edge sequence is not properly chained')
+                    logger.warning('Edge sequence is not properly chained')
                 return False
         return True
 
@@ -880,7 +939,7 @@ class EdgeSequence:
             chained_edges = self.chained_order()
             chained_edges.isChained()
             if chained_edges.isLoop():
-                print(f'{self.__class__.__name__}::WARNING::Extending looped edge sequences is not available')
+                logger.warning('Extending looped edge sequences is not available')
                 return self
         else: 
             chained_edges = self

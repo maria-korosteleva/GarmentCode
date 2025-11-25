@@ -19,6 +19,7 @@ from assets.garment_programs.meta_garment import MetaGarment, IncorrectElementCo
 from assets.bodies.body_params import BodyParameters
 import pygarment as pyg
 import assets.garment_programs.stats_utils as stats_utils
+from loguru import logger
 
 def get_command_args():
     """command line arguments to control the run"""
@@ -27,10 +28,11 @@ def get_command_args():
     parser.add_argument('--batch_id', '-b', help='id of a sampling batch', type=int, default=None)
     parser.add_argument('--size', '-s', help='size of a sample', type=int, default=10)
     parser.add_argument('--name', '-n', help='Name of the dataset', type=str, default='data')
+    parser.add_argument('--design', '-d', help='Name of the design file', type=str, default='pants.yaml')
     parser.add_argument('--replicate', '-re', help='Name of the dataset to re-generate. If set, other arguments are ignored', type=str, default=None)
     
     args = parser.parse_args()
-    print('Commandline arguments: ', args)
+    logger.info('Commandline arguments: {}'.format(args))
 
     return args
 
@@ -118,7 +120,7 @@ def _save_sample(piece, body, new_design, folder, verbose=False):
             sort_keys=False
         )
     if verbose:
-        print(f'Saved {piece.name}')
+        logger.info(f'Saved {piece.name}')
 
     return pattern
 
@@ -134,7 +136,7 @@ def gather_visuals(path, verbose=False):
             shutil.copy(p, vis_path)
         except shutil.SameFileError:
             if verbose:
-                print('File {} already exists'.format(p.name))
+                logger.info('File {} already exists'.format(p.name))
             pass
 
 # Quality filter
@@ -206,7 +208,7 @@ def generate(path, properties, sys_paths, verbose=False):
     # init random seed
     if 'random_seed' not in gen_config or gen_config['random_seed'] is None:
         gen_config['random_seed'] = int(time.time())
-    print(f'Random seed is {gen_config["random_seed"]}')
+    logger.info(f'Random seed is {gen_config["random_seed"]}')
     random.seed(gen_config['random_seed'])
 
     # generate data
@@ -224,7 +226,7 @@ def generate(path, properties, sys_paths, verbose=False):
             name = f'rand_{_id_generator()}'
             try:
                 if verbose:
-                    print(f'{name} saving design params for debug')
+                    logger.debug(f'{name} saving design params for debug')
                     with open(Path('./Logs') / f'{name}_design_params.yaml', 'w') as f:
                         yaml.dump(
                             {'design': new_design}, 
@@ -256,7 +258,7 @@ def generate(path, properties, sys_paths, verbose=False):
                 
                 if piece_default.is_self_intersecting() or piece_shaped.is_self_intersecting():
                     if verbose:
-                        print(f'{piece_default.name} is self-intersecting!!') 
+                        logger.warning(f'{piece_default.name} is self-intersecting!!') 
                     continue  # Redo the randomization
                 
                 # Save samples
@@ -270,18 +272,18 @@ def generate(path, properties, sys_paths, verbose=False):
             except KeyboardInterrupt:  # Return immediately with whatever is ready
                 return default_path, body_sample_path
             except BaseException as e:
-                print(f'{name} failed')
+                logger.error(f'{name} failed')
                 if verbose:
                     traceback.print_exc()
-                print(e)
+                logger.error(str(e))
 
                 # Check empty folder
                 if (default_sample_data / name).exists():
-                    print('Generate::Info::Removed empty folder after unsuccessful sampling attempt', default_sample_data / name)
+                    logger.info('Removed empty folder after unsuccessful sampling attempt {}'.format(default_sample_data / name))
                     shutil.rmtree(default_sample_data / name, ignore_errors=True)
                 
                 if (body_sample_data / name).exists():
-                    print('Generate::Info::Removed empty folder after unsuccessful sampling attempt', body_sample_data / name)
+                    logger.info('Removed empty folder after unsuccessful sampling attempt {}'.format(body_sample_data / name))
                     shutil.rmtree(body_sample_data / name, ignore_errors=True)
 
                 continue
@@ -310,7 +312,7 @@ if __name__ == '__main__':
     else:  # New sample
         props = Properties()
         props.set_basic(
-            design_file='./assets/design_params/default.yaml',
+            design_file=f'./assets/design_params/{args.design}.yaml',
             body_default='mean_all',
             body_samples='5000_body_shapes_and_measures', 
             size=args.size,
@@ -333,4 +335,4 @@ if __name__ == '__main__':
     gather_visuals(default_path)
     gather_visuals(body_sample_path)
 
-    print('Data generation completed!')
+    logger.info('Data generation completed!')

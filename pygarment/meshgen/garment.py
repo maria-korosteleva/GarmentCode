@@ -3,6 +3,9 @@ import json
 import pickle
 import numpy as np
 import yaml
+from typing import Optional
+
+from loguru import logger
 
 import warp as wp
 
@@ -13,18 +16,52 @@ from warp.sim.collide import count_self_intersections, count_body_cloth_intersec
 from warp.sim.integrator_xpbd import replace_mesh_points
 
 # Custom
-from pygarment.meshgen.sim_config import PathCofig, SimConfig
+from config import PathCofig
+from config.sim_config import SimConfig
 from pygarment.pattern.core import BasicPattern
+from pattern_definitions.body_definition import BodyDefinition
+from pygarment.meshgen.garment_utils import AttachmentConstraintUtils
+from pygarment.meshgen.garment_data import GarmentData
 
-class Cloth:
-    def __init__(self, 
-                 name, config: SimConfig, paths: PathCofig, 
-                 caching=False):
+
+class SimulationGarment:
+    """Garment simulation class that builds and runs cloth simulations.
+    
+    This class handles the setup and execution of cloth simulations using the
+    Warp physics engine. It supports both disk-based and in-memory data loading.
+    """
+    
+    def __init__(
+        self,
+        name: str,
+        config: SimConfig,
+        paths: PathCofig,
+        caching: bool = False,
+        garment_data: Optional[GarmentData] = None
+    ) -> None:
+        """Initialize the simulation garment.
+        
+        Parameters
+        ----------
+        name : str
+            Name of the garment/cloth being simulated.
+        config : SimConfig
+            Simulation configuration object containing all simulation parameters.
+        paths : PathCofig
+            Path configuration object containing all necessary file paths.
+        caching : bool, optional
+            If True, enables caching of intermediate frames and extra logging.
+            Default is False.
+        garment_data : GarmentData, optional
+            Optional in-memory garment data. If provided, the simulation will
+            use this data directly instead of reading from disk. Default is None.
+        """
 
         self.caching = caching   # Saves intermediate frames, extra logs, etc.
         self.paths = paths
         self.name = name
         self.config = config
+        self.garment_data = garment_data  # Optional in-memory data
 
         self.sim_fps = config.sim_fps
         self.sim_substeps = config.sim_substeps
@@ -92,12 +129,43 @@ class Cloth:
         self.last_verts = None
         self.current_verts = wp.array.numpy(self.state_0.particle_q)
 
-    def build_stage(self, config):
+    def build_stage(self, config: SimConfig) -> None:
+        """Build the simulation stage including cloth, body, and constraints.
+        
+        This method sets up the complete simulation environment including:
+        - Body mesh loading and setup
+        - Cloth mesh loading and setup
+        - Collision detection setup
+        - Attachment constraints
+        - Reference shapes for cloth-body interaction
+        
+        Parameters
+        ----------
+        config : SimConfig
+            Simulation configuration object containing all simulation parameters.
+            
+        Note
+        ----
+        The order of operations is critical:
+        1. Body and cloth meshes are loaded
+        2. Reference shapes are added
+        3. Reference labels are added
+        4. Attachment constraints are added (must be after reference labels)
+        5. Model is finalized
+        """
 
         builder = wp.sim.ModelBuilder(gravity=0.0)
         # --------------- Load body info -----------------
-        body_vertices, body_indices, body_faces = self.load_obj(self.paths.in_body_obj)
-        body_seg = self.read_json(self.paths.body_seg) 
+        if self.garment_data is not None:
+            # Use in-memory data (match format from load_obj)
+            body_vertices = np.array(self.garment_data.body_vertices).copy()
+            body_faces = np.array(self.garment_data.body_faces).copy()
+            body_indices = body_faces.flatten()
+            body_seg = self.garment_data.body_segmentation.copy()
+        else:
+            # Read from disk (backward compatible)
+            body_vertices, body_indices, body_faces = self.load_obj(self.paths.in_body_obj)
+            body_seg = self.read_json(self.paths.body_seg) 
 
         body_vertices = body_vertices * self.b_scale
         self.shift_y = self.get_shift_param(body_vertices)
@@ -110,24 +178,49 @@ class Cloth:
         self.body_indices = body_indices
 
         # -------------- Load cloth ------------
-        cloth_vertices, cloth_indices, cloth_faces = self.load_obj(self.paths.g_box_mesh)
-        cloth_seg_dict = assign.read_segmentation(self.paths.g_mesh_segmentation)
-        self.cloth_seg_dict = cloth_seg_dict
-        stitching_vertices = cloth_seg_dict["stitch"] if 'stitch' in cloth_seg_dict.keys() else []
+        if self.garment_data is not None:
+            # Use in-memory BoxMesh data
+            box_mesh = self.garment_data.box_mesh
+            # Convert to numpy arrays (BoxMesh stores as lists)
+            # Match the format returned by load_obj: vertices and faces as numpy arrays
+            cloth_vertices = np.array(box_mesh.vertices)
+            cloth_faces = np.array(box_mesh.faces)
+            cloth_indices = cloth_faces.flatten()
+            
+            # Save segmentation to file temporarily so we can use read_segmentation
+            # This ensures we get the exact same format as the original implementation
+            if hasattr(box_mesh, 'stitch_segmentation') and box_mesh.stitch_segmentation:
+                # Save segmentation to the expected file path
+                box_mesh.save_segmentation()
+            
+            # Use read_segmentation to get the exact same format as disk-based path
+            # This ensures consistency with the original implementation
+            cloth_seg_dict = assign.read_segmentation(self.paths.g_mesh_segmentation)
+            self.cloth_seg_dict = cloth_seg_dict
+            stitching_vertices = cloth_seg_dict["stitch"] if 'stitch' in cloth_seg_dict.keys() else []
+            
+            # Use original edge lengths from BoxMesh
+            orig_lens_dict = box_mesh.orig_lens if hasattr(box_mesh, 'orig_lens') and box_mesh.orig_lens else None
+        else:
+            # Read from disk (backward compatible)
+            cloth_vertices, cloth_indices, cloth_faces = self.load_obj(self.paths.g_box_mesh)
+            cloth_seg_dict = assign.read_segmentation(self.paths.g_mesh_segmentation)
+            self.cloth_seg_dict = cloth_seg_dict
+            stitching_vertices = cloth_seg_dict["stitch"] if 'stitch' in cloth_seg_dict.keys() else []
+            
+            # Load ground truth stitching lengths
+            if not self.paths.g_orig_edge_len.exists():
+                orig_lens_dict = None
+                logger.warning("no original length dict found")
+            else:
+                with open(self.paths.g_orig_edge_len, 'rb') as file:
+                    orig_lens_dict = pickle.load(file)
 
         cloth_vertices = cloth_vertices * self.c_scale
         if self.shift_y:
             cloth_vertices[:, 1] = cloth_vertices[:, 1] + self.shift_y
         self.v_cloth_init = cloth_vertices
         self.f_cloth = cloth_faces
-
-        #Load ground truth stitching lengths
-        if not self.paths.g_orig_edge_len.exists():
-            orig_lens_dict = None
-            print("no original length dict found")
-        else:
-            with open(self.paths.g_orig_edge_len, 'rb') as file:
-                orig_lens_dict = pickle.load(file)
 
         cloth_pos = (0.0, 0.0, 0.0)
         cloth_rot = wp.quat_from_axis_angle(wp.vec3(0.0, 1.0, 0.0), wp.degrees(0.0)) #no rotation, but orientation of cloth in world space
@@ -229,111 +322,152 @@ class Cloth:
             model_particle_filter_ids = particle_filter,
         )
         
+        # ----- Global collision resolution error ---- 
+        # Add reference shapes for body parts
+        if body_parts:
+            for part in body_parts:
+                part_v, part_inds = assign.extract_submesh(body_vertices, body_indices, body_parts[part])
+                builder.add_cloth_reference_shape_mesh(
+                    mesh = wp.sim.Mesh(part_v, part_inds),
+                    name = part,
+                    pos = body_pos,
+                    rot = body_rot,
+                    scale = (1.0,1.0,1.0) #performed body scaling above
+                )
+            # NOTE: has a side-effect of filling up model.particle_reference_label array 
+            # Only add reference labels if we actually added reference shapes
+            self.body_parts_names2index = builder.add_cloth_reference_labels(
+                cloth_reference_labels, 
+                [   # NOTE: Not adding drag between legs and the body as it's useless and contradicts attachment
+                    ['left_arm', 'body'], 
+                    ['right_arm', 'body'], 
+                    ['left_leg', 'right_leg'],
+                    ['left_arm', 'left_leg'], 
+                    ['right_arm', 'left_leg'], 
+                    ['left_arm', 'right_leg'], 
+                    ['right_arm', 'right_leg'], 
+                    ['left_arm', 'legs'], 
+                    ['right_arm', 'legs'], 
+                ]
+            )
+        else:
+            # No body parts found - this shouldn't happen normally
+            self.body_parts_names2index = {}
+            logger.warning("No body parts found for reference shapes. Skipping cloth reference labels.")
+        
         # ----- Attachment constraint -------
-
+        # NOTE: Must be called AFTER reference shapes and labels are added, as attachment
+        # may need to reference cloth reference labels
         if config.enable_attachment_constraint:
             self._add_attachment_labels(builder, config)
-
-        # ----- Global collision resolution error ---- 
-        for part in body_parts:
-            part_v, part_inds = assign.extract_submesh(body_vertices, body_indices, body_parts[part])
-            builder.add_cloth_reference_shape_mesh(
-                mesh = wp.sim.Mesh(part_v, part_inds),
-                name = part,
-                pos = body_pos,
-                rot = body_rot,
-                scale = (1.0,1.0,1.0) #performed body scaling above
-            )
-        # NOTE: has a side-effect of filling up model.particle_reference_label array 
-        self.body_parts_names2index = builder.add_cloth_reference_labels(
-            cloth_reference_labels, 
-            [   # NOTE: Not adding drag between legs and the body as it's useless and contradicts attachment
-                ['left_arm', 'body'], 
-                ['right_arm', 'body'], 
-                ['left_leg', 'right_leg'],
-                ['left_arm', 'left_leg'], 
-                ['right_arm', 'left_leg'], 
-                ['left_arm', 'right_leg'], 
-                ['right_arm', 'right_leg'], 
-                ['left_arm', 'legs'], 
-                ['right_arm', 'legs'], 
-            ]
-        )  
 
         # ------- Finalize --------------
         self.model: wp.sim.Model = builder.finalize(device = self.device) #data is transferred to warp tensors, object used in simulation
 
-    def _add_attachment_labels(self, builder, config):
-        with open(self.paths.in_body_mes, 'r') as file:
-            body_dict = yaml.load(file, Loader=yaml.SafeLoader)['body']
-        with open(self.paths.g_vert_labels, 'r') as f:
-            vertex_labels = yaml.load(f, Loader=yaml.SafeLoader)
+    def _add_attachment_labels(
+        self,
+        builder: wp.sim.ModelBuilder,
+        config: SimConfig
+    ) -> None:
+        """Add attachment constraints to the simulation model.
         
-        lables_present = False
-        for i, attach_label in enumerate(config.attachment_labels):     
+        This method processes attachment constraints from the configuration,
+        calculates attachment positions and directions, and adds them to the
+        simulation builder.
+        
+        Parameters
+        ----------
+        builder : wp.sim.ModelBuilder
+            Warp simulation model builder to add attachments to.
+        config : SimConfig
+            Simulation configuration containing attachment constraint definitions.
+            
+        Note
+        ----
+        Position calculation priority:
+        1. Explicit position (if provided in constraint)
+        2. Position calculation from body parameters (if provided)
+        3. Label-specific default position
+        
+        Direction priority:
+        1. Explicit direction (if provided in constraint)
+        2. Label-specific default direction
+        
+        If no attachment labels are found, the attachment constraint feature
+        is automatically disabled.
+        """
+        # Use in-memory data if available, otherwise read from disk
+        if self.garment_data is not None:
+            body_def = self.garment_data.body_definition
+            vertex_labels = self.garment_data.vertex_labels
+            if vertex_labels is None:
+                # Try to extract from BoxMesh if available
+                if hasattr(self.garment_data.box_mesh, 'vertex_labels'):
+                    vertex_labels = self.garment_data.box_mesh.vertex_labels
+                else:
+                    # Fall back to reading from file
+                    with open(self.paths.g_vert_labels, 'r') as f:
+                        vertex_labels = yaml.load(f, Loader=yaml.SafeLoader)
+        else:
+            # Read from disk (backward compatible)
+            with open(self.paths.in_body_mes, 'r') as file:
+                body_data = yaml.load(file, Loader=yaml.SafeLoader)
+            with open(self.paths.g_vert_labels, 'r') as f:
+                vertex_labels = yaml.load(f, Loader=yaml.SafeLoader)
+            
+            # Use BodyDefinition class for body parameter access
+            body_def = BodyDefinition(body_data)
+        
+        labels_present = False
+        if vertex_labels is None:
+            logger.warning('No vertex labels available for attachment constraints')
+            config.enable_attachment_constraint = False
+            config.update_min_steps()
+            return
+        
+        for constraint in config.attachment_constraints:
+            attach_label = constraint.label
             if attach_label in vertex_labels.keys() and len(vertex_labels[attach_label]) > 0:
-                constaint_verts = vertex_labels[attach_label]
-                if attach_label == 'lower_interface':
-                    lables_present = True
-                    if '_waist_level' in body_dict:
-                        waist_level = body_dict['_waist_level']
-                    else:
-                        waist_level = body_dict['height'] - body_dict['head_l'] - body_dict['waist_line']
-                    builder.add_attachment(
-                        constaint_verts, 
-                        wp.vec3(0, waist_level, 0),
-                        wp.vec3(0., 1., 0.),    # Vertical attachment
-                        stiffness = config.attachment_stiffness[i],
-                        damping = config.attachment_damping[i]
-                    )
-                elif attach_label == 'right_collar':
-                    lables_present = True
-                    
-                    neck_w = body_dict['neck_w'] - 2
-                    builder.add_attachment(
-                        constaint_verts, 
-                        wp.vec3(-neck_w / 2, 0, 0),   
-                        wp.vec3(1., 0., 0.),    # Horizontal attachment
-                        stiffness = config.attachment_stiffness[i],
-                        damping = config.attachment_damping[i]
-                    )
-                elif attach_label == 'left_collar':
-                    lables_present = True
-                    
-                    neck_w = body_dict['neck_w'] - 2
-                    builder.add_attachment(
-                        constaint_verts, 
-                        wp.vec3(neck_w / 2, 0, 0),   
-                        wp.vec3(-1., 0., 0.),    # Horizontal attachment
-                        stiffness = config.attachment_stiffness[i],
-                        damping = config.attachment_damping[i]
-                    )
-                elif attach_label == 'strapless_top':
-                    lables_present = True
-
-                    # Attach under arm 
-                    level = body_dict['height'] - body_dict['head_l'] - body_dict['armscye_depth']
-                    builder.add_attachment(
-                        constaint_verts, 
-                        wp.vec3(0, level, 0),  
-                        wp.vec3(0., 1., 0.),    # Vertical attachment
-                        stiffness = config.attachment_stiffness[i],
-                        damping = config.attachment_damping[i]
+                constraint_verts = vertex_labels[attach_label]
+                
+                # Calculate position: explicit position > position_calculation > label-specific defaults
+                if constraint.position is not None:
+                    # Use explicit position
+                    position = wp.vec3(constraint.position[0], constraint.position[1], constraint.position[2])
+                elif constraint.position_calculation is not None:
+                    # Calculate position from body parameters
+                    position = AttachmentConstraintUtils.calculate_position_from_body_params(
+                        constraint.position_calculation, body_def
                     )
                 else:
-                    print(f'{self.name}::WARNING::Requested attachment label {attach_label} '
-                          'is not supported. Skipped')
-                    continue
-                    
-                print(f'Using attachment for {attach_label} with {len(constaint_verts)} vertices')
+                    # Fall back to label-specific defaults
+                    position = AttachmentConstraintUtils.get_default_position_for_label(attach_label, body_def)
+                    if position is None:
+                        logger.warning(f'Requested attachment label {attach_label} is not supported. Skipped')
+                        continue
+                
+                # Use provided direction or use label-specific default
+                if constraint.direction is not None:
+                    direction = wp.vec3(constraint.direction[0], constraint.direction[1], constraint.direction[2])
+                else:
+                    direction = AttachmentConstraintUtils.get_default_direction_for_label(attach_label)
+                
+                labels_present = True
+                builder.add_attachment(
+                    constraint_verts,
+                    position,
+                    direction,
+                    stiffness=constraint.stiffness,
+                    damping=constraint.damping
+                )
+                logger.info(f'Using attachment for {attach_label} with {len(constraint_verts)} vertices')
 
-        if not lables_present:
+        if not labels_present:
             # Loaded garment is not labeled -- update config
             config.enable_attachment_constraint = False
             config.update_min_steps()
-            print(f'{self.name}::WARNING::Requested attachment labels {config.attachment_labels} '
-                  'are not present. Attachment is turned off'
-                )
+            constraint_labels = [c.label for c in config.attachment_constraints]
+            logger.warning(f'Requested attachment labels {constraint_labels} are not present. Attachment is turned off')
 
     def _load_panel_labels(self):
         pattern = BasicPattern(self.paths.g_specs)
@@ -550,7 +684,7 @@ class Cloth:
             diff_L1[diff_L1 > threshold])  # compare vertex-wise to allow accurate control over outliers
 
         if non_static_len == 0 or (non_static_len < len(curr_verts_arr) * 0.01 * non_static_percent):
-            print('\nStatic with {} non-static vertices out of {}'.format(non_static_len, len(curr_verts_arr)))
+            logger.info('\nStatic with {} non-static vertices out of {}'.format(non_static_len, len(curr_verts_arr)))
             # Store last frame
             return True, non_static_len
         else:

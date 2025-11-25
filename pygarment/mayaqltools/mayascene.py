@@ -25,6 +25,7 @@ import pygarment.pattern.wrappers as wrappers
 from pygarment.pattern.utils import vector_angle, rel_to_abs_2d
 from pygarment.mayaqltools import qualothwrapper as qw
 from pygarment.mayaqltools import utils
+from loguru import logger
 reload(core)
 reload(wrappers)
 reload(qw)
@@ -97,7 +98,7 @@ class MayaGarment(wrappers.VisPattern):
         # remove the junk after garment was stitched and labeled
         self._clean_mesh()
 
-        print('Garment ' + self.name + ' is loaded to Maya')
+        logger.info('Garment {} is loaded to Maya'.format(self.name))
 
     def load_panels(self, parent_group=None):
         """Load panels to Maya as curve collection & geometry objects.
@@ -154,7 +155,7 @@ class MayaGarment(wrappers.VisPattern):
             to the folder with the pattern if not given.
         """
         if not self.loaded_to_maya:
-            print('MayaGarmentWARNING::Pattern is not yet loaded. Nothing saved')
+            logger.warning('Pattern is not yet loaded. Nothing saved')
             return
 
         if folder:
@@ -188,7 +189,7 @@ class MayaGarment(wrappers.VisPattern):
             cmds.setAttr(self.get_qlcloth_props_obj() + '.active', 0)
 
             if delete:
-                print('MayaGarment::Deleting {}'.format(self.MayaObjects['pattern']))
+                logger.info('Deleting {}'.format(self.MayaObjects['pattern']))
 
                  # Clean solver cache properly
                 solver = qw.findSolver()
@@ -274,7 +275,7 @@ class MayaGarment(wrappers.VisPattern):
 
         cmds.setAttr((data_node + '.default'), color[0], color[1], color[2], type='double3')
 
-        print('INFO::Segmentation Color Set!') 
+        logger.info('Segmentation Color Set') 
         
         cmds.connectAttr((data_node + '.outColor'), (shader + '.color'))   # Assume Lambert shader
         cmds.setAttr((data_node + '.attribute'), color_set[0], type="string")
@@ -348,7 +349,7 @@ class MayaGarment(wrappers.VisPattern):
         """If caching is enabled -> saves current geometry to cache folder
             Does nothing otherwise """
         if not self.loaded_to_maya:
-            print('MayaGarmentWARNING::Pattern is not yet loaded. Nothing cached')
+            logger.warning('Pattern is not yet loaded. Nothing cached')
             return
 
         if hasattr(self, 'cache_path') and self.cache_path:
@@ -418,7 +419,7 @@ class MayaGarment(wrappers.VisPattern):
         non_static_len = len(diff_L1[diff_L1 > threshold])  # compare vertex-wize to allow accurate control over outliers
 
         if non_static_len == 0 or non_static_len < len(self.current_verts) * 0.01 * allowed_non_static_percent:  
-            print('\nStatic with {} non-static vertices out of {}'.format(non_static_len, len(self.current_verts)))
+            logger.info('\nStatic with {} non-static vertices out of {}'.format(non_static_len, len(self.current_verts)))
             return True, non_static_len
         else:
             return False, non_static_len
@@ -435,7 +436,7 @@ class MayaGarment(wrappers.VisPattern):
         if not obstacles:
             obstacles = self.obstacles
         
-        print('Garment::3D Penetration checks')
+        logger.info('3D Penetration checks')
 
         # check intersection with colliders
         for obj in obstacles:
@@ -491,22 +492,22 @@ class MayaGarment(wrappers.VisPattern):
                 if vtx1 not in face_verts and vtx2 not in face_verts:
                     # hit face is not adjacent to the edge => real hit
                     if verbose:
-                        print('Hit point: {}, {}, {}'.format(hitPoints[face_id][0], hitPoints[face_id][1], hitPoints[face_id][2]))
+                        logger.debug('Hit point: {}, {}, {}'.format(hitPoints[face_id][0], hitPoints[face_id][1], hitPoints[face_id][2]))
                     num_hits += 1
         
         if num_hits == 0:  # no intersections -- no need for threshold check
-            print('{} is not self-intersecting'.format(self.name))
+            logger.info('{} is not self-intersecting'.format(self.name))
             return False
 
         if ('self_intersect_hit_threshold' in self.config 
                 and num_hits > self.config['self_intersect_hit_threshold']
                 or num_hits > 0 and 'self_intersect_hit_threshold' not in self.config):  # non-zero hit if no threshold provided
-            print('{} is self-intersecting with {} intersect edges -- above threshold {}'.format(
+            logger.warning('{} is self-intersecting with {} intersect edges -- above threshold {}'.format(
                 self.name, num_hits,
                 self.config['self_intersect_hit_threshold'] if 'self_intersect_hit_threshold' in self.config else 0))
             return True
         else:
-            print('{} is self-intersecting with {} intersect edges -- ignored by threshold {}'.format(
+            logger.info('{} is self-intersecting with {} intersect edges -- ignored by threshold {}'.format(
                 self.name, num_hits,
                 self.config['self_intersect_hit_threshold'] if 'self_intersect_hit_threshold' in self.config else 0))
             # no need to reload -- non-invasive checks 
@@ -673,7 +674,7 @@ class MayaGarment(wrappers.VisPattern):
                     # put back 
                     # NOTE! There is a ponetial for infinite loop here, but it shoulf not occur
                     # if the garment is freshly loaded before sim
-                    print('Garment::Labelling::vertex {} needs revisit'.format(unlabeled_vert_id))
+                    logger.debug('Vertex {} needs revisit'.format(unlabeled_vert_id))
                     vertices_multi_match.append((unlabeled_vert_id, on_panel_planes))
 
     def _clean_mesh(self):
@@ -828,7 +829,7 @@ class MayaGarment(wrappers.VisPattern):
         # eval
         num_verts = cmds.polyEvaluate(self.get_qlcloth_geomentry(), v=True)
         if num_verts != len(self.vertex_labels):
-            print('MayaGarment::WARNING::Segmentation list does not match mesh topology in save {}'.format(self.name))
+            logger.warning('Segmentation list does not match mesh topology in save {}'.format(self.name))
         
     def _intersect_object(self, geometry):
         """Check if given object intersects current cloth geometry
@@ -862,18 +863,18 @@ class MayaGarment(wrappers.VisPattern):
                 hit_border_length += rayDir.length()  
 
         if hit_border_length < 1e-5:  # no intersections -- no need for threshold check
-            print('{} with {} do not intersect'.format(geometry, self.name))
+            logger.info('{} with {} do not intersect'.format(geometry, self.name))
             return False
 
         if ('object_intersect_border_threshold' in self.config 
                 and hit_border_length > self.config['object_intersect_border_threshold']
                 or (hit_border_length > 1e-5 and 'object_intersect_border_threshold' not in self.config)):  # non-zero hit if no threshold provided
-            print('{} with {} intersect::Approximate intersection border length {:.2f} cm is above threshold {:.2f} cm'.format(
+            logger.warning('{} with {} intersect. Approximate intersection border length {:.2f} cm is above threshold {:.2f} cm'.format(
                 geometry, self.name, hit_border_length, 
                 self.config['object_intersect_border_threshold'] if 'object_intersect_border_threshold' in self.config else 0))
             return True
         
-        print('{} with {} intersect::Approximate intersection border length {:.2f} cm is ignored by threshold {:.2f} cm'.format(
+        logger.info('{} with {} intersect. Approximate intersection border length {:.2f} cm is ignored by threshold {:.2f} cm'.format(
             geometry, self.name, hit_border_length, 
             self.config['object_intersect_border_threshold'] if 'object_intersect_border_threshold' in self.config else 0))
         return False
@@ -911,7 +912,7 @@ class MayaGarment(wrappers.VisPattern):
                 verts_on_curve = qw.getVertsOnCurve(panel_node, curve)
                 all_edge_verts += verts_on_curve
     
-                print(min(verts_on_curve), max(verts_on_curve))
+                logger.debug('{} {}'.format(min(verts_on_curve), max(verts_on_curve)))
 
         # might contain duplicates
         return all_edge_verts
@@ -1169,7 +1170,7 @@ class MayaGarmentWithUI(MayaGarment):
         """Returns current pattern to template state and 
         updates UI accordingly"""
         # update
-        print('Pattern returns to origins..')
+        logger.info('Pattern returns to origins..')
         self._restore_template()
         # update geometry in lazy manner
         if self.loaded_to_maya:
@@ -1284,7 +1285,7 @@ class Scene(object):
         objects = cmds.ls('defaultArnoldDriver')
         if not objects:  # Arnold objects not found
             # https://arnoldsupport.com/2015/12/09/mtoa-creating-the-defaultarnold-nodes-in-scripting/
-            print('Initialized Arnold')
+            logger.info('Initialized Arnold')
             mtoa.core.createOptions()
         
         cmds.setAttr('defaultArnoldRenderOptions.renderDevice', 1)  # turn on GPPU rendering
@@ -1317,7 +1318,7 @@ class Scene(object):
         curr_frame = cmds.currentTime(query=True)
         start_time = time.time()
         for camera in self.cameras:
-            print('Rendering from camera {}'.format(camera))
+            logger.info('Rendering from camera {}'.format(camera))
 
             camera_name = camera.split(':')[-1]  # list of one element if ':' is not found
             local_name = (name + '_' + camera_name) if name else camera_name

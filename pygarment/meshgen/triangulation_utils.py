@@ -2,6 +2,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from loguru import logger
 
 # CGAL 2D
 import CGAL.CGAL_Kernel
@@ -169,7 +170,7 @@ def cdt_insert_constraints(cdt, cdt_points, edge_verts_ids):
         if init_len != num_verts:
             new_points[num_verts - 1] = s_id
             init_len = num_verts
-            print('triangulation_utils::INFO::Generated extra boundary points for sdt contraints. Postprocessing will be performed')
+            logger.info('Generated extra boundary points for sdt constraints. Postprocessing will be performed')
 
     return new_points
 
