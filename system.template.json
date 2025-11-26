@@ -1,6 +1,6 @@
 {
   "output": "./Logs/",
-  "datasets_path": "",
+  "patterns_path": "./patterns",
   "datasets_sim": "",
   "sim_configs_path": "./assets/Sim_props",
   "bodies_default_path": "./assets/bodies",

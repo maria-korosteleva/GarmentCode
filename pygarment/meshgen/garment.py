@@ -424,6 +424,11 @@ class SimulationGarment:
             config.update_min_steps()
             return
         
+        # Debug: log what constraints we're looking for
+        constraint_labels = [c.label for c in config.attachment_constraints]
+        logger.debug(f'Looking for attachment labels: {constraint_labels}')
+        logger.debug(f'Available vertex labels: {list(vertex_labels.keys())}')
+        
         for constraint in config.attachment_constraints:
             attach_label = constraint.label
             if attach_label in vertex_labels.keys() and len(vertex_labels[attach_label]) > 0:

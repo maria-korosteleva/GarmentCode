@@ -1,25 +1,21 @@
 """
     Unified script for pattern dataset generation and simulation with MayaPy standalone mode.
     
-    This script combines pattern generation (from pattern_fitter.py) and simulation
-    (from pattern_data_sim.py) into a single workflow.
+    This script combines pattern generation and simulation into a single workflow.
     
     How to use:
         * Fill out system.json with appropriate paths
         * Generate and simulate from design file:
           python pattern_data_sim.py --design <design_file.yaml> --name <dataset_name> [options]
-        * Simulate existing dataset:
-          python pattern_data_sim.py --data <dataset_folder_name> [options]
     
     Note: This module can be executed in Maya (or by mayapy) for simulation.
 """
 
 import argparse
 import sys
-import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 from loguru import logger
@@ -48,20 +44,15 @@ def get_command_args() -> argparse.Namespace:
         description='Generate pattern datasets and/or run simulations'
     )
     
-    # Input options (mutually exclusive)
-    input_group = parser.add_mutually_exclusive_group(required=True)
-    input_group.add_argument(
+    # Required input option
+    parser.add_argument(
         '--design', '-d',
         help='Path to design parameters YAML file to generate dataset from',
-        type=str
-    )
-    input_group.add_argument(
-        '--data',
-        help='Name of existing dataset folder to simulate',
-        type=str
+        type=str,
+        required=True
     )
     
-    # Dataset generation options (only used with --design)
+    # Dataset generation options
     parser.add_argument(
         '--name', '-n',
         help='Name of the dataset (only used with --design)',
@@ -74,30 +65,12 @@ def get_command_args() -> argparse.Namespace:
         type=int,
         default=None
     )
-    parser.add_argument(
-        '--replicate', '-re',
-        help='Name of the dataset to re-generate. If set, other arguments are ignored',
-        type=str,
-        default=None
-    )
-    parser.add_argument(
-        '--num_samples',
-        help='Number of body samples to generate (default: 1). Use None for all samples.',
-        type=int,
-        default=1
-    )
-    
     # Simulation options
     parser.add_argument(
         '--config', '-c',
         help='Name of .json/.yaml file with desired simulation & rendering config',
         type=str,
-        default=None
-    )
-    parser.add_argument(
-        '--default_body',
-        action='store_true',
-        help='Run dataset on default body only'
+        default="default_sim_props.yaml"
     )
     parser.add_argument(
         '--caching',
@@ -110,14 +83,9 @@ def get_command_args() -> argparse.Namespace:
         help='Re-write simulation config even if it exists'
     )
     parser.add_argument(
-        '--skip_generation',
-        action='store_true',
-        help='Skip dataset generation, only run simulation (requires --data)'
-    )
-    parser.add_argument(
         '--skip_simulation',
         action='store_true',
-        help='Skip simulation, only generate dataset (requires --design)'
+        help='Skip simulation, only generate dataset'
     )
     parser.add_argument(
         '--verbose', '-v',
@@ -132,12 +100,6 @@ def get_command_args() -> argparse.Namespace:
     
     args = parser.parse_args()
     
-    # Validation
-    if args.skip_generation and args.design:
-        parser.error("--skip_generation can only be used with --data")
-    if args.skip_simulation and args.data:
-        parser.error("--skip_simulation can only be used with --design")
-    
     # Set log level based on verbose flag
     if args.verbose:
         set_log_level("DEBUG")
@@ -146,7 +108,7 @@ def get_command_args() -> argparse.Namespace:
     return args
 
 
-def _create_data_folder(properties: Properties, path: Path = Path('')) -> tuple[Path, Path, Path]:
+def _create_data_folder(properties: Properties, path: Path = Path('')) -> tuple[Path, Path]:
     """Create a new directory to put dataset in and generate appropriate name.
     
     Parameters:
@@ -158,11 +120,10 @@ def _create_data_folder(properties: Properties, path: Path = Path('')) -> tuple[
     
     Returns:
     --------
-    tuple[Path, Path, Path]
+    tuple[Path, Path]
         Tuple containing:
         - path_with_dataset: Full path to the created dataset folder
         - default_folder: Path to the default_body subfolder
-        - body_folder: Path to the random_body subfolder
     """
     if 'data_folder' in properties:
         # Regenerating from existing data
@@ -177,56 +138,12 @@ def _create_data_folder(properties: Properties, path: Path = Path('')) -> tuple[
     path_with_dataset.mkdir(parents=True)
     
     default_folder = path_with_dataset / 'default_body'
-    body_folder = path_with_dataset / 'random_body'
-    
     default_folder.mkdir(parents=True, exist_ok=True)
-    body_folder.mkdir(parents=True, exist_ok=True)
     
     logger.info(f"Created dataset folder: {data_folder}")
+    logger.info("Using default body configuration (default_body)")
     
-    return path_with_dataset, default_folder, body_folder
-
-
-def _gather_body_options(body_path: Path) -> list[dict[str, Any]]:
-    """Gather available body options from the body samples directory.
-    
-    Parameters:
-    -----------
-    body_path : Path
-        Path to the body samples directory containing measurements and meshes.
-    
-    Returns:
-    --------
-    list[dict[str, Any]]
-        List of body information dictionaries, each containing:
-        - 'objs': Dictionary with 'straight' and 'apart' mesh file paths
-        - 'mes': Path to the measurements YAML file
-    
-    Raises:
-    -------
-    FileNotFoundError
-        If the measurements directory does not exist.
-    """
-    measurements_path = body_path / 'measurements'
-    
-    bodies: list[dict[str, Any]] = []
-    if not measurements_path.exists() or not measurements_path.is_dir():
-        raise FileNotFoundError(f"Measurements directory not found at {measurements_path}")
-    
-    for file in measurements_path.glob('*.yaml'):
-        # Get name
-        b_name = file.stem.split('_')[0]
-        body_info: dict[str, Any] = {
-            'objs': {
-                'straight': f'meshes/{b_name}_straight.obj',
-                'apart': f'meshes/{b_name}_apart.obj'
-            },
-            'mes': f'measurements/{file.name}'
-        }
-        bodies.append(body_info)
-    
-    logger.debug(f"Found {len(bodies)} body options in {body_path}")
-    return bodies
+    return path_with_dataset, default_folder
 
 
 def body_sample(
@@ -320,7 +237,7 @@ def generate_sewing_pattern(
     properties: Properties,
     sys_paths: Properties,
     verbose: bool = False
-) -> tuple[Path, Path, dict[str, PatternData], dict[str, PatternData]]:
+) -> tuple[Path, dict[str, PatternData]]:
     """Generate a pattern sample with given properties.
     
     Parameters:
@@ -336,12 +253,10 @@ def generate_sewing_pattern(
     
     Returns:
     --------
-    tuple[Path, Path, dict[str, PatternData], dict[str, PatternData]]
+    tuple[Path, dict[str, PatternData]]
         Tuple containing:
         - default_path: Path to default body data folder
-        - body_sample_path: Path to body sample data folder
         - default_pattern_data: Dict mapping pattern names to PatternData objects
-        - body_sample_pattern_data: Dict mapping pattern names to PatternData objects
     
     Raises:
     -------
@@ -351,16 +266,13 @@ def generate_sewing_pattern(
         If required files or directories are not found.
     """
     path = Path(path)
-    body_samples_path = Path(sys_paths['body_samples_path']) / properties['body_samples']
-    body_options = _gather_body_options(body_samples_path)
     
     # Create data folder
-    _, default_path, body_sample_path = _create_data_folder(properties, path)
+    _, default_path = _create_data_folder(properties, path)
     default_sample_data = default_path / 'data'
     
     # Store pattern data in memory (for direct passing to simulation)
     default_pattern_data: dict[str, PatternData] = {}
-    body_sample_pattern_data: dict[str, PatternData] = {}
     
     # Load design file
     with open(properties['design_file'], 'r') as f:
@@ -444,10 +356,10 @@ def generate_sewing_pattern(
         out_path=output_path,
         in_name=piece_default.name,
         body_name=properties['body_default'],
-        samples_name=properties['body_samples'] if 'body_samples' in properties else '',  # type: ignore[assignment]
+        samples_name='',  # Not using body samples
         default_body=True,
         bodies_default_path=sys_paths['bodies_default_path'],
-        body_samples_path=sys_paths['body_samples_path'] if 'body_samples_path' in sys_paths else None
+        body_samples_path=None
     )
     
     # Store default body pattern data in memory
@@ -460,21 +372,14 @@ def generate_sewing_pattern(
         paths=paths_config_default
     )
     
-    # Generate samples - limit to requested number or available options, whichever is smaller
-    max_available = len(body_options)
-    requested_samples = properties['num_samples'] if 'num_samples' in properties else max_available
-    num_samples = min(requested_samples, max_available) if requested_samples is not None else max_available
-    
-    logger.info(f'Generating {num_samples} body samples (out of {max_available} available)...')
-
-    return default_path, body_sample_path, default_pattern_data, body_sample_pattern_data
+    return default_path, default_pattern_data
 
 
 def run_simulation(
     dataset: str,
     system_config: Properties,
     command_args: argparse.Namespace,
-    pattern_data: dict[str, PatternData] | None = None,
+    pattern_data: dict[str, PatternData],
     sim_config: SimulationConfig | None = None
 ) -> bool:
     """Run simulation on an existing dataset.
@@ -487,10 +392,9 @@ def run_simulation(
         System configuration properties.
     command_args : argparse.Namespace
         Parsed command line arguments.
-    pattern_data : dict[str, PatternData] | None, optional
-        Optional in-memory pattern data dict mapping pattern names to PatternData objects.
-        If provided, this data will be used directly instead of reading from disk.
-        If None, data will be read from disk (backward compatible).
+    pattern_data : dict[str, PatternData]
+        In-memory pattern data dict mapping pattern names to PatternData objects.
+        Required for simulation.
     sim_config : SimulationConfig | None, optional
         Optional simulation configuration object. If provided, will be used instead of
         creating Properties from scratch. If None, will create from config file.
@@ -500,82 +404,40 @@ def run_simulation(
     bool
         True if simulation finished successfully, False otherwise.
     """
-    body_type = 'default_body' if command_args.default_body else 'random_body'
-    datapath = Path(system_config['datasets_path']) / dataset / body_type / 'data'
+    body_type = 'default_body'
+    logger.info("Using default body configuration (default_body)")
     output_path = Path(system_config['datasets_sim']) / dataset / body_type
     output_path.mkdir(parents=True, exist_ok=True)
     
-    # Use in-memory data if available, otherwise read from disk
-    if pattern_data is not None:
-        logger.info(f"Using in-memory pattern data for {len(pattern_data)} patterns")
-        
-        # Use provided sim_config or create from scratch
-        if sim_config is None:
-            if command_args.config is not None:
-                config_path = Path(system_config['sim_configs_path']) / command_args.config
-                logger.info(f"Loading simulation config from: {config_path}")
-                sim_config_obj = SimulationConfig.from_config_file(config_path, dataset)
-            else:
-                sim_config_obj = SimulationConfig.create_default(dataset)
-        else:
-            sim_config_obj = sim_config
-        
-        # Main simulation loop
-        logger.info(f"Starting simulation for dataset: {dataset} (body_type: {body_type})")
-        finished = sim.batch_sim_with_data(
-            pattern_data,
-            sim_config_obj,
-            run_default_body=command_args.default_body,
-            num_samples=None,
-            caching=command_args.caching,
-            force_restart=False
-        )
-    else:
-        logger.info("Reading pattern data from disk (backward compatible mode)")
-        # Backward compatibility: use file-based approach
-        init_dataset_file = Path(system_config['datasets_path']) / dataset / 'dataset_properties.yaml'
-        dataset_file_body = output_path / f'dataset_properties_{body_type}.yaml'
-        if not dataset_file_body.exists():
-            if init_dataset_file.exists():
-                shutil.copy(str(init_dataset_file), str(dataset_file_body))
-            else:
-                # Create from scratch if file doesn't exist
-                props = data_config.Properties()
-                props.set_basic(data_folder=dataset)
-                import pygarment.meshgen.datasim_utils as sim_utils
-                sim_utils.init_sim_props(props, batch_run=True, force_restart=False)
-                if command_args.config is not None:
-                    config_path = Path(system_config['sim_configs_path']) / command_args.config
-                    logger.info(f"Loading simulation config from: {config_path}")
-                    props.merge(config_path, re_write=command_args.rewrite_config)
-                props.serialize(dataset_file_body)
-        
-        props = data_config.Properties(dataset_file_body)
-        if 'frozen' in props and props['frozen']:
-            logger.warning('Dataset is frozen, processing is skipped')
-            return False
-        
-        # Define sim props
-        props.set_basic(data_folder=dataset)
+    # Use in-memory pattern data (required)
+    if pattern_data is None:
+        logger.error('Pattern data is required. Cannot run simulation without pattern data.')
+        return False
+    
+    logger.info(f"Using in-memory pattern data for {len(pattern_data)} patterns")
+    
+    # Use provided sim_config or create from scratch
+    if sim_config is None:
         if command_args.config is not None:
             config_path = Path(system_config['sim_configs_path']) / command_args.config
             logger.info(f"Loading simulation config from: {config_path}")
-            props.merge(
-                config_path,
-                re_write=command_args.rewrite_config
-            )
-        
-        # Main simulation loop
-        logger.info(f"Starting simulation for dataset: {dataset} (body_type: {body_type})")
-        finished = sim.batch_sim(
-            datapath,
-            output_path,
-            props,
-            run_default_body=command_args.default_body,
-            num_samples=None,  # None = process all samples, can be set to a number for batching
-            caching=command_args.caching,
-            force_restart=False
-        )
+            sim_config_obj = SimulationConfig.from_config_file(config_path, dataset)
+        else:
+            sim_config_obj = SimulationConfig.create_default(dataset)
+            logger.info(f"Created default simulation config for dataset: {dataset}")
+    else:
+        sim_config_obj = sim_config
+    
+    # Main simulation loop
+    logger.info(f"Starting simulation for dataset: {dataset} (body_type: {body_type})")
+    finished = sim.batch_sim_with_data(
+        pattern_data,
+        sim_config_obj,
+        run_default_body=True,
+        num_samples=1,
+        caching=command_args.caching,
+        force_restart=False
+    )
     
     return finished
 
@@ -584,83 +446,56 @@ if __name__ == "__main__":
     command_args = get_command_args()
     system_config = data_config.Properties('./system.json')
     
-    dataset_name: Optional[str] = None
+    # Step 1: Generate dataset from design file
+    logger.info(f'Generating dataset from design file: {command_args.design}')
     
-    # Step 1: Generate dataset if design file is provided
-    if command_args.design and not command_args.skip_generation:
-        logger.info(f'Generating dataset from design file: {command_args.design}')
-        
-        # Set up properties for generation
-        if command_args.replicate is not None:
-            props = Properties(
-                Path(system_config['datasets_path']) / command_args.replicate / 'dataset_properties.yaml',
-                True
-            )
-        else:
-            props = Properties()
-            props.set_basic(
-                design_file=command_args.design,
-                body_default='mean_all',
-                body_samples='5000_body_shapes_and_measures',
-                body_sample_start_id=0,
-                name=command_args.name if not command_args.batch_id else f'{command_args.name}_{command_args.batch_id}',
-                to_subfolders=True
-            )
-            props['num_samples'] = command_args.num_samples
-            props['perfect_fit'] = command_args.perfect_fit  # Store perfect fit flag
-            props.set_section_config('generator')
-        
-        # Generate dataset
-        try:
-            default_path, body_sample_path, default_pattern_data, body_sample_pattern_data = generate_sewing_pattern(
-                system_config['datasets_path'],
-                props,
-                system_config,
-                verbose=command_args.verbose
-            )
-            
-            # At the end -- it takes some time to gather the info
-            props.add_sys_info()
-            
-            # Get the dataset name from properties
-            dataset_name = props['data_folder']
-            
-            logger.info(f'Data generation completed! Dataset: {dataset_name}')
-                
-        except Exception as e:
-            logger.error(f'Error during dataset generation: {e}')
-            logger.exception("Exception details:")
-            sys.exit(1)
+    # Set up properties for generation
+    props = Properties()
+    props.set_basic(
+        design_file=command_args.design,
+        body_default='mean_all',
+        name=command_args.name if not command_args.batch_id else f'{command_args.name}_{command_args.batch_id}',
+        to_subfolders=True
+    )
+    props['perfect_fit'] = command_args.perfect_fit  # Store perfect fit flag
+    props.set_section_config('generator')
     
-    # Store pattern data for simulation stage (if generation was run)
-    pattern_data_for_sim: dict[str, PatternData] | None = None
-    sim_config_for_sim: SimulationConfig | None = None
-    if command_args.design is not None:
-        # Generation was run, use the appropriate pattern data
-        pattern_data_for_sim = default_pattern_data if command_args.default_body else body_sample_pattern_data
+    # Get patterns_path from system config, default to './patterns' if not set
+    patterns_path = Path(system_config['patterns_path'] if 'patterns_path' in system_config else './patterns')
+    
+    # Generate dataset
+    try:
+        default_path, default_pattern_data = generate_sewing_pattern(
+            patterns_path,
+            props,
+            system_config,
+            verbose=command_args.verbose
+        )
         
-        # Create SimulationConfig from properties (for in-memory use)
-        if dataset_name is not None:
-            if command_args.config is not None:
-                config_path = Path(system_config['sim_configs_path']) / command_args.config
-                logger.info(f"Loading simulation config from: {config_path}")
-                sim_config_for_sim = SimulationConfig.from_config_file(config_path, dataset_name)
-            else:
-                sim_config_for_sim = SimulationConfig.create_default(dataset_name)
-        else:
-            sim_config_for_sim = None
+        # At the end -- it takes some time to gather the info
+        props.add_sys_info()
+        
+        # Get the dataset name from properties
+        dataset_name = props['data_folder']
+        
+        logger.info(f'Data generation completed! Dataset: {dataset_name}')
+            
+    except Exception as e:
+        logger.error(f'Error during dataset generation: {e}')
+        logger.exception("Exception details:")
+        sys.exit(1)
     
     # Step 2: Run simulation if not skipped
     if not command_args.skip_simulation:
-        # Determine dataset name
-        if dataset_name is None:
-            if command_args.data:
-                dataset_name = command_args.data
-            else:
-                logger.error('No dataset available for simulation')
-                sys.exit(1)
+        # Create SimulationConfig from properties (for in-memory use)
+        if command_args.config is not None:
+            config_path = Path(system_config['sim_configs_path']) / command_args.config
+            logger.info(f"Loading simulation config from: {config_path}")
+            sim_config_for_sim = SimulationConfig.from_config_file(config_path, dataset_name)
+        else:
+            sim_config_for_sim = SimulationConfig.create_default(dataset_name)
         
-        finished = run_simulation(dataset_name, system_config, command_args, pattern_data_for_sim, sim_config_for_sim)
+        finished = run_simulation(dataset_name, system_config, command_args, default_pattern_data, sim_config_for_sim)
     else:
         logger.info('Simulation skipped')
         sys.exit(0)

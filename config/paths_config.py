@@ -176,7 +176,10 @@ class PathCofig:
             # Backward compatibility: read from system.json
             from pygarment.data_config import Properties
             system = Properties('./system.json')
-            self._body_samples_path = Path(system.get('body_samples_path', '')) if 'body_samples_path' in system else None
+            if 'body_samples_path' in system and system['body_samples_path']:
+                self._body_samples_path = Path(system['body_samples_path'])
+            else:
+                self._body_samples_path = None
         
         self._body_name = body_name
         self._samples_folder_name = samples_name

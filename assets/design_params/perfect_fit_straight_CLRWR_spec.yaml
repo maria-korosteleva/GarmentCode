@@ -1,0 +1,6 @@
+garment_type: "pants"
+raise_to_waist_ratio: "MID"
+crotch_displacement_ratio: "LOW_CROTCH"
+leg_length_ratio: "LONG"
+general_fit_ratio: "REGULAR"
+pants_style_spec: "STRAIGHT"

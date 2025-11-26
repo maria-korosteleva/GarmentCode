@@ -538,14 +538,38 @@ def template_simulation_with_data(
     """
     # Inject attachment constraints into config if provided
     if attachment_constraints is not None and len(attachment_constraints) > 0:
-        # Update attachment constraints in SimConfig
-        sim_config.sim_config.options.attachment_constraints = attachment_constraints
-        sim_config.sim_config.options.enable_attachment_constraint = True
-        # Update exposed attributes
-        sim_config.sim_config.attachment_constraints = attachment_constraints
-        sim_config.sim_config.enable_attachment_constraint = True
+        # Convert to AttachmentConstraint objects if needed
+        from config import AttachmentConstraint
+        constraints_objects = []
+        for constraint in attachment_constraints:
+            if isinstance(constraint, AttachmentConstraint):
+                constraints_objects.append(constraint)
+            elif isinstance(constraint, dict):
+                constraints_objects.append(AttachmentConstraint(**constraint))
+            elif hasattr(constraint, 'model_dump'):
+                constraints_objects.append(AttachmentConstraint(**constraint.model_dump()))
+            else:
+                raise ValueError(f"Cannot convert constraint to AttachmentConstraint: {type(constraint)}")
         
-        logger.debug(f'Injected {len(attachment_constraints)} attachment constraints into simulation config')
+        # Update attachment constraints using Pydantic model_copy to ensure proper update
+        # This creates a new SimulationOptions instance with updated constraints
+        updated_options = sim_config.sim_config._options.model_copy(
+            update={
+                'attachment_constraints': constraints_objects,
+                'enable_attachment_constraint': True
+            }
+        )
+        sim_config.sim_config._options = updated_options
+        
+        # Update exposed attributes to match (these are set during _expose_attributes)
+        sim_config.sim_config.attachment_constraints = constraints_objects
+        sim_config.sim_config.enable_attachment_constraint = True
+        # Also update legacy exposed attributes for backward compatibility
+        sim_config.sim_config.attachment_labels = [c.label for c in constraints_objects]
+        sim_config.sim_config.attachment_stiffness = [c.stiffness for c in constraints_objects]
+        sim_config.sim_config.attachment_damping = [c.damping for c in constraints_objects]
+        
+        logger.debug(f'Injected {len(constraints_objects)} attachment constraints into simulation config: {[c.label for c in constraints_objects]}')
     
     # Ensure pattern data is saved to expected location (for backup)
     pattern = piece.assembly()
@@ -577,6 +601,16 @@ def template_simulation_with_data(
     
     # Use SimConfig from sim_config
     config = sim_config.sim_config
+    # Verify attachment constraints were properly set
+    if attachment_constraints is not None and len(attachment_constraints) > 0:
+        actual_labels = [c.label for c in config.attachment_constraints]
+        expected_labels = [c.label for c in attachment_constraints]
+        if actual_labels != expected_labels:
+            logger.warning(f'Attachment constraint mismatch! Expected: {expected_labels}, Got: {actual_labels}')
+            # Force update again
+            config._options.attachment_constraints = attachment_constraints
+            config.attachment_constraints = attachment_constraints
+            config.attachment_labels = [c.label for c in attachment_constraints]
     res = config.resolution_scale
     
     garment_box_mesh = BoxMesh(spec_path, res)
@@ -643,6 +677,26 @@ def template_simulation_with_data(
         body_segmentation=body_segmentation,
         vertex_labels=vertex_labels
     )
+    
+    # Update stats_props dict with the updated config so run_sim gets the correct constraints
+    if attachment_constraints is not None and len(attachment_constraints) > 0:
+        # Update the stats_props dict so that when run_sim creates SimConfig, it has the right constraints
+        from config import AttachmentConstraint
+        constraints_dicts = []
+        for constraint in attachment_constraints:
+            if isinstance(constraint, AttachmentConstraint):
+                constraints_dicts.append(constraint.model_dump())
+            elif isinstance(constraint, dict):
+                constraints_dicts.append(constraint)
+            elif hasattr(constraint, 'model_dump'):
+                constraints_dicts.append(constraint.model_dump())
+        
+        # Update the options dict in stats_props
+        if 'options' not in stats_props['sim']['config']:
+            stats_props['sim']['config']['options'] = {}
+        stats_props['sim']['config']['options']['attachment_constraints'] = constraints_dicts
+        stats_props['sim']['config']['options']['enable_attachment_constraint'] = True
+        logger.debug(f'Updated stats_props with attachment constraints: {[c.get("label", c) for c in constraints_dicts]}')
     
     # Run simulation with in-memory data
     logger.debug(f'Running simulation for {garment_box_mesh.name} with in-memory data...')

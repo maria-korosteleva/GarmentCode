@@ -30,6 +30,46 @@ apt-get install libglfw3-dev libgles2-mesa-dev -y
 3. [Body measurements Description](https://github.com/maria-korosteleva/GarmentCode/blob/main/docs/Body%20Measurements%20GarmentCode.pdf)
 4. [Dataset documentation](https://www.research-collection.ethz.ch/handle/20.500.11850/673889)
 
+## Pattern Dataset Generation & Simulation
+
+The `pattern_data_sim.py` script provides a unified workflow for generating sewing patterns and running simulations.
+
+### Basic Usage
+
+**Generate and simulate from a design file:**
+```bash
+python pattern_data_sim.py --design <design_file.yaml> --name <dataset_name>
+```
+
+### Common Options
+
+- `--design, -d`: Path to design parameters YAML file (required)
+- `--name, -n`: Name of the dataset (default: `design_fit`)
+- `--config, -c`: Simulation/rendering config file (JSON/YAML) (default: `default_sim_props.yaml`)
+- `--skip_simulation`: Skip simulation, only generate dataset
+- `--perfect-fit`: Use perfect fit garment specification format
+- `--verbose, -v`: Print verbose output
+- `--caching`: Cache intermediate simulation results
+- `--rewrite_config`: Re-write simulation config even if it exists
+
+### Examples
+
+```bash
+# Generate dataset and simulate
+python pattern_data_sim.py --design assets/design_params/pants_M.yaml --name my_pants
+
+# Generate dataset only (skip simulation)
+python pattern_data_sim.py --design assets/design_params/shirt_L.yaml --name my_shirt --skip_simulation
+
+# Use custom simulation config
+python pattern_data_sim.py --design assets/design_params/pants_M.yaml --name my_pants --config my_sim_config.json
+
+# Use perfect fit specification
+python pattern_data_sim.py --design assets/design_params/perfect_fit_garment_spec.yaml --perfect-fit --name perfect_fit_pants
+```
+
+> **Note:** Ensure `system.json` is configured with appropriate paths before running. The script can be executed in Maya (or via `mayapy`) for simulation.
+
 ## Navigation
 
 ### Library
