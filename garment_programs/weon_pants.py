@@ -37,7 +37,7 @@ class PantPanel(pyg.Panel):
     SMALL_DART_DEPTH_RATIO: float = 0.9
     DART_POSITION_MULTIPLIER: float = 0.5
     DART_OFFSET_MULTIPLIER_QUARTER: float = 0.25
-    GRAINLINE_OFFSET_RATIO: float = 0.5
+    GRAINLINE_OFFSET_RATIO: float = 0.4
     
     def __init__(
             self,
@@ -128,7 +128,7 @@ class PantPanel(pyg.Panel):
         right_4 = pyg.CurveEdgeFactory.curve_from_tangents(
             start=ext_point_thigh,
             end=right_5.start,
-            target_tan1=np.array([0, 1]),
+            target_tan0=np.array([0, 1]),
         )
 
         x_grainline = ext_point_thigh[0] + (design.width_thigh + crotch_extension) * self.GRAINLINE_OFFSET_RATIO
@@ -167,7 +167,7 @@ class PantPanel(pyg.Panel):
         )
         crotch_bottom = pyg.CurveEdgeFactory.curve_from_tangents(
             start=crotch_top.end,
-            end=[ext_point_thigh[0] + hips + crotch_extension, total_length], 
+            end=[ext_point_thigh[0] + design.width_thigh + crotch_extension, total_length], 
             target_tan0=np.array([0, -1]),
             target_tan1=np.array([1, 0]),
             initial_guess=[0.5, -0.5] 
@@ -201,8 +201,8 @@ class PantPanel(pyg.Panel):
 
         # Default placement
         self.set_pivot(crotch_bottom.end)
-        rightmost_point = max(0, ext_point_thigh[0], left_bottom.end[0], left_middle.end[0], left_bottom.end[0])
-        self.translation = translation + [-rightmost_point, 0, 0]
+        rightmost_thigh_alihnment = left_top.end[0]
+        self.translation = translation + [-rightmost_thigh_alihnment, 0, 0]
 
         # Out interfaces (easier to define before adding a dart)
         self.interfaces = {
@@ -335,7 +335,7 @@ class PantsHalf(BaseBottoms):
     BACK_CROTCH_EXTENSION_OFFSET: float = 3
 
     # Panel pivot and translation constants
-    DEFAULT_PIVOT_OFFSET_X: float = -1
+    DEFAULT_PIVOT_OFFSET_X: float = 0
     DEFAULT_TRANSLATION_Z_FRONT: float = 25
     DEFAULT_TRANSLATION_Z_BACK: float = -20
 
@@ -384,7 +384,7 @@ class PantsHalf(BaseBottoms):
             waist=self.pants_design.waist / 2,
             hips=self.pants_design.width_hips / 2,
             hips_crotch_diff=hips_crotch_diff,
-            crotch_extension=self.pants_design.width_hips / 8,
+            crotch_extension=self.pants_design.width_hips / 8 / 2,
             crotch_hip_diff=rise_middle - self.pants_design.length_waist_to_hip,
             dart_position=self.pants_design.waist / 4,
             match_top_int_to=self.pants_design.waist / 2,
@@ -399,7 +399,7 @@ class PantsHalf(BaseBottoms):
             waist=self.pants_design.waist / 2,
             hips=self.pants_design.width_hips / 2,
             hips_crotch_diff=hips_crotch_diff,
-            crotch_extension=self.pants_design.width_hips / 8 + self.BACK_CROTCH_EXTENSION_OFFSET,
+            crotch_extension=(self.pants_design.width_hips / 8 + self.BACK_CROTCH_EXTENSION_OFFSET) / 2,
             crotch_hip_diff=rise_middle - self.pants_design.length_waist_to_hip,
             hipline_ext=self.BACK_HIPLINE_EXTENSION,
             dart_position=self.pants_design.width_hips / 4,
@@ -482,21 +482,6 @@ class Pants(BaseBottoms):
 
         self.right = PantsHalf('r', design)
         self.left = PantsHalf('l', design).mirror()
-        
-        # After mirroring, adjust the left panel translation to ensure proper separation
-        # The mirror operation negates X translation, which can cause panels to overlap
-        # Calculate the current separation and ensure minimum separation
-        right_front_x = self.right.front.translation[0]
-        left_front_x = self.left.front.translation[0]
-        current_separation = left_front_x - right_front_x
-        
-        # If separation is too small, add offset to ensure proper separation
-        # The separation should be at least 2 * abs(DEFAULT_PIVOT_OFFSET_X) to account for the offset
-        min_separation = 2 * abs(PantsHalf.DEFAULT_PIVOT_OFFSET_X)
-        if current_separation < min_separation:
-            separation_offset = min_separation - current_separation
-            self.left.front.translate_by([separation_offset, 0, 0])
-            self.left.back.translate_by([separation_offset, 0, 0])
 
         self.stitching_rules = pyg.Stitches(
             (self.right.interfaces[InterfaceName.CROTCH_F], self.left.interfaces[InterfaceName.CROTCH_F]),
@@ -547,7 +532,7 @@ class Pants(BaseBottoms):
         """
         crotch_constraint = AttachmentConstraint(
             label='crotch',
-            stiffness=100000000.0,
+            stiffness=1000.0,
             damping=10.0,
             position_calculation={
                 'x': {'positive': [], 'negative': []},

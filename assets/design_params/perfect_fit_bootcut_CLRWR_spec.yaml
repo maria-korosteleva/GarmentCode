@@ -1,0 +1,6 @@
+garment_type: "pants"
+raise_to_waist_ratio: "HIGH"
+crotch_displacement_ratio: "AT_CROTCH"
+leg_length_ratio: "FULL"
+general_fit_ratio: "REGULAR"
+pants_style_spec: "BOOT_CUT"

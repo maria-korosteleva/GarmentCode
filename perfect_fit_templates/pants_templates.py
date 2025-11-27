@@ -6,24 +6,24 @@ from pattern_definitions.body_definition import BodyDefinition
 
 
 # Vertical ratios for leg length:
-THIGH_TO_KNEE_LEG_RATIO = 0.55
-KNEE_TO_CALF_LEG_RATIO = 0.2
-CALF_TO_ANKLE_LEG_RATIO = 0.2
+THIGH_TO_KNEE_LEG_RATIO = 0.5
+KNEE_TO_CALF_LEG_RATIO = 0.25
+CALF_TO_ANKLE_LEG_RATIO = 0.25
 
 
 class GeneralFit(Enum):
     """Enum for thigh & hips width ratio in relation to horizontal leg line at the crotch"""
     WIDE = 1.1
-    REGULAR = 1.05
-    TIGHT = 1
+    REGULAR = 1.02
+    TIGHT = 0.9
     SUPER_TIGHT = 0.75
 
 
 class RaiseWaist(Enum):
     """Enum for waist fit. Factors are relative to the body's waist level."""
-    HIGH = 0.8
-    MID = 0.6
-    LOW = 0.55
+    HIGH = 1.0
+    MID = 0.9
+    LOW = 0.85
 
 
 class CrotchDisplacementRatio(Enum):
@@ -104,7 +104,7 @@ class PerfectFitPantsDesign:
     Perfect fit pants design.
     """
 
-    RATIO_RAISE_BACK_TO_FRONT: float = 1.075
+    RATIO_RAISE_BACK_TO_FRONT: float = 1.1
 
     _waist: float
     _hips: float
@@ -175,18 +175,19 @@ class PerfectFitPantsDesign:
         back_extention = crotch_extention - front_extention
         self._width_gusset_crotch: float = (front_extention + back_extention) / 2 * general_fit_ratio.value
 
-        self._length_waist_to_hip: float = body_definition.hips_line
+        self._length_waist_to_hip: float = body_definition.hips_line * raise_to_waist_ratio.value
         self._crotch_shift_ratio: float = crotch_displacement_ratio.value
         body_definition.fit_waist_level = body_definition.computed_waist_level + waist_to_crotch * (raise_to_waist_ratio.value * self.RATIO_RAISE_BACK_TO_FRONT - 1)
 
         # Leg parameters:
-        self._length_thigh_to_knee: float = body_definition.computed_leg_length * (THIGH_TO_KNEE_LEG_RATIO  - self._crotch_shift_ratio) * leg_length_ratio.value
-        self._length_knee_to_calf: float = body_definition.computed_leg_length * KNEE_TO_CALF_LEG_RATIO * leg_length_ratio.value
-        self._length_calf_to_ankle: float = body_definition.computed_leg_length * CALF_TO_ANKLE_LEG_RATIO * leg_length_ratio.value
+        crotch_to_ankle_ratio = leg_length_ratio.value - body_definition.crotch_hip_diff / body_definition.computed_leg_length
+        self._length_thigh_to_knee: float = body_definition.computed_leg_length * (THIGH_TO_KNEE_LEG_RATIO  - self._crotch_shift_ratio) * crotch_to_ankle_ratio
+        self._length_knee_to_calf: float = body_definition.computed_leg_length * KNEE_TO_CALF_LEG_RATIO * crotch_to_ankle_ratio
+        self._length_calf_to_ankle: float = body_definition.computed_leg_length * CALF_TO_ANKLE_LEG_RATIO * crotch_to_ankle_ratio
         
-        self._width_knee: float = general_fit_ratio.value * body_definition.leg_circ / 2 * style_config.knee_ratio + style_config.knee_bias
-        self._width_calf: float = general_fit_ratio.value * body_definition.leg_circ / 2 * style_config.calf_ratio + style_config.calf_bias
-        self._width_ankle: float = general_fit_ratio.value * body_definition.leg_circ / 2 * style_config.ankle_ratio + style_config.ankle_bias
+        self._width_knee: float = general_fit_ratio.value * (body_definition.leg_circ / 2 * style_config.knee_ratio + style_config.knee_bias)
+        self._width_calf: float = general_fit_ratio.value * (body_definition.leg_circ / 2 * style_config.calf_ratio + style_config.calf_bias)
+        self._width_ankle: float = general_fit_ratio.value * (body_definition.leg_circ / 2 * style_config.ankle_ratio + style_config.ankle_bias)
 
     def get_design(self) -> PantsDesign:
         """Get pants design."""

@@ -7,7 +7,7 @@ sim:
       sim_fps: 60.0
       sim_substeps: 10
       sim_wo_gravity_percentage: 0
-      zero_gravity_steps: 10
+      zero_gravity_steps: 20
       resolution_scale: 1.0
       ground: false
       
@@ -17,8 +17,8 @@ sim:
       max_sim_time: 600
       non_static_percent: 1.5
       
-      max_body_collisions: 35
-      max_self_collisions: 300
+      max_body_collisions: 15
+      max_self_collisions: 100
     
     # Garment material and fabric properties
     material:
@@ -31,11 +31,11 @@ sim:
       spring_kd: 10.0
       fabric_density: 1.0
       fabric_thickness: 0.1
-      fabric_friction: 0.5
+      fabric_friction: 0.1
     
     # Simulation options and feature flags
     options:
-      enable_particle_particle_collisions: false
+      enable_particle_particle_collisions: true
       enable_triangle_particle_collisions: true
       enable_edge_edge_collisions: true
       enable_body_collision_filters: true
@@ -86,7 +86,7 @@ sim:
       smoothing_frame_gap_between_steps: 1
       
       body_collision_thickness: 0.25
-      body_friction: 0.5
+      body_friction: 0.1
     
     # Legacy/deprecated parameters (kept for backward compatibility)
     max_meshgen_time: 60  # Used in datasim_utils, not in config classes
