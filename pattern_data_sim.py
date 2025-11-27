@@ -126,13 +126,19 @@ def get_command_args() -> argparse.Namespace:
         '--bodies_default_path',
         help='Path to default bodies directory',
         type=str,
-        default="./assets/bodies"
+        default="./assets/bodies/smplx_sample"
     )
     parser.add_argument(
         '--body_samples_path',
         help='Path to body samples directory',
         type=str,
         default=""
+    )
+    parser.add_argument(
+        "--body_name",
+        help='The name of the body selected from --bodies_default_path',
+        type=str,
+        default="female_00018_default_pose"
     )
     
     args = parser.parse_args()
@@ -361,7 +367,7 @@ def generate_sewing_pattern(
     
     # On default body
     default_body_params = BodyParameters(
-        Path(bodies_default_path) / (properties['body_default'] + '.yaml')
+        Path(bodies_default_path) / (properties['body_name'] + '.yaml')
     )
     default_body_def = BodyDefinition(default_body_params.params)
     
@@ -378,9 +384,9 @@ def generate_sewing_pattern(
         constraints_default = piece_default.get_attachment_constraints()  # type: ignore[attr-defined]
     else:
         piece_default, constraints_default = create_garment(garment_type, default_body_def, design)
-    piece_default.name = properties['body_default']
+    piece_default.name = properties['body_name']
     
-    logger.info(f"Generating default body sample: {properties['body_default']}")
+    logger.info(f"Generating default body sample: {properties['body_name']}")
     _save_sample(piece_default, default_body_params, design, default_sample_data, verbose=verbose)
     
     # Create PathCofig for default body (will be used in simulation)
@@ -393,9 +399,9 @@ def generate_sewing_pattern(
         in_element_path=default_sample_data / piece_default.name,
         out_path=output_path,
         in_name=piece_default.name,
-        body_name=properties['body_default'],
+        body_name=properties['body_name'],
         samples_name='',  # Not using body samples
-        default_body=True,
+        smpl_body=True,
         bodies_default_path=bodies_default_path,
         body_samples_path=None
     )
@@ -489,7 +495,7 @@ if __name__ == "__main__":
     props = Properties()
     props.set_basic(
         design_file=command_args.design,
-        body_default='mean_all',
+        body_name=command_args.body_name,
         name=command_args.name if not command_args.batch_id else f'{command_args.name}_{command_args.batch_id}',
         to_subfolders=True
     )
