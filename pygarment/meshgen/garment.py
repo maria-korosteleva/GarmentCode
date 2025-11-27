@@ -154,6 +154,7 @@ class SimulationGarment:
         """
 
         builder = wp.sim.ModelBuilder(gravity=0.0)
+        builder.edge_contact_max = 3 * self.config.options.edge_contact_max  # per spring
         # --------------- Load body info -----------------
         if self.garment_data is not None:
             # Use in-memory data (match format from load_obj)

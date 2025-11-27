@@ -35,6 +35,7 @@ sim:
     
     # Simulation options and feature flags
     options:
+      edge_contact_max: 1024
       enable_particle_particle_collisions: true
       enable_triangle_particle_collisions: true
       enable_edge_edge_collisions: true

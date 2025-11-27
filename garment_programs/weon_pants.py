@@ -384,12 +384,17 @@ class PantsHalf(BaseBottoms):
             waist=self.pants_design.waist / 2,
             hips=self.pants_design.width_hips / 2,
             hips_crotch_diff=hips_crotch_diff,
-            crotch_extension=self.pants_design.width_hips / 8 / 2,
+            crotch_extension=self.pants_design.width_gusset_crotch,
             crotch_hip_diff=rise_middle - self.pants_design.length_waist_to_hip,
             dart_position=self.pants_design.waist / 4,
             match_top_int_to=self.pants_design.waist / 2,
             translation=np.array([self.DEFAULT_PIVOT_OFFSET_X, 0, self.DEFAULT_TRANSLATION_Z_FRONT])
         )
+
+        if self.pants_design.width_gusset_crotch_back is None:
+            crotch_extension_back = self.pants_design.width_gusset_crotch + self.BACK_CROTCH_EXTENSION_OFFSET
+        else:
+            crotch_extension_back = self.pants_design.width_gusset_crotch_back
 
         self.back = PantPanel(
             name=f'pant_b_{tag}',
@@ -399,7 +404,7 @@ class PantsHalf(BaseBottoms):
             waist=self.pants_design.waist / 2,
             hips=self.pants_design.width_hips / 2,
             hips_crotch_diff=hips_crotch_diff,
-            crotch_extension=(self.pants_design.width_hips / 8 + self.BACK_CROTCH_EXTENSION_OFFSET) / 2,
+            crotch_extension=crotch_extension_back,
             crotch_hip_diff=rise_middle - self.pants_design.length_waist_to_hip,
             hipline_ext=self.BACK_HIPLINE_EXTENSION,
             dart_position=self.pants_design.width_hips / 4,
@@ -547,7 +552,7 @@ class Pants(BaseBottoms):
         
         lower_interface_constraint = AttachmentConstraint(
             label='lower_interface',
-            stiffness=1000,
+            stiffness=1000000,
             damping=10.0,
             position_calculation={
                 'x': {'positive': [], 'negative': []},

@@ -106,6 +106,8 @@ class PantsDesign:
         Hip width measurement (full circumference).
     width_gusset_crotch : float
         Width of gusset at crotch.
+    width_gusset_crotch_back: float | None
+        Width of gusset at crotch on the back panel. If given, width_gusset_crotch is used for the front panel.
     crotch_shift_ratio : float
         Ratio for shifting crotch position.
     cuff : CuffDesign
@@ -142,6 +144,7 @@ class PantsDesign:
         self._width_ankle: float = pants_dict.get('width_4', {}).get('v', 12.1)
         self._width_hips: float = pants_dict.get('width_hips', {}).get('v', 49.0)
         self._width_gusset_crotch: float = pants_dict.get('width_gusset_crotch', {}).get('v', 7.0)
+        self._width_gusset_crotch_back: float | None = pants_dict.get('width_gusset_crotch_back', {}).get('v', None)
         self._crotch_shift_ratio: float = pants_dict.get('crotch_shift_ratio', {}).get('v', 0.5)
         
         # Initialize nested cuff design
@@ -212,6 +215,11 @@ class PantsDesign:
     def width_gusset_crotch(self) -> float:
         """Width of gusset at crotch."""
         return self._width_gusset_crotch
+    
+    @property
+    def width_gusset_crotch_back(self) -> float | None:
+        """Width of gusset at crotch on the back panel."""
+        return self._width_gusset_crotch_back
     
     @property
     def crotch_shift_ratio(self) -> float:

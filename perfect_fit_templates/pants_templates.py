@@ -173,7 +173,8 @@ class PerfectFitPantsDesign:
         crotch_extention = min_ext
         front_extention = front_hip / 4    # From pattern making book
         back_extention = crotch_extention - front_extention
-        self._width_gusset_crotch: float = (front_extention + back_extention) / 2 * general_fit_ratio.value
+        self._width_gusset_crotch: float = front_extention * general_fit_ratio.value
+        self._width_gusset_crotch_back: float = back_extention * general_fit_ratio.value
 
         self._length_waist_to_hip: float = body_definition.hips_line * raise_to_waist_ratio.value
         self._crotch_shift_ratio: float = crotch_displacement_ratio.value

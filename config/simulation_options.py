@@ -87,6 +87,8 @@ class SimulationOptions(BaseModel):
     
     Attributes
     ----------
+    edge_contact_max : int
+        Maximum number of edge contacts per spring, gets multiplied by 3 for edge-edge collisions
     enable_particle_particle_collisions : bool
         Enable particle-particle collision detection
     enable_triangle_particle_collisions : bool
@@ -132,6 +134,7 @@ class SimulationOptions(BaseModel):
     """
     
     # Self-collision prevention properties
+    edge_contact_max: int = Field(default=1024, description="Maximum number of edge contacts per spring, gets multiplied by 3 for edge-edge collisions")
     enable_particle_particle_collisions: bool = Field(default=False, description="Enable particle-particle collision detection")
     enable_triangle_particle_collisions: bool = Field(default=False, description="Enable triangle-particle collision detection")
     enable_edge_edge_collisions: bool = Field(default=False, description="Enable edge-edge collision detection")
