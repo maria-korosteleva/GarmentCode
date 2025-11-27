@@ -21,13 +21,13 @@ import yaml
 from loguru import logger
 
 # Custom modules
-import pygarment.data_config as data_config
 import pygarment.meshgen.datasim_utils as sim
 from pygarment.data_config import Properties
 from garment_programs.garment_factory import create_garment, GarmentFactory
-from config import AttachmentConstraint, PathCofig
 from pygarment.meshgen.pattern_data import PatternData, SimulationConfig
 from assets.bodies.body_params import BodyParameters
+
+from config import AttachmentConstraint, PathCofig
 from pattern_definitions.body_definition import BodyDefinition
 from log_config import set_log_level
 
@@ -96,6 +96,49 @@ def get_command_args() -> argparse.Namespace:
         '--perfect-fit',
         action='store_true',
         help='Use perfect fit garment specification format (requires perfect fit spec YAML file)'
+    )
+
+    parser.add_argument(
+        '--output',
+        help='Output directory for logs',
+        type=str,
+        default="./Logs/"
+    )
+    parser.add_argument(
+        '--patterns_path',
+        help='Path to output patterns',
+        type=str,
+        default="sewing_pattern"
+    )
+    parser.add_argument(
+        '--datasets_sim',
+        help='Path to output simulations',
+        type=str,
+        default="simulation"
+    )
+    parser.add_argument(
+        '--sim_configs_path',
+        help='Path to simulation configs directory',
+        type=str,
+        default="./assets/Sim_props"
+    )
+    parser.add_argument(
+        '--bodies_default_path',
+        help='Path to default bodies directory',
+        type=str,
+        default="./assets/bodies/smplx_sample"
+    )
+    parser.add_argument(
+        '--body_samples_path',
+        help='Path to body samples directory',
+        type=str,
+        default=""
+    )
+    parser.add_argument(
+        "--body_name",
+        help='The name of the body selected from --bodies_default_path',
+        type=str,
+        default="female_00018_default_pose"
     )
     
     args = parser.parse_args()
@@ -235,7 +278,8 @@ def _save_sample(
 def generate_sewing_pattern(
     path: str | Path,
     properties: Properties,
-    sys_paths: Properties,
+    bodies_default_path: str,
+    datasets_sim: str,
     verbose: bool = False
 ) -> tuple[Path, dict[str, PatternData]]:
     """Generate a pattern sample with given properties.
@@ -323,7 +367,7 @@ def generate_sewing_pattern(
     
     # On default body
     default_body_params = BodyParameters(
-        Path(sys_paths['bodies_default_path']) / (properties['body_default'] + '.yaml')
+        Path(bodies_default_path) / (properties['body_name'] + '.yaml')
     )
     default_body_def = BodyDefinition(default_body_params.params)
     
@@ -340,14 +384,14 @@ def generate_sewing_pattern(
         constraints_default = piece_default.get_attachment_constraints()  # type: ignore[attr-defined]
     else:
         piece_default, constraints_default = create_garment(garment_type, default_body_def, design)
-    piece_default.name = properties['body_default']
+    piece_default.name = properties['body_name']
     
-    logger.info(f"Generating default body sample: {properties['body_default']}")
+    logger.info(f"Generating default body sample: {properties['body_name']}")
     _save_sample(piece_default, default_body_params, design, default_sample_data, verbose=verbose)
     
     # Create PathCofig for default body (will be used in simulation)
     # Determine output path for simulation
-    datasets_sim_path = Path(sys_paths['datasets_sim'] if 'datasets_sim' in sys_paths else path / 'datasets_sim')
+    datasets_sim_path = Path(datasets_sim)
     output_path = datasets_sim_path / properties['data_folder'] / 'default_body'
     output_path.mkdir(parents=True, exist_ok=True)
     
@@ -355,10 +399,10 @@ def generate_sewing_pattern(
         in_element_path=default_sample_data / piece_default.name,
         out_path=output_path,
         in_name=piece_default.name,
-        body_name=properties['body_default'],
+        body_name=properties['body_name'],
         samples_name='',  # Not using body samples
-        default_body=True,
-        bodies_default_path=sys_paths['bodies_default_path'],
+        smpl_body=True,
+        bodies_default_path=bodies_default_path,
         body_samples_path=None
     )
     
@@ -377,7 +421,6 @@ def generate_sewing_pattern(
 
 def run_simulation(
     dataset: str,
-    system_config: Properties,
     command_args: argparse.Namespace,
     pattern_data: dict[str, PatternData],
     sim_config: SimulationConfig | None = None
@@ -406,7 +449,7 @@ def run_simulation(
     """
     body_type = 'default_body'
     logger.info("Using default body configuration (default_body)")
-    output_path = Path(system_config['datasets_sim']) / dataset / body_type
+    output_path = Path(command_args.datasets_sim) / dataset / body_type
     output_path.mkdir(parents=True, exist_ok=True)
     
     # Use in-memory pattern data (required)
@@ -419,7 +462,7 @@ def run_simulation(
     # Use provided sim_config or create from scratch
     if sim_config is None:
         if command_args.config is not None:
-            config_path = Path(system_config['sim_configs_path']) / command_args.config
+            config_path = Path(command_args.sim_configs_path) / command_args.config
             logger.info(f"Loading simulation config from: {config_path}")
             sim_config_obj = SimulationConfig.from_config_file(config_path, dataset)
         else:
@@ -444,7 +487,6 @@ def run_simulation(
 
 if __name__ == "__main__":
     command_args = get_command_args()
-    system_config = data_config.Properties('./system.json')
     
     # Step 1: Generate dataset from design file
     logger.info(f'Generating dataset from design file: {command_args.design}')
@@ -453,7 +495,7 @@ if __name__ == "__main__":
     props = Properties()
     props.set_basic(
         design_file=command_args.design,
-        body_default='mean_all',
+        body_name=command_args.body_name,
         name=command_args.name if not command_args.batch_id else f'{command_args.name}_{command_args.batch_id}',
         to_subfolders=True
     )
@@ -461,14 +503,16 @@ if __name__ == "__main__":
     props.set_section_config('generator')
     
     # Get patterns_path from system config, default to './patterns' if not set
-    patterns_path = Path(system_config['patterns_path'] if 'patterns_path' in system_config else './patterns')
+    patterns_path = Path(command_args.output, command_args.patterns_path)
+    datasets_sim_path = Path(command_args.output, command_args.datasets_sim)
     
     # Generate dataset
     try:
         default_path, default_pattern_data = generate_sewing_pattern(
             patterns_path,
             props,
-            system_config,
+            command_args.bodies_default_path,
+            datasets_sim_path,
             verbose=command_args.verbose
         )
         
@@ -489,13 +533,13 @@ if __name__ == "__main__":
     if not command_args.skip_simulation:
         # Create SimulationConfig from properties (for in-memory use)
         if command_args.config is not None:
-            config_path = Path(system_config['sim_configs_path']) / command_args.config
+            config_path = Path(command_args.sim_configs_path) / command_args.config
             logger.info(f"Loading simulation config from: {config_path}")
             sim_config_for_sim = SimulationConfig.from_config_file(config_path, dataset_name)
         else:
             sim_config_for_sim = SimulationConfig.create_default(dataset_name)
         
-        finished = run_simulation(dataset_name, system_config, command_args, default_pattern_data, sim_config_for_sim)
+        finished = run_simulation(dataset_name, command_args, default_pattern_data, sim_config_for_sim)
     else:
         logger.info('Simulation skipped')
         sys.exit(0)
