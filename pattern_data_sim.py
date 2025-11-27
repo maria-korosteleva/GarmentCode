@@ -497,7 +497,8 @@ if __name__ == "__main__":
     props.set_section_config('generator')
     
     # Get patterns_path from system config, default to './patterns' if not set
-    patterns_path = Path(command_args.patterns_path)
+    patterns_path = Path(command_args.output, command_args.patterns_path)
+    datasets_sim_path = Path(command_args.output, command_args.datasets_sim)
     
     # Generate dataset
     try:
@@ -505,7 +506,7 @@ if __name__ == "__main__":
             patterns_path,
             props,
             command_args.bodies_default_path,
-            command_args.datasets_sim,
+            datasets_sim_path,
             verbose=command_args.verbose
         )
         
