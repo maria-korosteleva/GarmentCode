@@ -162,24 +162,8 @@ class PathCofig:
             Path to body samples directory. If None, will try to read from system.json (backward compatibility)
         """
         # Set system paths - accept as parameters or fall back to Properties for backward compatibility
-        if bodies_default_path is not None:
-            self._bodies_default_path = Path(bodies_default_path)
-        else:
-            # Backward compatibility: read from system.json
-            from pygarment.data_config import Properties
-            system = Properties('./system.json')
-            self._bodies_default_path = Path(system['bodies_default_path'])
-        
-        if body_samples_path is not None:
-            self._body_samples_path = Path(body_samples_path)
-        else:
-            # Backward compatibility: read from system.json
-            from pygarment.data_config import Properties
-            system = Properties('./system.json')
-            if 'body_samples_path' in system and system['body_samples_path']:
-                self._body_samples_path = Path(system['body_samples_path'])
-            else:
-                self._body_samples_path = None
+        self._bodies_default_path = Path(bodies_default_path)
+        self._body_samples_path = Path(body_samples_path) if body_samples_path is not None else body_samples_path
         
         self._body_name = body_name
         self._samples_folder_name = samples_name
