@@ -1,43 +1,36 @@
 """Routines to run cloth simulation"""
 
-# Basic
 import time
 import multiprocessing
 import platform
 import signal
-from pathlib import Path
 from typing import Any, Optional
 
 from loguru import logger
-
-# BoxMeshGen
-import pygarment.meshgen.boxmeshgen as bmg
-from pygarment.meshgen.boxmeshgen import BoxMesh
-from config import PathCofig
-from pygarment.meshgen.pattern_data import PatternData, SimulationConfig
-
-# Warp simulation
-from pygarment.meshgen.simulation import run_sim
-from pygarment.meshgen.garment_data import GarmentData
-
-# For loading body mesh
 import igl
 import json
+
+from config import PathCofig
+from pygarment.meshgen.box_mesh_gen import BoxMesh
+from pygarment.meshgen.pattern_data import PatternData, SimulationConfig
+from pygarment.meshgen.simulation import run_sim
+from pygarment.meshgen.garment_data import GarmentData
+import pygarment.meshgen.box_mesh_gen as bmg
+
 
 
 def batch_sim_with_data(
     pattern_data: dict[str, PatternData],
-    sim_config: 'SimulationConfig',
+    sim_config: SimulationConfig,
     run_default_body: bool = False,
     num_samples: Optional[int] = None,
-    caching: bool = False,
-    force_restart: bool = False
+    caching: bool = False
 ) -> bool:
     """Perform pattern simulation using in-memory pattern data.
     
-    Similar to `batch_sim` but uses pattern data passed directly instead of reading
-    from disk. Data is still saved to disk for backup, but simulation uses the
-    in-memory structures for improved performance.
+    Uses pattern data passed directly instead of reading from disk. Data is still
+    saved to disk for backup, but simulation uses the in-memory structures for
+    improved performance.
     
     Parameters
     ----------
@@ -55,45 +48,14 @@ def batch_sim_with_data(
     caching : bool, optional
         If True, enables caching of every frame of simulation. This significantly
         slows down simulation. Default is False.
-    force_restart : bool, optional
-        If True, forces restarting the batch processing even if resume conditions
-        are met. Default is False.
 
     Returns
     -------
     bool
         True if all samples were processed successfully, False otherwise.
-        
-    Note
-    ----
-    This function automatically handles resuming from the last processed pattern
-    unless `force_restart` is True. Progress is saved periodically to allow safe
-    interruption and resumption.
     """
-    # ----- Init -----
-    # Check if frozen
-    if sim_config.frozen:
-        logger.warning('Dataset is frozen, processing is skipped')
-        return True
-
-    # Create Properties for stats tracking (still needed for stats serialization)
-    from pygarment.data_config import Properties
-    props = Properties()
-    props['sim'] = {
-        'config': sim_config.sim_config._props,
-        'stats': {}
-    }
-    props['render'] = {
-        'config': sim_config.render_config.model_dump(),
-        'stats': {}
-    }
-    props['data_folder'] = sim_config.data_folder
-    props['frozen'] = sim_config.frozen
-    
-    # Initialize sim props (for stats initialization)
-    resume = init_sim_props(props, batch_run=True, force_restart=force_restart)
-    
     body_type = 'default_body' if run_default_body else 'random_body'
+    
     # Get output path from first pattern's PathCofig
     if not pattern_data:
         logger.error("No pattern data provided")
@@ -102,8 +64,6 @@ def batch_sim_with_data(
     if not isinstance(first_pattern, PatternData):
         logger.error("Pattern data must contain PatternData objects")
         return False
-    output_path = first_pattern.paths.out
-    data_props_file = output_path / f'dataset_properties_{body_type}.yaml'
     
     # Get pattern names from in-memory data
     pattern_names = list(pattern_data.keys())
@@ -115,42 +75,16 @@ def batch_sim_with_data(
     # Simulate every template
     count = 0
     for pattern_name in pattern_names:
-        # Skip processed cases -- in case of resume
-        if resume and pattern_name in props['sim']['stats'].get('processed', []):
-            logger.debug(f'Skipped as already processed: {pattern_name}')
-            continue
-
-        # Initialize processed list if needed
-        if 'processed' not in props['sim']['stats']:
-            props['sim']['stats']['processed'] = []
-        props['sim']['stats']['processed'].append(pattern_name)
-        # Serialize before potential crash
-        _serialize_props_with_sim_stats(props, data_props_file)
-
         try:
             # Use in-memory pattern data (includes PathCofig)
             pattern_info = pattern_data[pattern_name]
             if not isinstance(pattern_info, PatternData):
                 logger.error(f"Pattern {pattern_name} is not a PatternData object")
-                props.add_fail('sim', 'crashes', pattern_name)
                 continue
-            
-            # Create a stats tracking object for this pattern
-            from pygarment.data_config import Properties
-            pattern_props = Properties()
-            pattern_props['sim'] = {
-                'config': sim_config.sim_config._props,
-                'stats': props['sim']['stats']  # Share stats with batch
-            }
-            pattern_props['render'] = {
-                'config': sim_config.render_config.model_dump(),
-                'stats': props['render']['stats']  # Share stats with batch
-            }
             
             template_simulation_with_data(
                 pattern_info.paths, 
                 sim_config,
-                pattern_props,  # For stats tracking
                 pattern_info.piece,
                 pattern_info.body_params,
                 pattern_info.body_def,
@@ -159,326 +93,26 @@ def batch_sim_with_data(
                 attachment_constraints=pattern_info.attachment_constraints
             )
         except BaseException as e: 
-            # Not all files available
             logger.error(f"Pattern simulation failed for {pattern_name}: {e}")
-            props.add_fail('sim', 'crashes', pattern_name)
+            logger.exception("Exception details:")
 
-        count += 1  # count actively processed cases
+        count += 1
         
         # Log progress periodically
         if count % 10 == 0:
             logger.info(f'Processed {count} patterns...')
         
-        if num_samples is not None and count >= num_samples:  # Process requested number of samples
+        if num_samples is not None and count >= num_samples:
             logger.info(f"Batch limit reached ({num_samples} samples processed)")
             break
 
-    # Check completion status
-    processed_count = len(props['sim']['stats'].get('processed', []))
-    logger.info(f'\nFinished batch processing: {processed_count}/{total_patterns} patterns processed')
-    
-    try:
-        if processed_count >= total_patterns:
-            # Processing successfully finished -- no need to resume later
-            if 'processed' in props['sim']['stats']:
-                del props['sim']['stats']['processed']
-            props['frozen'] = True
-            process_finished = True
-            logger.success("All patterns processed successfully. Dataset frozen.")
-        else:
-            process_finished = False
-            logger.warning(f"Processing incomplete: {processed_count}/{total_patterns} patterns processed")
-    except KeyError:
-        logger.warning('KeyError accessing processed stats')
-        process_finished = True
-
-    # Serialize final state
-    _serialize_props_with_sim_stats(props, data_props_file)
-
-    return process_finished
-
-
-def batch_sim(data_path, output_path, dataset_props,
-              run_default_body=False, num_samples=None, caching=False, force_restart=False):
-    """
-    Performs pattern simulation for each example in the dataset given by dataset_props.
-    Batch processing is automatically resumed from the last unprocessed datapoint if restart is not forced.
-    
-    Parameters:
-    -----------
-    data_path : Path
-        Path to folder with patterns (for given body type)
-    output_path : Path
-        Path to folder with the simulated dataset
-    dataset_props : Properties
-        Dataset properties. Must contain:
-        - Dataset folder (inside data_path)
-        - Type of dataset structure (with/without subfolders for patterns)
-        - List of processed samples if processing of dataset was already attempted
-        - Simulation parameters
-        - Rendering parameters
-        Other needed properties will be files with default values if the corresponding sections
-        are not found in props object
-    run_default_body : bool, optional
-        Runs the dataset on the default body (disabled by default)
-    num_samples : int, optional
-        Number of (unprocessed) samples from dataset to process with this run.
-        If None, runs over all unprocessed samples (useful for batching in the future)
-    caching : bool, optional
-        Enables caching of every frame of simulation (disabled by default)
-    force_restart : bool, optional
-        Force restarting the batch processing even if resume conditions are met.
-
-    Returns:
-    --------
-    bool
-        True if all samples were processed successfully, False otherwise
-    """
-
-    resume = init_sim_props(dataset_props, batch_run=True, force_restart=force_restart)
-    body_type = 'default_body' if run_default_body else 'random_body'
-    data_props_file = output_path / f'dataset_properties_{body_type}.yaml'
-    
-    pattern_names = _get_pattern_names(data_path)
-
-    total_patterns = len(pattern_names)
-    logger.info(f"Starting batch simulation: {total_patterns} patterns found (body_type: {body_type})")
-    if num_samples is not None:
-        logger.info(f"Processing {num_samples} samples in this batch")
-
-    # Simulate every template
-    count = 0
-    for pattern_name in pattern_names:
-        # Skip processed cases -- in case of resume
-        if resume and pattern_name in dataset_props['sim']['stats'].get('processed', []):
-            logger.debug(f'Skipped as already processed: {pattern_name}')
-            continue
-
-        # Initialize processed list if needed
-        if 'processed' not in dataset_props['sim']['stats']:
-            dataset_props['sim']['stats']['processed'] = []
-        dataset_props['sim']['stats']['processed'].append(pattern_name)
-
-        try:
-            paths = PathCofig(
-                in_element_path=data_path / pattern_name,
-                out_path=output_path,
-                in_name=pattern_name,
-                body_name=dataset_props['body_default'],
-                samples_name=dataset_props['body_samples'],
-                default_body=run_default_body
-            )
-        except BaseException as e: 
-            # Not all files available
-            logger.error(f"Pattern loading failed (paths) for {pattern_name}: {e}")
-            dataset_props.add_fail('sim', 'crashes', pattern_name)
-        else:
-            template_simulation(paths, dataset_props, caching=caching)
-
-        count += 1  # count actively processed cases
-        
-        # Log progress periodically
-        if count % 10 == 0:
-            logger.info(f'Processed {count} patterns...')
-        
-        if num_samples is not None and count >= num_samples:  # Process requested number of samples
-            logger.info(f"Batch limit reached ({num_samples} samples processed)")
-            break
-
-    # Check completion status
-    processed_count = len(dataset_props['sim']['stats'].get('processed', []))
-    logger.info(f'\nFinished batch processing: {processed_count}/{total_patterns} patterns processed')
-    
-    try:
-        if processed_count >= total_patterns:
-            # Processing successfully finished -- no need to resume later
-            if 'processed' in dataset_props['sim']['stats']:
-                del dataset_props['sim']['stats']['processed']
-            dataset_props['frozen'] = True
-            process_finished = True
-            logger.success("All patterns processed successfully. Dataset frozen.")
-        else:
-            process_finished = False
-            logger.warning(f"Processing incomplete: {processed_count}/{total_patterns} patterns processed")
-    except KeyError:
-        logger.warning('KeyError accessing processed stats')
-        process_finished = True
-
-    # Serialize final state
-    _serialize_props_with_sim_stats(dataset_props, data_props_file)
-
-    return process_finished
-
-
-# ------- Utils -------
-def init_sim_props(props, batch_run=False, force_restart=False):
-    """
-    Add default config values if not given in props & clean-up stats if not resuming previous processing
-    Returns a flag whether current simulation is a resumed last one
-    
-    Parameters:
-    -----------
-    props : Properties
-        Properties object to initialize
-    batch_run : bool, optional
-        Whether this is a batch run
-    force_restart : bool, optional
-        Force restart even if resume is possible
-
-    Returns:
-    --------
-    bool
-        True if resuming, False if starting fresh
-    """
-    if 'sim' not in props:
-        props.set_section_config(
-            'sim',
-            config={
-                'control': {
-                    'max_sim_steps': 1000,
-                    'max_frame_time': 15,  # in seconds
-                    'max_sim_time': 1500,  # in seconds
-                    'zero_gravity_steps': 10,
-                    'static_threshold': 0.03,
-                    'non_static_percent': 1.5,
-                    'max_body_collisions': 0,
-                    'max_self_collisions': 0,
-                    'resolution_scale': 1.0,
-                    'ground': False,  # Do not add floor s.t. garment falls infinitely if falls
-                },
-                'material': {},
-                'options': {},
-                'max_meshgen_time': 20,  # Legacy parameter, in seconds
-            }
-        )
-
-    config_dict = props['sim']['config']
-    
-    # Ensure control section exists
-    if 'control' not in config_dict:
-        config_dict['control'] = {}
-    
-    # Ensure material section exists
-    if 'material' not in config_dict or not config_dict['material']:
-        config_dict['material'] = {  
-            'garment_tri_ka': 10000.0,  
-            'garment_edge_ke': 1.0,  
-            'garment_tri_ke': 10000.0,
-            'spring_ke': 50000.0,  
-            'garment_edge_kd': 10.0,
-            'garment_tri_kd': 1.0,  
-            'spring_kd': 10.0, 
-            'fabric_density':  1.0,  
-            'fabric_thickness': 0.1,
-            'fabric_friction': 0.5
-        }
-
-    # Ensure options section exists
-    if 'options' not in config_dict or not config_dict['options']:
-        config_dict['options'] = {
-            'enable_particle_particle_collisions': False,
-            'enable_triangle_particle_collisions': True, 
-            'enable_edge_edge_collisions': True,
-            'enable_body_collision_filters': True,
-            'enable_attachment_constraint': True,   
-            'attachment_frames': 400, 
-            'attachment_label_names': ['lower_interface'],
-            'attachment_stiffness': [1000.],
-            'attachment_damping': [10.], 
-            'global_damping_factor': 0.25,
-            'global_damping_effective_velocity': 0.0,
-            'global_max_velocity': 25.0,
-            'enable_global_collision_filter': True,
-            'enable_cloth_reference_drag': False,    
-            'cloth_reference_margin': 0.1,
-            'enable_body_smoothing': False,  
-            'smoothing_total_smoothing_factor': 1.0,
-            'smoothing_recover_start_frame': 150,
-            'smoothing_num_steps': 100,
-            'smoothing_frame_gap_between_steps': 1,
-            'body_collision_thickness': 0.25,
-            'body_friction': 0.5
-        }
-
-    if 'render' not in props:
-        # init with defaults
-        props.set_section_config(
-            'render',
-            resolution=[800, 800],
-            sides=['front','back'],
-            front_camera_location=None,
-            uv_texture={
-                'seam_width': 0.5,
-                'dpi': 1500,
-                'fabric_grain_texture_path': None,
-                'fabric_grain_resolution': 5,
-            }
-        )
-
-    if batch_run and 'processed' in props['sim']['stats'] and not force_restart:
-        # Resuming existing batch processing -- do not clean stats
-        # Check if processed list is not empty before accessing
-        processed_list = props['sim']['stats']['processed']
-        if not processed_list:
-            # No processed items, start fresh
-            logger.info("No processed items found, starting fresh batch processing")
-        else:
-            # Assuming the last example processed example caused the failure
-            last_processed = processed_list[-1]
-
-            # Access render stats
-            render_time_keys = props['render']['stats'].get('render_time', {}).keys()
-            if not any([(name in last_processed) or (last_processed in name) for name in render_time_keys]):
-                # Crash detected -- the last example does not appear in the stats
-                if last_processed not in props['sim']['stats'].get('fails', {}).get('crashes', []):
-                    # Remove last from processed if it did not crash
-                    if last_processed not in props['sim']['stats'].get('stop_over', []):   
-                        props['sim']['stats'].setdefault('processed', []).pop()
-                        logger.debug(f"Removed last processed pattern (likely crashed): {last_processed}")
-                    else:
-                        # Already passed here once -> add as crash
-                        props['sim']['stats'].setdefault('fails', {}).setdefault('crashes', []).append(last_processed)
-                        logger.warning(f"Marking pattern as crash (second attempt): {last_processed}")
-
-            # Indicate resuming dataset simulation
-            props['sim']['stats'].setdefault('stop_over', []).append(last_processed)
-            logger.info(f"Resuming batch processing from: {last_processed}")
-            return True
-
-    # Starting fresh - prepare cumulative stats
-    props.set_section_stats('sim', 
-                            fails={}, 
-                            meshgen_time={}, 
-                            sim_time={}, 
-                            spf={}, 
-                            fin_frame={}, 
-                            face_count={},
-                            body_collisions={}, 
-                            self_collisions={})
-    props['sim']['stats']['fails'] = {
-        'crashes': [],
-        'cloth_body_intersection': [],
-        'cloth_self_intersection': [],
-        'static_equilibrium': [],
-        'fast_finish': [],
-        'pattern_loading': [],
-        'multi_stitching': [],
-        'gt_edges_creation': []
-    }
-
-    props.set_section_stats('render', render_time={})
-
-    if batch_run:  # track batch processing
-        props.set_section_stats('sim', processed=[], stop_over=[])
-
-    logger.debug("Initialized simulation properties for new batch run")
-    return False
+    logger.info(f'Finished batch processing: {count}/{total_patterns} patterns processed.')
+    return count == total_patterns
 
 
 def template_simulation_with_data(
     paths: PathCofig,
     sim_config: SimulationConfig,
-    stats_props: Any,  # Properties object for stats tracking
     piece: Any,
     body_params: Any,
     body_def: Any,
@@ -489,8 +123,8 @@ def template_simulation_with_data(
     """Simulate a garment template using in-memory pattern data.
     
     This function uses pattern data passed directly instead of reading from disk.
-    The data is still saved to disk for backup and compatibility, but simulation
-    uses the in-memory structures for improved performance.
+    The data is still saved to disk for backup, but simulation uses the
+    in-memory structures for improved performance.
     
     Parameters
     ----------
@@ -498,8 +132,6 @@ def template_simulation_with_data(
         Path configuration object containing all necessary file paths.
     sim_config : SimulationConfig
         Simulation configuration object with SimConfig and RenderConfig.
-    stats_props : Properties
-        Properties object for tracking simulation and render statistics.
     piece : Any
         Garment piece object. Must have an `assembly()` method that returns a
         pattern object with a `serialize()` method.
@@ -517,16 +149,6 @@ def template_simulation_with_data(
         If provided, these constraints will be added to the config before simulation.
         Default is None.
         
-    Note
-    ----
-    This function ensures that all necessary files are saved to disk (if they
-    don't already exist) before running the simulation. This maintains backward
-    compatibility and allows for later disk-based processing or debugging.
-    
-    If attachment_constraints are provided, they will be injected into the
-    simulation config before creating the SimConfig object. This allows 
-    garment-specific constraints to be used during simulation.
-    
     Raises
     ------
     TimeoutError
@@ -551,8 +173,7 @@ def template_simulation_with_data(
             else:
                 raise ValueError(f"Cannot convert constraint to AttachmentConstraint: {type(constraint)}")
         
-        # Update attachment constraints using Pydantic model_copy to ensure proper update
-        # This creates a new SimulationOptions instance with updated constraints
+        # Update attachment constraints using Pydantic model_copy
         updated_options = sim_config.sim_config._options.model_copy(
             update={
                 'attachment_constraints': constraints_objects,
@@ -561,15 +182,14 @@ def template_simulation_with_data(
         )
         sim_config.sim_config._options = updated_options
         
-        # Update exposed attributes to match (these are set during _expose_attributes)
+        # Update exposed attributes
         sim_config.sim_config.attachment_constraints = constraints_objects
         sim_config.sim_config.enable_attachment_constraint = True
-        # Also update legacy exposed attributes for backward compatibility
         sim_config.sim_config.attachment_labels = [c.label for c in constraints_objects]
         sim_config.sim_config.attachment_stiffness = [c.stiffness for c in constraints_objects]
         sim_config.sim_config.attachment_damping = [c.damping for c in constraints_objects]
         
-        logger.debug(f'Injected {len(constraints_objects)} attachment constraints into simulation config: {[c.label for c in constraints_objects]}')
+        logger.debug(f'Injected {len(constraints_objects)} attachment constraints: {[c.label for c in constraints_objects]}')
     
     # Ensure pattern data is saved to expected location (for backup)
     pattern = piece.assembly()
@@ -601,47 +221,27 @@ def template_simulation_with_data(
     
     # Use SimConfig from sim_config
     config = sim_config.sim_config
-    # Verify attachment constraints were properly set
-    if attachment_constraints is not None and len(attachment_constraints) > 0:
-        actual_labels = [c.label for c in config.attachment_constraints]
-        expected_labels = [c.label for c in attachment_constraints]
-        if actual_labels != expected_labels:
-            logger.warning(f'Attachment constraint mismatch! Expected: {expected_labels}, Got: {actual_labels}')
-            # Force update again
-            config._options.attachment_constraints = attachment_constraints
-            config.attachment_constraints = attachment_constraints
-            config.attachment_labels = [c.label for c in attachment_constraints]
     res = config.resolution_scale
     
     garment_box_mesh = BoxMesh(spec_path, res)
     
-    # Load BoxMesh with timeout handling (same as template_simulation)
-    meshgen_start_time = time.time()
-    # max_meshgen_time is an optional config value not in SimConfig classes
+    # Load BoxMesh with timeout handling
     timeout_after = int(config._props.get('max_meshgen_time', 20))
     
     try:
         _load_boxmesh_timeout(garment_box_mesh, timeout_after)
     except TimeoutError as e:
         logger.error(f"Mesh generation timeout for {garment_box_mesh.name}: {e}")
-        stats_props.add_fail('sim', 'meshgen-timeout', garment_box_mesh.name)
         return
     except bmg.PatternLoadingError as e:
         logger.error(f"Pattern loading error for {garment_box_mesh.name}: {e}")
-        stats_props.add_fail('sim', 'pattern_loading', garment_box_mesh.name)
         return
     except BaseException as e:
-        logger.error(f"Pattern loading failed due to unknown error for {garment_box_mesh.name}: {e}")
+        logger.error(f"Pattern loading failed for {garment_box_mesh.name}: {e}")
         logger.exception("Exception details:")
-        stats_props.add_fail('sim', 'crashes', garment_box_mesh.name)
         return
     
-    # Successfully loaded garment
-    stats_props['sim']['stats']['meshgen_time'][garment_box_mesh.name] = time.time() - meshgen_start_time
-    stats_props['sim']['stats']['face_count'][garment_box_mesh.name] = len(garment_box_mesh.faces)
-    
     # Serialize BoxMesh (for backup and rendering)
-    # Note: store_vertex_normals and store_panels are optional fields in options dict
     options_dict = config._props.get('options', {})
     vertex_normals = options_dict.get('store_vertex_normals', False)
     store_panels = options_dict.get('store_panels', False)
@@ -656,7 +256,7 @@ def template_simulation_with_data(
         uv_config=render_config.uv_texture.model_dump()
     )
     
-    # Load body mesh data (same as load_obj in garment.py)
+    # Load body mesh data
     body_vertices, body_faces = igl.read_triangle_mesh(str(paths.in_body_obj))
     body_indices = body_faces.flatten()
     
@@ -665,7 +265,11 @@ def template_simulation_with_data(
         body_segmentation = json.load(f)
     
     # Extract vertex labels from BoxMesh (if available)
-    vertex_labels = garment_box_mesh.vertex_labels if hasattr(garment_box_mesh, 'vertex_labels') and garment_box_mesh.vertex_labels else None
+    vertex_labels = (
+        garment_box_mesh.vertex_labels 
+        if hasattr(garment_box_mesh, 'vertex_labels') and garment_box_mesh.vertex_labels 
+        else None
+    )
     
     # Create GarmentData object
     garment_data = GarmentData(
@@ -678,9 +282,8 @@ def template_simulation_with_data(
         vertex_labels=vertex_labels
     )
     
-    # Update stats_props dict with the updated config so run_sim gets the correct constraints
+    # Update config dict with attachment constraints for run_sim compatibility
     if attachment_constraints is not None and len(attachment_constraints) > 0:
-        # Update the stats_props dict so that when run_sim creates SimConfig, it has the right constraints
         from config import AttachmentConstraint
         constraints_dicts = []
         for constraint in attachment_constraints:
@@ -691,23 +294,33 @@ def template_simulation_with_data(
             elif hasattr(constraint, 'model_dump'):
                 constraints_dicts.append(constraint.model_dump())
         
-        # Update the options dict in stats_props
-        if 'options' not in stats_props['sim']['config']:
-            stats_props['sim']['config']['options'] = {}
-        stats_props['sim']['config']['options']['attachment_constraints'] = constraints_dicts
-        stats_props['sim']['config']['options']['enable_attachment_constraint'] = True
-        logger.debug(f'Updated stats_props with attachment constraints: {[c.get("label", c) for c in constraints_dicts]}')
+        # Update the options dict
+        if 'options' not in config._props:
+            config._props['options'] = {}
+        config._props['options']['attachment_constraints'] = constraints_dicts
+        config._props['options']['enable_attachment_constraint'] = True
     
-    # Run simulation with in-memory data
+    # Create dict for run_sim compatibility
+    sim_dict = {
+        'sim': {
+            'config': config._props,
+            'stats': {}
+        },
+        'render': {
+            'config': render_config.model_dump(),
+            'stats': {}
+        }
+    }
+    
+    # Run simulation
     logger.debug(f'Running simulation for {garment_box_mesh.name} with in-memory data...')
     optimize_storage = config._props.get('optimize_storage', False)
     
-    # Use stats_props which already has the correct structure
     run_sim(
         garment_box_mesh.name,  
-        stats_props,
+        sim_dict,
         paths,
-        save_v_norms=vertex_normals,  # Already extracted above
+        save_v_norms=vertex_normals,
         store_usd=caching,
         optimize_storage=optimize_storage,
         verbose=False,
@@ -715,110 +328,27 @@ def template_simulation_with_data(
     )
 
 
-def template_simulation(paths: PathCofig, props, caching=False):
-    """
-    Simulate given template within given scene & save log files
+def _load_boxmesh_timeout(garment: BoxMesh, timeout_after: int) -> None:
+    """Load boxmesh with timeout protection.
     
-    Parameters:
-    -----------
-    paths : PathCofig
-        Path configuration object
-    props : Properties
-        Simulation properties
-    caching : bool, optional
-        Enable caching of simulation frames
-    """
-    # Get config from props
-    from config.sim_config import SimConfig
-    config = SimConfig(props['sim']['config'])
-    res = config.resolution_scale
-
-    garment = BoxMesh(paths.in_g_spec, res)
-
-    logger.debug(f'Loading garment: {garment.name}')
-
-    meshgen_start_time = time.time()
-    # max_meshgen_time is an optional config value not in SimConfig classes
-    timeout_after = int(props['sim']['config'].get('max_meshgen_time', 20))
-
-    try:
-        _load_boxmesh_timeout(garment, timeout_after)
-    except TimeoutError as e:
-        logger.error(f"Mesh generation timeout for {garment.name}: {e}")
-        failure_case = 'meshgen-timeout'
-        props.add_fail('sim', failure_case, garment.name)
-    except bmg.PatternLoadingError as e:
-        logger.error(f"Pattern loading error for {garment.name}: {e}")
-        failure_case = 'pattern_loading'
-        props.add_fail('sim', failure_case, garment.name)
-    except bmg.DegenerateTrianglesError as e:
-        logger.error(f"Degenerate triangles error for {garment.name}: {e}")
-        failure_case = 'degenerate_triangles'
-        props.add_fail('sim', failure_case, garment.name)
-    except bmg.MultiStitchingError as e:
-        logger.error(f"Multi-stitching error for {garment.name}: {e}")
-        failure_case = 'multi_stitching'
-        props.add_fail('sim', failure_case, garment.name)
-    except bmg.NormError as e:
-        logger.error(f"Normal error for {garment.name}: {e}")
-        failure_case = 'norm_error'
-        props.add_fail('sim', failure_case, garment.name)
-    except bmg.StitchingError as e:
-        logger.error(f"Stitching error for {garment.name}: {e}")
-        failure_case = 'stitching_error'
-        props.add_fail('sim', failure_case, garment.name)
-    except BaseException as e:
-        logger.error(f"Pattern loading failed due to unknown error for {garment.name}: {e}")
-        logger.exception("Exception details:")
-        failure_case = 'crashes'
-        props.add_fail('sim', failure_case, garment.name)
-    else:
-        # Successfully loaded garment
-        props['sim']['stats']['meshgen_time'][garment.name] = time.time() - meshgen_start_time
-        props['sim']['stats']['face_count'][garment.name] = len(garment.faces)
-        # Note: store_vertex_normals and store_panels are optional fields in options dict
-        options_dict = props['sim']['config'].get('options', {})
-        vertex_normals = options_dict.get('store_vertex_normals', False)
-        store_panels = options_dict.get('store_panels', False)
-        
-        # Get render config for UV texture
-        from config.render_config import RenderConfig
-        render_config = RenderConfig(**props['render']['config'])
-        
-        garment.serialize(
-            paths, 
-            with_v_norms=vertex_normals, 
-            store_panels=store_panels,
-            uv_config=render_config.uv_texture.model_dump()
-        )
-
-        logger.debug(f'Running simulation for {garment.name}...')
-        optimize_storage = props['sim']['config'].get('optimize_storage', False)
-        run_sim(
-            garment.name,  
-            props, 
-            paths,
-            save_v_norms=vertex_normals,
-            store_usd=caching,  # NOTE: False for fast simulation!
-            optimize_storage=optimize_storage,
-            verbose=False
-        )
-        logger.debug(f'Simulation completed for {garment.name}')
-
-
-def _load_boxmesh_timeout(garment, timeout_after):
-    """Load boxmesh with timeout protection
-    
-    Parameters:
-    -----------
+    Parameters
+    ----------
     garment : BoxMesh
-        Garment mesh to load
+        Garment mesh to load.
     timeout_after : int
-        Timeout in seconds
+        Timeout in seconds.
+        
+    Raises
+    ------
+    TimeoutError
+        If loading exceeds the timeout.
     """
     if platform.system() == "Windows":
         # Windows timeout using multiprocessing
-        p = multiprocessing.Process(target=garment.load(), name="GarmentGeneration")
+        def load_garment() -> None:
+            garment.load()
+        
+        p = multiprocessing.Process(target=load_garment, name="GarmentGeneration")
         p.start()
 
         # Wait timeout_after seconds for garment.load()
@@ -833,7 +363,7 @@ def _load_boxmesh_timeout(garment, timeout_after):
 
     elif platform.system() in ["Linux", "OSX"]:
         # Unix timeout using signal
-        def alarm_handler(signum, frame):
+        def alarm_handler(signum: int, frame: Any) -> None:
             raise TimeoutError(f"Garment loading exceeded timeout of {timeout_after}s")
 
         signal.signal(signal.SIGALRM, alarm_handler)
@@ -844,62 +374,3 @@ def _load_boxmesh_timeout(garment, timeout_after):
             raise
         finally:
             signal.alarm(0)
-
-
-def get_dict_default_value(props, name, default_value):
-    """Get value from dict with default fallback
-    
-    Parameters:
-    -----------
-    props : dict
-        Dictionary to query
-    name : str
-        Key name
-    default_value : Any
-        Default value if key not found
-    
-    Returns:
-    --------
-    Any
-        Value from dict or default
-    """
-    if name in props:
-        return props[name]
-    return default_value
-
-
-def _serialize_props_with_sim_stats(props: Any, filename: Path) -> None:
-    """Serialize Properties to file with stats summary
-    
-    Parameters:
-    -----------
-    props : Properties
-        Properties object to serialize
-    filename : Path
-        Output file path
-    """
-    if hasattr(props, 'stats_summary'):
-        props.stats_summary()
-    props.serialize(filename)
-
-
-def _get_pattern_names(data_path: Path):
-    """Get list of pattern names from data directory
-    
-    Parameters:
-    -----------
-    data_path : Path
-        Path to data directory
-    
-    Returns:
-    --------
-    list[str]
-        List of pattern names (directory stems)
-    """
-    names = []
-    to_ignore = ['renders']  # Special dirs not to include in the pattern list
-    for el in data_path.iterdir():
-        if el.is_dir() and el.stem not in to_ignore:
-            names.append(el.stem)
-
-    return names

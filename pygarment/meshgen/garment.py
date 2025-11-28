@@ -211,7 +211,7 @@ class SimulationGarment:
             # Load ground truth stitching lengths
             if not self.paths.g_orig_edge_len.exists():
                 orig_lens_dict = None
-                logger.warning("no original length dict found")
+                logger.warning("No original length dict found.")
             else:
                 with open(self.paths.g_orig_edge_len, 'rb') as file:
                     orig_lens_dict = pickle.load(file)
@@ -420,15 +420,15 @@ class SimulationGarment:
         
         labels_present = False
         if vertex_labels is None:
-            logger.warning('No vertex labels available for attachment constraints')
+            logger.warning('No vertex labels available for attachment constraints.')
             config.enable_attachment_constraint = False
             config.update_min_steps()
             return
         
         # Debug: log what constraints we're looking for
         constraint_labels = [c.label for c in config.attachment_constraints]
-        logger.debug(f'Looking for attachment labels: {constraint_labels}')
-        logger.debug(f'Available vertex labels: {list(vertex_labels.keys())}')
+        logger.debug(f'Looking for attachment labels: {constraint_labels}.')
+        logger.debug(f'Available vertex labels: {list(vertex_labels.keys())}.')
         
         for constraint in config.attachment_constraints:
             attach_label = constraint.label
@@ -448,7 +448,7 @@ class SimulationGarment:
                     # Fall back to label-specific defaults
                     position = AttachmentConstraintUtils.get_default_position_for_label(attach_label, body_def)
                     if position is None:
-                        logger.warning(f'Requested attachment label {attach_label} is not supported. Skipped')
+                        logger.warning(f'Requested attachment label {attach_label} is not supported. Skipped.')
                         continue
                 
                 # Use provided direction or use label-specific default
@@ -465,14 +465,14 @@ class SimulationGarment:
                     stiffness=constraint.stiffness,
                     damping=constraint.damping
                 )
-                logger.info(f'Using attachment for {attach_label} with {len(constraint_verts)} vertices')
+                logger.info(f'Using attachment for {attach_label} with {len(constraint_verts)} vertices.')
 
         if not labels_present:
             # Loaded garment is not labeled -- update config
             config.enable_attachment_constraint = False
             config.update_min_steps()
             constraint_labels = [c.label for c in config.attachment_constraints]
-            logger.warning(f'Requested attachment labels {constraint_labels} are not present. Attachment is turned off')
+            logger.warning(f'Requested attachment labels {constraint_labels} are not present. Attachment is turned off.')
 
     def _load_panel_labels(self):
         pattern = BasicPattern(self.paths.g_specs)
@@ -689,7 +689,7 @@ class SimulationGarment:
             diff_L1[diff_L1 > threshold])  # compare vertex-wise to allow accurate control over outliers
 
         if non_static_len == 0 or (non_static_len < len(curr_verts_arr) * 0.01 * non_static_percent):
-            logger.info('\nStatic with {} non-static vertices out of {}'.format(non_static_len, len(curr_verts_arr)))
+            logger.info(f'Static with {non_static_len} non-static vertices out of {len(curr_verts_arr)}.')
             # Store last frame
             return True, non_static_len
         else:

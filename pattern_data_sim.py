@@ -12,8 +12,6 @@
 """
 
 import argparse
-import sys
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -22,7 +20,7 @@ from loguru import logger
 
 # Custom modules
 import pygarment.meshgen.datasim_utils as sim
-from pygarment.data_config import Properties
+from pygarment.meshgen.cli_pattern_config import CLIPatternConfig
 from garment_programs.garment_factory import create_garment, GarmentFactory
 from pygarment.meshgen.pattern_data import PatternData, SimulationConfig
 from assets.bodies.body_params import BodyParameters
@@ -35,8 +33,8 @@ from log_config import set_log_level
 def get_command_args() -> argparse.Namespace:
     """Parse command line arguments to control the run.
     
-    Returns:
-    --------
+    Returns
+    -------
     argparse.Namespace
         Parsed command line arguments.
     """
@@ -151,42 +149,36 @@ def get_command_args() -> argparse.Namespace:
     return args
 
 
-def _create_data_folder(properties: Properties, path: Path = Path('')) -> tuple[Path, Path]:
-    """Create a new directory to put dataset in and generate appropriate name.
+def _create_data_folder(config: CLIPatternConfig, path: Path = Path('')) -> tuple[Path, Path]:
+    """Create a new directory for pattern output and generate appropriate name.
     
-    Parameters:
-    -----------
-    properties : Properties
-        Dataset properties object that will be updated with the data folder name.
+    Parameters
+    ----------
+    config : CLIPatternConfig
+        Pattern configuration object that will be updated with the output folder name.
     path : Path, optional
-        Base path where the dataset folder will be created. Default is current directory.
+        Base path where the output folder will be created. Default is current directory.
     
-    Returns:
-    --------
+    Returns
+    -------
     tuple[Path, Path]
         Tuple containing:
-        - path_with_dataset: Full path to the created dataset folder
+        - path_with_output: Full path to the created output folder
         - default_folder: Path to the default_body subfolder
     """
-    if 'data_folder' in properties:
-        # Regenerating from existing data
-        properties['name'] = properties['data_folder'] + '_regen'
-        data_folder = properties['name']
-    else:
-        data_folder = properties['name']
+    regenerate = config.output_folder is not None
+    output_folder = config.generate_output_folder_name(regenerate=regenerate)
     
-    data_folder = f"{data_folder}_{datetime.now().strftime('%y%m%d-%H-%M-%S')}"
-    properties['data_folder'] = data_folder
-    path_with_dataset = path / data_folder
-    path_with_dataset.mkdir(parents=True)
+    path_with_output = path / output_folder
+    path_with_output.mkdir(parents=True, exist_ok=True)
     
-    default_folder = path_with_dataset / 'default_body'
+    default_folder = path_with_output / 'default_body'
     default_folder.mkdir(parents=True, exist_ok=True)
     
-    logger.info(f"Created dataset folder: {data_folder}")
+    logger.info(f"Created pattern output folder: {output_folder}")
     logger.info("Using default body configuration (default_body)")
     
-    return path_with_dataset, default_folder
+    return path_with_output, default_folder
 
 
 def body_sample(
@@ -197,8 +189,8 @@ def body_sample(
 ) -> tuple[BodyParameters, BodyDefinition]:
     """Sample a body from the available body options.
     
-    Parameters:
-    -----------
+    Parameters
+    ----------
     idx : int
         Index of the body to sample.
     bodies : list[dict[str, Any]]
@@ -208,8 +200,8 @@ def body_sample(
     straight : bool, optional
         Whether to use straight or apart pose. Default is True.
     
-    Returns:
-    --------
+    Returns
+    -------
     tuple[BodyParameters, BodyDefinition]
         Tuple containing:
         - BodyParameters: For saving and metadata access
@@ -238,8 +230,8 @@ def _save_sample(
 ) -> None:
     """Save a garment pattern sample to disk.
     
-    Parameters:
-    -----------
+    Parameters
+    ----------
     piece : Any
         The garment piece/component to save (must have assembly() method and name attribute).
     body : BodyParameters
@@ -277,135 +269,136 @@ def _save_sample(
 
 def generate_sewing_pattern(
     path: str | Path,
-    properties: Properties,
+    config: CLIPatternConfig,
     bodies_default_path: str,
     datasets_sim: str,
     verbose: bool = False
 ) -> tuple[Path, dict[str, PatternData]]:
-    """Generate a pattern sample with given properties.
-    
-    Parameters:
-    -----------
+    """Generate a pattern sample with given configuration.
+
+    Parameters
+    ----------
     path : str | Path
-        Path to folder to put a new dataset into.
-    properties : Properties
-        A Properties object with requested properties of the dataset.
-    sys_paths : Properties
-        System paths configuration Properties object (acts like a dictionary).
+        Path to folder to put pattern output into.
+    config : CLIPatternConfig
+        Pattern configuration object with requested properties for pattern generation.
+    bodies_default_path : str
+        Path to the default bodies directory.
+    datasets_sim : str
+        Path to the datasets simulation directory.
     verbose : bool, optional
         Whether to print verbose output. Default is False.
-    
-    Returns:
-    --------
+
+    Returns
+    -------
     tuple[Path, dict[str, PatternData]]
         Tuple containing:
-        - default_path: Path to default body data folder
+        - default_path: Path to default body pattern folder
         - default_pattern_data: Dict mapping pattern names to PatternData objects
-    
-    Raises:
-    -------
+
+    Raises
+    ------
     ValueError
         If the design does not specify a valid garment type in 'meta.upper.v' or 'meta.bottom.v'.
     FileNotFoundError
         If required files or directories are not found.
     """
     path = Path(path)
-    
-    # Create data folder
-    _, default_path = _create_data_folder(properties, path)
+
+    # Create output folder for patterns
+    _, default_path = _create_data_folder(config, path)
     default_sample_data = default_path / 'data'
-    
+
     # Store pattern data in memory (for direct passing to simulation)
     default_pattern_data: dict[str, PatternData] = {}
-    
+
     # Load design file
-    with open(properties['design_file'], 'r') as f:
+    with open(config.design_file, 'r') as f:
         loaded_data = yaml.safe_load(f)
-    
-    # Check if perfect fit flag is set or if file is perfect fit spec format
-    perfect_fit_flag = properties['perfect_fit'] if 'perfect_fit' in properties else False
-    use_perfect_fit = perfect_fit_flag or ('garment_type' in loaded_data and 'design' not in loaded_data)
-    
+
+    # Detect if this is a perfect fit spec format
+    is_perfect_fit_format = 'garment_type' in loaded_data and 'design' not in loaded_data
+    use_perfect_fit = config.perfect_fit or is_perfect_fit_format
+
+    # Extract garment type and relevant design
     if use_perfect_fit:
-        # Perfect fit spec format - use directly without conversion
         logger.info('Using perfect fit garment specification')
-        perfect_fit_spec = loaded_data
-        garment_type = perfect_fit_spec.get('garment_type', 'Pants')
-        # Set garment type for later use
-        upper_type = None
-        bottom_type = garment_type
-        wb_type = None
-        design = perfect_fit_spec  # Use perfect fit spec directly
+        design = loaded_data
+        garment_type = design.get('garment_type', 'Pants')
+        upper_type, bottom_type, wb_type = None, garment_type, None
     else:
-        # Regular design file format
-        design = loaded_data.get('design', loaded_data)  # Support both {'design': {...}} and direct {...}
-        # Determine garment type from design (check both upper and bottom)
-        upper_type = design.get('meta', {}).get('upper', {}).get('v')
-        bottom_type = design.get('meta', {}).get('bottom', {}).get('v')
-        wb_type = design.get('meta', {}).get('wb', {}).get('v')
-    
-    # Check if this is a composite garment (has both upper and lower, or waistband)
-    is_composite = (upper_type and bottom_type) or (upper_type and wb_type) or (bottom_type and wb_type)
-    
-    # Determine which garment to create and appropriate pose
-    if is_composite:
-        # Composite garment (dress/jumpsuit) - use factory's composite method
-        logger.info(f'Detected composite garment: upper={upper_type}, bottom={bottom_type}, wb={wb_type}')
-        garment_type = 'Composite'
-    elif upper_type:
-        garment_type = upper_type  # 'Shirt' or 'FittedShirt'
-    elif bottom_type:
-        garment_type = bottom_type  # 'Pants', 'SkirtCircle', 'AsymmSkirtCircle', etc.
-    else:
-        raise ValueError(
-            "Design must specify either 'meta.upper.v' or 'meta.bottom.v' to determine garment type. "
-            f"Found: upper={upper_type}, bottom={bottom_type}"
-        )
-    
-    if not is_composite:
-        logger.info(f'Detected garment type: {garment_type}')
-    
+        # Support both {'design': {...}} and direct {...}
+        design = loaded_data.get('design', loaded_data)
+        meta = design.get('meta', {})
+        upper_type = meta.get('upper', {}).get('v')
+        bottom_type = meta.get('bottom', {}).get('v')
+        wb_type = meta.get('wb', {}).get('v')
+        garment_type = None  # will be determined below
+
     # On default body
     default_body_params = BodyParameters(
-        Path(bodies_default_path) / (properties['body_name'] + '.yaml')
+        Path(bodies_default_path) / f"{config.body_name}.yaml"
     )
     default_body_def = BodyDefinition(default_body_params.params)
-    
+
+    # Determine garment type and composite status
+    is_composite = any([
+        upper_type and bottom_type,
+        upper_type and wb_type,
+        bottom_type and wb_type
+    ])
+
+    if not use_perfect_fit:
+        if is_composite:
+            logger.info(f'Detected composite garment: upper={upper_type}, bottom={bottom_type}, wb={wb_type}')
+            garment_type = 'Composite'
+        elif upper_type:
+            garment_type = upper_type
+        elif bottom_type:
+            garment_type = bottom_type
+        else:
+            raise ValueError(
+                "Design must specify either 'meta.upper.v' or 'meta.bottom.v' to determine garment type. "
+                f"Found: upper={upper_type}, bottom={bottom_type}"
+            )
+
+    if not is_composite and not use_perfect_fit:
+        logger.info(f'Detected garment type: {garment_type}')
+
     # Create garment using factory
     if is_composite:
         factory = GarmentFactory(default_body_def, design)
         piece_default = factory.create_composite_garment()
-        # Composite garments don't have constraints yet, use empty list
         constraints_default: list[AttachmentConstraint] = []
     elif use_perfect_fit:
-        # Use perfect fit factory method
         factory = GarmentFactory(default_body_def, design)
         piece_default = factory.create_pants_perfect_fit()
         constraints_default = piece_default.get_attachment_constraints()  # type: ignore[attr-defined]
     else:
         piece_default, constraints_default = create_garment(garment_type, default_body_def, design)
-    piece_default.name = properties['body_name']
-    
-    logger.info(f"Generating default body sample: {properties['body_name']}")
+
+    piece_default.name = config.body_name
+    logger.info(f"Generating default body sample: {config.body_name}")
     _save_sample(piece_default, default_body_params, design, default_sample_data, verbose=verbose)
-    
+
     # Create PathCofig for default body (will be used in simulation)
-    # Determine output path for simulation
     datasets_sim_path = Path(datasets_sim)
-    output_path = datasets_sim_path / properties['data_folder'] / 'default_body'
+    if config.output_folder is None:
+        raise ValueError("output_folder must be set before creating PathCofig")
+    output_path = datasets_sim_path / config.output_folder / 'default_body'
     output_path.mkdir(parents=True, exist_ok=True)
-    
+
     paths_config_default = PathCofig(
         in_element_path=default_sample_data / piece_default.name,
         out_path=output_path,
         in_name=piece_default.name,
-        body_name=properties['body_name'],
-        samples_name='',  # Not using body samples
+        body_name=config.body_name,
+        samples_name='',
         smpl_body=True,
         bodies_default_path=bodies_default_path,
         body_samples_path=None
     )
-    
+
     # Store default body pattern data in memory
     default_pattern_data[piece_default.name] = PatternData(
         piece=piece_default,
@@ -415,7 +408,7 @@ def generate_sewing_pattern(
         attachment_constraints=constraints_default,
         paths=paths_config_default
     )
-    
+
     return default_path, default_pattern_data
 
 
@@ -427,12 +420,10 @@ def run_simulation(
 ) -> bool:
     """Run simulation on an existing dataset.
     
-    Parameters:
-    -----------
+    Parameters
+    ----------
     dataset : str
         Name of the dataset folder to simulate.
-    system_config : Properties
-        System configuration properties.
     command_args : argparse.Namespace
         Parsed command line arguments.
     pattern_data : dict[str, PatternData]
@@ -440,10 +431,10 @@ def run_simulation(
         Required for simulation.
     sim_config : SimulationConfig | None, optional
         Optional simulation configuration object. If provided, will be used instead of
-        creating Properties from scratch. If None, will create from config file.
+        creating from config file. If None, will create from config file.
     
-    Returns:
-    --------
+    Returns
+    -------
     bool
         True if simulation finished successfully, False otherwise.
     """
@@ -452,14 +443,6 @@ def run_simulation(
     output_path = Path(command_args.datasets_sim) / dataset / body_type
     output_path.mkdir(parents=True, exist_ok=True)
     
-    # Use in-memory pattern data (required)
-    if pattern_data is None:
-        logger.error('Pattern data is required. Cannot run simulation without pattern data.')
-        return False
-    
-    logger.info(f"Using in-memory pattern data for {len(pattern_data)} patterns")
-    
-    # Use provided sim_config or create from scratch
     if sim_config is None:
         if command_args.config is not None:
             config_path = Path(command_args.sim_configs_path) / command_args.config
@@ -478,60 +461,46 @@ def run_simulation(
         sim_config_obj,
         run_default_body=True,
         num_samples=1,
-        caching=command_args.caching,
-        force_restart=False
+        caching=command_args.caching
     )
     
     return finished
 
 
-if __name__ == "__main__":
-    command_args = get_command_args()
-    
-    # Step 1: Generate dataset from design file
-    logger.info(f'Generating dataset from design file: {command_args.design}')
-    
-    # Set up properties for generation
-    props = Properties()
-    props.set_basic(
-        design_file=command_args.design,
+def run_pipeline(command_args: argparse.Namespace) -> None:
+    """Run the entire pipeline for pattern generation and simulation."""
+    output_name = (
+        command_args.name 
+        if not command_args.batch_id
+        else f'{command_args.name}_{command_args.batch_id}'
+    )
+    config = CLIPatternConfig(
+        design_file=Path(command_args.design),
         body_name=command_args.body_name,
-        name=command_args.name if not command_args.batch_id else f'{command_args.name}_{command_args.batch_id}',
+        output_name=output_name,
+        perfect_fit=command_args.perfect_fit,
         to_subfolders=True
     )
-    props['perfect_fit'] = command_args.perfect_fit  # Store perfect fit flag
-    props.set_section_config('generator')
+    logger.debug(f"Created pattern config: {config}")
     
-    # Get patterns_path from system config, default to './patterns' if not set
-    patterns_path = Path(command_args.output, command_args.patterns_path)
-    datasets_sim_path = Path(command_args.output, command_args.datasets_sim)
+    # Get patterns_path from command args
+    patterns_path = Path(command_args.output) / command_args.patterns_path
+    datasets_sim_path = Path(command_args.output) / command_args.datasets_sim
     
-    # Generate dataset
-    try:
-        default_path, default_pattern_data = generate_sewing_pattern(
-            patterns_path,
-            props,
-            command_args.bodies_default_path,
-            datasets_sim_path,
-            verbose=command_args.verbose
-        )
-        
-        # At the end -- it takes some time to gather the info
-        props.add_sys_info()
-        
-        # Get the dataset name from properties
-        dataset_name = props['data_folder']
-        
-        logger.info(f'Data generation completed! Dataset: {dataset_name}')
+    # Generate pattern
+    _, default_pattern_data = generate_sewing_pattern(
+        patterns_path,
+        config,
+        command_args.bodies_default_path,
+        str(datasets_sim_path),
+        verbose=command_args.verbose
+    )
+    dataset_name = config.pattern_output_name
+    logger.info(f'Pattern generation completed! Output folder: {dataset_name}')
             
-    except Exception as e:
-        logger.error(f'Error during dataset generation: {e}')
-        logger.exception("Exception details:")
-        sys.exit(1)
-    
     # Step 2: Run simulation if not skipped
     if not command_args.skip_simulation:
-        # Create SimulationConfig from properties (for in-memory use)
+        # Create SimulationConfig (for in-memory use)
         if command_args.config is not None:
             config_path = Path(command_args.sim_configs_path) / command_args.config
             logger.info(f"Loading simulation config from: {config_path}")
@@ -539,7 +508,11 @@ if __name__ == "__main__":
         else:
             sim_config_for_sim = SimulationConfig.create_default(dataset_name)
         
-        finished = run_simulation(dataset_name, command_args, default_pattern_data, sim_config_for_sim)
+        run_simulation(dataset_name, command_args, default_pattern_data, sim_config_for_sim)
     else:
         logger.info('Simulation skipped')
-        sys.exit(0)
+
+
+if __name__ == "__main__":
+    command_args = get_command_args()
+    run_pipeline(command_args)

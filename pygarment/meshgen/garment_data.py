@@ -5,7 +5,7 @@ from typing import Any, Optional
 import numpy as np
 
 from pattern_definitions.body_definition import BodyDefinition
-from pygarment.meshgen.boxmeshgen import BoxMesh
+from pygarment.meshgen.box_mesh_gen import BoxMesh
 
 
 @dataclass

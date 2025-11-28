@@ -32,6 +32,7 @@ dependencies = [
     "cgal",
     "loguru>=0.7.0",
     "pydantic",
+    "tqdm>=4.67.1",
 ]
 
 [project.optional-dependencies]

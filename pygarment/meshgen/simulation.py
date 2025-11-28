@@ -4,7 +4,7 @@ import trimesh
 from typing import Optional, Any
 
 from loguru import logger
-from tqdm import tqdm
+from tqdm import tqdm # type: ignore[import-untyped]
 import warp as wp
 
 from pygarment.meshgen.render.pythonrender import render_images
@@ -108,14 +108,14 @@ def sim_frame_sequence(
     )
     for frame in frame_iter:
         if verbose:
-            logger.info(f'\n------ Frame {frame + 1} ------')
+            logger.info(f'------ Frame {frame + 1} ------')
 
         garment.frame = frame
         garment.run_frame()
 
         if verbose:
             num_cloth_cloth_contacts = garment.count_self_intersections()
-            logger.debug(f'\nSelf-Intersection: {num_cloth_cloth_contacts}')
+            logger.debug(f'Self-Intersection: {num_cloth_cloth_contacts}')
 
         if frame >= config.zero_gravity_steps and frame >= config.min_sim_steps:
             static, _ = garment.is_static()
@@ -188,42 +188,42 @@ def run_sim(
     garment = SimulationGarment(cloth_name, config, paths, caching=store_usd, garment_data=garment_data)
 
     try:
-        logger.info("Simulation..")
+        logger.info("Simulation started...")
         sim_frame_sequence(garment, config, store_usd, verbose=verbose)
     except SimulationError as e:
-        logger.error(f"Simulation failed for {cloth_name}: {e}")
+        logger.error(f"Simulation failed for {cloth_name} with error: {e}")
         logger.error(traceback.format_exc())
         raise
     except BaseException as e:
-        logger.error(f'Simulation crashed for {cloth_name}: {e}')
+        logger.error(f'Simulation crashed for {cloth_name} with error: {e}')
         logger.error(traceback.format_exc())
         raise
 
     # Quality checks (log warnings and continue)
     frame = garment.frame
-    logger.info(f"\nSimulation took #frames={frame + 1}")
+    logger.info(f"Simulation completed with {frame + 1} frames")
 
     if garment.frame == config.max_sim_steps - 1:
         _, non_st_count = garment.is_static()
-        logger.warning(f'Failed to achieve static equilibrium for {cloth_name} with {non_st_count} non-static vertices out of {len(garment.current_verts)}')
+        logger.warning(f'Failed to achieve static equilibrium for {cloth_name}. {non_st_count} non-static vertices out of {len(garment.current_verts)}')
 
     if time.time() - start_time < 0.5:  # 0.5 sec -- finished suspiciously fast
-        logger.warning(f'Simulation finished suspiciously fast for {cloth_name} (< 0.5s)')
+        logger.warning(f'Simulation finished suspiciously fast for {cloth_name}. Time taken: < 0.5s')
 
     # 3D penetrations
     num_body_collisions = garment.count_body_intersections()
-    logger.info(f"Body-Cloth Intersections: {num_body_collisions}")
+    logger.info(f"Body-Cloth intersections: {num_body_collisions}.")
     num_self_collisions = garment.count_self_intersections()
 
     if num_body_collisions > config.max_body_collisions:
-        logger.warning(f'Excessive body-cloth intersections for {cloth_name}: {num_body_collisions} > {config.max_body_collisions}')
+        logger.warning(f'Excessive body-cloth intersections for {cloth_name}. {num_body_collisions} > {config.max_body_collisions}')
     
     if num_self_collisions:
-        logger.info(f'Self-Intersecting with {num_self_collisions}')
+        logger.info(f'Self-intersecting with {num_self_collisions}.')
         if num_self_collisions > config.max_self_collisions:
-            logger.warning(f'Excessive self-intersections for {cloth_name}: {num_self_collisions} > {config.max_self_collisions}')
+            logger.warning(f'Excessive self-intersections for {cloth_name}. {num_self_collisions} > {config.max_self_collisions}')
     else:
-        logger.info('Mesh is intersection-free')
+        logger.info('Mesh is intersection-free.')
 
     garment.save_frame(save_v_norms=save_v_norms)
 
@@ -236,4 +236,4 @@ def run_sim(
     # Final info output
     sec = round(time.time() - start_time, 3)
     min_ = int(sec / 60)
-    logger.info(f"\nSimulation pipeline took: {min_} m {sec - min_ * 60} s")
+    logger.info(f"Simulation pipeline completed. Time taken: {min_} m {sec - min_ * 60} s.")

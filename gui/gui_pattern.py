@@ -12,7 +12,7 @@ from typing import Optional
 from assets.garment_programs.meta_garment import MetaGarment
 from assets.bodies.body_params import BodyParameters
 import pygarment as pyg
-from pygarment.meshgen.boxmeshgen import BoxMesh
+from pygarment.meshgen.box_mesh_gen import BoxMesh
 from pygarment.meshgen.simulation import run_sim
 import pygarment.data_config as data_config
 from config import PathCofig

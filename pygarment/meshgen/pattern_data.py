@@ -4,11 +4,17 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
+import yaml
+from loguru import logger
+
 from assets.bodies.body_params import BodyParameters
 from pattern_definitions.body_definition import BodyDefinition
 from config import AttachmentConstraint, PathCofig
 from config.sim_config import SimConfig
 from config.render_config import RenderConfig
+from config.simulation_control import SimulationControl
+from config.garment_properties import GarmentMaterialProperties
+from config.simulation_options import SimulationOptions
 
 
 @dataclass
@@ -66,18 +72,17 @@ class SimulationConfig:
         Render configuration object.
     data_folder : str
         Dataset folder name.
-    frozen : bool, optional
-        Whether the dataset is frozen (processing complete). Default is False.
     """
     sim_config: SimConfig
     render_config: RenderConfig
     data_folder: str
-    frozen: bool = False
     
     @classmethod
     def create_default(cls, data_folder: str) -> 'SimulationConfig':
-        """
-        Create SimulationConfig with default values.
+        """Create SimulationConfig with default values.
+        
+        Uses Pydantic model defaults to create configuration without needing
+        Properties or initialization helpers.
         
         Parameters
         ----------
@@ -89,27 +94,27 @@ class SimulationConfig:
         SimulationConfig
             Initialized with default configuration.
         """
-        import pygarment.meshgen.datasim_utils as sim_utils
-        from pygarment.data_config import Properties
+        # Create default config dicts using Pydantic models with defaults
+        control_defaults = SimulationControl().model_dump()
+        material_defaults = GarmentMaterialProperties().model_dump()
+        options_defaults = SimulationOptions().model_dump()
         
-        # Create Properties to use init_sim_props helper
-        props = Properties()
-        props.set_basic(data_folder=data_folder, name=data_folder)
-        sim_utils.init_sim_props(props, batch_run=True, force_restart=False)
-        
-        # Extract config dicts
-        sim_config_dict = props['sim']['config']
-        render_config_dict = props['render']['config']
+        # Create sim config dict structure
+        sim_config_dict = {
+            'control': control_defaults,
+            'material': material_defaults,
+            'options': options_defaults,
+            'max_meshgen_time': 20,  # Legacy parameter
+        }
         
         # Create config objects
         sim_config = SimConfig(sim_config_dict)
-        render_config = RenderConfig(**render_config_dict)
+        render_config = RenderConfig()  # Uses defaults from Pydantic model
         
         return cls(
             sim_config=sim_config,
             render_config=render_config,
-            data_folder=data_folder,
-            frozen=False
+            data_folder=data_folder
         )
     
     @classmethod
@@ -119,8 +124,10 @@ class SimulationConfig:
         data_folder: str,
         default_config: Optional['SimulationConfig'] = None
     ) -> 'SimulationConfig':
-        """
-        Create SimulationConfig from a config file.
+        """Create SimulationConfig from a config file.
+        
+        Loads configuration from YAML/JSON file and merges with defaults.
+        Uses Pydantic models for validation and default handling.
         
         Parameters
         ----------
@@ -136,31 +143,59 @@ class SimulationConfig:
         SimulationConfig
             Initialized from config file.
         """
-        import pygarment.meshgen.datasim_utils as sim_utils
-        from pygarment.data_config import Properties
-        
         # Start with defaults
         if default_config is None:
             default_config = cls.create_default(data_folder)
         
         # Load config file
-        props = Properties()
-        props.set_basic(data_folder=data_folder, name=data_folder)
-        sim_utils.init_sim_props(props, batch_run=True, force_restart=False)
-        props.merge(str(config_path), re_write=True)
+        with open(config_path, 'r') as f:
+            file_data = yaml.safe_load(f)
         
-        # Extract config dicts
-        sim_config_dict = props['sim']['config']
-        render_config_dict = props['render']['config']
+        if not file_data:
+            logger.warning(f"Config file {config_path} is empty, using defaults")
+            return default_config
+        
+        # Extract sim and render configs from file
+        file_sim_config = file_data.get('sim', {}).get('config', {})
+        file_render_config = file_data.get('render', {}).get('config', {})
+        
+        # Merge with defaults: start with defaults, then update with file values
+        default_sim_dict = default_config.sim_config._props.copy()
+        
+        # Deep merge control, material, options sections
+        if 'control' in file_sim_config:
+            default_sim_dict['control'] = {
+                **default_sim_dict.get('control', {}),
+                **file_sim_config['control']
+            }
+        if 'material' in file_sim_config:
+            default_sim_dict['material'] = {
+                **default_sim_dict.get('material', {}),
+                **file_sim_config['material']
+            }
+        if 'options' in file_sim_config:
+            default_sim_dict['options'] = {
+                **default_sim_dict.get('options', {}),
+                **file_sim_config['options']
+            }
+        
+        # Merge top-level keys (like max_meshgen_time)
+        for key, value in file_sim_config.items():
+            if key not in ('control', 'material', 'options'):
+                default_sim_dict[key] = value
         
         # Create config objects
-        sim_config = SimConfig(sim_config_dict)
-        render_config = RenderConfig(**render_config_dict)
+        sim_config = SimConfig(default_sim_dict)
+        
+        # Merge render config
+        if file_render_config:
+            render_config = RenderConfig(**file_render_config)
+        else:
+            render_config = default_config.render_config
         
         return cls(
             sim_config=sim_config,
             render_config=render_config,
-            data_folder=data_folder,
-            frozen=props['frozen'] if 'frozen' in props else False
+            data_folder=data_folder
         )
 

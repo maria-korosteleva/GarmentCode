@@ -2,7 +2,7 @@ import os
 import argparse
 from pathlib import Path
 
-from pygarment.meshgen.boxmeshgen import BoxMesh
+from pygarment.meshgen.box_mesh_gen import BoxMesh
 from pygarment.meshgen.simulation import run_sim
 import pygarment.data_config as data_config
 from config import PathCofig
