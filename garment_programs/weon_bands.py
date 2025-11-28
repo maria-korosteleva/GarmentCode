@@ -1,10 +1,12 @@
 from typing import Optional, Any, List
 
 import pygarment as pyg
+from loguru import logger
 from assets.garment_programs.circle_skirt import CircleArcPanel
 from assets.garment_programs import skirt_paneled
 from garment_programs.base_classes import BaseBand
 from garment_programs.garment_enums import InterfaceName
+from garment_programs.garment_program_utils import AttachmentHandler
 from pattern_definitions.body_definition import BodyDefinition
 from pattern_definitions.waistband_design import WaistbandDesign
 from config import AttachmentConstraint
@@ -148,7 +150,8 @@ class StraightWB(BaseBand):
             match_int_proportion=self.waist_back
         )
     
-    def get_attachment_constraints(self) -> List[AttachmentConstraint]:
+    @staticmethod
+    def get_attachment_constraints() -> List[AttachmentConstraint]:
         """Get the list of attachment constraints for this waistband garment.
         
         Returns the attachment constraints required for simulating this waistband garment.
@@ -160,6 +163,19 @@ class StraightWB(BaseBand):
             An empty list (waistbands do not require attachment constraints).
         """
         return []
+    
+    def get_vertex_processor_callback(self):
+        """Get the vertex processor callback for waistband attachment constraints.
+        
+        Waistbands do not require custom vertex processing, so this returns a default
+        callback that uses generic constraint processing.
+        
+        Returns:
+        --------
+        Callable[[BoxMesh], None] | None
+            A callback that handles constraints with default behavior.
+        """
+        return AttachmentHandler.create_default_vertex_processor(BaseBand)
 
     def apply_body_alignment(self, body: BodyDefinition) -> None:
         """Apply body alignment to position the waistband correctly.

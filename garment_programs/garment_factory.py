@@ -612,9 +612,10 @@ def create_garment(
     
     garment = garment_creators[garment_type]()
     
-    # Get attachment constraints from the garment itself
-    # All garment classes implement get_attachment_constraints() method
-    constraints = garment.get_attachment_constraints()  # type: ignore[attr-defined]
+    # Get attachment constraints from the garment class
+    # All garment classes implement get_attachment_constraints() static method
+    garment_class = garment.__class__
+    constraints = garment_class.get_attachment_constraints()  # type: ignore[attr-defined]
     
     return garment, constraints
 

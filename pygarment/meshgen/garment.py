@@ -426,12 +426,13 @@ class SimulationGarment:
             return
         
         # Debug: log what constraints we're looking for
-        constraint_labels = [c.label for c in config.attachment_constraints]
+        constraint_labels = [c.label_enum.value for c in config.attachment_constraints]
         logger.debug(f'Looking for attachment labels: {constraint_labels}.')
         logger.debug(f'Available vertex labels: {list(vertex_labels.keys())}.')
         
         for constraint in config.attachment_constraints:
-            attach_label = constraint.label
+            # Get label as string
+            attach_label = constraint.label_enum.value
             if attach_label in vertex_labels.keys() and len(vertex_labels[attach_label]) > 0:
                 constraint_verts = vertex_labels[attach_label]
                 
@@ -471,7 +472,7 @@ class SimulationGarment:
             # Loaded garment is not labeled -- update config
             config.enable_attachment_constraint = False
             config.update_min_steps()
-            constraint_labels = [c.label for c in config.attachment_constraints]
+            constraint_labels = [c.label_enum.value for c in config.attachment_constraints]
             logger.warning(f'Requested attachment labels {constraint_labels} are not present. Attachment is turned off.')
 
     def _load_panel_labels(self):

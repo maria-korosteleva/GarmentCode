@@ -1,13 +1,15 @@
 
 import numpy as np
-from typing import List
 
 import pygarment as pyg
+from config import AttachmentConstraint
 from garment_programs.base_classes import BaseBottoms
 from garment_programs.garment_enums import InterfaceName, EdgeLabel
+from garment_programs.garment_program_utils import AttachmentHandler
 from pattern_definitions.pants_design import PantsDesign
 from pattern_definitions.body_definition import BodyDefinition
-from config import AttachmentConstraint
+from pygarment.meshgen.box_mesh_gen.stitch_types import EdgeLabel as BoxEdgeLabel
+
 
 
 class PantPanel(pyg.Panel):
@@ -523,20 +525,27 @@ class Pants(BaseBottoms):
         """
         return self.right.length()
 
-    def get_attachment_constraints(self) -> List[AttachmentConstraint]:
-        """Get the list of attachment constraints for this pants garment.
+    @staticmethod
+    def get_attachment_constraints() -> list[AttachmentConstraint]:
+        """Get the list of attachment constraints for pants garments.
         
-        Returns the attachment constraints required for simulating this pants garment.
+        Returns the attachment constraints required for simulating pants garments.
         Pants require both a crotch constraint to anchor the garment at the crotch level
         and a lower_interface constraint at the waist level.
         
+        The crotch constraint finds vertices by looking for edges with CROTCH_POINT_SEAM label,
+        then labels all vertices below those reference vertices (in Y direction).
+        
+        The lower_interface constraint finds vertices by looking for edges with LOWER_INTERFACE label.
+        
         Returns:
         --------
-        List[AttachmentConstraint]
+        list[AttachmentConstraint]
             A list containing the crotch and lower_interface attachment constraints for pants.
         """
         crotch_constraint = AttachmentConstraint(
-            label='crotch',
+            label=BoxEdgeLabel.CROTCH,
+            vertex_labels_to_find=[BoxEdgeLabel.CROTCH_POINT_SEAM],
             stiffness=1000.0,
             damping=10.0,
             position_calculation={
@@ -551,7 +560,8 @@ class Pants(BaseBottoms):
         )
         
         lower_interface_constraint = AttachmentConstraint(
-            label='lower_interface',
+            label=BoxEdgeLabel.LOWER_INTERFACE,
+            vertex_labels_to_find=[BoxEdgeLabel.LOWER_INTERFACE],
             stiffness=1000000,
             damping=10.0,
             position_calculation={
@@ -566,6 +576,22 @@ class Pants(BaseBottoms):
         )
         
         return [crotch_constraint, lower_interface_constraint]
+    
+    def get_vertex_processor_callback(self):
+        """Get the vertex processor callback for pants attachment constraints.
+        
+        Returns a callback that handles all pants-specific constraint processing:
+        - Gets constraints internally from garment_program.get_attachment_constraints()
+        - CROTCH: finds edges with CROTCH_POINT_SEAM, then labels all vertices below in Y
+        - LOWER_INTERFACE: uses vertices already labeled with LOWER_INTERFACE from edges
+        - Stores constraints in BoxMesh for later use
+        
+        Returns:
+        --------
+        Callable[[BoxMesh], None]
+            The vertex processor callback function.
+        """
+        return lambda box_mesh: AttachmentHandler.process_attachment_constraints_generic(Pants, box_mesh)
 
     def apply_body_alignment(self, body: BodyDefinition) -> None:
         """Apply body alignment to position the pants correctly.

@@ -5,6 +5,7 @@ import pygarment as pyg
 from scipy.spatial.transform import Rotation as R
 
 from garment_programs.base_classes import BaseBodicePanel
+from garment_programs.garment_program_utils import AttachmentHandler
 from garment_programs.weon_torso import TorsoFrontHalfPanel, TorsoBackHalfPanel
 from garment_programs import weon_sleeves
 from garment_programs.garment_enums import InterfaceName, EdgeLabel
@@ -623,12 +624,12 @@ class Shirt(pyg.Component):
         # Create ShirtDesign from the design dict and store it
         self.shirt_design = shirt_design
         
-        self.right = BodiceHalf(f'right',
+        self.right = BodiceHalf('right',
                                 self.shirt_design,
                                 arm_pose_angle=arm_pose_angle,
                                 fitted=fitted
                                 )
-        self.left = BodiceHalf(f'left',
+        self.left = BodiceHalf('left',
                                self.shirt_design,
                                arm_pose_angle=arm_pose_angle,
                                fitted=fitted).mirror()
@@ -657,7 +658,8 @@ class Shirt(pyg.Component):
         """
         return self.right.length()
     
-    def get_attachment_constraints(self) -> List[AttachmentConstraint]:
+    @staticmethod
+    def get_attachment_constraints() -> List[AttachmentConstraint]:
         """Get the list of attachment constraints for this shirt garment.
         
         Returns the attachment constraints required for simulating this shirt garment.
@@ -669,6 +671,19 @@ class Shirt(pyg.Component):
             An empty list (shirts do not require attachment constraints).
         """
         return []
+    
+    def get_vertex_processor_callback(self):
+        """Get the vertex processor callback for shirt attachment constraints.
+        
+        Shirts do not require custom vertex processing, so this returns a default
+        callback that uses generic constraint processing.
+        
+        Returns:
+        --------
+        Callable[[BoxMesh], None] | None
+            A callback that handles constraints with default behavior.
+        """
+        return AttachmentHandler.create_default_vertex_processor(Shirt)
     
     def apply_body_alignment(self, body: BodyDefinition) -> None:
         """Apply body alignment to the shirt.

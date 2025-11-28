@@ -5,9 +5,11 @@ import pygarment as pyg
 
 from garment_programs.base_classes import StackableSkirtComponent
 from garment_programs.garment_enums import InterfaceName, EdgeLabel
+from garment_programs.garment_program_utils import AttachmentHandler
 from pattern_definitions.body_definition import BodyDefinition
 from pattern_definitions.skirt_design import SkirtDesign
 from config import AttachmentConstraint
+from pygarment.meshgen.box_mesh_gen.stitch_types import EdgeLabel as BoxEdgeLabel
 
 
 class CircleArcPanel(pyg.Panel):
@@ -367,7 +369,8 @@ class SkirtCircle(StackableSkirtComponent):
         """
         return self.front.waist_width
 
-    def get_attachment_constraints(self) -> List[AttachmentConstraint]:
+    @staticmethod
+    def get_attachment_constraints() -> List[AttachmentConstraint]:
         """Get the list of attachment constraints for this skirt garment.
         
         Returns the attachment constraints required for simulating this skirt garment.
@@ -379,7 +382,8 @@ class SkirtCircle(StackableSkirtComponent):
             A list containing the lower_interface attachment constraint for skirts.
         """
         lower_interface_constraint = AttachmentConstraint(
-            label='lower_interface',
+            label=BoxEdgeLabel.LOWER_INTERFACE,
+            vertex_labels_to_find=[BoxEdgeLabel.LOWER_INTERFACE],
             stiffness=0.0,
             damping=10.0,
             position_calculation={
@@ -394,6 +398,19 @@ class SkirtCircle(StackableSkirtComponent):
         )
         
         return [lower_interface_constraint]
+    
+    def get_vertex_processor_callback(self):
+        """Get the vertex processor callback for skirt attachment constraints.
+        
+        Skirts use default behavior: for LOWER_INTERFACE, uses vertices already
+        labeled from edges.
+        
+        Returns:
+        --------
+        Callable[[BoxMesh], None] | None
+            A callback that handles constraints with default behavior.
+        """
+        return lambda box_mesh: AttachmentHandler.process_attachment_constraints_generic(SkirtCircle, box_mesh)
 
     def apply_body_alignment(self, body: BodyDefinition) -> None:
         """Apply body alignment to position the skirt correctly.

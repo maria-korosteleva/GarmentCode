@@ -9,6 +9,7 @@ from typing import Any, Optional
 from loguru import logger
 import igl
 import json
+import yaml
 
 from config import PathCofig
 from pygarment.meshgen.box_mesh_gen import BoxMesh
@@ -158,38 +159,6 @@ def template_simulation_with_data(
     BaseException
         If any other error occurs during pattern loading or simulation.
     """
-    # Inject attachment constraints into config if provided
-    if attachment_constraints is not None and len(attachment_constraints) > 0:
-        # Convert to AttachmentConstraint objects if needed
-        from config import AttachmentConstraint
-        constraints_objects = []
-        for constraint in attachment_constraints:
-            if isinstance(constraint, AttachmentConstraint):
-                constraints_objects.append(constraint)
-            elif isinstance(constraint, dict):
-                constraints_objects.append(AttachmentConstraint(**constraint))
-            elif hasattr(constraint, 'model_dump'):
-                constraints_objects.append(AttachmentConstraint(**constraint.model_dump()))
-            else:
-                raise ValueError(f"Cannot convert constraint to AttachmentConstraint: {type(constraint)}")
-        
-        # Update attachment constraints using Pydantic model_copy
-        updated_options = sim_config.sim_config._options.model_copy(
-            update={
-                'attachment_constraints': constraints_objects,
-                'enable_attachment_constraint': True
-            }
-        )
-        sim_config.sim_config._options = updated_options
-        
-        # Update exposed attributes
-        sim_config.sim_config.attachment_constraints = constraints_objects
-        sim_config.sim_config.enable_attachment_constraint = True
-        sim_config.sim_config.attachment_labels = [c.label for c in constraints_objects]
-        sim_config.sim_config.attachment_stiffness = [c.stiffness for c in constraints_objects]
-        sim_config.sim_config.attachment_damping = [c.damping for c in constraints_objects]
-        
-        logger.debug(f'Injected {len(constraints_objects)} attachment constraints: {[c.label for c in constraints_objects]}')
     
     # Ensure pattern data is saved to expected location (for backup)
     pattern = piece.assembly()
@@ -215,7 +184,6 @@ def template_simulation_with_data(
     # Ensure design params are saved
     design_params_path = paths.in_design_params
     if not design_params_path.exists():
-        import yaml
         with open(design_params_path, 'w') as f:
             yaml.dump({'design': design}, f, default_flow_style=False, sort_keys=False)
     
@@ -240,6 +208,16 @@ def template_simulation_with_data(
         logger.error(f"Pattern loading failed for {garment_box_mesh.name}: {e}")
         logger.exception("Exception details:")
         return
+    
+    # Process attachment constraints using callback
+    # The callback gets constraints internally from the garment program
+    vertex_processor = piece.get_vertex_processor_callback()  # type: ignore[attr-defined]
+    if vertex_processor is not None:
+        garment_box_mesh.process_attachment_constraints(vertex_processor)
+        logger.debug(
+            f"Processed attachment constraints for {garment_box_mesh.name} "
+            f"({len(garment_box_mesh.attachment_constraints)} constraints)"
+        )
     
     # Serialize BoxMesh (for backup and rendering)
     options_dict = config._props.get('options', {})
@@ -282,17 +260,9 @@ def template_simulation_with_data(
         vertex_labels=vertex_labels
     )
     
-    # Update config dict with attachment constraints for run_sim compatibility
-    if attachment_constraints is not None and len(attachment_constraints) > 0:
-        from config import AttachmentConstraint
-        constraints_dicts = []
-        for constraint in attachment_constraints:
-            if isinstance(constraint, AttachmentConstraint):
-                constraints_dicts.append(constraint.model_dump())
-            elif isinstance(constraint, dict):
-                constraints_dicts.append(constraint)
-            elif hasattr(constraint, 'model_dump'):
-                constraints_dicts.append(constraint.model_dump())
+    # Update config dict with attachment constraints from BoxMesh for run_sim compatibility
+    if garment_box_mesh.attachment_constraints:
+        constraints_dicts = [c.model_dump() for c in garment_box_mesh.attachment_constraints]
         
         # Update the options dict
         if 'options' not in config._props:

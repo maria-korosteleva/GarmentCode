@@ -5,6 +5,7 @@ from typing import Any
 import warp as wp
 from loguru import logger
 from pattern_definitions.body_definition import BodyDefinition
+from pygarment.meshgen.box_mesh_gen.stitch_types import EdgeLabel
 
 
 class AttachmentConstraintUtils:
@@ -82,14 +83,14 @@ class AttachmentConstraintUtils:
         return wp.vec3(x, y, z)
     
     @staticmethod
-    def get_default_position_for_label(label: str, body_def: BodyDefinition) -> wp.vec3 | None:
+    def get_default_position_for_label(label: EdgeLabel | str, body_def: BodyDefinition) -> wp.vec3 | None:
         """
         Get default position for a label type using BodyDefinition.
         
         Parameters
         ----------
-        label : str
-            Attachment label name.
+        label : EdgeLabel | str
+            Attachment label enum or string value.
         body_def : BodyDefinition
             Body definition object.
         
@@ -98,48 +99,54 @@ class AttachmentConstraintUtils:
         wp.vec3 | None
             Default position vector, or None if label is not supported.
         """
-        if label == 'crotch':
+        # Convert EdgeLabel to string value if needed
+        label_str = label.value if isinstance(label, EdgeLabel) else label
+        
+        if label_str == EdgeLabel.CROTCH.value:
             crotch_level = body_def['_leg_length'] - body_def['crotch_hip_diff']
             return wp.vec3(0, crotch_level, 0)
-        elif label == 'lower_interface':
+        elif label_str == EdgeLabel.LOWER_INTERFACE.value:
             try:
                 waist_level = body_def['_waist_level']
             except KeyError:
                 waist_level = body_def['computed_waist_level']
             return wp.vec3(0, waist_level, 0)
-        elif label == 'right_collar':
+        elif label_str == EdgeLabel.RIGHT_COLLAR.value:
             neck_w = body_def['neck_w'] - 2
             return wp.vec3(-neck_w / 2, 0, 0)
-        elif label == 'left_collar':
+        elif label_str == EdgeLabel.LEFT_COLLAR.value:
             neck_w = body_def['neck_w'] - 2
             return wp.vec3(neck_w / 2, 0, 0)
-        elif label == 'strapless_top':
+        elif label_str == EdgeLabel.STRAPLESS_TOP.value:
             level = body_def['height'] - body_def['head_l'] - body_def['armscye_depth']
             return wp.vec3(0, level, 0)
         else:
             return None
     
     @staticmethod
-    def get_default_direction_for_label(label: str) -> wp.vec3:
+    def get_default_direction_for_label(label: EdgeLabel | str) -> wp.vec3:
         """
         Get default direction vector for a label type.
         
         Parameters
         ----------
-        label : str
-            Attachment label name.
+        label : EdgeLabel | str
+            Attachment label enum or string value.
         
         Returns
         -------
         wp.vec3
             Default direction vector.
         """
+        # Convert EdgeLabel to string value if needed
+        label_str = label.value if isinstance(label, EdgeLabel) else label
+        
         defaults = {
-            'crotch': wp.vec3(0., -1., 0.),  # Vertical attachment downward
-            'lower_interface': wp.vec3(0., 1., 0.),  # Vertical attachment upward
-            'right_collar': wp.vec3(1., 0., 0.),  # Horizontal attachment right
-            'left_collar': wp.vec3(-1., 0., 0.),  # Horizontal attachment left
-            'strapless_top': wp.vec3(0., 1., 0.),  # Vertical attachment upward
+            EdgeLabel.CROTCH.value: wp.vec3(0., -1., 0.),  # Vertical attachment downward
+            EdgeLabel.LOWER_INTERFACE.value: wp.vec3(0., 1., 0.),  # Vertical attachment upward
+            EdgeLabel.RIGHT_COLLAR.value: wp.vec3(1., 0., 0.),  # Horizontal attachment right
+            EdgeLabel.LEFT_COLLAR.value: wp.vec3(-1., 0., 0.),  # Horizontal attachment left
+            EdgeLabel.STRAPLESS_TOP.value: wp.vec3(0., 1., 0.),  # Vertical attachment upward
         }
-        return defaults.get(label, wp.vec3(0., 1., 0.))  # Default upward
+        return defaults.get(label_str, wp.vec3(0., 1., 0.))  # Default upward
 

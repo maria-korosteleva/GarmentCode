@@ -20,14 +20,12 @@ class EdgeLabel(StrEnum):
     
     # Vertex labels (for attachment constraints)
     CROTCH = 'crotch'
+    RIGHT_COLLAR = 'right_collar'
+    LEFT_COLLAR = 'left_collar'
     
     # Component-specific labels (used with f-strings)
     ARMHOLE = 'armhole'
     COLLAR = 'collar'
-    
-    # Right/left collar labels (for shirts)
-    RIGHT_COLLAR = 'right_collar'
-    LEFT_COLLAR = 'left_collar'
 
 
 @dataclass(frozen=True)

@@ -273,7 +273,7 @@ def generate_sewing_pattern(
     bodies_default_path: str,
     datasets_sim: str,
     verbose: bool = False
-) -> tuple[Path, dict[str, PatternData]]:
+) -> dict[str, PatternData]:
     """Generate a pattern sample with given configuration.
 
     Parameters
@@ -291,10 +291,8 @@ def generate_sewing_pattern(
 
     Returns
     -------
-    tuple[Path, dict[str, PatternData]]
-        Tuple containing:
-        - default_path: Path to default body pattern folder
-        - default_pattern_data: Dict mapping pattern names to PatternData objects
+    dict[str, PatternData]
+        Dictionary mapping pattern names to PatternData objects
 
     Raises
     ------
@@ -373,7 +371,9 @@ def generate_sewing_pattern(
     elif use_perfect_fit:
         factory = GarmentFactory(default_body_def, design)
         piece_default = factory.create_pants_perfect_fit()
-        constraints_default = piece_default.get_attachment_constraints()  # type: ignore[attr-defined]
+        # Get constraints using the class's static method
+        garment_class = piece_default.__class__
+        constraints_default = garment_class.get_attachment_constraints()  # type: ignore[attr-defined]
     else:
         piece_default, constraints_default = create_garment(garment_type, default_body_def, design)
 
@@ -409,7 +409,7 @@ def generate_sewing_pattern(
         paths=paths_config_default
     )
 
-    return default_path, default_pattern_data
+    return default_pattern_data
 
 
 def run_simulation(
@@ -488,7 +488,7 @@ def run_pipeline(command_args: argparse.Namespace) -> None:
     datasets_sim_path = Path(command_args.output) / command_args.datasets_sim
     
     # Generate pattern
-    _, default_pattern_data = generate_sewing_pattern(
+    default_pattern_data = generate_sewing_pattern(
         patterns_path,
         config,
         command_args.bodies_default_path,

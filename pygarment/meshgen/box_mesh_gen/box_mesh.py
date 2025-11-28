@@ -3,7 +3,7 @@
 import pickle
 import shutil
 from pathlib import Path
-from typing import Optional
+from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,7 +12,7 @@ import yaml
 
 import pygarment.pattern.wrappers as wrappers
 import pygarment.pattern.utils as pat_utils
-from config import PathCofig
+from config import PathCofig, AttachmentConstraint
 from pygarment.meshgen.render.texture_utils import texture_mesh_islands, save_obj
 from pygarment.meshgen.pattern_spec import PatternSpec, StitchSpec
 from pygarment.meshgen.box_mesh_gen.errors import (
@@ -45,7 +45,23 @@ class BoxMesh(wrappers.VisPattern):
         Mesh resolution (vertices are spread with distance ~res cm). Default: 1.0
     """
 
-    crotch_vertex_id: Optional[int] = None
+    mesh_resolution: float
+    pattern_spec: PatternSpec
+    loaded: bool
+    panels: dict[str, Panel]
+    stitches: list[Seam]
+    vertices: list[np.ndarray]
+    faces: list[list[int]]
+    orig_lens: dict[tuple[int, int], float]
+    verts_loc_glob: dict[tuple[str, int], int]
+    verts_glob_loc: list[list[tuple[str, int]]]
+    stitch_segmentation: list[list[SegmentationEntry]]
+    vertex_normals: list[np.ndarray]
+    faces_with_texture: list[list[int]]
+    vertex_texture: list[list[float]]
+    vertex_labels: dict[str, list[int]]
+    attachment_constraints: list[AttachmentConstraint]
+
 
     def __init__(self, path: str | Path, res: float = 1.0) -> None:
         super(BoxMesh, self).__init__(path)
@@ -68,6 +84,7 @@ class BoxMesh(wrappers.VisPattern):
         self.faces_with_texture: list[list[int]] = []
         self.vertex_texture: list[list[float]] = []
         self.vertex_labels: dict[str, list[int]] = {}  # Additional vertex labels coming from panel edges' labels
+        self.attachment_constraints: list[Any] = []  # Attachment constraints stored by callback
 
     @property
     def panel_names(self) -> list[str]:
@@ -1137,98 +1154,111 @@ class BoxMesh(wrappers.VisPattern):
         # NOTE: self.vertices now contains all mesh vertices
         # self.faces now contains all mesh faces
 
-        self.crotch_vertex_id = self._identify_crotch_vertex()
-        logger.debug(f"Crotch vertex global ID: {self.crotch_vertex_id}")
-
-    def _identify_crotch_vertex(self) -> int:
+    def find_vertices_by_edge_labels(self, labels: list[EdgeLabel]) -> list[int]:
         """
-        Identify and return the global vertex ID of the crotch point.
-
-        The crotch point is where the 'crotch' and 'inside' seams meet.
-        It is marked by the 'crotch_point_seam' label on an edge.
-        The crotch vertex is the end vertex of the edge with this label
-        (where it connects to the inside seam).
-
+        Find global vertex IDs by searching for edges with the specified labels.
+        
+        This method searches through all panels for edges matching the given labels
+        and returns the global vertex IDs of the end vertices of those edges.
+        
+        Parameters
+        ----------
+        labels : list[EdgeLabel]
+            List of edge labels to search for.
+            
         Returns
         -------
-        int
-            Global vertex ID of the crotch vertex, or -1 if not found
+        list[int]
+            List of global vertex IDs found. May contain duplicates if multiple
+            edges with the same label share vertices.
         """
-        crotch_vertex_global_id = -1
-
-        # Debug: Check what panels we have
-        pants_panels = [
-            name for name in self.panels.keys() if "pants" in name.lower() or "pant" in name.lower()
-        ]
-        logger.debug(f"Looking for crotch vertex in panels: {pants_panels}")
-
-        # Find edges with 'crotch_point_seam' label
-        found_crotch_edges = []
+        found_vertices: list[int] = []
+        
         for panel_name, panel in self.panels.items():
-            if "pants" not in panel_name.lower() and "pant" not in panel_name.lower():
-                continue
+            for edge in panel.edges:
+                if edge.label and EdgeLabel(edge.label) in labels:
+                    if not edge.vertex_range:
+                        logger.warning(
+                            f'Edge with label "{edge.label}" has no vertex_range for panel {panel_name}'
+                        )
+                        continue
+                    
+                    # Get the end vertex (last one in the vertex_range)
+                    end_local_id = edge.vertex_range[-1]
+                    end_global_id = self.verts_loc_glob.get((panel_name, end_local_id))
+                    
+                    if end_global_id is not None:
+                        found_vertices.append(int(end_global_id))
 
-            # Debug: Check all edge labels in this panel
-            edge_labels = [(idx, edge.label) for idx, edge in enumerate(panel.edges) if edge.label]
-            if edge_labels:
-                logger.debug(f"Panel {panel_name} has labeled edges: {edge_labels}")
+        return found_vertices
 
-            for edge_idx, edge in enumerate(panel.edges):
-                if edge.label == EdgeLabel.CROTCH_POINT_SEAM.value:
-                    found_crotch_edges.append((panel_name, edge_idx, edge))
-                    logger.debug(
-                        f'Found edge with "{EdgeLabel.CROTCH_POINT_SEAM.value}" label in panel {panel_name}, edge_idx {edge_idx}'
-                    )
-
-        if not found_crotch_edges:
-            logger.warning('No edge with "crotch_point_seam" label found in any pants panel')
-            return -1
-
-        # Process found crotch edges
-        for panel_name, edge_idx, crotch_edge in found_crotch_edges:
-            # The crotch vertex is at the end of this edge (where it connects to inside seam)
-            if not crotch_edge.vertex_range:
-                logger.warning(
-                    f'Edge with "crotch_point_seam" label has no vertex_range for panel {panel_name}'
-                )
-                continue
-
-            # The end vertex is the last one in the vertex_range
-            end_local_id = crotch_edge.vertex_range[-1]
-            logger.debug(
-                f"Looking for vertex (panel={panel_name}, local_id={end_local_id}) in verts_loc_glob"
-            )
-
-            end_global_id = self.verts_loc_glob.get((panel_name, end_local_id))
-
-            if end_global_id is None:
-                # Debug: Check what vertices are available for this panel
-                panel_verts = {
-                    k: v for k, v in self.verts_loc_glob.items() if k[0] == panel_name
-                }
-                logger.debug(
-                    f"Vertex not found in verts_loc_glob. Available vertices for {panel_name}: "
-                    f"{list(panel_verts.keys())[:10]}... (showing first 10)"
-                )
-                continue
-
-            crotch_vertex_global_id = int(end_global_id)
-            logger.debug(
-                f"Found crotch vertex for panel {panel_name}: "
-                f"local_id={end_local_id}, global_id={crotch_vertex_global_id}"
-            )
-            break
-
-        if crotch_vertex_global_id == -1:
-            logger.warning("Could not identify crotch vertex - vertex not in verts_loc_glob")
+    def process_attachment_constraints(
+        self,
+        vertex_processor: Optional[Callable[['BoxMesh'], None]] = None
+    ) -> None:
+        """
+        Process attachment constraints to label vertices in the mesh.
+        
+        This method calls the vertex_processor callback (if provided) which:
+        1. Gets constraints internally from the garment program
+        2. Processes each constraint to determine vertices to label
+        3. Labels vertices and stores constraints in BoxMesh
+        
+        The callback has full access to the garment program instance and BoxMesh,
+        allowing it to handle all constraint-specific logic internally.
+        
+        Parameters
+        ----------
+        vertex_processor : Callable[[BoxMesh], None], optional
+            Optional callback function to process attachment constraints.
+            Takes (box_mesh) and processes all constraints internally.
+            The callback should:
+            - Get constraints from the garment program (self.get_attachment_constraints())
+            - Process each constraint to find/label vertices
+            - Store constraints in box_mesh.attachment_constraints
+            If None, no processing is performed.
+            
+        Note
+        ----
+        The vertex_processor callback is responsible for handling different constraint
+        types (e.g., CROTCH vs LOWER_INTERFACE) with their specific behaviors.
+        """
+        if vertex_processor is not None:
+            vertex_processor(self)
         else:
-            # Label all vertices below the crotch vertex (in Y direction)
+            logger.debug("No vertex processor callback provided, skipping attachment constraint processing")
+
+    def _process_attachment_constraints(self) -> None:
+        """
+        Process attachment constraints to label vertices in the mesh.
+        
+        This method is called during mesh finalization to identify and label
+        vertices based on attachment constraint specifications. It finds
+        reference vertices using the vertex_labels_to_find from each constraint,
+        then applies the constraint's label to the appropriate vertices.
+        
+        The actual vertex selection logic (e.g., "all vertices below y coordinate")
+        should be implemented by the garment program class if provided, otherwise
+        this method uses default behavior.
+        """
+        # This method will be called by garment programs or external code
+        # that has access to attachment constraints. For now, we keep the
+        # legacy crotch vertex identification for backward compatibility.
+        # The new approach will be used when attachment constraints are provided
+        # during BoxMesh initialization or via a callback.
+        
+        # Legacy: Identify crotch vertex for pants (backward compatibility)
+        # This can be removed once all garment programs use the new approach
+        crotch_edges = self.find_vertices_by_edge_labels([EdgeLabel.CROTCH_POINT_SEAM])
+        if crotch_edges:
+            # Use the first found crotch vertex
+            crotch_vertex_global_id = crotch_edges[0]
             crotch_y = self.vertices[crotch_vertex_global_id][1]
             below_crotch_vertices = [i for i, v in enumerate(self.vertices) if v[1] < crotch_y]
             self.vertex_labels.setdefault(EdgeLabel.CROTCH.value, []).extend(below_crotch_vertices)
-            logger.debug(f"Labeled {len(below_crotch_vertices)} vertices below crotch (y < {crotch_y:.2f})")
-
-        return crotch_vertex_global_id
+            logger.debug(
+                f"Labeled {len(below_crotch_vertices)} vertices below crotch (y < {crotch_y:.2f})"
+            )
 
     def eval_vertex_normals(self) -> np.ndarray:
         """

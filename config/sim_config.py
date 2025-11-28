@@ -159,7 +159,10 @@ class SimConfig:
         self.attachment_constraints = self._options.attachment_constraints
         self.attachment_frames = self._options.attachment_frames
         # Backward compatibility: expose legacy attributes
-        self.attachment_labels = [constraint.label for constraint in self._options.attachment_constraints]
+        self.attachment_labels = [
+            constraint.label_enum.value
+            for constraint in self._options.attachment_constraints
+        ]
         self.attachment_stiffness = [constraint.stiffness for constraint in self._options.attachment_constraints]
         self.attachment_damping = [constraint.damping for constraint in self._options.attachment_constraints]
         self.global_damping_factor = self._options.global_damping_factor

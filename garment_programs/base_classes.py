@@ -1,5 +1,5 @@
 import math
-from typing import Optional, Any, List
+from typing import Callable, Optional, Any, List, Protocol
 
 import pygarment as pyg
 
@@ -7,6 +7,20 @@ from garment_programs.garment_enums import InterfaceName
 from pattern_definitions.torso_design import TorsoDesign
 from pattern_definitions.body_definition import BodyDefinition
 from config import AttachmentConstraint
+
+
+class VertexProcessorProvider(Protocol):
+    """Protocol for garment programs that provide vertex processor callbacks."""
+    
+    def get_vertex_processor_callback(self) -> Callable[[Any, list[int], Any], list[int]] | None:
+        """Get the vertex processor callback for attachment constraints.
+        
+        Returns:
+        --------
+        Callable[[EdgeLabel, list[int], BoxMesh], list[int]] | None
+            A callback function that processes reference vertices, or None.
+        """
+        ...
 
 class BaseBodicePanel(pyg.Panel):
     """Base class for bodice panels that defines expected interfaces and common functions"""
@@ -75,7 +89,8 @@ class BaseBottoms(pyg.Component):
             InterfaceName.TOP: object()
         }
     
-    def get_attachment_constraints(self) -> List[AttachmentConstraint]:
+    @staticmethod
+    def get_attachment_constraints() -> List[AttachmentConstraint]:
         """Get the list of attachment constraints for this garment.
         
         Default implementation returns an empty list. Subclasses should override
@@ -152,7 +167,8 @@ class BaseBand(pyg.Component):
         """Base length == Length of a first panel"""
         return self._get_subcomponents()[0].length()
     
-    def get_attachment_constraints(self) -> List[AttachmentConstraint]:
+    @staticmethod
+    def get_attachment_constraints() -> List[AttachmentConstraint]:
         """Get the list of attachment constraints for this garment.
         
         Default implementation returns an empty list. Subclasses should override
@@ -165,3 +181,27 @@ class BaseBand(pyg.Component):
             garment-specific constraints.
         """
         return []
+    
+    def get_vertex_processor_callback(self):
+        """Get the vertex processor callback for attachment constraints.
+        
+        This callback is used by BoxMesh to process attachment constraints and
+        determine the final set of vertices to label. The callback handles all
+        constraint-specific logic internally, including getting constraints from
+        the garment program.
+        
+        Default implementation returns None (no processing).
+        Subclasses should override this method to provide garment-specific
+        vertex processing logic.
+        
+        Returns:
+        --------
+        Callable[[BoxMesh], None] | None
+            A callback function that takes (box_mesh) and processes constraints
+            internally. The callback should:
+            - Get constraints from the garment class's get_attachment_constraints() static method
+            - Process each constraint to find/label vertices
+            - Store constraints in box_mesh.attachment_constraints
+            Returns None if no processing is needed.
+        """
+        return None

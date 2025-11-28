@@ -1,5 +1,7 @@
 """Simulation options and feature flags."""
 
+from typing import Any, List
+
 from pydantic import BaseModel, Field, model_validator, field_validator
 
 
@@ -9,8 +11,15 @@ class AttachmentConstraint(BaseModel):
     
     Attributes
     ----------
-    label : str
-        Attachment label name (e.g., 'crotch', 'lower_interface', 'right_collar')
+    label : EdgeLabel
+        Attachment label enum (e.g., EdgeLabel.CROTCH, EdgeLabel.LOWER_INTERFACE).
+        This is the final label that will be used to identify vertices in the mesh.
+    vertex_labels_to_find : List[EdgeLabel]
+        List of edge labels to search for in the mesh to find reference vertices.
+        These labels are used to locate vertices that will then be processed by
+        the garment program to determine the final set of vertices for this constraint.
+        For example, [EdgeLabel.CROTCH_POINT_SEAM] finds edges with that label,
+        then the garment program can use those vertices to label all vertices below them.
     stiffness : float
         Stiffness value for this attachment constraint
     damping : float
@@ -33,7 +42,11 @@ class AttachmentConstraint(BaseModel):
         Body parameter names can include computed properties (e.g., 'computed_leg_length',
         '_leg_length' for legacy format).
     """
-    label: str = Field(description="Attachment label name (e.g., 'crotch', 'lower_interface')")
+    label: Any = Field(description="Attachment label enum (e.g., EdgeLabel.CROTCH, EdgeLabel.LOWER_INTERFACE)")
+    vertex_labels_to_find: List[Any] = Field(
+        default_factory=list,
+        description="List of edge labels to search for in the mesh to find reference vertices"
+    )
     stiffness: float = Field(description="Stiffness value for this attachment constraint")
     damping: float = Field(description="Damping value for this attachment constraint")
     position: list[float] | None = Field(
@@ -48,6 +61,64 @@ class AttachmentConstraint(BaseModel):
         default=None,
         description="Position calculation from body parameters. Format: {'x': {'positive': [...], 'negative': [...]}, ...}"
     )
+    
+    @field_validator('label', mode='before')
+    @classmethod
+    def validate_label(cls, v):
+        """Convert string labels to EdgeLabel enum for backward compatibility."""
+        # Import here to avoid circular import
+        from pygarment.meshgen.box_mesh_gen.stitch_types import EdgeLabel
+        
+        if isinstance(v, str):
+            try:
+                return EdgeLabel(v)
+            except ValueError:
+                raise ValueError(f'Invalid label: {v}. Must be a valid EdgeLabel enum value.')
+        # If it's already an EdgeLabel, return as-is
+        return v
+    
+    @field_validator('vertex_labels_to_find', mode='before')
+    @classmethod
+    def validate_vertex_labels_to_find(cls, v):
+        """Convert string labels to EdgeLabel enums for backward compatibility."""
+        # Import here to avoid circular import
+        from pygarment.meshgen.box_mesh_gen.stitch_types import EdgeLabel
+        
+        if v is None:
+            return []
+        if isinstance(v, list):
+            return [EdgeLabel(item) if isinstance(item, str) else item for item in v]
+        return v
+    
+    @property
+    def label_enum(self):  # type: ignore[no-any-return]
+        """Get the label as an EdgeLabel enum.
+        
+        After validation, label is always an EdgeLabel enum, so we can return it directly.
+        
+        Returns
+        -------
+        EdgeLabel
+            The label as an EdgeLabel enum.
+        """
+        # Validator ensures this is always EdgeLabel after validation
+        # Return directly - validators guarantee type consistency
+        return self.label
+    
+    @property
+    def vertex_labels_to_find_enums(self):  # type: ignore[no-any-return]
+        """Get vertex_labels_to_find as a list of EdgeLabel enums.
+        
+        After validation, all items are EdgeLabel enums, so we can return them directly.
+        
+        Returns
+        -------
+        List[EdgeLabel]
+            List of EdgeLabel enums.
+        """
+        # Validator ensures all items are EdgeLabel enums after validation
+        # Return directly - validators guarantee type consistency
+        return self.vertex_labels_to_find
     
     @field_validator('position')
     @classmethod
@@ -227,8 +298,15 @@ class SimulationOptions(BaseModel):
                 )
             
             # Convert to AttachmentConstraint objects
+            # Convert string labels to EdgeLabel enums
+            from pygarment.meshgen.box_mesh_gen.stitch_types import EdgeLabel
+            
             self.attachment_constraints = [
-                AttachmentConstraint(label=label, stiffness=stiff, damping=damp)
+                AttachmentConstraint(
+                    label=EdgeLabel(label) if isinstance(label, str) else label,
+                    stiffness=stiff,
+                    damping=damp
+                )
                 for label, stiff, damp in zip(labels, stiffnesses, dampings)
             ]
         
