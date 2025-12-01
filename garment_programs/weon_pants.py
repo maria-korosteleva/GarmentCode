@@ -1,7 +1,9 @@
+from typing import Callable
 
 import numpy as np
 
 import pygarment as pyg
+from pygarment.meshgen.box_mesh_gen.box_mesh import BoxMesh
 from config import AttachmentConstraint
 from garment_programs.base_classes import BaseBottoms
 from garment_programs.garment_enums import InterfaceName, EdgeLabel
@@ -40,6 +42,7 @@ class PantPanel(pyg.Panel):
     DART_POSITION_MULTIPLIER: float = 0.5
     DART_OFFSET_MULTIPLIER_QUARTER: float = 0.25
     GRAINLINE_OFFSET_RATIO: float = 0.4
+    EPSILON: float = 1e-6
     
     def __init__(
             self,
@@ -176,11 +179,23 @@ class PantPanel(pyg.Panel):
         )
         crotch_bottom.label = EdgeLabel.CROTCH_POINT_SEAM
 
+        # Calculate the angle (in radians) between the start and end point of the segment and the horizontal axis.
+        left_top_start = crotch_bottom.end
+        left_top_end = [right_2.end[0] + design.width_knee, design.length_knee_to_calf + design.length_calf_to_ankle]
+        dx = left_top_end[0] - left_top_start[0]
+        dy = left_top_end[1] - left_top_start[1]
+        if abs(dx) < self.EPSILON:
+            left_top_angle = np.pi/2 if dy > 0 else -np.pi/2
+        else:
+            left_top_angle = np.arctan2(dy, -dx)
+
         left_top = pyg.CurveEdgeFactory.interpolate_with_tangents(
-            start=crotch_bottom.end,
-            end=[right_2.end[0] + design.width_knee, design.length_knee_to_calf + design.length_calf_to_ankle], 
+            start=left_top_start,
+            end=left_top_end, 
             post_end=[x_grainline + design.width_calf / 2, design.length_calf_to_ankle],
-            initial_guess=[0.3, 0]
+            initial_guess=[0.3, 0],
+            tan0_min_angle=left_top_angle,
+            constraint_penalty=1e3,
         )
 
         left_middle = pyg.CurveEdgeFactory.interpolate_with_tangents(
@@ -577,7 +592,7 @@ class Pants(BaseBottoms):
         
         return [crotch_constraint, lower_interface_constraint]
     
-    def get_vertex_processor_callback(self):
+    def get_vertex_processor_callback(self) -> Callable[[BoxMesh], None]:
         """Get the vertex processor callback for pants attachment constraints.
         
         Returns a callback that handles all pants-specific constraint processing:

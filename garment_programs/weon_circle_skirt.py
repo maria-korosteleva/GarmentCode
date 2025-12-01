@@ -1,14 +1,15 @@
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Callable
 
 import numpy as np
-import pygarment as pyg
 
+import pygarment as pyg
+from config import AttachmentConstraint
+from pygarment.meshgen.box_mesh_gen.box_mesh import BoxMesh
 from garment_programs.base_classes import StackableSkirtComponent
 from garment_programs.garment_enums import InterfaceName, EdgeLabel
 from garment_programs.garment_program_utils import AttachmentHandler
 from pattern_definitions.body_definition import BodyDefinition
 from pattern_definitions.skirt_design import SkirtDesign
-from config import AttachmentConstraint
 from pygarment.meshgen.box_mesh_gen.stitch_types import EdgeLabel as BoxEdgeLabel
 
 
@@ -399,7 +400,7 @@ class SkirtCircle(StackableSkirtComponent):
         
         return [lower_interface_constraint]
     
-    def get_vertex_processor_callback(self):
+    def get_vertex_processor_callback(self) -> Callable[[BoxMesh], None]:
         """Get the vertex processor callback for skirt attachment constraints.
         
         Skirts use default behavior: for LOWER_INTERFACE, uses vertices already

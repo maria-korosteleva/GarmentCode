@@ -6,10 +6,10 @@ from scipy.spatial.transform import Rotation as R
 import pygarment as pyg
 from loguru import logger
 
+from garment_programs.weon_circle_skirt import CircleArcPanel
 from garment_programs.weon_bands import StraightBandPanel
 from garment_programs.garment_enums import InterfaceName
 from pattern_definitions.shirt_design import CollarDesign
-from assets.garment_programs.circle_skirt import CircleArcPanel
 
 
 # # ------ Collar shapes withough extra panels ------

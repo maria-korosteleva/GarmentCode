@@ -1,9 +1,11 @@
-from typing import Optional, Any, List
+from typing import Optional, Any, List, Callable
 
 import numpy as np
-import pygarment as pyg
-from scipy.spatial.transform import Rotation as R
 
+import pygarment as pyg
+from config import AttachmentConstraint
+from scipy.spatial.transform import Rotation as R
+from pygarment.meshgen.box_mesh_gen.box_mesh import BoxMesh
 from garment_programs.base_classes import BaseBodicePanel
 from garment_programs.garment_program_utils import AttachmentHandler
 from garment_programs.weon_torso import TorsoFrontHalfPanel, TorsoBackHalfPanel
@@ -11,10 +13,8 @@ from garment_programs import weon_sleeves
 from garment_programs.garment_enums import InterfaceName, EdgeLabel
 from pattern_definitions.body_definition import BodyDefinition
 from garment_programs.weon_collars import NoPanelsCollar
-
 from pattern_definitions.shirt_design import ShirtDesign
 from pattern_definitions.torso_design import TorsoDesign
-from config import AttachmentConstraint
 
 
 class BodiceFrontHalf(BaseBodicePanel):
@@ -672,7 +672,7 @@ class Shirt(pyg.Component):
         """
         return []
     
-    def get_vertex_processor_callback(self):
+    def get_vertex_processor_callback(self) -> Callable[[BoxMesh], None]:
         """Get the vertex processor callback for shirt attachment constraints.
         
         Shirts do not require custom vertex processing, so this returns a default

@@ -186,11 +186,35 @@ class CurveEdgeFactory:
 
     @staticmethod
     def curve_from_tangents(start, end, target_tan0=None, target_tan1=None,
-                            initial_guess=None, verbose=False):
+                            initial_guess=None, verbose=False,
+                            tan0_min_angle=None, tan0_max_angle=None,
+                            tan1_min_angle=None, tan1_max_angle=None,
+                            constraint_penalty=1e6):
         """Create Quadratic Bezier curve connecting given points with the target tangents
             (both or any of the two can be specified)
         
             NOTE: Target tangent vectors are automatically normalized
+        
+        Parameters:
+        -----------
+        tan0_min_angle : float, optional
+            Minimum allowed angle (in radians) for start tangent. If the actual
+            tangent angle is below this, a penalty is added to the objective.
+            Angles are measured in the RELATIVE coordinate system where the edge
+            goes from [0,0] to [1,0] along the x-axis. 0 = along edge direction,
+            π/2 = perpendicular counterclockwise, -π/2 = perpendicular clockwise.
+        tan0_max_angle : float, optional
+            Maximum allowed angle (in radians) for start tangent. If the actual
+            tangent angle is above this, a penalty is added to the objective.
+            Angles are in the relative coordinate system (see tan0_min_angle).
+        tan1_min_angle : float, optional
+            Minimum allowed angle (in radians) for end tangent. Angles are in
+            the relative coordinate system (see tan0_min_angle).
+        tan1_max_angle : float, optional
+            Maximum allowed angle (in radians) for end tangent. Angles are in
+            the relative coordinate system (see tan0_min_angle).
+        constraint_penalty : float, optional
+            Penalty weight for constraint violations. Default is 1e6.
         """
 
         if target_tan0 is not None:
@@ -203,16 +227,76 @@ class CurveEdgeFactory:
         
         # Initialization with a target point as control point
         # Ensures very smooth, minimal solution
+        # Set bounds for control point: x in [0, 1] (along edge), y can vary
+        # Reasonable bounds for y to prevent extreme curves
+        bounds = [(0, 1), (-2.0, 2.0)]  # Allow some extrapolation in x, reasonable y range
+        
+        # Use L-BFGS-B for bounded optimization, or BFGS if no constraints
+        has_constraints = (tan0_min_angle is not None or tan0_max_angle is not None or 
+                          tan1_min_angle is not None or tan1_max_angle is not None)
+        method = 'L-BFGS-B' if has_constraints else None
+        
+        x0 = [0.5, 0] if initial_guess is None else initial_guess
+        
         out = minimize(
             _fit_tangents, 
-            [0.5, 0] if initial_guess is None else initial_guess,
-            args=(target_tan0, target_tan1)
+            x0,
+            args=(target_tan0, target_tan1, 0.01,  # reg_strength
+                  tan0_min_angle, tan0_max_angle,
+                  tan1_min_angle, tan1_max_angle,
+                  constraint_penalty),
+            method=method,
+            bounds=bounds if method == 'L-BFGS-B' else None,
+            options={'maxiter': 1000, 'ftol': 1e-6} if method == 'L-BFGS-B' else {}
         )
 
+        # If optimization failed, try a fallback method or check if result is still usable
         if not out.success:
-            logger.warning('Optimization not successful')
-            if verbose:
-                logger.debug(str(out))
+            # Check if the result is still usable (sometimes optimization fails but result is close)
+            final_obj = _fit_tangents(
+                out.x, target_tan0, target_tan1, 0.01,
+                tan0_min_angle, tan0_max_angle,
+                tan1_min_angle, tan1_max_angle,
+                constraint_penalty
+            )
+            
+            # Try fallback with different method if objective is high
+            if final_obj > 1e-3:
+                # Try with more tolerant settings or different method
+                if has_constraints:
+                    # Try with relaxed tolerance
+                    out_fallback = minimize(
+                        _fit_tangents,
+                        out.x,  # Start from previous result
+                        args=(target_tan0, target_tan1, 0.01,
+                              tan0_min_angle, tan0_max_angle,
+                              tan1_min_angle, tan1_max_angle,
+                              constraint_penalty),
+                        method='L-BFGS-B',
+                        bounds=bounds,
+                        options={'maxiter': 2000, 'ftol': 1e-4}
+                    )
+                    if out_fallback.success or _fit_tangents(
+                        out_fallback.x, target_tan0, target_tan1, 0.01,
+                        tan0_min_angle, tan0_max_angle,
+                        tan1_min_angle, tan1_max_angle,
+                        constraint_penalty
+                    ) < final_obj:
+                        out = out_fallback
+                        final_obj = _fit_tangents(
+                            out.x, target_tan0, target_tan1, 0.01,
+                            tan0_min_angle, tan0_max_angle,
+                            tan1_min_angle, tan1_max_angle,
+                            constraint_penalty
+                        )
+            
+            # Log warning only if result is truly poor
+            if final_obj > 1e-2:  # More lenient threshold
+                logger.warning(f'Optimization not successful (objective: {final_obj:.2e})')
+                if verbose:
+                    logger.debug(f'Optimization details: {out}')
+            elif verbose and not out.success:
+                logger.debug(f'Optimization reported failure but objective is acceptable ({final_obj:.2e}), using result')
 
         cp = out.x.tolist()
 
@@ -226,7 +310,12 @@ class CurveEdgeFactory:
         target_tan0: list[float] | None = None,
         target_tan1: list[float] | None = None,
         pre_start: list[float] | None = None,
-        post_end: list[float] | None = None
+        post_end: list[float] | None = None,
+        tan0_min_angle: float | None = None,
+        tan0_max_angle: float | None = None,
+        tan1_min_angle: float | None = None,
+        tan1_max_angle: float | None = None,
+        constraint_penalty: float = 1e6
     ) -> CurveEdge:
         """
         Interpolate a curve between start and end with the given initial guess and pre_start and post_end tangents.
@@ -239,6 +328,17 @@ class CurveEdgeFactory:
             target_tan1: Tangent at the end point
             pre_start: Tangent at the start point
             post_end: Tangent at the end point
+            tan0_min_angle: Minimum allowed angle (in radians) for start tangent.
+                Angles are in the RELATIVE coordinate system where the edge goes
+                from [0,0] to [1,0] along the x-axis. 0 = along edge direction,
+                π/2 = perpendicular counterclockwise, -π/2 = perpendicular clockwise.
+            tan0_max_angle: Maximum allowed angle (in radians) for start tangent.
+                Angles are in the relative coordinate system.
+            tan1_min_angle: Minimum allowed angle (in radians) for end tangent.
+                Angles are in the relative coordinate system.
+            tan1_max_angle: Maximum allowed angle (in radians) for end tangent.
+                Angles are in the relative coordinate system.
+            constraint_penalty: Penalty weight for constraint violations
         """
         
         target_tan0 = None
@@ -253,7 +353,12 @@ class CurveEdgeFactory:
             end,
             target_tan0=target_tan0,
             target_tan1=target_tan1,
-            initial_guess=initial_guess
+            initial_guess=initial_guess,
+            tan0_min_angle=tan0_min_angle,
+            tan0_max_angle=tan0_max_angle,
+            tan1_min_angle=tan1_min_angle,
+            tan1_max_angle=tan1_max_angle,
+            constraint_penalty=constraint_penalty
         )
 
 
@@ -452,14 +557,28 @@ def _fit_pass_point(cp, target_location):
     return diff**2
 
 
-def _fit_tangents(cp, target_tangent_start, target_tangent_end, reg_strength=0.01):
+def _fit_tangents(cp, target_tangent_start, target_tangent_end, reg_strength=0.01,
+                  tan0_min_angle=None, tan0_max_angle=None,
+                  tan1_min_angle=None, tan1_max_angle=None,
+                  constraint_penalty=1e6):
     """ Fit the control point of basic [[0, 0] -> [1, 0]] Quadratic Bezier s.t. 
         it's expremum is close to target location.
 
         * cp - initial guess for Quadratic Bezier control point coordinates
             (relative to the edge)
-        * target_location -- target to fit extremum to -- 
-            expressed in RELATIVE coordinates to your desired edge
+        * target_tangent_start -- target tangent at start point
+        * target_tangent_end -- target tangent at end point
+        * tan0_min_angle -- minimum allowed angle (in radians) for start tangent.
+            Angles are in the RELATIVE coordinate system where the edge goes from
+            [0,0] to [1,0] along the x-axis. 0 = along edge direction,
+            π/2 = perpendicular counterclockwise, -π/2 = perpendicular clockwise.
+        * tan0_max_angle -- maximum allowed angle (in radians) for start tangent.
+            Angles are in the relative coordinate system.
+        * tan1_min_angle -- minimum allowed angle (in radians) for end tangent.
+            Angles are in the relative coordinate system.
+        * tan1_max_angle -- maximum allowed angle (in radians) for end tangent.
+            Angles are in the relative coordinate system.
+        * constraint_penalty -- penalty weight for constraint violations
     """
     control_bezier = np.array([
         [0, 0], 
@@ -478,6 +597,62 @@ def _fit_tangents(cp, target_tangent_start, target_tangent_end, reg_strength=0.0
     if target_tangent_end is not None: 
         target1 = target_tangent_end[0] + 1j*target_tangent_end[1]
         fin += (abs(curve.unit_tangent(1) - target1))**2
+
+    # Add inequality constraint penalties for start tangent
+    if tan0_min_angle is not None or tan0_max_angle is not None:
+        actual_tan = curve.unit_tangent(0)
+        angle = np.angle(actual_tan)  # angle in radians, range [-π, π]
+        
+        # Handle angle wrapping: if constraints span across ±π boundary, adjust
+        if tan0_min_angle is not None and tan0_max_angle is not None:
+            # Check if constraint range crosses the ±π boundary
+            if tan0_max_angle - tan0_min_angle > np.pi:
+                # Constraint wraps around, need special handling
+                if angle < tan0_min_angle and angle > tan0_max_angle:
+                    # Angle is in the "forbidden" region (wrapping case)
+                    dist_to_min = min(abs(angle - tan0_min_angle), abs(angle + 2*np.pi - tan0_min_angle))
+                    dist_to_max = min(abs(angle - tan0_max_angle), abs(angle - 2*np.pi - tan0_max_angle))
+                    fin += constraint_penalty * min(dist_to_min, dist_to_max)**2
+            else:
+                # Normal case: no wrapping
+                if angle < tan0_min_angle:
+                    fin += constraint_penalty * (tan0_min_angle - angle)**2
+                if angle > tan0_max_angle:
+                    fin += constraint_penalty * (angle - tan0_max_angle)**2
+        else:
+            # Only one bound specified
+            if tan0_min_angle is not None and angle < tan0_min_angle:
+                fin += constraint_penalty * (tan0_min_angle - angle)**2
+            if tan0_max_angle is not None and angle > tan0_max_angle:
+                fin += constraint_penalty * (angle - tan0_max_angle)**2
+    
+    # Add inequality constraint penalties for end tangent
+    if tan1_min_angle is not None or tan1_max_angle is not None:
+        actual_tan = curve.unit_tangent(1)
+        angle = np.angle(actual_tan)  # angle in radians, range [-π, π]
+        
+        # Handle angle wrapping: if constraints span across ±π boundary, adjust
+        if tan1_min_angle is not None and tan1_max_angle is not None:
+            # Check if constraint range crosses the ±π boundary
+            if tan1_max_angle - tan1_min_angle > np.pi:
+                # Constraint wraps around, need special handling
+                if angle < tan1_min_angle and angle > tan1_max_angle:
+                    # Angle is in the "forbidden" region (wrapping case)
+                    dist_to_min = min(abs(angle - tan1_min_angle), abs(angle + 2*np.pi - tan1_min_angle))
+                    dist_to_max = min(abs(angle - tan1_max_angle), abs(angle - 2*np.pi - tan1_max_angle))
+                    fin += constraint_penalty * min(dist_to_min, dist_to_max)**2
+            else:
+                # Normal case: no wrapping
+                if angle < tan1_min_angle:
+                    fin += constraint_penalty * (tan1_min_angle - angle)**2
+                if angle > tan1_max_angle:
+                    fin += constraint_penalty * (angle - tan1_max_angle)**2
+        else:
+            # Only one bound specified
+            if tan1_min_angle is not None and angle < tan1_min_angle:
+                fin += constraint_penalty * (tan1_min_angle - angle)**2
+            if tan1_max_angle is not None and angle > tan1_max_angle:
+                fin += constraint_penalty * (angle - tan1_max_angle)**2
 
     # NOTE: Tried _max_curvature() and Y value regularizaton, 
     # but it seems like they are not needed
