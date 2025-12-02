@@ -416,7 +416,8 @@ def run_simulation(
     dataset: str,
     command_args: argparse.Namespace,
     pattern_data: dict[str, PatternData],
-    sim_config: SimulationConfig | None = None
+    sim_config: SimulationConfig | None = None,
+    experiment_tracker=None
 ) -> bool:
     """Run simulation on an existing dataset.
     
@@ -461,7 +462,8 @@ def run_simulation(
         sim_config_obj,
         run_default_body=True,
         num_samples=1,
-        caching=command_args.caching
+        caching=command_args.caching,
+        experiment_tracker=experiment_tracker
     )
     
     return finished

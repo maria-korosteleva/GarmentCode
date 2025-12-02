@@ -70,6 +70,30 @@ python pattern_data_sim.py --design assets/design_params/perfect_fit_garment_spe
 
 > **Note:** Ensure `system.json` is configured with appropriate paths before running. The script can be executed in Maya (or via `mayapy`) for simulation.
 
+## Grid Simulation & MLflow Tracking
+
+Run parameter sweeps with automatic experiment tracking:
+
+**Grid Simulation:**
+```bash
+python run_grid_simulation.py --grid-config <grid_config.yaml>
+```
+
+Create a YAML config file (see `assets/peefect_fit_pants_grid_config.yaml` for example) defining parameter ranges. The script generates all combinations and runs simulations.
+
+**MLflow Tracking:**
+
+Configure in `config/mlflow_config.json`:
+- `server_url`: MLflow server URL (e.g., `http://localhost:5000`)
+- `enabled`: Set to `false` to disable tracking
+
+Automatically tracks:
+- Rendered images (4 camera views: front, back, straight-front, straight-back)
+- Parameters (design and material properties)
+- Metrics (simulation time, frames, collisions)
+
+View results: `mlflow ui --port 5000` → `http://localhost:5000`
+
 ## Navigation
 
 ### Library

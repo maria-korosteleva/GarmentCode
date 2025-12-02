@@ -132,7 +132,8 @@ def run_sim(
     store_usd: bool = False,
     optimize_storage: bool = False,
     verbose: bool = False,
-    garment_data: Optional[GarmentData] = None
+    garment_data: Optional[GarmentData] = None,
+    experiment_tracker=None
 ) -> None:
     """Initialize and run the simulation.
 
@@ -228,7 +229,13 @@ def run_sim(
     garment.save_frame(save_v_norms=save_v_norms)
 
     # Render images
-    render_images(paths, garment.v_body, garment.f_body, dataset_props.render.config)
+    render_images(
+        paths,
+        garment.v_body,
+        garment.f_body,
+        dataset_props.render.config,
+        experiment_tracker=experiment_tracker
+    )
 
     if optimize_storage:
         optimize_garment_storage(paths)
@@ -237,3 +244,16 @@ def run_sim(
     sec = round(time.time() - start_time, 3)
     min_ = int(sec / 60)
     logger.info(f"Simulation pipeline completed. Time taken: {min_} m {sec - min_ * 60} s.")
+    
+    # Log metrics to experiment tracker if provided
+    if experiment_tracker is not None:
+        try:
+            metrics = {
+                'sim_time_seconds': sec,
+                'sim_frames': frame + 1,
+                'body_collisions': num_body_collisions,
+                'self_collisions': num_self_collisions,
+            }
+            experiment_tracker.log_metrics(metrics)
+        except Exception as e:
+            logger.warning(f"Failed to log metrics to experiment tracker: {e}")

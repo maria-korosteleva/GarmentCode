@@ -206,7 +206,13 @@ def load_meshes(paths:PathCofig, body_v, body_f):
     
     return pyrender_garm_mesh, pyrender_body_mesh
 
-def render_images(paths: PathCofig, body_v, body_f, render_config: RenderConfig):
+def render_images(
+    paths: PathCofig,
+    body_v,
+    body_f,
+    render_config: RenderConfig,
+    experiment_tracker=None
+):
     """Render images for all specified sides.
     
     Parameters
@@ -219,10 +225,23 @@ def render_images(paths: PathCofig, body_v, body_f, render_config: RenderConfig)
         Body mesh faces
     render_config : RenderConfig
         Render configuration object
+    experiment_tracker : ExperimentTracker, optional
+        Optional experiment tracker for logging rendered images to MLflow
     """
     pyrender_garm_mesh, pyrender_body_mesh = load_meshes(paths, body_v, body_f)
 
     for side in render_config.sides:
         render(pyrender_garm_mesh, pyrender_body_mesh, side, paths, render_config)
+    
+    # Log rendered images to experiment tracker if provided
+    if experiment_tracker is not None:
+        try:
+            experiment_tracker.log_rendered_images(paths, render_config.sides)
+            # Also log texture.png file
+            experiment_tracker.log_texture(paths)
+        except Exception as e:
+            # Don't fail rendering if tracking fails
+            from loguru import logger
+            logger.warning(f"Failed to log rendered images to experiment tracker: {e}")
 
 

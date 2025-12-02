@@ -1,0 +1,10 @@
+{
+    "server_url": "http://localhost:5000",
+    "remote_server_alias": null,
+    "local_artifact_dir": "./mlruns",
+    "remote_artifact_uri": "/home/dahuerfanov/code_runs",
+    "remote_mlflow_path": "/home/dahuerfanov/repos/GarmentCode/.venv/bin/mlflow",
+    "max_workers": 4,
+    "enabled": true
+}
+

@@ -25,7 +25,8 @@ def batch_sim_with_data(
     sim_config: SimulationConfig,
     run_default_body: bool = False,
     num_samples: Optional[int] = None,
-    caching: bool = False
+    caching: bool = False,
+    experiment_tracker=None
 ) -> bool:
     """Perform pattern simulation using in-memory pattern data.
     
@@ -91,7 +92,8 @@ def batch_sim_with_data(
                 pattern_info.body_def,
                 pattern_info.design,
                 caching=caching,
-                attachment_constraints=pattern_info.attachment_constraints
+                attachment_constraints=pattern_info.attachment_constraints,
+                experiment_tracker=experiment_tracker
             )
         except BaseException as e: 
             logger.error(f"Pattern simulation failed for {pattern_name}: {e}")
@@ -119,7 +121,8 @@ def template_simulation_with_data(
     body_def: Any,
     design: dict[str, Any],
     caching: bool = False,
-    attachment_constraints: list[Any] | None = None
+    attachment_constraints: list[Any] | None = None,
+    experiment_tracker=None
 ) -> None:
     """Simulate a garment template using in-memory pattern data.
     
@@ -286,6 +289,7 @@ def template_simulation_with_data(
     logger.debug(f'Running simulation for {garment_box_mesh.name} with in-memory data...')
     optimize_storage = config._props.get('optimize_storage', False)
     
+    from pygarment.meshgen.simulation import run_sim
     run_sim(
         garment_box_mesh.name,  
         sim_dict,
@@ -294,7 +298,8 @@ def template_simulation_with_data(
         store_usd=caching,
         optimize_storage=optimize_storage,
         verbose=False,
-        garment_data=garment_data
+        garment_data=garment_data,
+        experiment_tracker=experiment_tracker
     )
 
 

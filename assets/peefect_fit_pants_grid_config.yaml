@@ -1,0 +1,89 @@
+# Example grid configuration file for run_grid_simulation.py
+#
+# This file defines parameter ranges for grid search simulations.
+# Each parameter list will be combined with all others to create
+# a full Cartesian product of parameter combinations.
+#
+# Design parameters (from enums in perfect_fit_templates/pants_templates.py):
+#   - garment_type: str (e.g., "pants")
+#   - raise_to_waist_ratio: str (HIGH, MID, LOW)
+#   - crotch_displacement_ratio: str (INSIDE_CROTCH, AT_CROTCH, LOW_CROTCH, HANGY)
+#   - leg_length_ratio: str (SHORT_SHORTS, SHORTS, CAPRI, ANKLE, FULL, LONG)
+#   - general_fit_ratio: str (WIDE, REGULAR, TIGHT, SUPER_TIGHT)
+#   - pants_style_spec: str (TIGHTS, SKINNY, STRAIGHT, BOOT_CUT, FLARE, WIDE_LEG)
+#
+# Material properties (from config/garment_properties.py):
+#   - garment_density: float
+#   - garment_radius: float
+#   - garment_tri_ke: float
+#   - garment_tri_kd: float
+#   - garment_tri_ka: float
+
+# Design parameters (all enum categories from perfect_fit_templates/pants_templates.py):
+
+garment_type:
+  - "pants"
+
+# RaiseWaist enum
+raise_to_waist_ratio:
+  - "HIGH"
+  - "MID"
+  - "LOW"
+
+# CrotchDisplacementRatio enum
+crotch_displacement_ratio:
+  - "INSIDE_CROTCH"
+  - "AT_CROTCH"
+  - "LOW_CROTCH"
+  - "HANGY"
+
+# LegLength enum
+leg_length_ratio:
+  - "CAPRI"
+  - "ANKLE"
+  - "FULL"
+  - "LONG"
+
+# GeneralFit enum
+general_fit_ratio:
+  - "WIDE"
+  - "REGULAR"
+  - "TIGHT"
+  - "SUPER_TIGHT"
+
+# PerfectFitPantsStyleSpec enum
+pants_style_spec:
+  - "TIGHTS"
+  - "SKINNY"
+  - "STRAIGHT"
+  - "BOOT_CUT"
+  - "FLARE"
+  - "WIDE_LEG"
+
+#garment_density:
+#  - 1.0
+#  - 1.5
+#  - 2
+
+garment_radius:
+  - 0.1
+  - 0.2
+
+#garment_tri_ke:
+#  - 10000.0
+#  - 15000.0
+#  - 20000.0
+
+#garment_tri_kd:
+#  - 1.0
+#  - 2.0
+#  - 3.0
+
+#garment_tri_ka:
+#  - 10000.0
+#  - 15000.0
+#  - 20000.0
+
+# Optional: custom name prefix (if not provided, names are auto-generated)
+# name: "my_grid_run"
+
