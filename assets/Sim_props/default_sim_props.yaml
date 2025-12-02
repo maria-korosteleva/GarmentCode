@@ -108,7 +108,17 @@ render:
     sides:
     - front
     - back
+    - straight-front
+    - straight-back
     front_camera_location:
+    - 0
+    - 0.97
+    - 4.15
+    straight_front_camera_location:
+    - 0
+    - 0.97
+    - 4.15
+    straight_back_camera_location:
     - 0
     - 0.97
     - 4.15

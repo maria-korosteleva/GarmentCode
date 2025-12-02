@@ -92,10 +92,17 @@ def create_camera(pyrender, pyrender_body_mesh, scene, side, camera_location=Non
         [0.0, 0.0, 0.0, 1.0]
     ])
 
-    camera_pose = rotate_matrix_x(camera_pose, -15)
-    camera_pose = rotate_matrix_y(camera_pose, 20)
-    if side == 'back':
-        camera_pose = rotate_matrix_y(camera_pose, 180)
+    # Apply rotations based on view type
+    if side in ('straight-front', 'straight-back'):
+        # Straight views: no rotations, just position
+        if side == 'straight-back':
+            camera_pose = rotate_matrix_y(camera_pose, 180)
+    else:
+        # Angled views: apply standard rotations
+        camera_pose = rotate_matrix_x(camera_pose, -15)
+        camera_pose = rotate_matrix_y(camera_pose, 20)
+        if side == 'back':
+            camera_pose = rotate_matrix_y(camera_pose, 180)
 
     # Set camera's pose in the scene
     scene.add(camera, pose=camera_pose)
@@ -141,7 +148,16 @@ def render(
     scene.add(pyrender_garm_mesh)
     scene.add(pyrender_body_mesh)
 
-    camera_location = render_config.front_camera_location if render_config and render_config.front_camera_location else None
+    # Select appropriate camera location based on side
+    camera_location = None
+    if render_config:
+        if side == 'straight-front' and render_config.straight_front_camera_location:
+            camera_location = render_config.straight_front_camera_location
+        elif side == 'straight-back' and render_config.straight_back_camera_location:
+            camera_location = render_config.straight_back_camera_location
+        elif side in ('front', 'back') and render_config.front_camera_location:
+            camera_location = render_config.front_camera_location
+    
     create_camera(
         pyrender, pyrender_body_mesh, scene, side,
         camera_location=camera_location

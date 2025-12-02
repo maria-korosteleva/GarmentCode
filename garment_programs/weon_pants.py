@@ -127,6 +127,7 @@ class PantPanel(pyg.Panel):
             start=[-hips, hips_crotch_diff + total_length],
             end=[-waist, mid_rise + total_length],
             target_tan0=np.array([0, 1]),
+            initial_guess=[0.2, 0]
         )
         ext_point_thigh = right_5.evaluate_at_length(-hips_crotch_diff)
 

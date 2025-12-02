@@ -35,9 +35,13 @@ class RenderConfig(BaseModel):
     resolution : list[int]
         Render resolution as [width, height] in pixels
     sides : list[str]
-        List of sides to render (e.g., ['front', 'back'])
+        List of sides to render (e.g., ['front', 'back', 'straight-front', 'straight-back'])
     front_camera_location : Optional[list[float]]
         Optional camera location for front view as [x, y, z]
+    straight_front_camera_location : Optional[list[float]]
+        Optional camera location for straight-front view as [x, y, z]
+    straight_back_camera_location : Optional[list[float]]
+        Optional camera location for straight-back view as [x, y, z]
     uv_texture : UVTextureConfig
         UV texture configuration
     """
@@ -47,11 +51,19 @@ class RenderConfig(BaseModel):
     )
     sides: list[str] = Field(
         default_factory=lambda: ['front', 'back'],
-        description="List of sides to render (e.g., ['front', 'back'])"
+        description="List of sides to render (e.g., ['front', 'back', 'straight-front', 'straight-back'])"
     )
     front_camera_location: Optional[list[float]] = Field(
         default=None,
         description="Optional camera location for front view as [x, y, z]"
+    )
+    straight_front_camera_location: Optional[list[float]] = Field(
+        default=None,
+        description="Optional camera location for straight-front view as [x, y, z]"
+    )
+    straight_back_camera_location: Optional[list[float]] = Field(
+        default=None,
+        description="Optional camera location for straight-back view as [x, y, z]"
     )
     uv_texture: UVTextureConfig = Field(
         default_factory=UVTextureConfig,
@@ -67,10 +79,10 @@ class RenderConfig(BaseModel):
             raise ValueError('resolution must contain only integers')
         return v
     
-    @field_validator('front_camera_location')
+    @field_validator('front_camera_location', 'straight_front_camera_location', 'straight_back_camera_location')
     @classmethod
     def validate_camera_location(cls, v):
         if v is not None and len(v) != 3:
-            raise ValueError('front_camera_location must be a list of exactly 3 floats [x, y, z]')
+            raise ValueError('camera_location must be a list of exactly 3 floats [x, y, z]')
         return v
 

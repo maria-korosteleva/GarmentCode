@@ -14,7 +14,7 @@ CALF_TO_ANKLE_LEG_RATIO = 0.25
 class GeneralFit(Enum):
     """Enum for thigh & hips width ratio in relation to horizontal leg line at the crotch"""
     WIDE = 1.1
-    REGULAR = 1.02
+    REGULAR = 1.0
     TIGHT = 0.9
     SUPER_TIGHT = 0.75
 
