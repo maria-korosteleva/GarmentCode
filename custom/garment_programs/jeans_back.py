@@ -41,9 +41,15 @@ def draft_jeans_back(m, front):
     back_hem = fpts["0'"] + np.array([0, -ext])
     pt12 = fpts["3'"] + np.array([0, -ext])  # back knee point ("12")
 
-    # Extend crotch line: 6–11 is seat/16
-    crotch_ext_back = m['seat'] / 16
-    pt11 = fpts['6'] + np.array([0, -crotch_ext_back])
+    # Step 2: 6–11 = seat/16 (initial position)
+    pt11_initial = fpts['6'] + np.array([0, -(m['seat'] / 16)])
+
+    # Step 3-5: Construction line from 11 through 12; adjust 11 along it
+    # so that dist(12,11) = dist(6,12) - 1/4" (denim adjustment)
+    dir_from_12_to_11 = pt11_initial - pt12
+    dir_from_12_to_11_norm = dir_from_12_to_11 / np.linalg.norm(dir_from_12_to_11)
+    target_dist = np.linalg.norm(fpts['6'] - pt12) - 1/4 * INCH
+    pt11 = pt12 + dir_from_12_to_11_norm * target_dist
 
     # Construction line from 11 through 12 to hem level (x = 0)
     dir_11_12 = pt12 - pt11
@@ -225,12 +231,13 @@ def plot_jeans_back(front, back, output_path='Logs/jeans_back.png', debug=False)
     ax.plot([bpts['12'][0], bpts['back_hem'][0]],
             [bpts['12'][1], bpts['back_hem'][1]], **OUTLINE)
 
-    # Outseam (shared with front): back_hem → 0 → 4 → hip curve → 1
+    # Outseam: back_hem → 0 → 4 → 1
     ax.plot([bpts['back_hem'][0], fpts['0'][0]],
             [bpts['back_hem'][1], fpts['0'][1]], **OUTLINE)
     ax.plot([fpts['0'][0], fpts['4'][0]],
             [fpts['0'][1], fpts['4'][1]], **OUTLINE)
-    ax.plot(fcurves['hip'][:, 0], fcurves['hip'][:, 1], **OUTLINE)
+    ax.plot([fpts['4'][0], fpts['1'][0]],
+            [fpts['4'][1], fpts['1'][1]], **OUTLINE)
 
     # -- Reference lines --
     y_lo = min(bpts['11'][1], fpts['6'][1]) - 3
@@ -278,7 +285,7 @@ def plot_jeans_back(front, back, output_path='Logs/jeans_back.png', debug=False)
         _annotate_segment(ax, bpts['12'], bpts['back_hem'], offset=(10, 0))
         _annotate_segment(ax, bpts['back_hem'], fpts['0'], offset=(0, 8))
         _annotate_segment(ax, fpts['0'], fpts['4'], offset=(0, 8))
-        _annotate_curve(ax, fcurves['hip'], offset=(0, -10))
+        _annotate_segment(ax, fpts['4'], fpts['1'], offset=(-10, 0))
 
     ax.set_title(back['metadata']['title'])
     ax.set_aspect('equal')
