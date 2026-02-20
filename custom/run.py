@@ -37,6 +37,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--measurements', '-m', help='path to measurements YAML file')
     parser.add_argument('--program', '-p', help='garment program module name (e.g. jeans_front)')
+    parser.add_argument('--debug', '-d', action='store_true',
+                        help='show construction lines, point labels, and grid')
     args = parser.parse_args()
 
     # --- measurements selection ---
@@ -56,10 +58,17 @@ def main():
         )
         program_name = _fzf_select(programs, 'Program')
 
+    # --- mode selection ---
+    if args.debug:
+        debug = True
+    else:
+        mode = _fzf_select(['pattern', 'debug (construction lines, labels, grid)'], 'Mode')
+        debug = mode.startswith('debug')
+
     # --- import and run ---
     module = importlib.import_module(f'custom.garment_programs.{program_name}')
     output_path = f'Logs/{program_name}_{date.today()}.png'
-    module.run(measurements_path, output_path)
+    module.run(measurements_path, output_path, debug=debug)
 
 
 if __name__ == '__main__':

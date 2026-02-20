@@ -174,90 +174,119 @@ def draft_jeans_front(m):
 
 # -- Visualization -----------------------------------------------------------
 
-def plot_jeans_front(draft, output_path='Logs/jeans_front.png'):
-    """Render the draft to a matplotlib figure and save as PNG."""
+def plot_jeans_front(draft, output_path='Logs/jeans_front.png', debug=False):
+    """Render the draft to a matplotlib figure and save as PNG.
+
+    Always draws the pattern outline and internal reference lines (hip, knee, CF).
+    With debug=True, adds construction lines, point labels, legend, and grid.
+    """
     pts = draft['points']
     curves = draft['curves']
     con = draft['construction']
+    REF = dict(color='gray', linewidth=0.8, linestyle='--', alpha=0.4)
 
     fig, ax = plt.subplots(1, 1, figsize=(16, 10))
 
-    # Baseline
-    baseline_pts_sorted = sorted(
-        [pts['0'], pts['1'], pts['2'], pts['3'], pts['4']],
-        key=lambda p: p[0],
-    )
-    ax.plot(
-        [baseline_pts_sorted[0][0] - 5, baseline_pts_sorted[-1][0] + 5],
-        [0, 0], 'k-', linewidth=0.5, alpha=0.2,
-    )
+    # --- Debug-only: construction scaffolding ---
+    if debug:
+        # Baseline
+        baseline_xs = sorted(p[0] for p in [pts['0'], pts['1'], pts['2'], pts['3'], pts['4']])
+        ax.plot([baseline_xs[0] - 5, baseline_xs[-1] + 5], [0, 0],
+                'k-', linewidth=0.5, alpha=0.2)
 
-    # Drop lines
-    for base_k, drop_k in [('0', "0'"), ('3', "3'"), ('2', '5'), ('4', '8'), ('1', '7')]:
-        ax.plot(
-            [pts[base_k][0], pts[drop_k][0]],
-            [pts[base_k][1], pts[drop_k][1]],
-            'k--', linewidth=0.5, alpha=0.1,
-        )
-    ax.plot([pts['5'][0], pts['6'][0]], [pts['5'][1], pts['6'][1]],
-            'k--', linewidth=0.5, alpha=0.1)
+        # Drop lines
+        for base_k, drop_k in [('0', "0'"), ('3', "3'"), ('2', '5'), ('4', '8'), ('1', '7')]:
+            ax.plot([pts[base_k][0], pts[drop_k][0]],
+                    [pts[base_k][1], pts[drop_k][1]],
+                    'k--', linewidth=0.5, alpha=0.1)
+        ax.plot([pts['5'][0], pts['6'][0]], [pts['5'][1], pts['6'][1]],
+                'k--', linewidth=0.5, alpha=0.1)
 
-    # Construction: fly line
-    ax.plot([con['fly_start'][0], con['fly_end'][0]],
-            [con['fly_start'][1], con['fly_end'][1]],
-            'k--', linewidth=0.5, alpha=0.15)
-    # Construction: inseam straight
-    ax.plot([pts['6'][0], pts["3'"][0], pts["0'"][0]],
-            [pts['6'][1], pts["3'"][1], pts["0'"][1]],
-            'k--', linewidth=0.5, alpha=0.15)
+        # Fly line
+        ax.plot([con['fly_start'][0], con['fly_end'][0]],
+                [con['fly_start'][1], con['fly_end'][1]],
+                'k--', linewidth=0.5, alpha=0.15)
+        # Inseam straight
+        ax.plot([pts['6'][0], pts["3'"][0], pts["0'"][0]],
+                [pts['6'][1], pts["3'"][1], pts["0'"][1]],
+                'k--', linewidth=0.5, alpha=0.15)
 
-    # Curves
+        # CF construction (2→5 dashed, temp point)
+        ax.plot([pts['2'][0], pts['5'][0]], [pts['2'][1], pts['5'][1]],
+                'c--', linewidth=0.5, alpha=0.2)
+        ax.plot(pts['temp'][0], pts['temp'][1], 'x', color='cyan',
+                markersize=5, alpha=0.4, zorder=5)
+
+    # --- Pattern outline: curves ---
     c = curves
-    ax.plot(c['hip'][:, 0], c['hip'][:, 1],
-            'b-', linewidth=2, label='1. Side hip (1*->4)', zorder=4)
-    ax.plot(c['rise'][:, 0], c['rise'][:, 1],
-            'r-', linewidth=2, label='2. Front rise (1*->7*)', zorder=4)
-    ax.plot(c['crotch'][:, 0], c['crotch'][:, 1],
-            'g-', linewidth=2, label='3. Crotch (8->9->6)', zorder=4)
-    ax.plot(c['inseam'][:, 0], c['inseam'][:, 1],
-            'm-', linewidth=2, label="4. Inseam (6->3')", zorder=4)
+    if debug:
+        ax.plot(c['hip'][:, 0], c['hip'][:, 1],
+                'b-', linewidth=2, label='Side hip (1*->4)', zorder=4)
+        ax.plot(c['rise'][:, 0], c['rise'][:, 1],
+                'r-', linewidth=2, label='Front rise (1*->7*)', zorder=4)
+        ax.plot(c['crotch'][:, 0], c['crotch'][:, 1],
+                'g-', linewidth=2, label='Crotch (8->9->6)', zorder=4)
+        ax.plot(c['inseam'][:, 0], c['inseam'][:, 1],
+                'm-', linewidth=2, label="Inseam (6->3')", zorder=4)
+    else:
+        for curve in c.values():
+            ax.plot(curve[:, 0], curve[:, 1], 'k-', linewidth=1.5)
 
-    # Straight segments
-    ax.plot([pts['4'][0], pts['0'][0]], [pts['4'][1], pts['0'][1]],
-            'k-', linewidth=1.5, alpha=0.5, label='Straight segments')
-    ax.plot([pts['7*'][0], pts['8'][0]], [pts['7*'][1], pts['8'][1]],
-            'k-', linewidth=1.5, alpha=0.5)
-    ax.plot([pts["3'"][0], pts["0'"][0]], [pts["3'"][1], pts["0'"][1]],
-            'k-', linewidth=1.5, alpha=0.5)
-    ax.plot([pts["0'"][0], pts['0'][0]], [pts["0'"][1], pts['0'][1]],
-            'k-', linewidth=1.5, alpha=0.5)
+    # --- Pattern outline: straight segments ---
+    for a, b in [('4', '0'), ('7*', '8'), ("3'", "0'"), ("0'", '0')]:
+        ax.plot([pts[a][0], pts[b][0]], [pts[a][1], pts[b][1]],
+                'k-', linewidth=1.5)
 
-    # Center front line (Step 6)
-    ax.plot([pts['2'][0], pts['5'][0]], [pts['2'][1], pts['5'][1]],
-            'c--', linewidth=0.5, alpha=0.2)
-    ax.plot(pts['temp'][0], pts['temp'][1], 'x', color='cyan',
-            markersize=5, alpha=0.4, zorder=5)
-    ax.plot([pts['1'][0] - 5, pts['0'][0] + 5],
-            [pts['10'][1], pts['10'][1]],
-            'c-', linewidth=1.2, alpha=0.5, label='6. CF line')
-    ax.plot(pts['10'][0], pts['10'][1], 's', color='cyan',
-            markersize=7, zorder=6, label='Point 10 (CF)')
+    # --- Internal reference lines (always shown) ---
+    # y-range for vertical lines (span the full width of the pattern)
+    y_lo = min(pts['6'][1], pts['5'][1]) - 2
+    y_hi = 2
 
-    # All key points
-    for name, pt in pts.items():
-        if name == 'temp':
-            continue
-        ax.plot(pt[0], pt[1], 'o', color='gray', markersize=4, zorder=5, alpha=0.5)
-        ax.annotate(name, pt, textcoords="offset points",
-                    xytext=(6, 4), ha='left', fontsize=8, alpha=0.6)
+    # Seat line — vertical at pt4 x-level (just above crotch fork)
+    seat_x = pts['4'][0]
+    ax.plot([seat_x, seat_x], [y_lo, y_hi], **REF)
+    ax.annotate('seat', (seat_x, y_hi), textcoords="offset points",
+                xytext=(4, 4), fontsize=7, color='gray')
 
-    ax.legend(loc='lower right', fontsize=9)
-    ax.set_xlabel('cm')
-    ax.set_ylabel('cm')
+    # Hip line — vertical at the crotch-fork x-level
+    hip_x = pts['2'][0]
+    ax.plot([hip_x, hip_x], [y_lo, y_hi], **REF)
+    ax.annotate('hip', (hip_x, y_hi), textcoords="offset points",
+                xytext=(4, 4), fontsize=7, color='gray')
+
+    # Knee line — vertical at knee x-level
+    knee_x = pts['3'][0]
+    ax.plot([knee_x, knee_x], [y_lo, y_hi], **REF)
+    ax.annotate('knee', (knee_x, y_hi), textcoords="offset points",
+                xytext=(4, 4), fontsize=7, color='gray')
+
+    # Center front line — horizontal at CF y-offset
+    x_left, x_right = pts['1'][0] - 3, pts['0'][0] + 3
+    cf_mid = (x_left + x_right) / 2
+    ax.plot([x_left, x_right], [pts['10'][1], pts['10'][1]], **REF)
+    ax.annotate('center front', (cf_mid, pts['10'][1]), textcoords="offset points",
+                xytext=(0, 4), fontsize=7, color='gray', ha='center')
+
+    # --- Debug-only: point labels, legend, grid ---
+    if debug:
+        for name, pt in pts.items():
+            if name == 'temp':
+                continue
+            ax.plot(pt[0], pt[1], 'o', color='gray', markersize=4, zorder=5, alpha=0.5)
+            ax.annotate(name, pt, textcoords="offset points",
+                        xytext=(6, 4), ha='left', fontsize=8, alpha=0.6)
+        ax.plot(pts['10'][0], pts['10'][1], 's', color='cyan',
+                markersize=7, zorder=6, label='Point 10 (CF)')
+        ax.legend(loc='lower right', fontsize=9)
+        ax.set_xlabel('cm')
+        ax.set_ylabel('cm')
+        ax.grid(True, alpha=0.2)
+
     ax.set_title(draft['metadata']['title'])
     ax.set_aspect('equal')
-    ax.grid(True, alpha=0.2)
     ax.margins(0.05)
+    if not debug:
+        ax.axis('off')
 
     plt.tight_layout()
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
@@ -268,8 +297,8 @@ def plot_jeans_front(draft, output_path='Logs/jeans_front.png'):
 
 # -- Entry point for generic runner ------------------------------------------
 
-def run(measurements_path, output_path):
+def run(measurements_path, output_path, debug=False):
     """Uniform interface called by the generic runner."""
     m = load_measurements(measurements_path)
     draft = draft_jeans_front(m)
-    plot_jeans_front(draft, output_path)
+    plot_jeans_front(draft, output_path, debug=debug)
