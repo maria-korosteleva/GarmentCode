@@ -178,17 +178,21 @@ def draft_jeans_back(m, front):
 
 # -- Visualization -----------------------------------------------------------
 
-def plot_jeans_back(front, back, output_path='Logs/jeans_back.png', debug=False):
+def plot_jeans_back(front, back, output_path='Logs/jeans_back.png', debug=False, units='cm'):
     """Render the back panel and save as PNG.
 
     Always draws the pattern outline and internal reference lines.
     With debug=True, adds construction lines, point labels, and grid.
+
+    units : 'cm' or 'inch' — display unit for axes and annotations.
     """
-    fpts = front['points']
-    fcurves = front['curves']
-    bpts = back['points']
-    bcurves = back['curves']
-    bcon = back['construction']
+    s = 1 / INCH if units == 'inch' else 1.0
+    unit_label = 'in' if units == 'inch' else 'cm'
+    fpts = {k: v * s for k, v in front['points'].items()}
+    fcurves = {k: v * s for k, v in front['curves'].items()}
+    bpts = {k: v * s for k, v in back['points'].items()}
+    bcurves = {k: v * s for k, v in back['curves'].items()}
+    bcon = {k: v * s for k, v in back['construction'].items()}
 
     fig, ax = plt.subplots(1, 1, figsize=(16, 10))
     OUTLINE = dict(color='black', linewidth=1.5)
@@ -293,8 +297,8 @@ def plot_jeans_back(front, back, output_path='Logs/jeans_back.png', debug=False)
     if not debug:
         ax.axis('off')
     else:
-        ax.set_xlabel('cm')
-        ax.set_ylabel('cm')
+        ax.set_xlabel(unit_label)
+        ax.set_ylabel(unit_label)
         ax.grid(True, alpha=0.2)
 
     plt.tight_layout()
@@ -306,9 +310,9 @@ def plot_jeans_back(front, back, output_path='Logs/jeans_back.png', debug=False)
 
 # -- Entry point for generic runner ------------------------------------------
 
-def run(measurements_path, output_path, debug=False):
+def run(measurements_path, output_path, debug=False, units='cm'):
     """Uniform interface called by the generic runner."""
     m = load_measurements(measurements_path)
     front = draft_jeans_front(m)
     back = draft_jeans_back(m, front)
-    plot_jeans_back(front, back, output_path, debug=debug)
+    plot_jeans_back(front, back, output_path, debug=debug, units=units)

@@ -83,7 +83,7 @@ def draft_jeans_front(m):
     """
     # Step 1: Marking out the lengths
     pt0 = np.array([0.0, 0.0])
-    pt1 = np.array([-(m['side_length'] - m['waistband_width']), 0.0])
+    pt1 = np.array([-m['side_length'], 0.0])
     pt2 = np.array([-m['inseam'], 0.0])
     pt3 = np.array([pt2[0] / 2 - 2 * INCH, 0.0])
     pt4 = np.array([pt2[0] - (m['seat'] / 2) / 6, 0.0])
@@ -200,15 +200,19 @@ def draft_jeans_front(m):
 
 # -- Visualization -----------------------------------------------------------
 
-def plot_jeans_front(draft, output_path='Logs/jeans_front.png', debug=False):
+def plot_jeans_front(draft, output_path='Logs/jeans_front.png', debug=False, units='cm'):
     """Render the draft to a matplotlib figure and save as PNG.
 
     Always draws the pattern outline and internal reference lines (hip, knee, CF).
     With debug=True, adds construction lines, point labels, legend, and grid.
+
+    units : 'cm' or 'inch' — display unit for axes and annotations.
     """
-    pts = draft['points']
-    curves = draft['curves']
-    con = draft['construction']
+    s = 1 / INCH if units == 'inch' else 1.0  # display scale factor
+    unit_label = 'in' if units == 'inch' else 'cm'
+    pts = {k: v * s for k, v in draft['points'].items()}
+    curves = {k: v * s for k, v in draft['curves'].items()}
+    con = {k: v * s for k, v in draft['construction'].items()}
     REF = dict(color='gray', linewidth=0.8, linestyle='--', alpha=0.4)
 
     fig, ax = plt.subplots(1, 1, figsize=(16, 10))
@@ -304,8 +308,8 @@ def plot_jeans_front(draft, output_path='Logs/jeans_front.png', debug=False):
         ax.plot(pts['10'][0], pts['10'][1], 's', color='cyan',
                 markersize=7, zorder=6, label='Point 10 (CF)')
         ax.legend(loc='lower right', fontsize=9)
-        ax.set_xlabel('cm')
-        ax.set_ylabel('cm')
+        ax.set_xlabel(unit_label)
+        ax.set_ylabel(unit_label)
         ax.grid(True, alpha=0.2)
 
         # Measurement annotations
@@ -333,8 +337,8 @@ def plot_jeans_front(draft, output_path='Logs/jeans_front.png', debug=False):
 
 # -- Entry point for generic runner ------------------------------------------
 
-def run(measurements_path, output_path, debug=False):
+def run(measurements_path, output_path, debug=False, units='cm'):
     """Uniform interface called by the generic runner."""
     m = load_measurements(measurements_path)
     draft = draft_jeans_front(m)
-    plot_jeans_front(draft, output_path, debug=debug)
+    plot_jeans_front(draft, output_path, debug=debug, units=units)

@@ -32,5 +32,5 @@ Start with the legs, work up towards the waist. The back is drafted relative to 
 
 - **Waist**: Measure waist lines, subtract 3/4". Double it — should match waist measurement.
 - **Hips**: Front 4→8 + back 4→seat seam (at 90° to seat seam). Should have a couple inches ease.
-- **Fly/Seat seams**: Check lengths, subtract 1.5" for waistband.
-- **Lengths**: Side lengths and inseam correct minus 1.5" waistband? Back curved inseam 1/4" shorter than front?
+- **Fly/Seat seams**: Check lengths.
+- **Lengths**: Side lengths and inseam correct? (Side length measurement should not include waistband.) Back curved inseam 1/4" shorter than front?

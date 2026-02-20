@@ -9,7 +9,6 @@ Step-by-step instructions adapted from Historical Tailoring Masterclasses.
 | Side length | Outside leg, waist to floor |
 | Inseam | Crotch to floor, inside leg |
 | Seat | Circumference around fullest part of seat |
-| Waistband width | Width of waistband (typically 1.5") |
 | Hem width | Desired hem opening width |
 | Knee width | Desired knee opening width |
 
@@ -17,7 +16,7 @@ Step-by-step instructions adapted from Historical Tailoring Masterclasses.
 
 Draw a long horizontal baseline. Mark point **0** at the right end (this is the hem). From **0**, measure left to mark:
 
-- **0 → 1**: Side length minus waistband width (waist point)
+- **0 → 1**: Side length (waist point). The side length measurement should not include the waistband.
 - **0 → 2**: Inseam measurement (crotch point)
 - **0 → 3**: Half of 0–2 distance, plus 2" (knee point)
 - **2 → 4**: Half the seat divided by 6, measured from 2 toward the waist (hip point)
@@ -71,3 +70,43 @@ Find the distance between points **2** and **5**. Divide by **2** and make a tem
 - **1873 straight leg**: Hem width matches knee width for a square, full cut.
 - **Tapered**: Reduce the hem width for a more fitted look below the knee.
 - **Boot cut**: Fitted at the knee but wider at the hem to fit over boots.
+
+## Note: Relationship to Garmentcode Library Measurements
+
+The garmentcode library (`pygarment`) defines its own body parametrization system
+via `BodyParametrizationBase` in `pygarment/garmentcode/params.py`. Library body
+files (`assets/bodies/*.yaml`) contain ~25 SMPL-derived measurements under a
+`body:` key (height, waist, hips, bust, shoulder_w, armscye_depth, etc.). These
+are anthropometric values extracted from 3D body scans, used by the library's
+built-in garment programs (bodice, tee, meta_garment).
+
+**Our custom jeans programs bypass this system entirely.** `jeans_front.py` has
+its own `load_measurements()` that reads a different YAML format (`measurements:`
+key, with a `unit` field for inch/cm conversion) and expects traditional tailoring
+measurements specific to trouser drafting.
+
+### Overlap between the two systems
+
+| Jeans measurement | Library equivalent | Notes |
+|---|---|---|
+| `waist` | `waist` | Same concept (circumference) |
+| `seat` | `hips` | Same concept (hip circumference) |
+| `side_length` | — | Could be derived from `height`, `waist_line`, `head_l` but not directly available |
+| `inseam` | — | Not in library; related to `_leg_length` (computed) but not the same |
+| `hem_width` | — | Design choice, not a body measurement |
+| `knee_width` | — | Design choice, not a body measurement |
+
+### Why we don't use library measurements
+
+1. **Missing keys**: side_length, inseam, hem_width, and knee_width have no
+   library equivalents. They are either traditional tape measurements or design
+   decisions, not scannable body dimensions.
+2. **Different context**: The library measurements come from SMPL body model
+   fitting. Our measurements are taken with a tape measure or from a size chart
+   — simpler but differently structured.
+3. **Unit handling**: The library works in cm natively. Our loader supports an
+   explicit `unit` field for inch-to-cm conversion at load time.
+
+If the jeans programs ever need to accept library body files as input, a thin
+adapter mapping `hips` -> `seat` and deriving `side_length`/`inseam` from
+height-based calculations would be needed.

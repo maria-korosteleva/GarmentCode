@@ -39,6 +39,8 @@ def main():
     parser.add_argument('--program', '-p', help='garment program module name (e.g. jeans_front)')
     parser.add_argument('--debug', '-d', action='store_true',
                         help='show construction lines, point labels, and grid')
+    parser.add_argument('--units', '-u', choices=['cm', 'inch'], default=None,
+                        help='display units for the plot (default: prompt via fzf)')
     args = parser.parse_args()
 
     # --- measurements selection ---
@@ -65,10 +67,16 @@ def main():
         mode = _fzf_select(['pattern', 'debug (construction lines, labels, grid)'], 'Mode')
         debug = mode.startswith('debug')
 
+    # --- units selection ---
+    if args.units:
+        units = args.units
+    else:
+        units = _fzf_select(['cm', 'inch'], 'Units')
+
     # --- import and run ---
     module = importlib.import_module(f'custom.garment_programs.{program_name}')
     output_path = f'Logs/{program_name}_{date.today()}.png'
-    module.run(measurements_path, output_path, debug=debug)
+    module.run(measurements_path, output_path, debug=debug, units=units)
 
 
 if __name__ == '__main__':
