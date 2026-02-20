@@ -1,6 +1,7 @@
 measurements:
   side_length: 43       # inches - outside leg, waist to floor
   inseam: 32            # inches - crotch to floor
+  waist: 36             # inches - circumference at natural waist
   seat: 42              # inches - circumference around fullest part
   waistband_width: 1.5  # inches - waistband width
   hem_width: 18.75      # inches - desired hem opening (full width)

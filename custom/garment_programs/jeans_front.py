@@ -40,6 +40,32 @@ def _bezier_quad(P0, P1, P2, n=100):
     return (1-t)**2 * P0 + 2*(1-t) * t * P1 + t**2 * P2
 
 
+# -- Measurement annotation helpers -----------------------------------------
+
+def _curve_length(pts):
+    """Arc length of a polyline (Nx2 array)."""
+    diffs = np.diff(pts, axis=0)
+    return np.sum(np.sqrt(diffs[:, 0]**2 + diffs[:, 1]**2))
+
+
+def _annotate_curve(ax, pts, offset=(0, 6)):
+    """Label a curve with its arc length at the midpoint."""
+    length = _curve_length(pts)
+    mid = pts[len(pts) // 2]
+    ax.annotate(f'{length:.1f}', mid, textcoords="offset points",
+                xytext=offset, fontsize=6, color='darkblue', ha='center',
+                bbox=dict(boxstyle='round,pad=0.2', fc='white', ec='none', alpha=0.7))
+
+
+def _annotate_segment(ax, p0, p1, offset=(0, 6)):
+    """Label a straight segment with its length at the midpoint."""
+    length = np.linalg.norm(p1 - p0)
+    mid = (p0 + p1) / 2
+    ax.annotate(f'{length:.1f}', mid, textcoords="offset points",
+                xytext=offset, fontsize=6, color='darkblue', ha='center',
+                bbox=dict(boxstyle='round,pad=0.2', fc='white', ec='none', alpha=0.7))
+
+
 # -- Drafting ----------------------------------------------------------------
 
 def draft_jeans_front(m):
@@ -281,6 +307,16 @@ def plot_jeans_front(draft, output_path='Logs/jeans_front.png', debug=False):
         ax.set_xlabel('cm')
         ax.set_ylabel('cm')
         ax.grid(True, alpha=0.2)
+
+        # Measurement annotations
+        _annotate_curve(ax, curves['hip'], offset=(0, -10))
+        _annotate_curve(ax, curves['rise'], offset=(-10, 0))
+        _annotate_curve(ax, curves['crotch'], offset=(0, -10))
+        _annotate_curve(ax, curves['inseam'], offset=(10, 0))
+        _annotate_segment(ax, pts['4'], pts['0'], offset=(0, 8))
+        _annotate_segment(ax, pts['7*'], pts['8'])
+        _annotate_segment(ax, pts["3'"], pts["0'"], offset=(10, 0))
+        _annotate_segment(ax, pts["0'"], pts['0'], offset=(8, 0))
 
     ax.set_title(draft['metadata']['title'])
     ax.set_aspect('equal')
