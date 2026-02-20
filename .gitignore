@@ -31,3 +31,7 @@ output*
 
 # Nicegui
 .nicegui
+
+# Environment / OS
+.venv/
+.DS_Store
