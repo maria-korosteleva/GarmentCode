@@ -1,0 +1,8 @@
+measurements:
+  side_length: 43       # inches - outside leg, waist to floor
+  inseam: 32            # inches - crotch to floor
+  seat: 42              # inches - circumference around fullest part
+  waistband_width: 1.5  # inches - waistband width
+  hem_width: 18.75      # inches - desired hem opening (full width)
+  knee_width: 20        # inches - desired knee opening (full width)
+  unit: inch            # all values in inches, converted at load time
