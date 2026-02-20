@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-from custom.garment_programs.jeans_front import (
+from .jeans_front import (
     INCH, load_measurements, draft_jeans_front,
     _bezier_cubic, _bezier_quad,
     _annotate_curve, _annotate_segment,
