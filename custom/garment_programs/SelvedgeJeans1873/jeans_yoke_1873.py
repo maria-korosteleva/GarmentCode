@@ -149,7 +149,7 @@ def draft_jeans_yoke(m, front, back):
 
 # -- Visualization -----------------------------------------------------------
 
-def plot_jeans_yoke(front, back, yoke, output_path='Logs/jeans_yoke.png',
+def plot_jeans_yoke(front, back, yoke, output_path='Logs/jeans_yoke.svg',
                     debug=False, units='cm'):
     """Render the yoke overlaid on the back panel and save as PNG.
 

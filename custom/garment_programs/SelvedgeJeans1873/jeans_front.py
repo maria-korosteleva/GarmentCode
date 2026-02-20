@@ -200,7 +200,7 @@ def draft_jeans_front(m):
 
 # -- Visualization -----------------------------------------------------------
 
-def plot_jeans_front(draft, output_path='Logs/jeans_front.png', debug=False, units='cm'):
+def plot_jeans_front(draft, output_path='Logs/jeans_front.svg', debug=False, units='cm'):
     """Render the draft to a matplotlib figure and save as PNG.
 
     Always draws the pattern outline and internal reference lines (hip, knee, CF).

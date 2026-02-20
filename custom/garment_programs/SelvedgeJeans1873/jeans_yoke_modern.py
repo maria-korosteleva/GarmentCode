@@ -210,7 +210,7 @@ def draft_jeans_yoke_modern(m, front, back):
 # -- Visualization -----------------------------------------------------------
 
 def plot_jeans_yoke_modern(front, back, yoke,
-                           output_path='Logs/jeans_yoke_modern.png',
+                           output_path='Logs/jeans_yoke_modern.svg',
                            debug=False, units='cm'):
     """Render the modern curved yoke overlaid on the back panel.
 

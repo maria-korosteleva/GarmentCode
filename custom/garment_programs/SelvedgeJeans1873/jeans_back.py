@@ -178,7 +178,7 @@ def draft_jeans_back(m, front):
 
 # -- Visualization -----------------------------------------------------------
 
-def plot_jeans_back(front, back, output_path='Logs/jeans_back.png', debug=False, units='cm'):
+def plot_jeans_back(front, back, output_path='Logs/jeans_back.svg', debug=False, units='cm'):
     """Render the back panel and save as PNG.
 
     Always draws the pattern outline and internal reference lines.

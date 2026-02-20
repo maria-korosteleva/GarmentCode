@@ -49,10 +49,10 @@ def _run_piece(pkg, piece_module, measurements_path, debug, units, output_dir=No
     full_module = f'custom.garment_programs.{pkg}.{piece_module}'
     module = importlib.import_module(full_module)
     if output_dir:
-        output_path = f'{output_dir}/{piece_module}.png'
+        output_path = f'{output_dir}/{piece_module}.svg'
     else:
         timestamp = datetime.now().strftime('%Y-%m-%d_%H%M%S')
-        output_path = f'Logs/{pkg}.{piece_module}_{timestamp}.png'
+        output_path = f'Logs/{pkg}.{piece_module}_{timestamp}.svg'
     module.run(measurements_path, output_path, debug=debug, units=units)
     return output_path
 
@@ -158,7 +158,7 @@ def main():
             _run_piece(parts[0], parts[1], measurements_path, debug, units)
         else:
             module = importlib.import_module(f'custom.garment_programs.{program_name}')
-            output_path = f'Logs/{program_name}_{timestamp}.png'
+            output_path = f'Logs/{program_name}_{timestamp}.svg'
             module.run(measurements_path, output_path, debug=debug, units=units)
 
 
