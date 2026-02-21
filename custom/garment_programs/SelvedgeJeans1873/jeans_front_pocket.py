@@ -45,13 +45,13 @@ def draft_jeans_front_pocket(m, front):
     pt1 = fpts['1']
 
     # -- 1. Lower pocket opening: 3 1/4" along the outseam from pt1 --
-    # The outseam runs: pt1 → 1* → hip curve → pt4.
+    # The outseam runs: pt1 → 1' → hip curve → pt4.
     # Build a combined polyline and walk it by arc-length.
     outseam_path = np.vstack([pt1.reshape(1, 2), front['curves']['hip']])
     pocket_lower = _point_at_arclength(outseam_path, 3.25 * INCH)
 
     # -- 2. Upper pocket opening: 4 3/4" along the waist/rise from pt1 --
-    # The waist/fly edge runs: pt1 → 1* → rise curve → 7*.
+    # The waist/fly edge runs: pt1 → 1' → rise curve → 7'.
     rise_path = np.vstack([pt1.reshape(1, 2), front['curves']['rise']])
     pocket_upper = _point_at_arclength(rise_path, 4.75 * INCH)
 
@@ -133,7 +133,7 @@ def plot_jeans_front_pocket(front, pocket, output_path='Logs/jeans_front_pocket.
     if debug:
         for curve in fcurves.values():
             ax.plot(curve[:, 0], curve[:, 1], **CONTEXT)
-        for a, b in [('4', '0'), ('7*', '8'), ("3'", "0'"), ("0'", '0')]:
+        for a, b in [('4', '0'), ("7'", '8'), ("3'", "0'"), ("0'", '0')]:
             ax.plot([fpts[a][0], fpts[b][0]], [fpts[a][1], fpts[b][1]], **CONTEXT)
     else:
         # Show just the waist/side seam area for context

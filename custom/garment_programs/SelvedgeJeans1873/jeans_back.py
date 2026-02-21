@@ -125,14 +125,14 @@ def draft_jeans_back(m, front):
     waist_seat_intersection = fpts['1'] + params[0] * waist_line_dir
 
     # Back waist width
-    front_waist_width = np.linalg.norm(fpts['7*'] - fpts['1*'])
+    front_waist_width = np.linalg.norm(fpts["7'"] - fpts["1'"])
     back_waist_target = m['waist'] / 2 + 3/4 * INCH
     back_waist_width = back_waist_target - front_waist_width
     back_waist_pt = fpts['1'] + waist_line_dir * (back_waist_width / np.linalg.norm(waist_line_dir))
 
-    # -- Final seat seam (back_waist_pt → 8_new → 11) --
+    # -- Final seat seam (back_waist_pt → 8' → 11) --
 
-    # Straight line from back_waist to 8_new
+    # Straight line from back_waist to 8'
     curve_seat_upper = np.array([back_waist_pt, new_pt8])
 
     curve_seat_lower = _bezier_cubic(
@@ -147,8 +147,8 @@ def draft_jeans_back(m, front):
             'back_hem': back_hem,
             '11': pt11,
             '12': pt12,
-            '2_new': new_pt2,
-            '8_new': new_pt8,
+            "2'": new_pt2,
+            "8'": new_pt8,
             'back_waist': back_waist_pt,
             'waist_seat_x': waist_seat_intersection,
         },
@@ -201,7 +201,7 @@ def plot_jeans_back(front, back, output_path='Logs/jeans_back.svg', debug=False,
         FRONT_STYLE = dict(color='gray', linewidth=1, alpha=0.3)
         for curve in fcurves.values():
             ax.plot(curve[:, 0], curve[:, 1], **FRONT_STYLE)
-        for a, b in [('4', '0'), ('7*', '8'), ("3'", "0'"), ("0'", '0')]:
+        for a, b in [('4', '0'), ("7'", '8'), ("3'", "0'"), ("0'", '0')]:
             ax.plot([fpts[a][0], fpts[b][0]], [fpts[a][1], fpts[b][1]], **FRONT_STYLE)
 
         # Construction: inseam line, seat line, seat angle, waist line
@@ -221,7 +221,7 @@ def plot_jeans_back(front, back, output_path='Logs/jeans_back.svg', debug=False,
     ax.plot([fpts['1'][0], bpts['back_waist'][0]],
             [fpts['1'][1], bpts['back_waist'][1]], **OUTLINE)
 
-    # Seat seam curves (back_waist → 8_new → 11)
+    # Seat seam curves (back_waist → 8' → 11)
     ax.plot(bcurves['seat_upper'][:, 0], bcurves['seat_upper'][:, 1], **OUTLINE)
     ax.plot(bcurves['seat_lower'][:, 0], bcurves['seat_lower'][:, 1], **OUTLINE)
 
@@ -296,7 +296,7 @@ def plot_jeans_back(front, back, output_path='Logs/jeans_back.svg', debug=False,
     SA_YOKE    = 3/4 * INCH   # yoke seam (outseam side → waist)
 
     # CW outline: outseam(1→4→0) → hem(0→back_hem) → lower_inseam(back_hem→12)
-    #   → back_inseam(12→11) → seat_lower(11→8_new) → seat_upper(8_new→back_waist)
+    #   → back_inseam(12→11) → seat_lower(11→8') → seat_upper(8'→back_waist)
     #   → waist(back_waist→1)
     sa_edges = [
         (np.array([fpts['1'], fpts['4']]),                       SA_SIDE),    # outseam upper
@@ -304,8 +304,8 @@ def plot_jeans_back(front, back, output_path='Logs/jeans_back.svg', debug=False,
         (np.array([fpts['0'], bpts['back_hem']]),                SA_HEM),     # hem
         (np.array([bpts['back_hem'], bpts['12']]),               SA_INSEAM),  # lower inseam straight
         (bcurves['back_inseam'][::-1],                           SA_INSEAM),  # back inseam curve (12→11)
-        (bcurves['seat_lower'][::-1],                            SA_SEAT),    # seat lower (11→8_new)
-        (bcurves['seat_upper'][::-1],                            SA_SEAT),    # seat upper (8_new→back_waist)
+        (bcurves['seat_lower'][::-1],                            SA_SEAT),    # seat lower (11→8')
+        (bcurves['seat_upper'][::-1],                            SA_SEAT),    # seat upper (8'→back_waist)
         (np.array([bpts['back_waist'], fpts['1']]),              SA_YOKE),    # waist
     ]
     _draw_seam_allowance(ax, sa_edges, scale=s)

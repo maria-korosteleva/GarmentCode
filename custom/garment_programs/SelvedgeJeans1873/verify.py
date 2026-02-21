@@ -70,7 +70,7 @@ def verify_draft(measurements_path):
     # Instruction: "measure the waist lines and subtract 3/4″; double that
     #              ≈ your waist measurement"
     #
-    # "Waist lines" = front waist seam (rise curve 1*→7*) +
+    # "Waist lines" = front waist seam (rise curve 1'→7') +
     #                 back waist seam (straight 1→back_waist)  — one half.
     # Subtract 3/4" for the two SA joins at this half (CF corner 3/8" +
     # side-seam corner 3/8").  Double → full waist circle.
@@ -82,7 +82,7 @@ def verify_draft(measurements_path):
     waist_target   = m['waist']
 
     lines.append("\n── 1. WAIST ──")
-    lines.append(_row("Front waist arc (1*→7*)",     _inch(front_waist)))
+    lines.append(_row("Front waist arc (1'→7')",     _inch(front_waist)))
     lines.append(_row("Back waist straight (1→bw)",  _inch(back_waist)))
     lines.append(_row("Half net (front+back − ¾\")",  _inch(half_net)))
     lines.append(_row("Full waist (×2)",              _inch(full_waist),
@@ -95,12 +95,12 @@ def verify_draft(measurements_path):
     #
     # Front hip: horizontal distance from pt4 (outseam at seat level)
     #            to pt8 (fly/crotch at seat level).
-    # Back hip:  from pt4 to back new_pt8, measured along the y-axis
+    # Back hip:  from pt4 to back 8', measured along the y-axis
     #            (perpendicular to the outseam, parallel to the seat line).
     # Both panels share the outseam at pt4, so we add the half-widths.
     #
     front_hip_half = abs(fpts['8'][1]      - fpts['4'][1])
-    back_hip_half  = abs(bpts['8_new'][1]  - fpts['4'][1])
+    back_hip_half  = abs(bpts["8'"][1]  - fpts['4'][1])
     total_hip_half = front_hip_half + back_hip_half
     total_hip_full = 2 * total_hip_half
     seat_target    = m['seat']
@@ -108,7 +108,7 @@ def verify_draft(measurements_path):
 
     lines.append("\n── 2. HIPS (at seat level) ──")
     lines.append(_row("Front hip half (4→8, horiz.)", _inch(front_hip_half)))
-    lines.append(_row("Back hip half (4→8_new, horiz.)", _inch(back_hip_half)))
+    lines.append(_row("Back hip half (4→8', horiz.)",    _inch(back_hip_half)))
     lines.append(_row("Total hip (×2)",                _inch(total_hip_full),
                        _inch(seat_target), tol_in=5.0))
     ease_ok = 1.0 * INCH <= ease <= 5.0 * INCH
@@ -120,31 +120,31 @@ def verify_draft(measurements_path):
     # Instruction: "subtract 1½" for waistband; compare to your own
     #              measurements — may be off, use at first fitting"
     #
-    # Fly seam  = rise curve (1*→7*) + fly extension (7*→8), − 1½" wb.
-    # Seat seam = seat_upper (back_waist→8_new, straight) +
-    #             seat_lower (8_new→11, curve), − 1½" wb.
+    # Fly seam  = rise curve (1'→7') + fly extension (7'→8), − 1½" wb.
+    # Seat seam = seat_upper (back_waist→8', straight) +
+    #             seat_lower (8'→11, curve), − 1½" wb.
     #
     fly_rise      = _curve_length(fcurves['rise'])
-    fly_ext       = _seg(fpts['7*'], fpts['8'])
+    fly_ext       = _seg(fpts["7'"], fpts['8'])
     fly_total_net = fly_rise + fly_ext - WAISTBAND
 
-    seat_upper_len = _seg(bpts['back_waist'], bpts['8_new'])
+    seat_upper_len = _seg(bpts['back_waist'], bpts["8'"])
     seat_lower_len = _curve_length(bcurves['seat_lower'])
     seat_total_net = seat_upper_len + seat_lower_len - WAISTBAND
 
     lines.append("\n── 3. FLY & SEAT SEAMS (minus 1½\" waistband) ──")
-    lines.append(_row("Rise arc (1*→7*)",              _inch(fly_rise)))
-    lines.append(_row("Fly extension (7*→8)",          _inch(fly_ext)))
+    lines.append(_row("Rise arc (1'→7')",              _inch(fly_rise)))
+    lines.append(_row("Fly extension (7'→8)",          _inch(fly_ext)))
     lines.append(_row("Fly seam total",                _inch(fly_total_net),
                        note="(no direct target — verify at fitting)"))
-    lines.append(_row("Seat upper (back_waist→8_new)", _inch(seat_upper_len)))
-    lines.append(_row("Seat lower arc (8_new→11)",     _inch(seat_lower_len)))
+    lines.append(_row("Seat upper (back_waist→8')",    _inch(seat_upper_len)))
+    lines.append(_row("Seat lower arc (8'→11)",        _inch(seat_lower_len)))
     lines.append(_row("Seat seam total",               _inch(seat_total_net),
                        note="(no direct target — verify at fitting)"))
 
     # ── 4. LENGTHS ───────────────────────────────────────────────────────
     #
-    # Side seam (pt1*→4 arc + 4→0 straight).
+    # Side seam (1'→4 arc + 4→0 straight).
     #   Our 'side_length' = body waist-to-hem.  The lesson says "minus 1½""
     #   because some drafts extend to include the waistband; ours does not,
     #   so we compare directly to side_length.
@@ -168,7 +168,7 @@ def verify_draft(measurements_path):
     back_front_diff  = back_inseam_arc - front_inseam_arc   # should be −¼"
 
     lines.append("\n── 4. LENGTHS ──")
-    lines.append(_row("Side arc (1*→4)",               _inch(side_arc)))
+    lines.append(_row("Side arc (1'→4)",               _inch(side_arc)))
     lines.append(_row("Side straight (4→0)",           _inch(side_str)))
     lines.append(_row("Side total",                    _inch(side_total),
                        _inch(side_target)))

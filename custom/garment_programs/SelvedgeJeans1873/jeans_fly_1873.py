@@ -39,7 +39,7 @@ def draft_jeans_fly_1873(m, front):
     -------
     dict with keys: points, curves, construction, metadata
     """
-    # Fly height = length of the front rise curve (1* → 7*)
+    # Fly height = length of the front rise curve (1' → 7')
     fly_height = _curve_length(front['curves']['rise'])
     half_width = 1.75 * INCH   # 1 3/4" from seam line
     inlay = 1.0 * INCH         # extra at top to be trimmed

@@ -216,7 +216,7 @@ def draft_jeans_front(m):
     fly_end = pt8 + fly_dir_norm * 5
 
     # Step 5: Curves
-    # 1. Side hip curve (1* -> 4)
+    # 1. Side hip curve (1' -> 4)
     hip_curve_end = pt4.copy()
     dist_14 = np.linalg.norm(hip_curve_end - pt1_adj)
     rise_1 = hip_curve_end[1] - pt1_adj[1]
@@ -227,7 +227,7 @@ def draft_jeans_front(m):
         hip_curve_end
     )
 
-    # 2. Front rise / waist curve (1* -> 7*)
+    # 2. Front rise / waist curve (1' -> 7')
     # Both endpoints tangent in the −y direction (toward the side seam).
     # This guarantees a C-curve with no inflection: the x-component of the
     # Bézier is the product of two non-negative Bernstein terms → monotone.
@@ -276,7 +276,7 @@ def draft_jeans_front(m):
             '0': pt0, '1': pt1, '2': pt2, '3': pt3, '4': pt4,
             "0'": pt0_drop, "3'": pt3_drop,
             '5': pt5, '6': pt6, '7': pt7, '8': pt8,
-            '1*': pt1_adj, '7*': pt7_adj, '9': pt9,
+            "1'": pt1_adj, "7'": pt7_adj, '9': pt9,
             '10': pt10, 'temp': pt_temp,
         },
         'curves': {
@@ -346,9 +346,9 @@ def plot_jeans_front(draft, output_path='Logs/jeans_front.svg', debug=False, uni
     c = curves
     if debug:
         ax.plot(c['hip'][:, 0], c['hip'][:, 1],
-                'b-', linewidth=2, label='Side hip (1*->4)', zorder=4)
+                'b-', linewidth=2, label="Side hip (1'->4)", zorder=4)
         ax.plot(c['rise'][:, 0], c['rise'][:, 1],
-                'r-', linewidth=2, label='Front rise (1*->7*)', zorder=4)
+                'r-', linewidth=2, label="Front rise (1'->7')", zorder=4)
         ax.plot(c['crotch'][:, 0], c['crotch'][:, 1],
                 'g-', linewidth=2, label='Crotch (8->9->6)', zorder=4)
         ax.plot(c['inseam'][:, 0], c['inseam'][:, 1],
@@ -358,7 +358,7 @@ def plot_jeans_front(draft, output_path='Logs/jeans_front.svg', debug=False, uni
             ax.plot(curve[:, 0], curve[:, 1], 'k-', linewidth=1.5)
 
     # --- Pattern outline: straight segments ---
-    for a, b in [('4', '0'), ('7*', '8'), ("3'", "0'"), ("0'", '0')]:
+    for a, b in [('4', '0'), ("7'", '8'), ("3'", "0'"), ("0'", '0')]:
         ax.plot([pts[a][0], pts[b][0]], [pts[a][1], pts[b][1]],
                 'k-', linewidth=1.5)
 
@@ -413,7 +413,7 @@ def plot_jeans_front(draft, output_path='Logs/jeans_front.svg', debug=False, uni
         _annotate_curve(ax, curves['crotch'], offset=(0, -10))
         _annotate_curve(ax, curves['inseam'], offset=(10, 0))
         _annotate_segment(ax, pts['4'], pts['0'], offset=(0, 8))
-        _annotate_segment(ax, pts['7*'], pts['8'])
+        _annotate_segment(ax, pts["7'"], pts['8'])
         _annotate_segment(ax, pts["3'"], pts["0'"], offset=(10, 0))
         _annotate_segment(ax, pts["0'"], pts['0'], offset=(8, 0))
 
@@ -427,8 +427,8 @@ def plot_jeans_front(draft, output_path='Logs/jeans_front.svg', debug=False, uni
     SA_WAIST  = 3/8 * INCH    # waist
 
     # Build edges: (polyline, sa_distance_cm)
-    # Outline travels CW: hip(1*→4) → hem(4→0) → hem_drop(0→0') → inseam(0'→3')
-    #   → inseam_curve(3'→6) → crotch(6→8) → fly(8→7*) → rise(7*→1*)
+    # Outline travels CW: hip(1'→4) → hem(4→0) → hem_drop(0→0') → inseam(0'→3')
+    #   → inseam_curve(3'→6) → crotch(6→8) → fly(8→7') → rise(7'→1')
     sa_edges = [
         (curves['hip'],                                          SA_SIDE),    # side seam (waist→seat)
         (np.array([pts['4'], pts['0']]),                         SA_SIDE),    # side seam (seat→hem)
@@ -436,8 +436,8 @@ def plot_jeans_front(draft, output_path='Logs/jeans_front.svg', debug=False, uni
         (np.array([pts["0'"], pts["3'"]]),                       SA_INSEAM),  # lower inseam straight
         (curves['inseam'][::-1],                                 SA_INSEAM),  # inseam curve (3'→6)
         (curves['crotch'][::-1],                                 SA_CROTCH),  # crotch curve (6→8)
-        (np.array([pts['8'], pts['7*']]),                        SA_FLY),     # fly extension (3/8" + 3/8")
-        (curves['rise'][::-1],                                   SA_WAIST),   # rise / waist (7*→1*)
+        (np.array([pts['8'], pts["7'"]]),                        SA_FLY),     # fly extension (3/8" + 3/8")
+        (curves['rise'][::-1],                                   SA_WAIST),   # rise / waist (7'→1')
     ]
     _draw_seam_allowance(ax, sa_edges, scale=s)
 

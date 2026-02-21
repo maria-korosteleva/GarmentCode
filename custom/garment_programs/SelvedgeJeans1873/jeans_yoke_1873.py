@@ -96,7 +96,7 @@ def draft_jeans_yoke(m, front, back, gathering_extension=0):
     yoke_side = fpts['1'] + dir_1_to_4_norm * (1.5 * INCH)
 
     # -- 2. Yoke point on seat seam --
-    # Walk the seat_upper curve (back_waist → 8_new) from the start by 2.75"
+    # Walk the seat_upper curve (back_waist → 8') from the start by 2.75"
     yoke_seat_dist = 2.75 * INCH + gathering_extension
     yoke_seat = _point_at_arclength(back['curves']['seat_upper'], yoke_seat_dist)
 
