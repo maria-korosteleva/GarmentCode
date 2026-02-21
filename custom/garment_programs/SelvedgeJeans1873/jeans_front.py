@@ -431,8 +431,6 @@ def plot_jeans_front(draft, output_path='Logs/jeans_front.svg', debug=False, uni
             ax.plot(pt[0], pt[1], 'o', color='gray', markersize=4, zorder=5, alpha=0.5)
             ax.annotate(name, pt, textcoords="offset points",
                         xytext=(6, 4), ha='left', fontsize=8, alpha=0.6)
-        ax.plot(pts['10'][0], pts['10'][1], 's', color='cyan',
-                markersize=7, zorder=6, label='Point 10 (CF)')
         ax.legend(loc='lower right', fontsize=9)
         ax.set_xlabel(unit_label)
         ax.set_ylabel(unit_label)
@@ -457,6 +455,13 @@ def plot_jeans_front(draft, output_path='Logs/jeans_front.svg', debug=False, uni
     SA_FLY    = 3/4 * INCH    # fly extension (3/8" crotch + 3/8" additional)
     SA_WAIST  = 3/8 * INCH    # waist
 
+    # SA transition: 3/4" kicks in 1/2" before pt8 on the crotch curve
+    _crotch_rev = curves['crotch'][::-1]          # scaled, pt6 → pt8
+    _crotch_len = _curve_length(_crotch_rev)
+    _split      = 0.5 * INCH * s
+    _crotch_body = _curve_up_to_arclength(_crotch_rev, _crotch_len - _split)
+    _crotch_end  = _curve_up_to_arclength(_crotch_rev[::-1], _split)[::-1]
+
     # Build edges: (polyline, sa_distance_cm)
     # Outline travels CW: hip(1'→4) → hem(4→0) → hem_drop(0→0') → inseam(0'→3')
     #   → inseam_curve(3'→6) → crotch(6→8) → fly(8→7') → rise(7'→1')
@@ -466,8 +471,9 @@ def plot_jeans_front(draft, output_path='Logs/jeans_front.svg', debug=False, uni
         (np.array([pts['0'], pts["0'"]]),                        SA_HEM),     # hem
         (np.array([pts["0'"], pts["3'"]]),                       SA_INSEAM),  # lower inseam straight
         (curves['inseam'][::-1],                                 SA_INSEAM),  # inseam curve (3'→6)
-        (curves['crotch'][::-1],                                 SA_CROTCH),  # crotch curve (6→8)
-        (np.array([pts['8'], pts["7'"]]),                        SA_FLY),     # fly extension (3/8" + 3/8")
+        (_crotch_body,                                           SA_CROTCH),  # crotch (6 → transition)
+        (_crotch_end,                                            SA_FLY),     # last 1/2" of crotch: 3/4"
+        (np.array([pts['8'], pts["7'"]]),                        SA_FLY),     # fly: full 3/4"
         (curves['rise'][::-1],                                   SA_WAIST),   # rise / waist (7'→1')
     ]
     _draw_seam_allowance(ax, sa_edges, scale=s)

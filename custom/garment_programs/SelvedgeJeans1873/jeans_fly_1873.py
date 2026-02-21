@@ -15,7 +15,6 @@ Steps:
 """
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 from pathlib import Path
 
 from .jeans_front import (
@@ -112,23 +111,6 @@ def plot_jeans_fly_1873(fly, output_path='Logs/jeans_fly_1873.svg',
     # Bottom curve
     ax.plot(curves['bottom'][:, 0], curves['bottom'][:, 1], **OUTLINE)
 
-    # -- Inlay region: diagonal hatch (always shown) --
-    # The inlay is the 1" strip at the top that will be trimmed after sewing.
-    inlay_corners = np.array([
-        [0,                    con['inlay_y']],          # fold line, bottom of inlay
-        [pts['outer_top'][0],  con['inlay_y']],          # outer edge, bottom of inlay
-        [pts['outer_top'][0],  pts['outer_top'][1]],     # outer top corner
-        [0,                    pts['fold_top'][1]],      # fold line, top
-    ])
-    inlay_patch = mpatches.Polygon(
-        inlay_corners,
-        closed=True,
-        facecolor='none',
-        edgecolor='none',
-        hatch='////',
-        linewidth=0.0,
-    )
-    ax.add_patch(inlay_patch)
     # Thin boundary line at the trim/inlay separation
     ax.plot([0, pts['outer_top'][0]],
             [con['inlay_y'], con['inlay_y']],

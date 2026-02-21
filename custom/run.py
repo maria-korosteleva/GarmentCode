@@ -48,11 +48,12 @@ def _run_piece(pkg, piece_module, measurements_path, debug, units, output_dir=No
     """Import and run a single piece module, returning the output path."""
     full_module = f'custom.garment_programs.{pkg}.{piece_module}'
     module = importlib.import_module(full_module)
+    measurements_stem = Path(measurements_path).stem
     if output_dir:
         output_path = f'{output_dir}/{piece_module}.svg'
     else:
         timestamp = datetime.now().strftime('%Y-%m-%d_%H%M%S')
-        output_path = f'Logs/{pkg}.{piece_module}_{timestamp}.svg'
+        output_path = f'Logs/{pkg}.{piece_module}_{measurements_stem}_{timestamp}.svg'
     module.run(measurements_path, output_path, debug=debug, units=units)
     return output_path
 
@@ -135,11 +136,12 @@ def main():
 
     # --- import and run ---
     timestamp = datetime.now().strftime('%Y-%m-%d_%H%M%S')
+    measurements_stem = Path(measurements_path).stem
 
     if program_name in garment_map:
         # Run all pieces into a garment folder
         garment = garment_map[program_name]
-        output_dir = f'Logs/{garment["name"]}_{timestamp}'
+        output_dir = f'Logs/{garment["name"]}_{measurements_stem}_{timestamp}'
         Path(output_dir).mkdir(parents=True, exist_ok=True)
         print(f"\n--- {garment['name']} ---")
         print(f"Output: {output_dir}/")
@@ -158,7 +160,7 @@ def main():
             _run_piece(parts[0], parts[1], measurements_path, debug, units)
         else:
             module = importlib.import_module(f'custom.garment_programs.{program_name}')
-            output_path = f'Logs/{program_name}_{timestamp}.svg'
+            output_path = f'Logs/{program_name}_{measurements_stem}_{timestamp}.svg'
             module.run(measurements_path, output_path, debug=debug, units=units)
 
 
