@@ -419,6 +419,7 @@ def plot_jeans_front(draft, output_path='Logs/jeans_front.svg', debug=False, uni
     SA_HEM    = (1.5 + 7/8) * INCH  # 2 3/8" (1 1/2" turn-up + 7/8" hem)
     SA_INSEAM = 3/8 * INCH    # inseam
     SA_CROTCH = 3/8 * INCH    # crotch / fly
+    SA_FLY    = 3/4 * INCH    # fly extension (3/8" crotch + 3/8" additional)
     SA_WAIST  = 3/8 * INCH    # waist
 
     # Build edges: (polyline, sa_distance_cm)
@@ -431,7 +432,7 @@ def plot_jeans_front(draft, output_path='Logs/jeans_front.svg', debug=False, uni
         (np.array([pts["0'"], pts["3'"]]),                       SA_INSEAM),  # lower inseam straight
         (curves['inseam'][::-1],                                 SA_INSEAM),  # inseam curve (3'→6)
         (curves['crotch'][::-1],                                 SA_CROTCH),  # crotch curve (6→8)
-        (np.array([pts['8'], pts['7*']]),                        SA_CROTCH),  # fly extension
+        (np.array([pts['8'], pts['7*']]),                        SA_FLY),     # fly extension (3/8" + 3/8")
         (curves['rise'][::-1],                                   SA_WAIST),   # rise / waist (7*→1*)
     ]
     _draw_seam_allowance(ax, sa_edges, scale=s)

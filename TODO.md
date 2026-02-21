@@ -33,20 +33,8 @@ Changed `curve_seat_upper` from a cubic Bézier to a straight line (`back_waist`
 
 ## Pending
 
-### 4. Replace SA offset with pyclipper
+### 4. Improve SA corner geometry
 
-The current `_offset_polyline` uses simple normal averaging with miter joins. Replace with `pyclipper.PyclipperOffset` for proper corner treatment (square/round joins, clean transitions where SA widths change, self-intersection cleanup).
+The current `_draw_seam_allowance` offsets each edge independently by its per-edge SA distance and concatenates the results. Corner treatment uses simple normal averaging (miter joins). Improve by computing proper line-line intersections at corners where adjacent edges meet, especially where SA widths differ (e.g. fly extension 3/4" meeting crotch 3/8").
 
-### 5. Commit all uncommitted changes
-
-Everything since the SVG switch commit (`83f2188`) is uncommitted:
-- 6 new piece modules: `jeans_waistband.py`, `jeans_fly_1873.py`, `jeans_fly_one_piece.py`, `jeans_front_pocket.py`, `jeans_back_pocket.py`, `jeans_back_cinch.py`
-- 4 instruction markdown files: `jeans_waistband_instructions.md`, `jeans_fly_instructions.md`, `jeans_pocket_instructions.md`, `jeans_back_cinch_instructions.md`
-- Updated `__init__.py` (10 pieces)
-- SA helpers and per-piece SA drawing
-- Gathering extension parameter on 1873 yoke
-- Back seat_upper straightened
-- Front pocket direction fix + points on outline
-- Back pocket pentagon shape with exact dimensions
-- Yoke non-debug mode (hide back panel context)
-- Fly rename (modern → one-piece)
+Note: `pyclipper` (`PyclipperOffset`) was considered but only supports uniform offset for an entire polygon — it can't do per-edge SA widths. The current per-edge approach is correct; just the corner geometry needs refinement.
