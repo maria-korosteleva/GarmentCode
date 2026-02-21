@@ -24,9 +24,9 @@ from pathlib import Path
 from .jeans_front import (
     INCH, load_measurements, draft_jeans_front,
     _bezier_cubic, _annotate_segment, _annotate_curve,
+    _point_at_arclength, _curve_up_to_arclength,
 )
 from .jeans_back import draft_jeans_back
-from .jeans_yoke_1873 import _point_at_arclength, _curve_up_to_arclength
 
 
 # -- Helpers -----------------------------------------------------------------

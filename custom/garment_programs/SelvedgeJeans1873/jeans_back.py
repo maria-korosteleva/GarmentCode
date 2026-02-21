@@ -13,6 +13,7 @@ from .jeans_front import (
     _bezier_cubic, _bezier_quad,
     _annotate_curve, _annotate_segment,
     _draw_seam_allowance,
+    _point_at_arclength, _curve_up_to_arclength,
 )
 
 
@@ -142,6 +143,16 @@ def draft_jeans_back(m, front):
         pt11,
     )
 
+    # -- Yoke seam reference line (same geometry as draft_jeans_yoke) --
+    # yoke_side: 1.5" from pt1 toward pt4 along the outseam
+    dir_1_to_4      = fpts['4'] - fpts['1']
+    dir_1_to_4_norm = dir_1_to_4 / np.linalg.norm(dir_1_to_4)
+    yoke_side = fpts['1'] + dir_1_to_4_norm * (1.5 * INCH)
+    # yoke_seat: 2.75" along seat_upper from back_waist
+    yoke_seat = _point_at_arclength(curve_seat_upper, 2.75 * INCH)
+    # sub-curve of seat_upper from back_waist to yoke_seat
+    yoke_seat_curve = _curve_up_to_arclength(curve_seat_upper, 2.75 * INCH)
+
     return {
         'points': {
             'back_hem': back_hem,
@@ -151,11 +162,14 @@ def draft_jeans_back(m, front):
             "8'": new_pt8,
             'back_waist': back_waist_pt,
             'waist_seat_x': waist_seat_intersection,
+            'yoke_side': yoke_side,
+            'yoke_seat': yoke_seat,
         },
         'curves': {
             'back_inseam': curve_back_inseam,
             'seat_upper': curve_seat_upper,
             'seat_lower': curve_seat_lower,
+            'yoke_seat_curve': yoke_seat_curve,   # seat_upper sub-curve to yoke_seat
         },
         'construction': {
             'inseam_line_start': pt11,
@@ -239,6 +253,21 @@ def plot_jeans_back(front, back, output_path='Logs/jeans_back.svg', debug=False,
             [fpts['0'][1], fpts['4'][1]], **OUTLINE)
     ax.plot([fpts['4'][0], fpts['1'][0]],
             [fpts['4'][1], fpts['1'][1]], **OUTLINE)
+
+    # -- Yoke seam reference line (always shown) --
+    # Shows where to cut the yoke away from the back body panel.
+    YOKE_REF = dict(color='steelblue', linewidth=1.2, linestyle='--')
+    ax.plot(bcurves['yoke_seat_curve'][:, 0], bcurves['yoke_seat_curve'][:, 1],
+            **YOKE_REF)
+    ax.plot([bpts['yoke_seat'][0], bpts['yoke_side'][0]],
+            [bpts['yoke_seat'][1], bpts['yoke_side'][1]], **YOKE_REF)
+    ax.plot([bpts['yoke_side'][0], fpts['1'][0]],
+            [bpts['yoke_side'][1], fpts['1'][1]], **YOKE_REF)
+    # Label near the midpoint of the straight yoke seam segment
+    yoke_mid = (bpts['yoke_seat'] + bpts['yoke_side']) / 2
+    ax.annotate('yoke seam', yoke_mid, textcoords="offset points",
+                xytext=(0, -14), fontsize=7, color='steelblue', ha='center',
+                bbox=dict(boxstyle='round,pad=0.2', fc='white', ec='none', alpha=0.8))
 
     # -- Reference lines --
     y_lo = min(bpts['11'][1], fpts['6'][1]) - 3

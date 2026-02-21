@@ -40,6 +40,37 @@ def _bezier_quad(P0, P1, P2, n=100):
     return (1-t)**2 * P0 + 2*(1-t) * t * P1 + t**2 * P2
 
 
+# -- Arc-length walk helpers ------------------------------------------------
+
+def _point_at_arclength(curve, dist):
+    """Interpolated (x, y) at *dist* arc-length from the start of a polyline."""
+    diffs = np.diff(curve, axis=0)
+    seg_lengths = np.sqrt(diffs[:, 0]**2 + diffs[:, 1]**2)
+    cum = np.concatenate([[0.0], np.cumsum(seg_lengths)])
+    if dist <= 0:
+        return curve[0].copy()
+    if dist >= cum[-1]:
+        return curve[-1].copy()
+    idx = max(0, int(np.searchsorted(cum, dist)) - 1)
+    idx = min(idx, len(curve) - 2)
+    t = (dist - cum[idx]) / seg_lengths[idx]
+    return curve[idx] * (1 - t) + curve[idx + 1] * t
+
+
+def _curve_up_to_arclength(curve, dist):
+    """Sub-polyline from ``curve[0]`` to the point at *dist* arc-length."""
+    diffs = np.diff(curve, axis=0)
+    seg_lengths = np.sqrt(diffs[:, 0]**2 + diffs[:, 1]**2)
+    cum = np.concatenate([[0.0], np.cumsum(seg_lengths)])
+    if dist >= cum[-1]:
+        return curve.copy()
+    idx = max(0, int(np.searchsorted(cum, dist)) - 1)
+    idx = min(idx, len(curve) - 2)
+    t = (dist - cum[idx]) / seg_lengths[idx]
+    endpoint = curve[idx] * (1 - t) + curve[idx + 1] * t
+    return np.vstack([curve[:idx + 1], endpoint.reshape(1, 2)])
+
+
 # -- Measurement annotation helpers -----------------------------------------
 
 def _curve_length(pts):

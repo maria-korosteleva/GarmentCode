@@ -21,8 +21,8 @@ from pathlib import Path
 from .jeans_front import (
     INCH, load_measurements, draft_jeans_front,
     _bezier_cubic, _curve_length, _annotate_segment,
+    _point_at_arclength,
 )
-from .jeans_yoke_1873 import _point_at_arclength
 
 
 # -- Drafting ----------------------------------------------------------------

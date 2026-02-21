@@ -12,55 +12,9 @@ from pathlib import Path
 from .jeans_front import (
     INCH, load_measurements, draft_jeans_front,
     _annotate_segment, _draw_seam_allowance,
+    _point_at_arclength, _curve_up_to_arclength,
 )
 from .jeans_back import draft_jeans_back
-
-
-# -- Helpers -----------------------------------------------------------------
-
-def _point_at_arclength(curve, dist):
-    """Interpolated (x, y) at *dist* arc-length from the start of a polyline.
-
-    Parameters
-    ----------
-    curve : ndarray, shape (N, 2)
-        Sampled polyline.
-    dist : float
-        Target arc-length distance from ``curve[0]``.
-
-    Returns
-    -------
-    ndarray, shape (2,)
-    """
-    diffs = np.diff(curve, axis=0)
-    seg_lengths = np.sqrt(diffs[:, 0]**2 + diffs[:, 1]**2)
-    cum = np.concatenate([[0.0], np.cumsum(seg_lengths)])
-
-    if dist <= 0:
-        return curve[0].copy()
-    if dist >= cum[-1]:
-        return curve[-1].copy()
-
-    idx = int(np.searchsorted(cum, dist)) - 1
-    idx = max(0, min(idx, len(curve) - 2))
-    t = (dist - cum[idx]) / seg_lengths[idx]
-    return curve[idx] * (1 - t) + curve[idx + 1] * t
-
-
-def _curve_up_to_arclength(curve, dist):
-    """Sub-polyline from ``curve[0]`` to the point at *dist* arc-length."""
-    diffs = np.diff(curve, axis=0)
-    seg_lengths = np.sqrt(diffs[:, 0]**2 + diffs[:, 1]**2)
-    cum = np.concatenate([[0.0], np.cumsum(seg_lengths)])
-
-    if dist >= cum[-1]:
-        return curve.copy()
-
-    idx = int(np.searchsorted(cum, dist)) - 1
-    idx = max(0, min(idx, len(curve) - 2))
-    t = (dist - cum[idx]) / seg_lengths[idx]
-    endpoint = curve[idx] * (1 - t) + curve[idx + 1] * t
-    return np.vstack([curve[:idx + 1], endpoint.reshape(1, 2)])
 
 
 # -- Drafting ----------------------------------------------------------------
