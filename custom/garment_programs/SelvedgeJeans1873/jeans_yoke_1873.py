@@ -11,7 +11,7 @@ from pathlib import Path
 
 from .jeans_front import (
     INCH, load_measurements, draft_jeans_front,
-    _annotate_segment,
+    _annotate_segment, _draw_seam_allowance,
 )
 from .jeans_back import draft_jeans_back
 
@@ -65,7 +65,7 @@ def _curve_up_to_arclength(curve, dist):
 
 # -- Drafting ----------------------------------------------------------------
 
-def draft_jeans_yoke(m, front, back):
+def draft_jeans_yoke(m, front, back, gathering_extension=0):
     """
     Compute yoke geometry from the completed front and back drafts.
 
@@ -77,6 +77,10 @@ def draft_jeans_yoke(m, front, back):
         Result of ``draft_jeans_front(m)``.
     back : dict
         Result of ``draft_jeans_back(m, front)``.
+    gathering_extension : float, optional
+        Extra length (in cm) to extend the yoke_seat point further along
+        the seat_upper curve, creating gathering on the seat-seam side.
+        Typical range: 0.5*INCH to 1*INCH.  Default 0 (no gathering).
 
     Returns
     -------
@@ -93,7 +97,8 @@ def draft_jeans_yoke(m, front, back):
 
     # -- 2. Yoke point on seat seam --
     # Walk the seat_upper curve (back_waist → 8_new) from the start by 2.75"
-    yoke_seat = _point_at_arclength(back['curves']['seat_upper'], 2.75 * INCH)
+    yoke_seat_dist = 2.75 * INCH + gathering_extension
+    yoke_seat = _point_at_arclength(back['curves']['seat_upper'], yoke_seat_dist)
 
     # -- 3. Dart position — 1/3 of waist from pt 1 toward back_waist --
     pt1 = fpts['1']
@@ -143,6 +148,7 @@ def draft_jeans_yoke(m, front, back):
         },
         'metadata': {
             'title': 'Historical Jeans Yoke (1873)',
+            'yoke_seat_dist': yoke_seat_dist,
         },
     }
 
@@ -168,7 +174,8 @@ def plot_jeans_yoke(front, back, yoke, output_path='Logs/jeans_yoke.svg',
     ycon   = {k: v * s for k, v in yoke['construction'].items()}
 
     # Seat-seam curve segment for yoke right side
-    seat_seg = _curve_up_to_arclength(back['curves']['seat_upper'], 2.75 * INCH) * s
+    yoke_seat_dist = yoke['metadata']['yoke_seat_dist']
+    seat_seg = _curve_up_to_arclength(back['curves']['seat_upper'], yoke_seat_dist) * s
 
     fig, ax = plt.subplots(1, 1, figsize=(16, 10))
     OUTLINE  = dict(color='black', linewidth=1.5)
@@ -246,6 +253,21 @@ def plot_jeans_yoke(front, back, yoke, output_path='Logs/jeans_yoke.svg',
             ax.annotate(name, pt, textcoords="offset points",
                         xytext=(6, 4), ha='left', fontsize=6,
                         color='gray', alpha=0.4)
+
+    # --- Seam allowances (always drawn) ---
+    SA_SEAT_YOKE  = 5/8 * INCH   # long side / seat seam
+    SA_SIDE_YOKE  = 3/4 * INCH   # short edge / side seam
+    SA_WAIST_YOKE = 3/8 * INCH   # waist and yoke seams
+
+    # CW outline: outseam(1→yoke_side) → yoke_line(yoke_side→yoke_seat)
+    #   → seat_seg reversed(yoke_seat→back_waist) → waist(back_waist→1)
+    sa_edges = [
+        (np.array([fpts['1'], ypts['yoke_side']]),               SA_SIDE_YOKE),   # side seam
+        (np.array([ypts['yoke_side'], ypts['yoke_seat']]),       SA_WAIST_YOKE),  # yoke seam (bottom)
+        (seat_seg[::-1],                                         SA_SEAT_YOKE),   # seat seam segment (reversed)
+        (np.array([bpts['back_waist'], fpts['1']]),              SA_WAIST_YOKE),  # waist
+    ]
+    _draw_seam_allowance(ax, sa_edges, scale=s)
 
     ax.set_title(yoke['metadata']['title'])
     ax.set_aspect('equal')

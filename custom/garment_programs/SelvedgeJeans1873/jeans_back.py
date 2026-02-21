@@ -12,6 +12,7 @@ from .jeans_front import (
     INCH, load_measurements, draft_jeans_front,
     _bezier_cubic, _bezier_quad,
     _annotate_curve, _annotate_segment,
+    _draw_seam_allowance,
 )
 
 
@@ -126,17 +127,9 @@ def draft_jeans_back(m, front):
     back_waist_pt = fpts['1'] + waist_line_dir * (back_waist_width / np.linalg.norm(waist_line_dir))
 
     # -- Final seat seam (back_waist_pt → 8_new → 11) --
-    waist_perp = np.array([-waist_line_dir[1], waist_line_dir[0]])
-    if np.dot(waist_perp, new_pt8 - back_waist_pt) < 0:
-        waist_perp = -waist_perp
 
-    dist_w_8 = np.linalg.norm(new_pt8 - back_waist_pt)
-    curve_seat_upper = _bezier_cubic(
-        back_waist_pt,
-        back_waist_pt + waist_perp * (dist_w_8 / 3),
-        new_pt8 + seat_angle_dir_norm * (dist_w_8 / 3),
-        new_pt8,
-    )
+    # Straight line from back_waist to 8_new
+    curve_seat_upper = np.array([back_waist_pt, new_pt8])
 
     curve_seat_lower = _bezier_cubic(
         new_pt8,
@@ -290,6 +283,28 @@ def plot_jeans_back(front, back, output_path='Logs/jeans_back.svg', debug=False,
         _annotate_segment(ax, bpts['back_hem'], fpts['0'], offset=(0, 8))
         _annotate_segment(ax, fpts['0'], fpts['4'], offset=(0, 8))
         _annotate_segment(ax, fpts['4'], fpts['1'], offset=(-10, 0))
+
+    # --- Seam allowances (always drawn) ---
+    SA_SIDE    = 3/4 * INCH   # side seam
+    SA_HEM     = (1.5 + 7/8) * INCH  # 2 3/8"
+    SA_INSEAM  = 3/4 * INCH   # back inseam
+    SA_SEAT    = 5/8 * INCH   # seat seam
+    SA_YOKE    = 3/4 * INCH   # yoke seam (outseam side → waist)
+
+    # CW outline: outseam(1→4→0) → hem(0→back_hem) → lower_inseam(back_hem→12)
+    #   → back_inseam(12→11) → seat_lower(11→8_new) → seat_upper(8_new→back_waist)
+    #   → waist(back_waist→1)
+    sa_edges = [
+        (np.array([fpts['1'], fpts['4']]),                       SA_SIDE),    # outseam upper
+        (np.array([fpts['4'], fpts['0']]),                       SA_SIDE),    # outseam lower
+        (np.array([fpts['0'], bpts['back_hem']]),                SA_HEM),     # hem
+        (np.array([bpts['back_hem'], bpts['12']]),               SA_INSEAM),  # lower inseam straight
+        (bcurves['back_inseam'][::-1],                           SA_INSEAM),  # back inseam curve (12→11)
+        (bcurves['seat_lower'][::-1],                            SA_SEAT),    # seat lower (11→8_new)
+        (bcurves['seat_upper'][::-1],                            SA_SEAT),    # seat upper (8_new→back_waist)
+        (np.array([bpts['back_waist'], fpts['1']]),              SA_YOKE),    # waist
+    ]
+    _draw_seam_allowance(ax, sa_edges, scale=s)
 
     ax.set_title(back['metadata']['title'])
     ax.set_aspect('equal')
