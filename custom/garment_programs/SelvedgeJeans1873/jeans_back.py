@@ -46,10 +46,11 @@ def draft_jeans_back(m, front):
     pt11_initial = fpts['6'] + np.array([0, -(m['seat'] / 16)])
 
     # Step 3-5: Construction line from 11 through 12; adjust 11 along it
-    # so that dist(12,11) = dist(6,12) - 1/4" (denim adjustment)
+    # so that dist(12,11) = dist(6,3') - 1/4" (denim adjustment)
+    # Use front's 6→3' measurement as instructed ("measure on the front pattern piece")
     dir_from_12_to_11 = pt11_initial - pt12
     dir_from_12_to_11_norm = dir_from_12_to_11 / np.linalg.norm(dir_from_12_to_11)
-    target_dist = np.linalg.norm(fpts['6'] - pt12) - 1/4 * INCH
+    target_dist = np.linalg.norm(fpts['6'] - fpts["3'"]) - 1/4 * INCH
     pt11 = pt12 + dir_from_12_to_11_norm * target_dist
 
     # Construction line from 11 through 12 to hem level (x = 0)
@@ -65,7 +66,10 @@ def draft_jeans_back(m, front):
         dir_11_to_12_norm[0] * np.cos(angle) - dir_11_to_12_norm[1] * np.sin(angle),
         dir_11_to_12_norm[0] * np.sin(angle) + dir_11_to_12_norm[1] * np.cos(angle),
     ])
-    straight_dir = back_hem_inseam - pt12
+    # Use the actual straight-segment direction (12 → back_hem) for the arrival
+    # tangent so the curve flows naturally into the straight lower inseam.
+    # (back_hem_inseam is only a construction point; back_hem is the real endpoint.)
+    straight_dir = back_hem - pt12
     straight_dir_norm = straight_dir / np.linalg.norm(straight_dir)
     dist_11_12 = np.linalg.norm(dir_11_to_12)
     curve_back_inseam = _bezier_cubic(

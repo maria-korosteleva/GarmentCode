@@ -227,12 +227,18 @@ def draft_jeans_front(m):
         hip_curve_end
     )
 
-    # 2. Front rise curve (1* -> 7*)
-    dist_17 = np.linalg.norm(pt7_adj - pt1_adj)
+    # 2. Front rise / waist curve (1* -> 7*)
+    # Both endpoints tangent in the −y direction (toward the side seam).
+    # This guarantees a C-curve with no inflection: the x-component of the
+    # Bézier is the product of two non-negative Bernstein terms → monotone.
+    # The curve bows slightly toward the hem (+x) at the midpoint — the
+    # natural "waist dip" shape — and arrives at pt7_adj flowing toward the
+    # side seam, as required.
+    y_arm = abs(pt7_adj[1] - pt1_adj[1]) / 3   # ≈ 1/3 of the y-span
     curve_rise = _bezier_cubic(
         pt1_adj,
-        pt1_adj + np.array([0, -dist_17 / 3]),
-        pt7_adj + np.array([0, dist_17 / 3]),
+        pt1_adj + np.array([0.0, -y_arm]),   # tangent: straight toward side seam
+        pt7_adj + np.array([0.0,  y_arm]),   # tangent: arriving from the side seam
         pt7_adj
     )
 
@@ -332,11 +338,9 @@ def plot_jeans_front(draft, output_path='Logs/jeans_front.svg', debug=False, uni
                 [pts['6'][1], pts["3'"][1], pts["0'"][1]],
                 'k--', linewidth=0.5, alpha=0.15)
 
-        # CF construction (2→5 dashed, temp point)
+        # CF construction (2→5 dashed)
         ax.plot([pts['2'][0], pts['5'][0]], [pts['2'][1], pts['5'][1]],
                 'c--', linewidth=0.5, alpha=0.2)
-        ax.plot(pts['temp'][0], pts['temp'][1], 'x', color='cyan',
-                markersize=5, alpha=0.4, zorder=5)
 
     # --- Pattern outline: curves ---
     c = curves

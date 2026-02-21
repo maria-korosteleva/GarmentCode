@@ -1,9 +1,9 @@
 measurements:
-  side_length: 100.0 # cm - outside leg, waist to floor
-  inseam: 80.0 # cm - crotch to floor
-  waist: 86.0 # cm - circumference at natural waist
-  seat: 102.0 # cm - circumference around fullest part (hip girth)
-  waistband_width: 4.0 # cm - waistband width
-  hem_width: 46.0 # cm - desired hem opening (full width)
-  knee_width: 50.0 # cm - desired knee opening (full width)
-  unit: cm # all values in cm
+  side_length: 40.00 # in - outside leg, waist to floor
+  inseam: 32.00 # in - crotch to floor
+  waist: 34.00 # in - circumference at natural waist
+  seat: 40.00 # in - circumference around fullest part (hip girth)
+  waistband_width: 1.5 # in - waistband width
+  hem_width: 18.0 # in - desired hem opening (full width)
+  knee_width: 20.0 # in - desired knee opening (full width)
+  unit: inch
