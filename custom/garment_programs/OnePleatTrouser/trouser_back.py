@@ -345,6 +345,52 @@ def draft_trouser_back(m, front, creaseline_shift=CREASELINE_SHIFT,
         print(f"Hip verification OK: ½ ease = {half_ease:.1f} cm "
               f"(A={A_front:.1f} + B={B_back:.1f} − ½Hg={Hg/2:.1f})")
 
+    # ================================================================
+    # Seam Transition Checks (MM&S)
+    # ================================================================
+    # 1) "Join the front and back trouser patterns at the inseam and
+    #     check the seam transition at the crotch line."
+    # 2) "Join the front and back trouser patterns at the sideseam and
+    #     check the seam transition at the waistline."
+    # We measure the kink angle at each knee join point: 0° = smooth.
+
+    def _tangent_angle(curve, end='start', n=3):
+        """Tangent angle (degrees) at start or end of a curve."""
+        if end == 'start':
+            d = curve[n] - curve[0]
+        else:
+            d = curve[-1] - curve[-n - 1]
+        return np.degrees(np.arctan2(d[1], d[0]))
+
+    def _kink(angle_a, angle_b):
+        """Kink between two tangent angles that should be ~180° apart."""
+        diff = abs(angle_a - angle_b)
+        return abs(180 - diff) if diff < 360 else abs(diff - 360)
+
+    KINK_WARN = 10.0  # degrees
+
+    # Inseam: front inseam_upper arrives at knee, back inseam departs from knee
+    inseam_front_angle = _tangent_angle(front['curves']['inseam_upper'], 'end')
+    inseam_back_angle = _tangent_angle(curve_inseam, 'start')
+    inseam_kink = _kink(inseam_front_angle, inseam_back_angle)
+
+    if inseam_kink > KINK_WARN:
+        print(f"WARNING: Inseam kink at knee = {inseam_kink:.1f}° (> {KINK_WARN}°). "
+              f"Blend the seam transition at the crotch line.")
+    else:
+        print(f"Inseam join OK: kink = {inseam_kink:.1f}°")
+
+    # Sideseam: front side_upper arrives at knee, back side_lower departs from knee
+    side_front_angle = _tangent_angle(front['curves']['side_upper'], 'end')
+    side_back_angle = _tangent_angle(curve_side_lower, 'start')
+    side_kink = _kink(side_front_angle, side_back_angle)
+
+    if side_kink > KINK_WARN:
+        print(f"WARNING: Sideseam kink at knee = {side_kink:.1f}° (> {KINK_WARN}°). "
+              f"Blend the seam transition at the waistline.")
+    else:
+        print(f"Sideseam join OK: kink = {side_kink:.1f}°")
+
     # -- Collect everything --
     points = {
         'back_hem_side':      back_hem_side,
@@ -397,6 +443,9 @@ def draft_trouser_back(m, front, creaseline_shift=CREASELINE_SHIFT,
         'A_front':            A_front,
         'B_back':             B_back,
         'half_ease':          half_ease,
+        # Seam transition checks
+        'inseam_kink':        inseam_kink,
+        'side_kink':          side_kink,
     }
 
     curves = {
