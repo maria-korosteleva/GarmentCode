@@ -268,6 +268,14 @@ def plot_jeans_back(front, back, output_path='Logs/jeans_back.svg', debug=False,
     ax.annotate('yoke seam', yoke_mid, textcoords="offset points",
                 xytext=(0, -14), fontsize=7, color='steelblue', ha='center',
                 bbox=dict(boxstyle='round,pad=0.2', fc='white', ec='none', alpha=0.8))
+    # Notch at midpoint of straight yoke seam — matches the yoke piece
+    _seam_d    = bpts['yoke_seat'] - bpts['yoke_side']
+    _seam_norm = _seam_d / np.linalg.norm(_seam_d)
+    _perp      = np.array([-_seam_norm[1], _seam_norm[0]])
+    _nsize     = 0.25 * INCH * s
+    ax.plot([yoke_mid[0] - _perp[0]*_nsize, yoke_mid[0] + _perp[0]*_nsize],
+            [yoke_mid[1] - _perp[1]*_nsize, yoke_mid[1] + _perp[1]*_nsize],
+            color='steelblue', linewidth=1.2)
 
     # -- Reference lines --
     y_lo = min(bpts['11'][1], fpts['6'][1]) - 3

@@ -1,11 +1,12 @@
+# Final garment measurements (not body scan — ease already included)
 measurements:
-  side_length: 40.00 # in - outside leg, waist to floor (borrowed from Justin)
-  inseam: 32.00      # in - crotch to floor (borrowed from Justin)
-  waist: 38.50      # in - pant waist circumference
-  seat: 41.00       # in - hip/seat circumference (fullest part)
+  side_length: 36.00 # in - outside leg, waist to floor
+  inseam: 26.00 # in - crotch to floor
+  waist: 39.00 # in - pant waist circumference
+  seat: 43.00 # in - hip/seat circumference (fullest part)
   waistband_width: 1.5 # in - waistband width
-  hem_width: 18.0   # in - desired hem opening (full width)
-  knee_width: 20.0  # in - desired knee opening (full width)
+  hem_width: 18.0 # in - desired hem opening (full width)
+  knee_width: 20.0 # in - desired knee opening (full width)
   unit: inch
 
   # Additional body measurements (not used by jeans pattern yet)
