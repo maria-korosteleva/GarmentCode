@@ -42,6 +42,22 @@ def _bezier_quad(P0, P1, P2, n=100):
     return (1-t)**2 * P0 + 2*(1-t) * t * P1 + t**2 * P2
 
 
+def _curve_length(pts):
+    """Arc length of a polyline (Nx2 array)."""
+    diffs = np.diff(pts, axis=0)
+    return np.sum(np.sqrt(diffs[:, 0]**2 + diffs[:, 1]**2))
+
+
+def _annotate_len(ax, pts, offset=(0, 6), label=None):
+    """Label a polyline/curve with its arc length at the midpoint."""
+    length = _curve_length(np.atleast_2d(pts))
+    mid = pts[len(pts) // 2]
+    text = f'{length:.1f}' if label is None else f'{label} {length:.1f}'
+    ax.annotate(text, mid, textcoords='offset points',
+                xytext=offset, fontsize=6, color='darkblue', ha='center',
+                bbox=dict(boxstyle='round,pad=0.2', fc='white', ec='none', alpha=0.7))
+
+
 # -- Drafting ----------------------------------------------------------------
 
 def draft_trouser_front(m):
@@ -408,10 +424,24 @@ def plot_trouser_front(draft, output_path='Logs/trouser_front.svg',
         p = pts[pt_name]
         ax.plot(p[0], p[1], 'x', color='gray', markersize=4)
 
-    # Pleat mark on waistline
-    ax.plot(pts['pleat'][0], pts['pleat'][1], 'kv', markersize=5)
-    ax.annotate('pleat', pts['pleat'], textcoords='offset points',
-                xytext=(-4, 6), fontsize=6, color='black')
+    # Pleat symbol: spans from creaseline (right) to pleat_x (left)
+    pr = con['creaseline_x']   # right edge (creaseline)
+    pl = con['pleat_x']        # left edge (3.5 cm left)
+    pm = (pr + pl) / 2         # midpoint
+    py = lvl['waistline']
+    chev_h = 1.5               # chevron height
+    drop   = 6.0               # vertical lines extend below waist
+    hw     = (pr - pl) / 2     # half-width
+    # Vertical lines at pleat edges
+    ax.plot([pl, pl], [py, py - drop], 'k-', linewidth=0.6, alpha=0.6)
+    ax.plot([pr, pr], [py, py - drop], 'k-', linewidth=0.6, alpha=0.6)
+    # Upper chevron (pointing down)
+    ax.plot([pl, pm, pr], [py - 0.5, py - 0.5 - chev_h, py - 0.5],
+            'k-', linewidth=0.8)
+    # Lower chevron (pointing down)
+    ax.plot([pl, pm, pr],
+            [py - 0.5 - chev_h, py - 0.5 - 2 * chev_h, py - 0.5 - chev_h],
+            'k-', linewidth=0.8)
 
     # CF line (angled: hipline → waistline)
     ax.plot([con['cf_hip_x'], con['cf_waist_x']],
@@ -496,26 +526,37 @@ def plot_trouser_front(draft, output_path='Logs/trouser_front.svg',
     ax.plot(crv['inseam_upper'][:, 0], crv['inseam_upper'][:, 1],
             'k-', linewidth=1.5, zorder=4)
 
-    # Inseam lower: knee → hem_inseam_top → hem_inseam (squared off)
-    ax.plot([pts['knee_inseam'][0], pts['hem_inseam_top'][0],
-             pts['hem_inseam'][0]],
-            [pts['knee_inseam'][1], pts['hem_inseam_top'][1],
-             pts['hem_inseam'][1]],
+    # Inseam lower: knee → hem_inseam_top (angled)
+    ax.plot([pts['knee_inseam'][0], pts['hem_inseam_top'][0]],
+            [pts['knee_inseam'][1], pts['hem_inseam_top'][1]],
             'k-', linewidth=1.5, zorder=4)
 
-    # Hemline
-    ax.plot([pts['hem_side'][0], pts['hem_inseam'][0]],
-            [pts['hem_side'][1], pts['hem_inseam'][1]],
-            'k-', linewidth=1.5, zorder=4)
+    # Hem perpendicular drops + hemline (one continuous polyline, butt caps)
+    ax.plot([pts['hem_inseam_top'][0], pts['hem_inseam'][0],
+             pts['hem_side'][0], pts['hem_side_top'][0]],
+            [pts['hem_inseam_top'][1], pts['hem_inseam'][1],
+             pts['hem_side'][1], pts['hem_side_top'][1]],
+            'k-', linewidth=1.5, zorder=4, solid_capstyle='butt')
 
-    # Sideseam: mid_side → knee (curve) → hem_side_top → hem_side (squared off)
+    # Sideseam: mid_side → knee (curve) → hem_side_top (angled)
     ax.plot(crv['side_upper'][:, 0], crv['side_upper'][:, 1],
             'k-', linewidth=1.5, zorder=4)
-    ax.plot([pts['knee_side'][0], pts['hem_side_top'][0],
-             pts['hem_side'][0]],
-            [pts['knee_side'][1], pts['hem_side_top'][1],
-             pts['hem_side'][1]],
+    ax.plot([pts['knee_side'][0], pts['hem_side_top'][0]],
+            [pts['knee_side'][1], pts['hem_side_top'][1]],
             'k-', linewidth=1.5, zorder=4)
+
+    # ── Debug: outline dimension annotations ──────────────────────
+    if debug:
+        _annotate_len(ax, crv['waistline'], offset=(0, 8))
+        _annotate_len(ax, crv['hip'], offset=(-10, 0))
+        _annotate_len(ax, crv['crotch'], offset=(6, 6))
+        _annotate_len(ax, crv['inseam_upper'], offset=(8, 0))
+        _annotate_len(ax, crv['side_upper'], offset=(-10, 0))
+        _annotate_len(ax, np.array([pts['cf_waist'], pts['cf_hip']]), offset=(6, 0))
+        _annotate_len(ax, np.array([pts['mid_side'], pts['hip_side']]), offset=(-10, 0))
+        _annotate_len(ax, np.array([pts['knee_inseam'], pts['hem_inseam_top']]), offset=(8, 0))
+        _annotate_len(ax, np.array([pts['knee_side'], pts['hem_side_top']]), offset=(-10, 0))
+        _annotate_len(ax, np.array([pts['hem_side'], pts['hem_inseam']]), offset=(0, -8))
 
     _finish_plot(fig, ax, draft, output_path, step)
 
