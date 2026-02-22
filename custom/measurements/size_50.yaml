@@ -1,0 +1,7 @@
+measurements:
+  unit: cm
+  waist: 88.0        # Wbg - waistband girth (full circumference)
+  seat: 102.0         # Hg - hip girth (full circumference)
+  hem_width: 44.0     # Hw - hem width (full circumference)
+  side_length: 103.0  # Sl - side length (waist to floor)
+  inseam: 81.0        # Is - inseam (crotch to floor)
