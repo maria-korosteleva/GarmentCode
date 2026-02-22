@@ -1,0 +1,19 @@
+measurements:
+  side_length: 40.00 # in - outside leg, waist to floor (borrowed from Justin)
+  inseam: 32.00      # in - crotch to floor (borrowed from Justin)
+  waist: 38.50      # in - pant waist circumference
+  seat: 41.00       # in - hip/seat circumference (fullest part)
+  waistband_width: 1.5 # in - waistband width
+  hem_width: 18.0   # in - desired hem opening (full width)
+  knee_width: 20.0  # in - desired knee opening (full width)
+  unit: inch
+
+  # Additional body measurements (not used by jeans pattern yet)
+  # chest: 42
+  # natural_waist: 37
+  # neck: 16
+  # bicep: 15
+  # wrist: 7
+  # thigh: 24
+  # calf: 15
+  # ankle: 10
