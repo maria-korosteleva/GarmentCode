@@ -46,7 +46,7 @@ These dependencies are installed through [setup.cfg](https://github.com/maria-ko
 * [svgpathtools](https://github.com/mathandy/svgpathtools)
 * [cairoSVG](https://cairosvg.org/)
     NOTE: this lib has some quirks on Windows, which we resolve with including needed dlls in `./pygarment/pattern/cairo_dlls` and adding the ditrectory to PATH in runtime
-* [NiceGUI](https://nicegui.io/#installation)
+* [NiceGUI](https://nicegui.io/#installation)<=2.24.2
 * [trimesh](https://trimesh.org/)
 * [libigl](https://libigl.github.io/libigl-python-bindings/)
 * [pyrender](https://pyrender.readthedocs.io/en/latest/index.html)
