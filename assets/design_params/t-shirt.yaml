@@ -116,7 +116,7 @@ design:
     bc_depth:
       v: 0
       range:
-      - 0
+      - -0.2
       - 2
       type: float
       default_prob: 0.4

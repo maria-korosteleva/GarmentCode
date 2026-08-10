@@ -148,13 +148,13 @@ class GUIState:
                 on_click=lambda: ui.navigate.to('https://igl.ethz.ch/projects/garmentcode/', new_tab=True)
                 ).props('flat color=white')
             with ui.link(target='https://arxiv.org/abs/2306.03642', new_tab=True):
-                ui.html(icon_arxiv).classes('w-16 bg-transparent')
+                ui.html(icon_arxiv, sanitize=False).classes('w-16 bg-transparent')
             ui.button(
                 'Dataset', 
                 on_click=lambda: ui.navigate.to('https://igl.ethz.ch/projects/GarmentCodeData/', new_tab=True)
                 ).props('flat color=white')
             with ui.link(target='https://github.com/maria-korosteleva/GarmentCode', new_tab=True):
-                ui.html(icon_github).classes('w-8 bg-transparent')
+                ui.html(icon_github, sanitize=False).classes('w-8 bg-transparent')
         # NOTE No ui.left_drawer(), no ui.right_drawer()
         with ui.footer(fixed=False, elevated=True).classes('items-center justify-center p-0 m-0'): 
             # https://www.termsfeed.com/blog/sample-copyright-notices/
@@ -259,15 +259,40 @@ class GUIState:
                     ).classes('text-stone-500')
                 elif p_type == 'float' or p_type == 'int':
                     ui.label(param_name).classes('p-0 m-0 mt-2 text-stone-500 text-[0.85rem]')
-                    ui_elems[param] = ui.slider(
-                        value=val, 
-                        min=p_range[0], 
-                        max=p_range[1], 
-                        step=0.025 if p_type == 'float' else 1,
-                    ).props('snap label').classes('w-full')  \
-                        .on('update:model-value', 
-                            lambda e, dic=design_params, param=param: self.update_pattern_ui_state(dic, param, e.args),
-                            throttle=0.5, leading_events=False)
+                    step = 0.025 if p_type == 'float' else 1
+                    with ui.row().classes('w-full items-center no-wrap gap-2'):
+                        slider = ui.slider(
+                            value=val,
+                            min=p_range[0],
+                            max=p_range[1],
+                            step=step,
+                        ).props('snap label').classes('grow')
+                        manual_input = ui.number(
+                            value=val,
+                            step=step,
+                            precision=3 if p_type == 'float' else 0,
+                        ).props('dense outlined').classes('w-24')
+
+                        async def slider_changed(e, dic=design_params, param=param,
+                                                 manual_input=manual_input):
+                            manual_input.value = e.args
+                            await self.update_pattern_ui_state(dic, param, e.args)
+
+                        async def manual_changed(e, dic=design_params, param=param,
+                                                 slider=slider, p_range=p_range):
+                            if e.value is None:
+                                return
+                            if p_range[0] <= e.value <= p_range[1]:
+                                slider.value = e.value
+                            await self.update_pattern_ui_state(dic, param, e.value)
+
+                        slider.on(
+                            'update:model-value', slider_changed,
+                            throttle=0.5, leading_events=False
+                        )
+                        manual_input.on_value_change(manual_changed)
+                        slider._manual_input = manual_input
+                        ui_elems[param] = slider
 
                     # NOTE Events control: https://nicegui.io/documentation/slider#throttle_events_with_leading_and_trailing_options
                 elif 'file' in p_type:
@@ -347,11 +372,11 @@ class GUIState:
                     switch.bind_value(self.ui_body_outline, 'visible')
                 
                 # NOTE: ui.row allows for correct classes application (e.g. no padding on svg pattern)
-                with ui.row().classes('w-full h-full p-0 m-0 bg-transparent relative'):
+                with ui.row().classes('w-full h-full p-0 m-0 bg-transparent').style('position: absolute; inset: 0;'):
                     # Automatically updates from source
                     self.ui_pattern_display = ui.interactive_image(
                         ''
-                    ).classes('bg-transparent p-0 m-0')                    
+                    ).classes('bg-transparent p-0 m-0').style('position: absolute;')
 
     # !SECTION
     # SECTION 3D view
@@ -635,6 +660,8 @@ class GUIState:
                 self.update_design_params_ui_state(ui_elems[param], design_params[param])
             else:
                 ui_elems[param].value = design_params[param]['v']
+                if hasattr(ui_elems[param], '_manual_input'):
+                    ui_elems[param]._manual_input.value = design_params[param]['v']
 
     def toggle_param_update_events(self, ui_elems):
         """Enable/disable event handling on the ui elements related to GarmentCode parameters"""
@@ -644,8 +671,12 @@ class GUIState:
             else:
                 if ui_elems[param].is_ignoring_events:  # -> disabled
                     ui_elems[param].enable()
+                    if hasattr(ui_elems[param], '_manual_input'):
+                        ui_elems[param]._manual_input.enable()
                 else:
                     ui_elems[param].disable()
+                    if hasattr(ui_elems[param], '_manual_input'):
+                        ui_elems[param]._manual_input.disable()
 
     def update_body_params_ui_state(self, ui_body_refs):
         """Sync ui params with the current state of the body params"""
